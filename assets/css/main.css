@@ -1,0 +1,233 @@
+/* Custom styles for SecureShare */
+
+/* Smooth animations */
+* {
+  @apply transition-colors duration-200 ease-in-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-100 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus visible styles */
+*:focus-visible {
+  @apply outline-none ring-2 ring-emerald-500 ring-offset-2;
+}
+
+/* Animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Apply animations */
+.animate-slide-in-up {
+  animation: slideInUp 0.4s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+/* Skeleton loading */
+.skeleton {
+  @apply bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200;
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent;
+}
+
+/* Card hover effects */
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+}
+
+/* Button primary gradient */
+.btn-primary {
+  @apply bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all;
+}
+
+/* Button secondary */
+.btn-secondary {
+  @apply bg-white border-2 border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 font-semibold px-6 py-3 rounded-xl transition-all;
+}
+
+/* Input focus styles */
+input:focus, textarea:focus, select:focus {
+  @apply outline-none ring-2 ring-emerald-500/50 border-emerald-500;
+}
+
+/* Checkbox custom styles */
+input[type="checkbox"]:checked {
+  @apply bg-gradient-to-br from-emerald-500 to-blue-600 border-transparent;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+}
+
+.badge-blue {
+  @apply bg-blue-100 text-blue-700;
+}
+
+.badge-amber {
+  @apply bg-amber-100 text-amber-700;
+}
+
+.badge-indigo {
+  @apply bg-indigo-100 text-indigo-700;
+}
+
+.badge-emerald {
+  @apply bg-emerald-100 text-emerald-700;
+}
+
+/* Avatar styles */
+.avatar {
+  @apply w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm shadow-md;
+}
+
+.avatar-gradient-blue {
+  @apply bg-gradient-to-br from-blue-500 to-blue-600;
+}
+
+.avatar-gradient-slate {
+  @apply bg-gradient-to-br from-slate-500 to-slate-600;
+}
+
+.avatar-gradient-cyan {
+  @apply bg-gradient-to-br from-cyan-500 to-blue-600;
+}
+
+.avatar-gradient-emerald {
+  @apply bg-gradient-to-br from-emerald-500 to-blue-600;
+}
+
+/* Panel styles */
+.panel {
+  @apply bg-white rounded-2xl shadow-lg shadow-slate-200/60 border border-slate-100 overflow-hidden transition-all hover:shadow-xl hover:shadow-slate-200/80;
+}
+
+/* Glass morphism effect */
+.glass {
+  @apply backdrop-blur-md bg-white/80 border border-white/20 shadow-lg;
+}
+
+/* Tooltip */
+[data-tooltip] {
+  @apply relative;
+}
+
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  @apply absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1 bg-slate-900 text-white text-xs rounded-lg whitespace-nowrap z-50;
+}
+
+[data-tooltip]:hover::before {
+  content: '';
+  @apply absolute bottom-full left-1/2 -translate-x-1/2 mb-1 border-4 border-transparent border-t-slate-900 z-50;
+}
+
+/* Loading spinner */
+.spinner {
+  @apply animate-spin rounded-full border-4 border-slate-200 border-t-emerald-600;
+}
+
+/* Responsive utilities */
+@media (max-width: 1024px) {
+  .hide-lg {
+    @apply hidden;
+  }
+}
+
+@media (max-width: 768px) {
+  .hide-md {
+    @apply hidden;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    @apply hidden;
+  }
+}
+
+/* Selection colors */
+::selection {
+  @apply bg-emerald-200 text-emerald-900;
+}
+
+::-moz-selection {
+  @apply bg-emerald-200 text-emerald-900;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
