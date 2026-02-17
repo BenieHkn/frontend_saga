@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   }
   try {
     // Envoyer le token, email et le nouveau mot de passe à l'API Laravel
-    const response = await $fetch(`${config.public.laravelApiUrl}/reset-password`, {
+    const response = await $fetch(`${config.public.apiBase}/reset-password`, {
       method: 'POST',
       body: {
         email,

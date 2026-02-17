@@ -666,7 +666,7 @@ const loadFonctions = async () => {
     const config = useRuntimeConfig()
     
     const response = await $fetch(
-      `${config.public.apiBase || 'http://localhost:8000'}/api/entites/entites-meme-niveau/${selectedUser.value?.entite_users?.[0]?.entite?.parent_entite_id || selectedUser.value?.parent_entite_id || '0'}`,
+      `${config.public.apiBase}/entites/entites-meme-niveau/${selectedUser.value?.entite_users?.[0]?.entite?.parent_entite_id || selectedUser.value?.parent_entite_id || '0'}`,
       { 
         method: 'GET', 
         headers: { 
@@ -836,7 +836,7 @@ const submitInterim = async () => {
     })
 
     const response = await $fetch(
-      `${config.public.apiBase || 'http://localhost:8000'}/api/entite-users`,
+      `${config.public.apiBase}/entite-users`,
       {
         method: 'POST',
         headers: {

@@ -26,6 +26,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useTransfertsStore } from '@/stores/transferts'
+import { useCourriersArrives } from '~/composables/courriers/useCourriersArrives'
+import { useApi } from '~/composables/useApi'
+import PageHeader from '~/components/PageHeader.vue'
+import TransfertsDestinatairesSelectionPanel from '~/components/transferts/TransfertsDestinatairesSelectionPanel.vue'
+import TransfertsRecipientSelectionPanel from '~/components/transferts/TransfertsRecipientSelectionPanel.vue'
+import TransfertsSummaryBar from '~/components/transferts/TransfertsSummaryBar.vue'
 
 // Mock data - sera remplacé par les vraies données de l'API
 const mockFiles = [

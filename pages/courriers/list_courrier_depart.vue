@@ -458,6 +458,7 @@ const authToken = ref("");
 const archiveData = ref([]);
 const loading = ref(false);
 const error = ref(null);
+const config = useRuntimeConfig();
 
 // Recherche et filtres
 const globalSearch = ref("");
@@ -526,7 +527,7 @@ const transformerDonneesAPI = (reponseAPI) => {
     objet: courrier.document?.objet || '',
     date_courrier: formatDate(courrier.document?.date_courrier),
     url: courrier.document?.url 
-      ? `http://localhost:8000${courrier.document.url}` 
+      ? `${config.public.apiBase}${courrier.document.url}` 
       : '',
     type_depart: courrier.type_depart || '',
     date_depart: formatDate(courrier.date_depart),
@@ -546,7 +547,7 @@ const loadData = async () => {
   error.value = null;
 
   try {
-    const reponse = await $fetch('http://localhost:8000/api/courriers-departs', {
+    const reponse = await $fetch(`${config.public.apiBase}/courriers-departs`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${authToken.value}`,

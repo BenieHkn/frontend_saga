@@ -60,6 +60,7 @@ useHead({
 const store = useAffectationsStore()
 const toast = useToast()
 const authToken = ref('')
+const config = useRuntimeConfig()
 
 const courrierLoading = ref(false)
 const destinataireLoading = ref(false)
@@ -70,7 +71,7 @@ const loadCourriers = async () => {
   courrierLoading.value = true
   
   try {
-    const response = await $fetch('http://localhost:8000/api/courriers-arrives', {
+    const response = await $fetch(`${config.public.apiBase}/courriers-arrives`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -86,7 +87,7 @@ const loadCourriers = async () => {
       priority: courrier.document?.priority || 'standard',
       confidentiel: courrier.document?.confidentiel || false,
       url: courrier.document?.url
-        ? `http://localhost:8000${courrier.document.url}`
+        ? `${config.public.apiBase}${courrier.document.url}`
         : '',
     }))
 
@@ -130,7 +131,7 @@ const loadDestinataires = async () => {
       return
     }
 
-    const response = await $fetch(`http://localhost:8000/api/users/${user.id}/subordinates`, {
+    const response = await $fetch(`${config.public.apiBase}/users/${user.id}/subordinates`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -213,7 +214,7 @@ const handleSubmit = async () => {
     console.log('📤 Envoi du payload:', payload)
 
     // Envoyer la requête
-    const response = await $fetch('http://localhost:8000/api/affectations', {
+    const response = await $fetch(`${config.public.apiBase}/affectations`, {
       method: 'POST',
       body: payload,
       headers: {

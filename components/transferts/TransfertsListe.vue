@@ -94,7 +94,7 @@ import { useTransferts } from '~/composables/transferts/useTransferts'
 import DataTable from '~/components/DataTable.vue'
 
 // Composable
-const { tableData, loading, error, fetchTransferts } = useTransferts()
+const { tableData, loading, error, fetchTransferts, config } = useTransferts()
 
 // Colonnes du tableau
 const columns = ref([
@@ -142,7 +142,7 @@ const handleEdit = async (item) => {
   try {
     const token = localStorage.getItem('token') || localStorage.getItem('auth_token')
     
-    const response = await fetch(`http://localhost:8000/api/transferts/${item.id}`, {
+    const response = await fetch(`${config.public.apiBase}/transferts/${item.id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -171,7 +171,7 @@ const handleDelete = async (item) => {
     try {
       const token = localStorage.getItem('token') || localStorage.getItem('auth_token')
       
-      const response = await fetch(`http://localhost:8000/api/transferts/${item.id}`, {
+      const response = await fetch(`${config.public.apiBase}/transferts/${item.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

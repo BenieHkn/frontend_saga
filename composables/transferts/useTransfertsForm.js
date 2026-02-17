@@ -1,8 +1,10 @@
 import { ref } from 'vue'
 import { useTransfertsStore } from '~/stores/transferts'
+import { useRuntimeConfig } from '#imports'
 
 export const useTransfertsForm = () => {
   const store = useTransfertsStore()
+  const config = useRuntimeConfig()
   
   const loading = ref(false)
   const error = ref(null)
@@ -96,7 +98,7 @@ export const useTransfertsForm = () => {
 
             console.log("les données de transfert", transferData)
 
-            const response = await fetch('http://localhost:8000/api/transferts', {
+            const response = await fetch(`${config.public.apiBase}/transferts`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`,

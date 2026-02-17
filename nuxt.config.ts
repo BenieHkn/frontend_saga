@@ -14,7 +14,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     public: {
-      laravelApiUrl: 'http://localhost:8000/api',
+      apiBase: 'http://localhost:8000/api',
     }
   },
 

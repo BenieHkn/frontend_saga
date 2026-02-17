@@ -37,6 +37,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import TransfertsListe from '~/components/transferts/TransfertsListe.vue'
+import AffectationsEmises from '~/components/affectations/AffectationsEmises.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import AppTabs from '~/components/AppTabs.vue'
 

@@ -119,8 +119,8 @@ const loadCourriers = async () => {
 
     const response = await $fetch(
       selectedFunction.code === "DGML"
-        ? `http://localhost:8000/api/courriers-arrives/non-affectes`
-        : `http://localhost:8000/api/courriers-arrives/affectes/entite-user/${entite_user.id}`,
+        ? `${config.public.apiBase}/courriers-arrives/non-affectes`
+        : `${config.public.apiBase}/courriers-arrives/affectes/entite-user/${entite_user.id}`,
       {
         method: 'GET',
         headers: {
@@ -137,7 +137,7 @@ const loadCourriers = async () => {
       priority: courrier.priority || 'STANDARD',
       confidentiel: courrier.document?.confidentiel || false,
       url: courrier.document?.url
-        ? `http://localhost:8000${courrier.document.url}`
+        ? `${config.public.apiBase}${courrier.document.url}`
         : '',
     }))
 
@@ -210,7 +210,7 @@ const loadDestinataires = async () => {
       courrierLoading.value = false
       return
     }
-    const response = await $fetch(`http://localhost:8000/api/entite-users/${entite_user.id}/subordinates`, {
+    const response = await $fetch(`${config.public.apiBase}/entite-users/${entite_user.id}/subordinates`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -352,7 +352,7 @@ const handleSubmit = async () => {
     // Envoyer toutes les affectations en parallèle
     const responses = await Promise.all(
       affectations.map(payload =>
-        $fetch('http://localhost:8000/api/affectations', {
+        $fetch(`${config.public.apiBase}/affectations`, {
           method: 'POST',
           body: payload,
           headers: {

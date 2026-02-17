@@ -1,10 +1,12 @@
 // composables/affectations/useAffectations.js
 import { ref, computed } from 'vue'
+import { useRuntimeConfig } from '#imports'
 
 export const useAffectations = () => {
   const affectations = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const config = useRuntimeConfig()
 
   // Récupérer le token depuis localStorage
   const getToken = () => {
@@ -132,7 +134,7 @@ export const useAffectations = () => {
         throw new Error('Entité utilisateur non trouvée')
       }
 
-      const response = await fetch(`http://localhost:8000/api/affectations/user/${entite_user.id}/pending`, {
+      const response = await fetch(`${config.public.apiBase}/affectations/user/${entite_user.id}/pending`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

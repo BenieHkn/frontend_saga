@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   }
   try {
     // Appel à l'API Laravel pour l'envoi du lien de réinitialisation
-    const res = await $fetch(`${config.public.laravelApiUrl}/forgot-password`, {
+    const res = await $fetch(`${config.public.apiBase}/forgot-password`, {
       method: 'POST',
       body: { email },
       headers: {

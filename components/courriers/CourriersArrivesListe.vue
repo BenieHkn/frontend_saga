@@ -127,6 +127,7 @@ import Swal from 'sweetalert2'
 
 // Store
 const store = useAffectationsStore()
+const config = useRuntimeConfig()
 
 // --- Configuration colonnes ---
 const columns = [
@@ -212,7 +213,7 @@ const transformCourriers = (response) => {
     date_enregistrement: formatDate(courrier.document?.date_enreg),
     objet: courrier.document?.objet || '',
     date_courrier: formatDate(courrier.document?.date_courrier),
-    url: courrier.document?.url ? `http://localhost:8000${courrier.document.url}` : '',
+    url: courrier.document?.url ? `${config.public.apiBase}${courrier.document.url}` : '',
     type_arrivee: courrier.type_arrivee || '',
     priority: courrier.priority || '',
     // Garder les données complètes
@@ -353,7 +354,7 @@ const onDelete = async (item) => {
 
   try {
     const authToken = localStorage.getItem('auth_token')
-    await $fetch(`http://localhost:8000/api/courriers-arrives/${item.id}`, {
+    await $fetch(`${config.public.apiBase}/courriers-arrives/${item.id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${authToken}`,

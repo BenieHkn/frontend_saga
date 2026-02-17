@@ -1,10 +1,12 @@
 // composables/courriers/useCourriersArrives.js
 import { ref, computed } from 'vue'
+import { useRuntimeConfig } from '#imports'
 
 export const useCourriersArrives = () => {
   const courriers = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const config = useRuntimeConfig()
 
   // Récupérer le token depuis localStorage
   const getToken = () => {
@@ -56,7 +58,7 @@ export const useCourriersArrives = () => {
         throw new Error('Token d\'authentification non trouvé')
       }
 
-      const response = await fetch('http://localhost:8000/api/courriers-arrives', {
+      const response = await fetch(`${config.public.apiBase}/courriers-arrives`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

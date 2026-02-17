@@ -183,6 +183,7 @@ import Swal from 'sweetalert2'
 
 // Composable
 const { tableData, loading, error, fetchAffectations } = useAffectations()
+const config = useRuntimeConfig()
 
 // Colonnes du tableau
 const columns = ref([
@@ -494,7 +495,7 @@ const handleDelete = async (item) => {
 
   try {
     const authToken = localStorage.getItem('auth_token')
-    await $fetch(`http://localhost:8000/api/affectations/${item.id}`, {
+    await $fetch(`${config.public.apiBase}/affectations/${item.id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${authToken}`,
@@ -552,7 +553,7 @@ const handleBulkDelete = async (selected) => {
     const authToken = localStorage.getItem('auth_token')
     await Promise.all(
       selected.map(id =>
-        $fetch(`http://localhost:8000/api/affectations/${id}`, {
+        $fetch(`${config.public.apiBase}/affectations/${id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${authToken}` },
         })

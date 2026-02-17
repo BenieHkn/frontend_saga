@@ -639,7 +639,7 @@ const loadData = async () => {
   error.value = null;
 
   try {
-    const reponse = await $fetch('http://localhost:8000/api/affectations', {
+    const reponse = await $fetch(`${config.public.apiBase}/affectations`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -1088,7 +1088,7 @@ const deleteItem = async (item) => {
   }
 
   try {
-    await $fetch(`http://localhost:8000/api/affectations/${item.id}`, {
+    await $fetch(`${config.public.apiBase}/affectations/${item.id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -1157,7 +1157,7 @@ const deleteSelected = async () => {
     // Supprimer toutes les affectations sélectionnées
     await Promise.all(
       selectedRows.value.map(id =>
-        $fetch(`http://localhost:8000/api/affectations/${id}`, {
+        $fetch(`${config.public.apiBase}/affectations/${id}`, {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${authToken.value}`,

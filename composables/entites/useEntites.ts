@@ -25,7 +25,7 @@ export interface EntiteResponse {
 
 export const useEntites = () => {
   const config = useRuntimeConfig()
-  const baseURL = config.public.apiBase || 'http://localhost:8000/api'
+  const baseURL = config.public.apiBase
 
   const entites: Ref<Entite[]> = ref([])
   const entite: Ref<Entite | null> = ref(null)

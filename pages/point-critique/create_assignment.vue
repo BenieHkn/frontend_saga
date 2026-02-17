@@ -95,31 +95,94 @@
                 <p class="text-xs text-gray-500 mt-1">Sélectionnez le point critique à assigner</p>
               </div>
 
-                <!-- Statut et Intérim -->
-              <div class="flex items-center gap-6 pt-4 border-t border-gray-100">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" v-model="form.actif"
-                    class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
-                  <span class="text-sm font-medium text-gray-700">Fonction</span>
+              <!-- Type d'assignation (Radio buttons) -->
+              <div class="pt-4 border-t border-gray-100">
+                <label class="block text-sm font-medium text-gray-700 mb-3">
+                  Type d'assignation <span class="text-red-600">*</span>
                 </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" v-model="form.is_interim"
-                    class="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500" />
-                  <span class="text-sm font-medium text-gray-700">Intérim</span>
-                </label>
+                <div class="flex flex-col sm:flex-row gap-4">
+                  <!-- Option Fonction -->
+                  <label 
+                    class="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all"
+                    :class="assignationType === 'fonction' 
+                      ? 'border-indigo-500 bg-indigo-50' 
+                      : 'border-gray-200 hover:border-gray-300'"
+                  >
+                    <input 
+                      type="radio" 
+                      name="assignationType"
+                      value="fonction"
+                      v-model="assignationType"
+                      class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                    />
+                    <div class="flex-1">
+                      <span class="block text-sm font-semibold text-gray-900">Fonction</span>
+                      <span class="block text-xs text-gray-500 mt-0.5">
+                        Assignation permanente (démarre aujourd'hui)
+                      </span>
+                    </div>
+                  </label>
+
+                  <!-- Option Intérim -->
+                  <label 
+                    class="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all"
+                    :class="assignationType === 'interim' 
+                      ? 'border-orange-500 bg-orange-50' 
+                      : 'border-gray-200 hover:border-gray-300'"
+                  >
+                    <input 
+                      type="radio" 
+                      name="assignationType"
+                      value="interim"
+                      v-model="assignationType"
+                      class="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500"
+                    />
+                    <div class="flex-1">
+                      <span class="block text-sm font-semibold text-gray-900">Intérim</span>
+                      <span class="block text-xs text-gray-500 mt-0.5">
+                        Assignation temporaire (dates obligatoires)
+                      </span>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               <!-- Dates -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
-                  <UInput v-model="form.date_debut" type="date" class="w-full h-12" />
-                  <p class="text-xs text-gray-500 mt-1">Optionnel</p>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Date d'Assignation
+                    <span v-if="assignationType === 'interim'" class="text-red-600">*</span>
+                  </label>
+                  <UInput 
+                    v-model="form.date_debut" 
+                    type="date" 
+                    class="w-full h-12"
+                    :disabled="assignationType === 'fonction'"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">
+                    <span v-if="assignationType === 'fonction'">Automatiquement définie à aujourd'hui</span>
+                    <span v-else-if="assignationType === 'interim'">Obligatoire pour les intérims</span>
+                    <span v-else>Optionnel</span>
+                  </p>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Date de fin</label>
-                  <UInput v-model="form.date_fin" type="date" class="w-full h-12" :min="form.date_debut" />
-                  <p class="text-xs text-gray-500 mt-1">Optionnel - Doit être après la date de début</p>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Date de fin
+                    <span v-if="assignationType === 'interim'" class="text-red-600">*</span>
+                  </label>
+                  <UInput 
+                    v-model="form.date_fin" 
+                    type="date" 
+                    class="w-full h-12" 
+                    :min="form.date_debut"
+                    :disabled="assignationType === 'fonction'"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">
+                    <span v-if="assignationType === 'fonction'">Non applicable pour les fonctions</span>
+                    <span v-else-if="assignationType === 'interim'">Obligatoire pour les intérims - Doit être après la date de début</span>
+                    <span v-else>Optionnel - Doit être après la date de début</span>
+                  </p>
                 </div>
               </div>
 
@@ -203,12 +266,6 @@
                   <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
                 </ul>
               </div>
-              <div v-if="errorRequest" class="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                <p class="text-sm font-bold text-red-900">Erreur serveur :</p>
-                <p class="text-sm text-red-600 mt-1">
-                  {{ errorRequest.message || errorRequest.data?.message || 'Une erreur est survenue' }}
-                </p>
-              </div>
             </form>
           </div>
         </div>
@@ -259,6 +316,9 @@ const selectedFile           = ref(null)
 const users                  = ref([])
 const pointsCritiques        = ref([])
 const errors                 = ref([])
+
+// Type d'assignation: 'fonction' ou 'interim'
+const assignationType = ref('fonction')
 
 const form = ref({
   user_id:    null,
@@ -318,6 +378,24 @@ const fileIconColor = computed(() => {
   if (t.startsWith('image/'))  return 'text-purple-500'
   if (t.includes('word'))      return 'text-blue-500'
   return 'text-gray-400'
+})
+
+// ── Watchers ───────────────────────────────────────────────────────────────
+watch(assignationType, (newType) => {
+  if (newType === 'fonction') {
+    // Fonction: actif = true, is_interim = false, dates auto
+    form.value.actif = true
+    form.value.is_interim = false
+    const today = new Date().toISOString().split('T')[0]
+    form.value.date_debut = today
+    form.value.date_fin = ''
+  } else if (newType === 'interim') {
+    // Intérim: actif = false, is_interim = true, dates vides (à remplir)
+    form.value.actif = false
+    form.value.is_interim = true
+    form.value.date_debut = ''
+    form.value.date_fin = ''
+  }
 })
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -381,6 +459,15 @@ const validateForm = () => {
     newErrors.push('Veuillez sélectionner un point critique')
   }
   
+  if (assignationType.value === 'interim') {
+    if (!form.value.date_debut) {
+      newErrors.push('La date de début est obligatoire pour un intérim')
+    }
+    if (!form.value.date_fin) {
+      newErrors.push('La date de fin est obligatoire pour un intérim')
+    }
+  }
+  
   if (form.value.date_debut && form.value.date_fin) {
     if (new Date(form.value.date_fin) < new Date(form.value.date_debut)) {
       newErrors.push('La date de fin doit être après ou égale à la date de début')
@@ -395,7 +482,7 @@ const validateForm = () => {
 const loadUsers = async () => {
   loadingUsers.value = true
   try {
-    const res = await $fetch(`${config.public.apiBase || 'http://localhost:8000'}/api/users`, {
+    const res = await $fetch(`${config.public.apiBase}/users`, {
       method: 'GET',
       headers: { 
         Authorization: `Bearer ${getToken()}`, 
@@ -442,7 +529,7 @@ const loadUsers = async () => {
 const loadPointsCritiques = async () => {
   loadingPointsCritiques.value = true
   try {
-    const res = await $fetch(`${config.public.apiBase || 'http://localhost:8000'}/api/points-critiques`, {
+    const res = await $fetch(`${config.public.apiBase}/points-critiques`, {
       method: 'GET',
       headers: { 
         Authorization: `Bearer ${getToken()}`, 
@@ -490,6 +577,9 @@ const loadPointsCritiques = async () => {
 onMounted(async () => {
   try {
     await Promise.allSettled([loadUsers(), loadPointsCritiques()])
+    // Initialiser avec le type par défaut
+    const today = new Date().toISOString().split('T')[0]
+    form.value.date_debut = today
   } finally {
     loadingInitial.value = false
   }
@@ -522,13 +612,17 @@ const handleSubmit = async () => {
     formData.append('statut',     form.value.actif ? '1' : '0')
     formData.append('is_interim', form.value.is_interim ? '1' : '0')
 
-    // Dates optionnelles
-    if (form.value.date_debut) {
-      formData.append('date_debut', form.value.date_debut)
-    }
-    
-    if (form.value.date_fin) {
-      formData.append('date_fin', form.value.date_fin)
+    // Dates en fonction du type
+    if (assignationType.value === 'fonction') {
+      const today = new Date().toISOString().split('T')[0]
+      formData.append('date_debut', today)
+    } else if (assignationType.value === 'interim') {
+      if (form.value.date_debut) {
+        formData.append('date_debut', form.value.date_debut)
+      }
+      if (form.value.date_fin) {
+        formData.append('date_fin', form.value.date_fin)
+      }
     }
 
     // Fichier optionnel
@@ -540,13 +634,12 @@ const handleSubmit = async () => {
     console.log('📤 Envoi de l\'assignation...')
 
     const response = await $fetch(
-      `${config.public.apiBase || 'http://localhost:8000'}/api/point-critique-user`,
+      `${config.public.apiBase}/point-critique-user`,
       {
         method:  'POST',
         headers: {
           Authorization: `Bearer ${getToken()}`,
           Accept:        'application/json',
-          // Ne pas définir Content-Type, laissez le navigateur le faire pour FormData
         },
         body: formData,
       }
@@ -554,11 +647,9 @@ const handleSubmit = async () => {
 
     console.log('✅ Réponse du serveur:', response)
 
-    // si response sucess false fais un toast du message d'erreur sinon affiche le modal de succès
     if (response.success === false) {
       throw new Error(response.message || 'Erreur lors de la création')
     }
-
 
     if (response.success) {
       showSuccessModal.value = true
@@ -569,10 +660,11 @@ const handleSubmit = async () => {
       })
 
       // Reset du formulaire
+      assignationType.value = 'fonction'
       form.value = { 
         user_id: null, 
         entite_id: null, 
-        date_debut: '', 
+        date_debut: new Date().toISOString().split('T')[0], 
         date_fin: '', 
         actif: true, 
         is_interim: false 

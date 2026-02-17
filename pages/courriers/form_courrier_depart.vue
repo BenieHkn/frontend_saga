@@ -155,6 +155,7 @@ const selectedFile = ref(null);
 const fileInput = ref(null);
 const loading = ref(false);
 const authToken = ref("");
+const config = useRuntimeConfig();
 
 const form = ref({
   type_depart: "externe",
@@ -288,7 +289,7 @@ const handleSubmit = async () => {
       authToken = localStorage.getItem("auth_token") || "";
     }
 
-    const response = await $fetch("http://localhost:8000/api/courriers-departs", {
+    const response = await $fetch(`${config.public.apiBase}/courriers-departs`, {
       method: "POST",
       body: formData,
       headers: {

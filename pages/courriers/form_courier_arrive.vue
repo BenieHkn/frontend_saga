@@ -424,7 +424,7 @@ const handleSubmit = async () => {
 
     // Appel API
     // const response = await $fetch(`${config.laravelApiUrl}/courriers-arrives`, {
-    const response = await $fetch("http://localhost:8000/api/courriers-arrives", {
+    const response = await $fetch(`${config.public.apiBase}/courriers-arrives`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${authToken.value}`,

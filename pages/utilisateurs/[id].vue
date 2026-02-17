@@ -613,7 +613,7 @@ const validateForm = () => {
 //   loadingFonctions.value = true
 //   try {
 //     const response = await $fetch(
-//       `${config.public.apiBase || 'http://localhost:8000'}/api/fonctions`,
+//       `${config.public.apiBase}/fonctions`,
 //       { method: 'GET', headers: { Authorization: `Bearer ${authToken.value}`, Accept: 'application/json' } }
 //     )
 //     fonctions.value = response?.data ?? (Array.isArray(response) ? response : [])
@@ -630,7 +630,7 @@ const loadEntites = async () => {
   loadingEntites.value = true
   try {
     const response = await $fetch(
-      `${config.public.apiBase || 'http://localhost:8000'}/api/entites`,
+      `${config.public.apiBase}/entites`,
       { method: 'GET', headers: { Authorization: `Bearer ${authToken.value}`, Accept: 'application/json' } }
     )
     entites.value = response?.data ?? (Array.isArray(response) ? response : [])
@@ -658,7 +658,7 @@ const formatForInput = (dateString) => {
 const loadUser = async () => {
   try {
     const response = await $fetch(
-      `${config.public.apiBase || 'http://localhost:8000'}/api/users/${userId}`,
+      `${config.public.apiBase}/users/${userId}`,
       { method: 'GET', headers: { Authorization: `Bearer ${authToken.value}`, Accept: 'application/json' } }
     )
 
@@ -797,7 +797,7 @@ const saveFonctionModal = async () => {
     }
 
     const response = await $fetch(
-      `${config.public.apiBase || 'http://localhost:8000'}/api/fonction-users`,
+      `${config.public.apiBase}/fonction-users`,
       {
         method: 'POST',
         headers: {
@@ -862,7 +862,7 @@ const updateFonctionActif = async (fn) => {
 
   try {
     await $fetch(
-      `${config.public.apiBase || 'http://localhost:8000'}/api/fonction-users/${fn.fonction_user_id}`,
+      `${config.public.apiBase}/fonction-users/${fn.fonction_user_id}`,
       {
         method: 'PUT',
         headers: {
@@ -898,7 +898,7 @@ const removeFonction = async (idx, fn) => {
     fn.deleting = true
     try {
       await $fetch(
-        `${config.public.apiBase || 'http://localhost:8000'}/api/fonction-users/${fn.fonction_user_id}`,
+        `${config.public.apiBase}/fonction-users/${fn.fonction_user_id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${authToken.value}`, Accept: 'application/json' },
@@ -951,7 +951,7 @@ const handleSubmit = async () => {
     }
 
     const response = await $fetch(
-      `${config.public.apiBase || 'http://localhost:8000'}/api/users/${userId}`,
+      `${config.public.apiBase}/users/${userId}`,
       {
         method:  'PUT',
         headers: {

@@ -253,6 +253,7 @@ const toast = useToast();
 const dataTableRef = ref(null);
 const selectedRows = ref([]);
 const isResponsable = ref(false); // ✅ NOUVEAU : Statut responsable de l'utilisateur
+const config = useRuntimeConfig();
 
 // ============================================================================
 // UTILITAIRES
@@ -300,7 +301,7 @@ const transformerDonneesAPI = (reponseAPI) => {
       reference_courrier: affectation?.courrier_arrive?.document?.reference || '',
       objet_courrier: affectation?.courrier_arrive?.document?.objet || '',
       doc_courrier: affectation?.courrier_arrive?.document?.url
-        ? `http://localhost:8000${affectation.courrier_arrive.document.url}`
+        ? `${config.public.apiBase}${affectation.courrier_arrive.document.url}`
         : '',
       date_affect: formatDate(affectation.date_affect),
       instructions: affectation.instructions || '',
@@ -359,7 +360,7 @@ const loadData = async () => {
       return
     }
 
-    const reponse = await $fetch('http://localhost:8000/api/affectations/destinataire/' + entite_user.id, {
+    const reponse = await $fetch(`${config.public.apiBase}/affectations/destinataire/` + entite_user.id, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -528,7 +529,7 @@ const handleDelete = async (item) => {
   if (!result.isConfirmed) return;
 
   try {
-    await $fetch(`http://localhost:8000/api/affectations/${item.id}`, {
+    await $fetch(`${config.public.apiBase}/affectations/${item.id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -622,7 +623,7 @@ const handleDeleteSelected = async (selected) => {
   try {
     await Promise.all(
       selected.map(id =>
-        $fetch(`http://localhost:8000/api/affectations/${id}`, {
+        $fetch(`${config.public.apiBase}/affectations/${id}`, {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${authToken.value}`,

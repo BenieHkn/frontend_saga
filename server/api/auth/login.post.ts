@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     // Appel API externe avec gestion d'erreur
     let response: any
     try {
-      response = await $fetch(`${config.public.laravelApiUrl}/login`, {
+      response = await $fetch(`${config.public.apiBase}/login`, {
         method: 'POST',
         body,
         headers: {

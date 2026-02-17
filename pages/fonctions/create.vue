@@ -211,6 +211,7 @@ const selectedEntite = ref(null);
 const formErrors = ref({});
 const showDebug = ref(false); // Mettre à true pour voir les infos de debug
 const debugInfo = ref({});
+const config = useRuntimeConfig();
 
 // Form data - EXACTEMENT comme attendu par l'API
 const form = ref({
@@ -348,7 +349,7 @@ const loadEntites = async () => {
     }
 
     // Essayer l'API
-    const response = await $fetch('http://localhost:8000/api/entites', {
+    const response = await $fetch(`${config.public.apiBase}/entites`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

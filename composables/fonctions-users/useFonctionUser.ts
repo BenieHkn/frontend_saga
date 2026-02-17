@@ -1,6 +1,6 @@
 export const useFonctionUser = () => {
   const config = useRuntimeConfig()
-  const baseURL = config.public.apiBase || 'http://localhost:8000/api'
+  const baseURL = config.public.apiBase
   const toast = useToast()
 
   // Récupérer le token d'authentification

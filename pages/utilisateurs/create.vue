@@ -23,7 +23,7 @@
             <form v-else @submit.prevent="handleSubmit" class="space-y-4 mt-6">
               
               <!-- Type d'utilisateur -->
-               <div class="flex items-center gap-8 pt-4 border-t border-gray-100">
+              <div class="flex items-center gap-8 pt-4 border-t border-gray-100">
                 <div class="flex items-center gap-2">
                   <input 
                     type="checkbox" 
@@ -36,42 +36,82 @@
                 </div>
               </div>
 
-              <!-- Entité -->
+              <!-- Entité avec recherche -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Entité <span class="text-red-600">*</span>
                 </label>
-                <select 
-                  v-model="form.entite_id"
-                  class="w-full h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                >
-                  <option value="" disabled>Sélectionner une entité</option>
-                  <option 
-                    v-for="entite in entites" 
-                    :key="entite.id" 
-                    :value="entite.id"
+                <div class="relative">
+                  <!-- Champ de recherche -->
+                  <div class="relative">
+                    <input
+                      v-model="searchEntite"
+                      @focus="showEntiteDropdown = true"
+                      @input="filterEntites"
+                      type="text"
+                      placeholder="Rechercher une entité..."
+                      class="w-full h-12 px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                    />
+                    <svg 
+                      class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+
+                  <!-- Dropdown des résultats -->
+                  <div
+                    v-if="showEntiteDropdown && filteredEntites.length > 0"
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
                   >
-                    {{ entite.libelle }}
-                    <!-- <template v-if="entite.fonction"> - {{ entite.fonction }}</template>
-                    <template v-if="entite.is_critique"> (Critique)</template> -->
-                  </option>
-                </select>
+                    <div
+                      v-for="entite in filteredEntites"
+                      :key="entite.id"
+                      @click="selectEntite(entite)"
+                      class="px-4 py-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                    >
+                      <div class="flex flex-col">
+                        <span class="font-semibold text-gray-900">{{ entite.libelle }}</span>
+                        <span v-if="entite.code" class="text-xs text-gray-500 mt-0.5">Code: {{ entite.code }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Entité sélectionnée -->
+                  <div v-if="selectedEntite" class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md">
+                    <span class="text-sm font-medium text-blue-900">{{ selectedEntite.libelle }}</span>
+                    <button
+                      type="button"
+                      @click="clearEntite"
+                      class="text-blue-600 hover:text-blue-800"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Tapez pour rechercher et sélectionner une entité</p>
               </div>
 
-              <!-- Matricule et Nom -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Matricule <span class="text-red-600">*</span>
-                  </label>
-                  <input 
-                    v-model="form.matricule"
-                    type="text"
-                    placeholder="Matricule"
-                    class="w-full h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+              <!-- Matricule seul sur une ligne -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Matricule <span class="text-red-600">*</span>
+                </label>
+                <input 
+                  v-model="form.matricule"
+                  type="text"
+                  placeholder="Matricule"
+                  class="w-full h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
 
+              <!-- Nom et Prénoms sur la même ligne -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Nom <span class="text-red-600">*</span>
@@ -83,10 +123,7 @@
                     class="w-full h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-              </div>
 
-              <!-- Prénoms et Email -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Prénoms <span class="text-red-600">*</span>
@@ -98,7 +135,10 @@
                     class="w-full h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
+              </div>
 
+              <!-- Email et Téléphone -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Email <span class="text-red-600">*</span>
@@ -110,10 +150,7 @@
                     class="w-full h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-              </div>
 
-              <!-- Téléphone et Date de Prise de Service -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Téléphone <span class="text-red-600">*</span>
@@ -125,45 +162,19 @@
                     class="w-full h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Date de Prise de Service
-                  </label>
-                  <input 
-                    v-model="form.datePriseService"
-                    type="date"
-                    class="w-full h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
               </div>
 
-              <!-- Mot de passe -->
-              <!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Mot de passe <span class="text-red-600">*</span>
-                  </label>
-                  <input 
-                    v-model="form.password"
-                    type="password"
-                    placeholder="Mot de passe (min. 8 caractères)"
-                    class="w-full h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Confirmer le mot de passe <span class="text-red-600">*</span>
-                  </label>
-                  <input 
-                    v-model="form.password_confirmation"
-                    type="password"
-                    placeholder="Confirmer le mot de passe"
-                    class="w-full h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div> -->
+              <!-- Date de Prise de Service -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Date de Prise de Service
+                </label>
+                <input 
+                  v-model="form.datePriseService"
+                  type="date"
+                  class="w-full h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
 
               <!-- Checkbox: Administrateur et Statut -->
               <div class="flex items-center gap-8 pt-4 border-t border-gray-100">
@@ -268,8 +279,12 @@ const form = ref({
 
 const errors = ref([]);
 
-// Données pour les selects
+// Données pour les selects et recherche
 const entites = ref([]);
+const searchEntite = ref('');
+const filteredEntites = ref([]);
+const showEntiteDropdown = ref(false);
+const selectedEntite = ref(null);
 
 // ✅ COMPUTED
 const isFormValid = computed(() => {
@@ -283,6 +298,46 @@ const isFormValid = computed(() => {
     form.value.entite_id !== null
   );
 });
+
+// ✅ MÉTHODES DE RECHERCHE D'ENTITÉ
+const filterEntites = () => {
+  const search = searchEntite.value.toLowerCase().trim();
+  
+  if (search === '') {
+    filteredEntites.value = entites.value;
+  } else {
+    filteredEntites.value = entites.value.filter(entite => {
+      const libelle = (entite.libelle || '').toLowerCase();
+      const code = (entite.code || '').toLowerCase();
+      return libelle.includes(search) || code.includes(search);
+    });
+  }
+  
+  showEntiteDropdown.value = true;
+};
+
+const selectEntite = (entite) => {
+  form.value.entite_id = entite.id;
+  selectedEntite.value = entite;
+  searchEntite.value = entite.libelle;
+  showEntiteDropdown.value = false;
+};
+
+const clearEntite = () => {
+  form.value.entite_id = '';
+  selectedEntite.value = null;
+  searchEntite.value = '';
+  filteredEntites.value = entites.value;
+};
+
+// Fermer le dropdown si on clique ailleurs
+if (process.client) {
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.relative')) {
+      showEntiteDropdown.value = false;
+    }
+  });
+}
 
 // ✅ WATCHERS
 watch(() => form.value.estResponsable, (newValue) => {
@@ -313,12 +368,6 @@ const validateForm = () => {
   if (!form.value.telephone.trim()) {
     newErrors.push('Le téléphone est obligatoire');
   }
-  // if (!form.value.password) {
-  //   newErrors.push('Le mot de passe est obligatoire');
-  // }
-  // if (!form.value.password_confirmation) {
-  //   newErrors.push('La confirmation du mot de passe est obligatoire');
-  // }
  
   if (!form.value.entite_id) {
     newErrors.push('L\'entité est obligatoire');
@@ -328,15 +377,6 @@ const validateForm = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (form.value.email && !emailRegex.test(form.value.email)) {
     newErrors.push('L\'email n\'est pas valide');
-  }
-
-  // Validation mot de passe
-  if (form.value.password && form.value.password.length < 8) {
-    newErrors.push('Le mot de passe doit contenir au moins 8 caractères');
-  }
-
-  if (form.value.password !== form.value.password_confirmation) {
-    newErrors.push('Les mots de passe ne correspondent pas');
   }
 
   errors.value = newErrors;
@@ -355,7 +395,7 @@ onMounted(async () => {
     console.log('🔄 Chargement des entités...');
 
     // Charger les entités
-    const entitesResponse = await $fetch(`${config.public.apiBase || 'http://localhost:8000'}/api/entites`, {
+    const entitesResponse = await $fetch(`${config.public.apiBase}/entites`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -372,6 +412,8 @@ onMounted(async () => {
     } else {
       entites.value = [];
     }
+    
+    filteredEntites.value = entites.value;
     
     console.log('✅ Entités chargées:', entites.value.length, entites.value);
 
@@ -417,8 +459,6 @@ const handleSubmit = async () => {
       prenoms: form.value.prenoms.trim(),
       email: form.value.email.trim(),
       telephone: form.value.telephone.trim(),
-      // password: form.value.password,
-      // password_confirmation: form.value.password_confirmation,
       datePriseService: form.value.datePriseService || null,
       estAdministrateur: form.value.estAdministrateur,
       statut: form.value.statut,
@@ -429,7 +469,7 @@ const handleSubmit = async () => {
     console.log('Données à envoyer:', userData);
 
     // Appel API
-    const response = await $fetch(`${config.public.apiBase || 'http://localhost:8000'}/api/users`, {
+    const response = await $fetch(`${config.public.apiBase}/users`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -455,14 +495,14 @@ const handleSubmit = async () => {
         prenoms: '',
         email: '',
         telephone: '',
-        // password: '',
-        // password_confirmation: '',
         datePriseService: '',
         estAdministrateur: false,
         statut: true,
-        estResponsable: '',
+        estResponsable: false,
         entite_id: '',
       };
+      
+      clearEntite();
 
       // Redirection après 1.5 secondes
       setTimeout(() => {

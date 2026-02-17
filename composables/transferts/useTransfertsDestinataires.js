@@ -1,11 +1,13 @@
 // composables/transferts/useTransfertsDestinataires.js
 import { ref, computed } from 'vue'
+import { useRuntimeConfig } from '#app'
 
 export const useDestinataires = () => {
   const destinataires = ref([])
   const loading = ref(false)
   const error = ref(null)
   const accessDenied = ref(false) // ✅ NOUVEAU : Flag pour 403
+  const config = useRuntimeConfig()
 
   // 🔐 Récupérer le token
   const getToken = () => {
@@ -99,7 +101,7 @@ export const useDestinataires = () => {
       console.log(`🎯 Recherche de collègues de même rang pour l'entité: ${entite_user.id}`)
 
       // 📡 Appel à l'endpoint /entite-users/{id}/same-rank
-      const response = await fetch(`http://localhost:8000/api/entite-users/${entite_user.id}/same-rank`, {
+      const response = await fetch(`${config.public.apiBase}/entite-users/${entite_user.id}/same-rank`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'

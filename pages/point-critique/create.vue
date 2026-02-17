@@ -64,29 +64,86 @@
                 </p>
               </div>
 
-              <!-- Entité Parent -->
+              <!-- Entité Parent avec recherche -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Entité Parent
                 </label>
-                <USelectMenu 
-                  v-model="selectedParent" 
-                  :options="entitesOptions"
-                  placeholder="Sélectionner l'entité parent (optionnel)"
-                  class="w-full"
-                  :ui="{ 
-                    height: 'h-[42px]',
-                    base: 'cursor-pointer'
-                  }"
-                  @update:model-value="handleParentSelect"
-                >
-                  <template #option="{ option }">
-                    <div class="flex flex-col py-1">
-                      <span class="font-semibold">{{ option.display }}</span>
-                      <span class="text-xs text-gray-500 truncate">{{ option.fonction || option.libelle }}</span>
+                <div class="relative">
+                  <!-- Champ de recherche -->
+                  <div class="relative">
+                    <input
+                      v-model="searchEntiteParent"
+                      @focus="showEntiteDropdown = true"
+                      @input="filterEntites"
+                      type="text"
+                      placeholder="Rechercher une entité parent..."
+                      class="w-full h-12 px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                      :disabled="loading"
+                    />
+                    <svg 
+                      class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+
+                  <!-- Dropdown des résultats -->
+                  <div
+                    v-if="showEntiteDropdown && filteredEntites.length > 0"
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                  >
+                    <div
+                      v-for="entite in filteredEntites"
+                      :key="entite.id"
+                      @click="selectEntiteParent(entite)"
+                      class="px-4 py-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                    >
+                      <div class="flex flex-col">
+                        <div class="flex items-center space-x-2">
+                          <span class="font-semibold text-gray-900">{{ entite.code }}</span>
+                          <span 
+                            v-if="entite.is_critique"
+                            class="px-1.5 py-0.5 text-xs rounded bg-red-100 text-red-800"
+                          >
+                            Critique
+                          </span>
+                        </div>
+                        <span class="text-sm text-gray-600 mt-0.5">{{ entite.libelle }}</span>
+                        <span v-if="entite.fonction" class="text-xs text-gray-500 italic mt-0.5">{{ entite.fonction }}</span>
+                      </div>
                     </div>
-                  </template>
-                </USelectMenu>
+                  </div>
+
+                  <!-- Message si aucun résultat -->
+                  <div
+                    v-if="showEntiteDropdown && searchEntiteParent && filteredEntites.length === 0"
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-4"
+                  >
+                    <p class="text-sm text-gray-500 text-center">Aucune entité ne correspond à votre recherche</p>
+                  </div>
+
+                  <!-- Entité parent sélectionnée -->
+                  <div v-if="selectedParent" class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md">
+                    <div class="flex flex-col">
+                      <span class="text-sm font-medium text-blue-900">{{ selectedParent.code }} - {{ selectedParent.libelle }}</span>
+                      <span v-if="selectedParent.fonction" class="text-xs text-blue-700">{{ selectedParent.fonction }}</span>
+                    </div>
+                    <button
+                      type="button"
+                      @click="clearEntiteParent"
+                      class="text-blue-600 hover:text-blue-800 ml-2"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Tapez pour rechercher et sélectionner une entité parent (optionnel)</p>
                 <p v-if="formErrors.parent_entite_id" class="text-red-600 text-sm font-bold mt-1">
                   {{ formErrors.parent_entite_id }}
                 </p>
@@ -151,13 +208,13 @@
         <!-- Right Column: Information Panel -->
         <div class="lg:col-span-6">
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Informations sur les entités</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Informations sur les points critiques</h3>
             <div class="space-y-4">
               <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 class="font-medium text-blue-800 mb-2">À propos des entités</h4>
+                <h4 class="font-medium text-blue-800 mb-2">À propos des points critiques</h4>
                 <p class="text-sm text-blue-700">
-                  Les entités représentent les différentes unités organisationnelles de votre structure.
-                  Chaque entité peut avoir une entité parent pour établir une hiérarchie claire.
+                  Les points critiques représentent les différentes unités organisationnelles de votre structure.
+                  Chaque point critique peut avoir une entité parent pour établir une hiérarchie claire.
                 </p>
               </div>
 
@@ -166,10 +223,9 @@
                 <h4 class="font-medium text-purple-800 mb-2">Guide des champs</h4>
                 <ul class="space-y-2 text-sm text-purple-700">
                   <li><strong>Code :</strong> Identifiant unique court (ex: DIR, DRH)</li>
-                  <li><strong>Libellé :</strong> Nom complet de l'entité</li>
-                  <li><strong>Fonction :</strong> Rôle ou mission de l'entité (optionnel)</li>
+                  <li><strong>Libellé :</strong> Nom complet du point critique</li>
+                  <li><strong>Fonction :</strong> Rôle ou mission du point critique (optionnel)</li>
                   <li><strong>Entité Parent :</strong> Position dans la hiérarchie (optionnel)</li>
-                  <li><strong>Critique :</strong> Entité essentielle au fonctionnement</li>
                 </ul>
               </div>
 
@@ -205,33 +261,11 @@
               <div v-else class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <h4 class="font-medium text-yellow-800 mb-2">Aucune entité disponible</h4>
                 <p class="text-sm text-yellow-700">
-                  Cette entité sera la première de la hiérarchie.
+                  Ce point critique sera le premier de la hiérarchie.
                 </p>
               </div>
-              
-              <!-- Affichage de l'entité parent sélectionnée -->
-              <!-- <div v-if="selectedParent" class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                <h4 class="font-medium text-indigo-800 mb-2">Entité parent sélectionnée</h4>
-                <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span class="text-indigo-600 font-bold">{{ getInitials(selectedParent.display) }}</span>
-                  </div>
-                  <div class="flex-1">
-                    <p class="font-semibold text-indigo-900">{{ selectedParent.display }}</p>
-                    <p v-if="selectedParent.fonction" class="text-xs text-indigo-700">
-                      {{ selectedParent.fonction }}
-                    </p>
-                    <span 
-                      v-if="selectedParent.is_critique"
-                      class="inline-block mt-1 px-2 py-0.5 text-xs rounded bg-red-100 text-red-800"
-                    >
-                      Entité critique
-                    </span>
-                  </div>
-                </div>
-              </div> -->
 
-              <!-- Aperçu de la nouvelle entité -->
+              <!-- Aperçu du nouveau point critique -->
               <div v-if="form.code || form.libelle" class="bg-slate-50 border border-slate-200 rounded-lg p-4">
                 <h4 class="font-medium text-slate-800 mb-2">Aperçu</h4>
                 <div class="space-y-2 text-sm">
@@ -247,11 +281,10 @@
                     <span class="text-slate-600">Fonction:</span>
                     <span class="font-semibold text-slate-900">{{ form.fonction }}</span>
                   </div>
-                  <!-- <div v-if="form.is_critique" class="flex items-center space-x-2">
-                    <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-800 font-semibold">
-                      🔴 Entité critique
-                    </span>
-                  </div> -->
+                  <div v-if="selectedParent" class="flex items-center space-x-2">
+                    <span class="text-slate-600">Entité parent:</span>
+                    <span class="font-semibold text-slate-900">{{ selectedParent.code }} - {{ selectedParent.libelle }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -264,7 +297,7 @@
 
 <script setup>
 useHead({
-  title: "Nouvelle Entité - Sagar Revolution",
+  title: "Nouveau Point Critique - Sagar Revolution",
 });
 
 // ✅ ÉTATS
@@ -272,6 +305,11 @@ const loading = ref(false);
 const errorRequest = ref(null);
 const selectedParent = ref(null);
 const formErrors = ref({});
+
+// États pour la recherche d'entité parent
+const searchEntiteParent = ref('');
+const filteredEntites = ref([]);
+const showEntiteDropdown = ref(false);
 
 // Form data avec TOUS les champs de la migration
 const form = ref({
@@ -284,44 +322,52 @@ const form = ref({
 
 // Liste des entités
 const entitesList = ref([]);
-const entitesOptions = ref([]);
 
-// Formater les options pour USelectMenu
-const formatEntitesOptions = (entitesList) => {
-  return entitesList.map(entite => ({
-    id: entite.id,
-    display: `${entite.code} - ${entite.libelle}`,
-    code: entite.code,
-    libelle: entite.libelle,
-    fonction: entite.fonction,
-    is_critique: entite.is_critique
-  }));
-};
-
-// Gérer la sélection de l'entité parent
-const handleParentSelect = (selectedOption) => {
-  console.log('Entité parent sélectionnée:', selectedOption);
+// ✅ MÉTHODES DE RECHERCHE D'ENTITÉ PARENT
+const filterEntites = () => {
+  const search = searchEntiteParent.value.toLowerCase().trim();
   
-  if (selectedOption && selectedOption.id) {
-    form.value.parent_entite_id = selectedOption.id;
-    selectedParent.value = selectedOption;
-    // Effacer l'erreur sur ce champ
-    delete formErrors.value.parent_entite_id;
+  if (search === '') {
+    filteredEntites.value = entitesList.value;
   } else {
-    form.value.parent_entite_id = null;
-    selectedParent.value = null;
+    filteredEntites.value = entitesList.value.filter(entite => {
+      const code = (entite.code || '').toLowerCase();
+      const libelle = (entite.libelle || '').toLowerCase();
+      const fonction = (entite.fonction || '').toLowerCase();
+      return code.includes(search) || libelle.includes(search) || fonction.includes(search);
+    });
   }
+  
+  showEntiteDropdown.value = true;
 };
 
-// Obtenir les initiales
-const getInitials = (text) => {
-  if (!text) return '';
-  return text.split(' ')
-    .map(word => word.charAt(0))
-    .join('')
-    .toUpperCase()
-    .substring(0, 2);
+const selectEntiteParent = (entite) => {
+  form.value.parent_entite_id = entite.id;
+  selectedParent.value = entite;
+  searchEntiteParent.value = `${entite.code} - ${entite.libelle}`;
+  showEntiteDropdown.value = false;
+  
+  // Effacer l'erreur sur ce champ
+  delete formErrors.value.parent_entite_id;
+  
+  console.log('Entité parent sélectionnée:', entite);
 };
+
+const clearEntiteParent = () => {
+  form.value.parent_entite_id = null;
+  selectedParent.value = null;
+  searchEntiteParent.value = '';
+  filteredEntites.value = entitesList.value;
+};
+
+// Fermer le dropdown si on clique ailleurs
+if (process.client) {
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.relative')) {
+      showEntiteDropdown.value = false;
+    }
+  });
+}
 
 // Charger les entités existantes
 const loadEntites = async () => {
@@ -374,8 +420,8 @@ const loadEntites = async () => {
   } catch (error) {
     console.error('Erreur lors du chargement des entités:', error);
   } finally {
-    entitesOptions.value = formatEntitesOptions(entitesList.value);
-    console.log('Options formatées:', entitesOptions.value.length);
+    filteredEntites.value = entitesList.value;
+    console.log('Entités disponibles pour filtre:', filteredEntites.value.length);
   }
 };
 
@@ -450,7 +496,6 @@ const handleSubmit = async () => {
       libelle: form.value.libelle.trim(),
       fonction: form.value.fonction.trim() || null,
       parent_entite_id: form.value.parent_entite_id || null,
-      // is_critique: form.value.is_critique
     };
 
     console.log('🚀 Données à envoyer:', data);
@@ -473,28 +518,27 @@ const handleSubmit = async () => {
       body: data
     });
 
-    console.debug('✅ Réponse API:', response);
+    console.log('✅ Réponse API:', response);
 
     // Vérifier le succès
     if (response.success || response.data?.id || response.id) {
       useToast().add({
         title: "Succès",
-        description: response.message || "L'entité a été créée avec succès",
+        description: response.message || "Le point critique a été créé avec succès",
         color: "green",
       });
 
-      // Ajouter la nouvelle entité à la liste locale
+      // Ajouter le nouveau point critique à la liste locale
       const newEntite = {
         id: response.id || response.data?.id || Date.now(),
         code: form.value.code,
         libelle: form.value.libelle,
         fonction: form.value.fonction,
         parent_entite_id: form.value.parent_entite_id,
-        // is_critique: form.value.is_critique
       };
       
       entitesList.value = [newEntite, ...entitesList.value];
-      entitesOptions.value = formatEntitesOptions(entitesList.value);
+      filteredEntites.value = entitesList.value;
 
       // Réinitialiser le formulaire
       form.value = {
@@ -502,18 +546,13 @@ const handleSubmit = async () => {
         libelle: '',
         fonction: '',
         parent_entite_id: null,
-        // is_critique: false
       };
       
-      selectedParent.value = null;
+      clearEntiteParent();
       formErrors.value = {};
       
+      // Rediriger vers la liste
       navigateTo('/point-critique');
-
-      // Rediriger vers la liste après 1.5 secondes
-      // setTimeout(() => {
-      //   navigateTo('/point-critique');
-      // }, 1500);
 
     } else {
       throw new Error(response.message || "Erreur lors de la création");
@@ -582,6 +621,6 @@ const handleSubmit = async () => {
 };
 
 const handleCancel = () => {
-  navigateTo("/entites");
+  navigateTo("/point-critique");
 };
 </script>

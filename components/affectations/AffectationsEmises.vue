@@ -307,6 +307,7 @@ const loading = ref(false)
 const error = ref(null)
 const toast = useToast()
 const dataTableRef = ref(null)
+const config = useRuntimeConfig()
 
 // Modal de modification
 const showEditModal = ref(false)
@@ -453,7 +454,7 @@ const fetchAffectations = async () => {
 
     console.log(`📥 Chargement des affectations pour emetteur_id: ${entite_user.id}`)
 
-    const response = await $fetch(`http://localhost:8000/api/affectations/emetteur/${entite_user.id}`, {
+    const response = await $fetch(`${config.public.apiBase}/affectations/emetteur/${entite_user.id}`, {
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
@@ -477,7 +478,7 @@ const fetchAffectations = async () => {
         objet_courrier: affectation.courrier_arrive?.document?.objet || '',
         doc_courrier: affectation.courrier_arrive?.document?.url
           ? (affectation.courrier_arrive.document.url !== 'Inconnu'
-            ? `http://localhost:8000${affectation.courrier_arrive.document.url}`
+            ? `${config.public.apiBase}${affectation.courrier_arrive.document.url}`
             : '')
           : '',
         date_affect: formatDate(affectation.date_affect),
@@ -541,7 +542,7 @@ const fetchDestinataires = async () => {
 
     console.log(`📝 Chargement des subordinates pour user_id: ${entite_user.id}`)
 
-    const response = await $fetch(`http://localhost:8000/api/entite-users/${entite_user.id}/subordinates`, {
+    const response = await $fetch(`${config.public.apiBase}/entite-users/${entite_user.id}/subordinates`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${authToken}`,
@@ -625,7 +626,7 @@ const confirmChangeDestinataire = async () => {
   try {
     const authToken = localStorage.getItem('auth_token')
 
-    const response = await $fetch(`http://localhost:8000/api/affectations/${selectedAffectation.value.id}`, {
+    const response = await $fetch(`${config.public.apiBase}/affectations/${selectedAffectation.value.id}`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${authToken}`,
@@ -794,7 +795,7 @@ const handleDelete = async (item) => {
 
   try {
     const authToken = localStorage.getItem('auth_token')
-    await $fetch(`http://localhost:8000/api/affectations/${item.id}`, {
+    await $fetch(`${config.public.apiBase}/affectations/${item.id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${authToken}`,
@@ -863,7 +864,7 @@ const handleBulkDelete = async (selected) => {
     const authToken = localStorage.getItem('auth_token')
     await Promise.all(
       selected.map(id =>
-        $fetch(`http://localhost:8000/api/affectations/${id}`, {
+        $fetch(`${config.public.apiBase}/affectations/${id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${authToken}` },
         })

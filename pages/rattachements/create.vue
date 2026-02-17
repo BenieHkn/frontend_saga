@@ -417,6 +417,7 @@ useHead({
 const authToken = ref("");
 const toast = useToast();
 const loading = ref(false);
+const config = useRuntimeConfig();
 
 // Navigation
 const currentStep = ref(1);
@@ -525,7 +526,7 @@ const handleSave = async () => {
   loading.value = true;
 
   try {
-    const response = await $fetch("http://localhost:8000/api/reponses", {
+    const response = await $fetch(`${config.public.apiBase}/reponses`, {
       method: "POST",
       body: {
         document_id: selectedArrivee.value.id,
@@ -597,7 +598,7 @@ const handleCancel = () => {
 
 const loadCourriersArrivee = async () => {
   try {
-    const response = await $fetch("http://localhost:8000/api/courriers-arrives/sans-reponses", {
+    const response = await $fetch(`${config.public.apiBase}/courriers-arrives/sans-reponses`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -611,7 +612,7 @@ const loadCourriersArrivee = async () => {
       structure: courrier.structure_emettrice || '',
       date_courrier: courrier.document?.date_courrier || '',
       url: courrier.document?.url
-        ? `http://localhost:8000${courrier.document.url}`
+        ? `${config.public.apiBase}${courrier.document.url}`
         : '',
     }));
 
@@ -629,7 +630,7 @@ const loadCourriersArrivee = async () => {
 
 const loadCourriersDepart = async () => {
   try {
-    const response = await $fetch("http://localhost:8000/api/courriers-departs/non-reponses", {
+    const response = await $fetch(`${config.public.apiBase}/courriers-departs/non-reponses`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -643,7 +644,7 @@ const loadCourriersDepart = async () => {
       destinataire: courrier.destinataire || '',
       date_depart: courrier.date_depart || '',
       url: courrier.document?.url
-        ? `http://localhost:8000${courrier.document.url}`
+        ? `${config.public.apiBase}${courrier.document.url}`
         : '',
     }));
 

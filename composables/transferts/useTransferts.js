@@ -1,10 +1,12 @@
 // composables/useTransferts.js
 import { ref, computed } from 'vue'
+import { useRuntimeConfig } from '#imports'
 
 export const useTransferts = () => {
   const transferts = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const config = useRuntimeConfig()
 
   // Récupérer le token depuis localStorage
   const getToken = () => {
@@ -41,7 +43,7 @@ export const useTransferts = () => {
         throw new Error('Token d\'authentification non trouvé')
       }
 
-      const response = await fetch(`http://localhost:8000/api/transferts/user/${entite_user.id}/emitted`, {
+      const response = await fetch(`${config.public.apiBase}/transferts/user/${entite_user.id}/emitted`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -79,6 +81,7 @@ export const useTransferts = () => {
     loading,
     error,
     fetchTransferts,
-    tableData
+    tableData,
+    config
   }
 }

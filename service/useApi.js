@@ -2,7 +2,7 @@ import axios from 'axios'
 
 export const useApi = () => {
   const config = useRuntimeConfig()
-  const baseURL = config.public.apiBase || 'http://10.1.14.145:8000/api'
+  const baseURL = config.public.apiBase || 'http://10.1.14.145:8000'
 
   const api = axios.create({
     baseURL: baseURL,

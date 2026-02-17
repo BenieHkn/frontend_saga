@@ -52,6 +52,11 @@ import { useTransfertsStore } from '~/stores/transferts'
 import { useAffectations } from '@/composables/affectations/useAffectations'
 import { useDestinataires } from '~/composables/transferts/useTransfertsDestinataires'
 import { useTransfertsForm } from '~/composables/transferts/useTransfertsForm'
+import AffectationsCheckboxListe from '~/components/affectations/AffectationsCheckboxListe.vue'
+import TransfertsDestinatairesSelectionPanel from '~/components/transferts/TransfertsDestinatairesSelectionPanel.vue'
+import TransfertsSummaryBar from '~/components/transferts/TransfertsSummaryBar.vue'
+import FormNotification from '~/components/FormNotification.vue'
+import PageHeader from '~/components/PageHeader.vue'
 
 const store = useTransfertsStore()
 const toast = useToast()
