@@ -14,7 +14,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     public: {
-      apiBase: 'http://localhost:8000/api',
+      apiBase: 'http://192.168.40.3:8000/api',
     }
   },
 
