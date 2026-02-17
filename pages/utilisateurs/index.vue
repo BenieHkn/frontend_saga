@@ -404,6 +404,8 @@
 <script setup>
 import DataTable from '~/components/DataTable.vue'
 
+const config = useRuntimeConfig()
+
 // ============================================================================
 // CONFIGURATION DES COLONNES - AVEC NOUVELLE COLONNE "Fonctions Intérimaires"
 // ============================================================================
@@ -512,7 +514,7 @@ const loadUtilisateurs = async () => {
 
     console.log('🔄 Chargement des utilisateurs...')
 
-    const response = await $fetch('http://127.0.0.1:8000/api/users', {
+    const response = await $fetch(`${config.public.apiBase}/users`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -923,7 +925,7 @@ const confirmDelete = async () => {
 
     console.log('🚀 Suppression de l\'utilisateur ID:', itemToDelete.value.id)
     
-    await $fetch(`http://127.0.0.1:8000/api/users/${itemToDelete.value.id}`, {
+    await $fetch(`${config.public.apiBase}/users/${itemToDelete.value.id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -996,7 +998,7 @@ const onBulkDelete = async (selectedIds) => {
     
     for (const id of selectedIds) {
       try {
-        await $fetch(`http://127.0.0.1:8000/api/users/${id}`, {
+        await $fetch(`${config.public.apiBase}/users/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,

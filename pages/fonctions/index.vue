@@ -98,6 +98,8 @@
 <script setup>
 import DataTable from '~/components/DataTable.vue'
 
+const config = useRuntimeConfig()
+
 // Configuration colonnes (basée sur le contrôleur: code, libelle, users)
 const columns = [
   { key: 'id', label: 'N°', visible: true },
@@ -125,7 +127,7 @@ const loadFonctions = async () => {
 
     console.log('🔄 Chargement des fonctions...')
 
-    const response = await $fetch('http://127.0.0.1:8000/api/fonctions', {
+    const response = await $fetch(`${config.public.apiBase}/fonctions`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -216,7 +218,7 @@ const onDelete = async (item) => {
     try {
       const token = localStorage.getItem('auth_token')
       
-      await $fetch(`http://127.0.0.1:8000/api/fonctions/${item.id}`, {
+      await $fetch(`${config.public.apiBase}/fonctions/${item.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -256,7 +258,7 @@ const onBulkDelete = async (selectedIds) => {
       
       for (const id of selectedIds) {
         try {
-          await $fetch(`http://127.0.0.1:8000/api/fonctions/${id}`, {
+          await $fetch(`${config.public.apiBase}/fonctions/${id}`, {
             method: 'DELETE',
             headers: {
               'Authorization': `Bearer ${token}`,

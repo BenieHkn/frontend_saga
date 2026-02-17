@@ -289,7 +289,7 @@ const loadEntites = async () => {
   try {
     console.log('🔄 Chargement des entités...')
     
-    const response = await $fetch('http://127.0.0.1:8000/api/entites', {
+    const response = await $fetch(`${config.public.apiBase}/entites`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -338,7 +338,7 @@ const loadPointCritique = async () => {
     console.log('🔄 Chargement du point critique ID:', pointCritiqueId)
     
     const response = await $fetch(
-      `http://127.0.0.1:8000/api/points-critiques/${pointCritiqueId}`,
+      `${config.public.apiBase}/points-critiques/${pointCritiqueId}`,
       {
         method: 'GET',
         headers: {
@@ -444,7 +444,7 @@ const handleSubmit = async () => {
     console.log('Données à envoyer:', data)
 
     const response = await $fetch(
-      `http://127.0.0.1:8000/api/points-critiques/${pointCritiqueId}`,
+      `${config.public.apiBase}/points-critiques/${pointCritiqueId}`,
       {
         method: 'PUT',
         headers: {

@@ -480,7 +480,7 @@ const handleSubmit = async () => {
     console.log('🔑 Token:', token.substring(0, 20) + '...');
 
     // ⚠️ APPEL API EXACT COMME DANS LE CURL
-    const response = await $fetch('http://127.0.0.1:8000/api/fonctions', {
+    const response = await $fetch(`${config.public.apiBase}/fonctions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

@@ -290,20 +290,6 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</template>
-
-<script setup>
-useHead({
-  title: "Nouveau Point Critique - Sagar Revolution",
-});
-
-// ✅ ÉTATS
-const loading = ref(false);
-const errorRequest = ref(null);
-const selectedParent = ref(null);
 const formErrors = ref({});
 
 // États pour la recherche d'entité parent
@@ -382,7 +368,7 @@ const loadEntites = async () => {
     }
 
     // Appel API
-    const response = await $fetch('http://127.0.0.1:8000/api/entites', {
+    const response = await $fetch(`${config.public.apiBase}/entites`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -508,7 +494,7 @@ const handleSubmit = async () => {
     }
 
     // APPEL API
-    const response = await $fetch('http://127.0.0.1:8000/api/points-critiques', {
+    const response = await $fetch(`${config.public.apiBase}/points-critiques`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

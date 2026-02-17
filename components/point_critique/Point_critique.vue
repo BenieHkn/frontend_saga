@@ -135,6 +135,8 @@ import DataTable from '~/components/DataTable.vue'
 import { useApi } from '~/composables/useApi'
 import { ref, computed, watch } from 'vue'
 
+const config = useRuntimeConfig()
+
 useHead({
   title: "Points Critiques - Sagar Revolution",
 });
@@ -359,7 +361,7 @@ const onDelete = async (item) => {
         throw new Error('Token d\'authentification manquant')
       }
 
-      await $fetch(`http://127.0.0.1:8000/api/points-critiques/${item.id}`, {
+      await $fetch(`${config.public.apiBase}/points-critiques/${item.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -428,7 +430,7 @@ const onBulkDelete = async (selectedIds) => {
 
       for (const id of selectedIds) {
         try {
-          await $fetch(`http://127.0.0.1:8000/api/points-critiques/${id}`, {
+          await $fetch(`${config.public.apiBase}/points-critiques/${id}`, {
             method: 'DELETE',
             headers: {
               'Authorization': `Bearer ${token}`,
