@@ -1,7 +1,7 @@
 <template>
   <div>
     <AllCourriers 
-      v-if="isReady && (selectedFunction?.code === 'DGML' || selectedFunction?.code === 'SP')" 
+      v-if="isReady && (selectedFunction?.code === 'DGML' || selectedFunction?.code === 'SP' || selectedFunction?.code === 'SA')" 
     />
     <AffectationsListe 
       v-else-if="isReady && selectedFunction" 
