@@ -434,7 +434,7 @@ const transformPointsCritiques = (response) => {
   })
 }
 
-const { data: pointsCritiques, loading, error, refresh } = useApi('point-critique-user', {
+const { data: pointsCritiques, loading, error, refresh } = useApi('/point-critique-user', {
   transform: transformPointsCritiques,
   immediate: true,
 })
@@ -540,7 +540,7 @@ const submitEdit = async () => {
 
     console.log('📤 Envoi de la mise à jour...')
 
-    const response = await $fetch(`/api/point-critique-user/${selectedItem.value.id}`, {
+    const response = await $fetch(`/point-critique-user/${selectedItem.value.id}`, {
       baseURL: config.public.apiBase,
       method: 'POST', // Utiliser POST avec _method=PUT pour FormData
       headers: {

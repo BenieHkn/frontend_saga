@@ -424,8 +424,8 @@ const submitEdit = async () => {
 
     formData.append('_method', 'PUT')
 
-    const response = await $fetch(`/api/entite-user/${selectedItem.value.id}`, {
-      baseURL: config.public.apiBase || 'http://localhost:8000',
+    const response = await $fetch(`/entite-user/${selectedItem.value.id}`, {
+      baseURL: config.public.apiBase,
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
