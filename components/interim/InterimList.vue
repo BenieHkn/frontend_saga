@@ -325,8 +325,8 @@ const loadInterims = async () => {
     const token = localStorage.getItem('auth_token')
     const config = useRuntimeConfig()
 
-    const response = await $fetch('api/entite-users', {
-      baseURL: config.public.apiBase || 'http://localhost:8000',
+    const response = await $fetch('/entite-users', {
+      baseURL: config.public.apiBase,
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
