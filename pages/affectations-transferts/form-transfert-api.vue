@@ -54,7 +54,7 @@ const { data: courriers, loading: recipientLoading, error: erroRecipientLoading,
   immediate: true,
 })
 
-const { data: users, loading: fileLoading, error: errorFileLoading, refresh: refreshFileLoading } = useApi('api/courriers-arrives', {
+const { data: users, loading: fileLoading, error: errorFileLoading, refresh: refreshFileLoading } = useApi('/courriers-arrives', {
   transform: transformCourriers,
   immediate: true,
 })

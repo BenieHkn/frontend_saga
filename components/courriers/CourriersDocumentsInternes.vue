@@ -144,7 +144,7 @@ const transformDocuments = (response) => {
   }))
 }
 
-const { data: documents, loading, error, refresh } = useApi('api/documents-internes', {
+const { data: documents, loading, error, refresh } = useApi('/documents-internes', {
   transform: transformDocuments,
   immediate: true,
 })
