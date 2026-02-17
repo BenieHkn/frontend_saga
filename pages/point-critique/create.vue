@@ -290,6 +290,14 @@
             </div>
           </div>
         </div>
+
+
+        </div>
+        </div>
+        </div>
+</template>
+
+<script setup>
 const formErrors = ref({});
 
 // États pour la recherche d'entité parent
