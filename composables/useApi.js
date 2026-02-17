@@ -34,7 +34,7 @@ import { ref, onMounted } from 'vue'
 
 /**
  * @typedef {Object} UseApiOptions
- * @property {string} [baseUrl='http://localhost:8000'] - URL de base du serveur
+ * @property {string} [baseUrl=`${config.public.apiBaseUrl}`] - URL de base du serveur
  * @property {function} [transform] - Fonction de transformation appliquée à la réponse brute
  * @property {boolean} [immediate=false] - Si true, lance la requête dès le montage du composant
  * @property {function} [onError] - Callback déclenché en cas d'erreur (reçoit l'erreur)
@@ -74,8 +74,10 @@ const getAuthToken = () => {
  * @returns {UseApiReturn}
  */
 export function useApi(endpoint, options = {}) {
+  const config = useRuntimeConfig()
+
   const {
-    baseUrl = 'http://localhost:8000/',
+    baseUrl = config.public.apiBaseUrl,
     transform = null,
     immediate = false,
     onError = null,

@@ -541,7 +541,7 @@ const submitEdit = async () => {
     console.log('📤 Envoi de la mise à jour...')
 
     const response = await $fetch(`/api/point-critique-user/${selectedItem.value.id}`, {
-      baseURL: config.public.apiBase || 'http://localhost:8000',
+      baseURL: config.public.apiBase,
       method: 'POST', // Utiliser POST avec _method=PUT pour FormData
       headers: {
         'Authorization': `Bearer ${getToken()}`,

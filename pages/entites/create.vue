@@ -312,6 +312,8 @@ const errorRequest = ref(null);
 const selectedParent = ref(null);
 const formErrors = ref({});
 
+const config = useRuntimeConfig();
+
 // États pour la recherche d'entité parent
 const searchEntiteParent = ref('');
 const filteredEntites = ref([]);
@@ -398,7 +400,7 @@ const loadEntites = async () => {
     }
 
     // Appel API
-    const response = await $fetch('http://127.0.0.1:8000/api/entites', {
+    const response = await $fetch(`${config.public.apiBase}/entites`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -525,7 +527,7 @@ const handleSubmit = async () => {
     }
 
     // APPEL API
-    const response = await $fetch('http://127.0.0.1:8000/api/entites', {
+    const response = await $fetch(`${config.public.apiBase}/entites`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

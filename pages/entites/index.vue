@@ -183,6 +183,8 @@ const showDeleteModal = ref(false)
 const itemToDelete = ref(null)
 const deleting = ref(false)
 
+const config = useRuntimeConfig()
+
 // Fonction de chargement des données
 const loadEntites = async () => {
   loading.value = true
@@ -197,7 +199,7 @@ const loadEntites = async () => {
 
     console.log('🔄 Chargement des entités...')
 
-    const response = await $fetch('http://127.0.0.1:8000/api/entites', {
+    const response = await $fetch(`${config.public.apiBase}/entites`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -312,7 +314,7 @@ const confirmDelete = async () => {
 
     console.log('🚀 Suppression de l\'entité ID:', itemToDelete.value.id)
     
-    const response = await $fetch(`http://127.0.0.1:8000/api/entites/${itemToDelete.value.id}`, {
+    const response = await $fetch(`${config.public.apiBase}/entites/${itemToDelete.value.id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -405,7 +407,7 @@ const onBulkDelete = async (selectedIds) => {
     
     for (const id of selectedIds) {
       try {
-        await $fetch(`http://127.0.0.1:8000/api/entites/${id}`, {
+        await $fetch(`${config.public.apiBase}/entites/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,

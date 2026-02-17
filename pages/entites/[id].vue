@@ -332,6 +332,7 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const entiteId = route.params.id
+const config = useRuntimeConfig()
 
 useHead({
   title: "Modification Entité - Sagar Revolution",
@@ -448,7 +449,7 @@ const loadEntiteData = async () => {
     console.log('🔄 Chargement de l\'entité ID:', entiteId)
 
     // Charger l'entité spécifique
-    const response = await $fetch(`http://127.0.0.1:8000/api/entites/${entiteId}`, {
+    const response = await $fetch(`${config.public.apiBase}/entites/${entiteId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -521,7 +522,7 @@ const loadAllEntites = async () => {
   try {
     const token = localStorage.getItem('auth_token')
     
-    const response = await $fetch('http://127.0.0.1:8000/api/entites', {
+    const response = await $fetch(`${config.public.apiBase}/entites`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -656,7 +657,7 @@ const handleSubmit = async () => {
     }
 
     // APPEL API PUT/PATCH
-    const response = await $fetch(`http://127.0.0.1:8000/api/entites/${entiteId}`, {
+    const response = await $fetch(`${config.public.apiBase}/entites/${entiteId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
