@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Appel à l'API Laravel pour récupérer les infos utilisateur
-    const response = await $fetch(`${config.laravelApiUrl}/api/user`, {
+    const response = await $fetch(`${config.public.apiBase}/user`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,

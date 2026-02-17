@@ -107,6 +107,7 @@
 import { computed } from 'vue'
 import DataTable from '~/components/DataTable.vue'
 import { useApi } from '~/composables/useApi'
+const config = useRuntimeConfig()
 
 // Configuration des colonnes
 const columns = [
@@ -145,7 +146,7 @@ const transformCourriers = (response) => {
     date_enregistrement: formatDate(courrier.document?.date_enreg),
     objet: courrier.document?.objet || '',
     date_courrier: formatDate(courrier.document?.date_courrier),
-    url: courrier.document?.url ? `http://localhost:8000${courrier.document.url}` : '',
+    url: courrier.document?.url ? `${config.public.baseUrl}${courrier.document.url}` : '',
     type_depart: courrier.type_depart || '',
     date_depart: formatDate(courrier.date_depart),
   }))

@@ -103,6 +103,7 @@
 // ... (Logique JS strictement identique à ton code original)
 import DataTable from '~/components/DataTable.vue'
 import { useApi } from '~/composables/useApi'
+const config = useRuntimeConfig()
 
 const columns = [
   // { key: 'id', label: 'N°', visible: true },
@@ -139,7 +140,7 @@ const transformDocuments = (response) => {
     objet: document.objet || '',
     type_document: document.type_document?.libelle || 'Non défini',
     large_diffusion: document.large_diffusion || false,
-    url: document.url ? `http://localhost:8000${document.url}` : '',
+    url: document.url ? `${config.public.baseUrl}${document.url}` : '',
     description: document.description || '',
   }))
 }
