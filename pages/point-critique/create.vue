@@ -7,12 +7,8 @@
         <div class="lg:col-span-6">
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
 
-            <PageHeader 
-              title="Création d'un Point Critique" 
-              subtitle="Gestion des points critiques"
-              to="/point-critique" 
-              btn-text="Retour à la liste" 
-            />
+            <PageHeader title="Création d'un Point Critique" subtitle="Gestion des points critiques"
+              to="/point-critique" btn-text="Retour à la liste" />
 
             <form @submit.prevent="handleSubmit" class="space-y-4">
               <!-- Code/Sigle -->
@@ -20,13 +16,8 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Sigle *
                 </label>
-                <UInput 
-                  v-model="form.code" 
-                  placeholder="Entrez le code de l'entité (ex: DIR, DRH)" 
-                  class="w-full h-12" 
-                  :disabled="loading"
-                  @input="form.code = form.code.toUpperCase()"
-                />
+                <UInput v-model="form.code" placeholder="Entrez le code de l'entité (ex: DIR, DRH)" class="w-full h-12"
+                  :disabled="loading" @input="form.code = form.code.toUpperCase()" />
                 <p v-if="formErrors.code" class="text-red-600 text-sm font-bold mt-1">
                   {{ formErrors.code }}
                 </p>
@@ -37,12 +28,8 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Libellé *
                 </label>
-                <UInput 
-                  v-model="form.libelle" 
-                  placeholder="Entrez le libellé complet de l'entité" 
-                  class="w-full h-12" 
-                  :disabled="loading"
-                />
+                <UInput v-model="form.libelle" placeholder="Entrez le libellé complet de l'entité" class="w-full h-12"
+                  :disabled="loading" />
                 <p v-if="formErrors.libelle" class="text-red-600 text-sm font-bold mt-1">
                   {{ formErrors.libelle }}
                 </p>
@@ -53,12 +40,8 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Fonction
                 </label>
-                <UInput 
-                  v-model="form.fonction" 
-                  placeholder="Entrez la fonction de l'entité (optionnel)" 
-                  class="w-full h-12" 
-                  :disabled="loading"
-                />
+                <UInput v-model="form.fonction" placeholder="Entrez la fonction de l'entité (optionnel)"
+                  class="w-full h-12" :disabled="loading" />
                 <p v-if="formErrors.fonction" class="text-red-600 text-sm font-bold mt-1">
                   {{ formErrors.fonction }}
                 </p>
@@ -72,85 +55,68 @@
                 <div class="relative">
                   <!-- Champ de recherche -->
                   <div class="relative">
-                    <input
-                      v-model="searchEntiteParent"
-                      @focus="showEntiteDropdown = true"
-                      @input="filterEntites"
-                      type="text"
-                      placeholder="Rechercher une entité parent..."
+                    <input v-model="searchEntiteParent" @focus="showEntiteDropdown = true" @input="filterEntites"
+                      type="text" placeholder="Rechercher une entité parent..."
                       class="w-full h-12 px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                      :disabled="loading"
-                    />
-                    <svg 
-                      class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      :disabled="loading" />
+                    <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none"
+                      stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
 
                   <!-- Dropdown des résultats -->
-                  <div
-                    v-if="showEntiteDropdown && filteredEntites.length > 0"
-                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
-                  >
-                    <div
-                      v-for="entite in filteredEntites"
-                      :key="entite.id"
-                      @click="selectEntiteParent(entite)"
-                      class="px-4 py-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors"
-                    >
+                  <div v-if="showEntiteDropdown && filteredEntites.length > 0"
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <div v-for="entite in filteredEntites" :key="entite.id" @click="selectEntiteParent(entite)"
+                      class="px-4 py-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors">
                       <div class="flex flex-col">
                         <div class="flex items-center space-x-2">
                           <span class="font-semibold text-gray-900">{{ entite.code }}</span>
-                          <span 
-                            v-if="entite.is_critique"
-                            class="px-1.5 py-0.5 text-xs rounded bg-red-100 text-red-800"
-                          >
+                          <span v-if="entite.is_critique" class="px-1.5 py-0.5 text-xs rounded bg-red-100 text-red-800">
                             Critique
                           </span>
                         </div>
                         <span class="text-sm text-gray-600 mt-0.5">{{ entite.libelle }}</span>
-                        <span v-if="entite.fonction" class="text-xs text-gray-500 italic mt-0.5">{{ entite.fonction }}</span>
+                        <span v-if="entite.fonction" class="text-xs text-gray-500 italic mt-0.5">{{ entite.fonction
+                        }}</span>
                       </div>
                     </div>
                   </div>
 
                   <!-- Message si aucun résultat -->
-                  <div
-                    v-if="showEntiteDropdown && searchEntiteParent && filteredEntites.length === 0"
-                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-4"
-                  >
+                  <div v-if="showEntiteDropdown && searchEntiteParent && filteredEntites.length === 0"
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-4">
                     <p class="text-sm text-gray-500 text-center">Aucune entité ne correspond à votre recherche</p>
                   </div>
 
                   <!-- Entité parent sélectionnée -->
-                  <div v-if="selectedParent" class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md">
+                  <div v-if="selectedParent"
+                    class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md">
                     <div class="flex flex-col">
-                      <span class="text-sm font-medium text-blue-900">{{ selectedParent.code }} - {{ selectedParent.libelle }}</span>
-                      <span v-if="selectedParent.fonction" class="text-xs text-blue-700">{{ selectedParent.fonction }}</span>
+                      <span class="text-sm font-medium text-blue-900">{{ selectedParent.code }} - {{
+                        selectedParent.libelle }}</span>
+                      <span v-if="selectedParent.fonction" class="text-xs text-blue-700">{{ selectedParent.fonction
+                      }}</span>
                     </div>
-                    <button
-                      type="button"
-                      @click="clearEntiteParent"
-                      class="text-blue-600 hover:text-blue-800 ml-2"
-                    >
+                    <button type="button" @click="clearEntiteParent" class="text-blue-600 hover:text-blue-800 ml-2">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">Tapez pour rechercher et sélectionner une entité parent (optionnel)</p>
+                <p class="text-xs text-gray-500 mt-1">Tapez pour rechercher et sélectionner une entité parent
+                  (optionnel)</p>
                 <p v-if="formErrors.parent_entite_id" class="text-red-600 text-sm font-bold mt-1">
                   {{ formErrors.parent_entite_id }}
                 </p>
               </div>
 
               <!-- Statut Critique -->
-             <!--  <div>
+              <!--  <div>
                 <label class="flex items-center space-x-3 cursor-pointer">
                   <UToggle 
                     v-model="form.is_critique" 
@@ -165,27 +131,18 @@
 
               <!-- Action Buttons -->
               <div class="flex justify-center space-x-4 pt-6 border-t border-gray-200">
-                <UButton 
-                  type="button" 
-                  @click="handleCancel" 
-                  color="gray" 
-                  variant="outline"
-                  :disabled="loading"
-                >
+                <UButton type="button" @click="handleCancel" color="gray" variant="outline" :disabled="loading">
                   ANNULER
                 </UButton>
-                <UButton 
-                  :disabled="!isFormValid || loading" 
-                  type="submit"
-                  class="bg-gradient-to-br from-emerald-800 to-blue-800 text-white dark:text-white" 
-                  :loading="loading"
-                >
+                <UButton :disabled="!isFormValid || loading" type="submit"
+                  class="bg-gradient-to-br from-emerald-800 to-blue-800 text-white dark:text-white" :loading="loading">
                   SAUVEGARDER
                 </UButton>
               </div>
 
               <!-- Error Messages -->
-              <div v-if="Object.keys(formErrors).length > 0" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div v-if="Object.keys(formErrors).length > 0"
+                class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <h4 class="text-sm font-semibold text-red-800 mb-2">Erreurs de validation :</h4>
                 <ul class="list-disc list-inside text-sm text-red-600">
                   <li v-for="(error, field) in formErrors" :key="field">
@@ -233,23 +190,18 @@
               <div v-if="entitesList.length > 0" class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
                 <h4 class="font-medium text-emerald-800 mb-2">Entités disponibles ({{ entitesList.length }})</h4>
                 <div class="space-y-2 max-h-40 overflow-y-auto">
-                  <div 
-                    v-for="entite in entitesList.slice(0, 10)" 
-                    :key="entite.id" 
-                    class="flex items-center justify-between text-sm p-2 hover:bg-emerald-100 rounded"
-                  >
+                  <div v-for="entite in entitesList.slice(0, 10)" :key="entite.id"
+                    class="flex items-center justify-between text-sm p-2 hover:bg-emerald-100 rounded">
                     <div class="flex flex-col flex-1 min-w-0">
                       <div class="flex items-center space-x-2">
                         <span class="font-semibold text-emerald-800">{{ entite.code }}</span>
-                        <span 
-                          v-if="entite.is_critique"
-                          class="px-1.5 py-0.5 text-xs rounded bg-red-100 text-red-800"
-                        >
+                        <span v-if="entite.is_critique" class="px-1.5 py-0.5 text-xs rounded bg-red-100 text-red-800">
                           Critique
                         </span>
                       </div>
                       <span class="text-xs text-gray-600 truncate">{{ entite.libelle }}</span>
-                      <span v-if="entite.fonction" class="text-xs text-gray-500 italic truncate">{{ entite.fonction }}</span>
+                      <span v-if="entite.fonction" class="text-xs text-gray-500 italic truncate">{{ entite.fonction
+                      }}</span>
                     </div>
                   </div>
                   <p v-if="entitesList.length > 10" class="text-xs text-emerald-600 mt-2 text-center">
@@ -257,7 +209,7 @@
                   </p>
                 </div>
               </div>
-              
+
               <div v-else class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <h4 class="font-medium text-yellow-800 mb-2">Aucune entité disponible</h4>
                 <p class="text-sm text-yellow-700">
@@ -283,18 +235,17 @@
                   </div>
                   <div v-if="selectedParent" class="flex items-center space-x-2">
                     <span class="text-slate-600">Entité parent:</span>
-                    <span class="font-semibold text-slate-900">{{ selectedParent.code }} - {{ selectedParent.libelle }}</span>
+                    <span class="font-semibold text-slate-900">{{ selectedParent.code }} - {{ selectedParent.libelle
+                    }}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-
-        </div>
-        </div>
-        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -320,7 +271,7 @@ const entitesList = ref([]);
 // ✅ MÉTHODES DE RECHERCHE D'ENTITÉ PARENT
 const filterEntites = () => {
   const search = searchEntiteParent.value.toLowerCase().trim();
-  
+
   if (search === '') {
     filteredEntites.value = entitesList.value;
   } else {
@@ -331,7 +282,7 @@ const filterEntites = () => {
       return code.includes(search) || libelle.includes(search) || fonction.includes(search);
     });
   }
-  
+
   showEntiteDropdown.value = true;
 };
 
@@ -340,10 +291,10 @@ const selectEntiteParent = (entite) => {
   selectedParent.value = entite;
   searchEntiteParent.value = `${entite.code} - ${entite.libelle}`;
   showEntiteDropdown.value = false;
-  
+
   // Effacer l'erreur sur ce champ
   delete formErrors.value.parent_entite_id;
-  
+
   console.log('Entité parent sélectionnée:', entite);
 };
 
@@ -367,9 +318,9 @@ if (process.client) {
 const loadEntites = async () => {
   try {
     console.log('Chargement des entités...');
-    
+
     const token = process.client ? localStorage.getItem('auth_token') : '';
-    
+
     if (!token) {
       console.warn('Token non trouvé');
       return;
@@ -388,7 +339,7 @@ const loadEntites = async () => {
 
     // Traiter la réponse
     let entitesData = [];
-    
+
     if (response && response.data && Array.isArray(response.data)) {
       entitesData = response.data;
     } else if (Array.isArray(response)) {
@@ -407,7 +358,7 @@ const loadEntites = async () => {
         parent_entite_id: entite.parent_entite_id,
         is_critique: entite.is_critique || false
       })).filter(entite => entite.code);
-      
+
       console.log('Entités chargées depuis API:', entitesList.value.length);
     }
 
@@ -434,19 +385,19 @@ const isFormValid = computed(() => {
 
 const validateForm = () => {
   const errors = {};
-  
+
   if (!form.value.code || form.value.code.trim().length < 2) {
     errors.code = "Le code est obligatoire (minimum 2 caractères)";
   }
-  
+
   if (!form.value.libelle || form.value.libelle.trim() === '') {
     errors.libelle = "Le libellé est obligatoire";
   }
-  
+
   if (form.value.fonction && form.value.fonction.length > 255) {
     errors.fonction = "La fonction ne peut pas dépasser 255 caractères";
   }
-  
+
   formErrors.value = errors;
   return Object.keys(errors).length === 0;
 };
@@ -470,10 +421,10 @@ const handleSubmit = async () => {
     }
 
     // Vérifier si le code existe déjà
-    const codeExists = entitesList.value.some(entite => 
+    const codeExists = entitesList.value.some(entite =>
       entite.code.toLowerCase() === form.value.code.trim().toLowerCase()
     );
-    
+
     if (codeExists) {
       useToast().add({
         title: "Erreur",
@@ -493,10 +444,10 @@ const handleSubmit = async () => {
     };
 
     console.log('🚀 Données à envoyer:', data);
-    
+
     // Récupérer le token
     const token = localStorage.getItem('auth_token');
-    
+
     if (!token) {
       throw new Error('Token d\'authentification non trouvé');
     }
@@ -530,7 +481,7 @@ const handleSubmit = async () => {
         fonction: form.value.fonction,
         parent_entite_id: form.value.parent_entite_id,
       };
-      
+
       entitesList.value = [newEntite, ...entitesList.value];
       filteredEntites.value = entitesList.value;
 
@@ -541,10 +492,10 @@ const handleSubmit = async () => {
         fonction: '',
         parent_entite_id: null,
       };
-      
+
       clearEntiteParent();
       formErrors.value = {};
-      
+
       // Rediriger vers la liste
       navigateTo('/point-critique');
 
@@ -555,15 +506,15 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error("❌ Erreur lors de la soumission:", error);
     errorRequest.value = error;
-    
+
     // Gestion des erreurs de validation (422)
     if (error.status === 422 || error.statusCode === 422) {
       const validationErrors = error.data?.errors || error.response?.data?.errors || {};
-      
+
       console.log('📋 Erreurs de validation reçues:', validationErrors);
-      
+
       const errors = {};
-      
+
       for (const [field, messages] of Object.entries(validationErrors)) {
         if (Array.isArray(messages) && messages.length > 0) {
           errors[field] = messages[0];
@@ -571,15 +522,15 @@ const handleSubmit = async () => {
           errors[field] = messages;
         }
       }
-      
+
       formErrors.value = errors;
-      
+
       useToast().add({
         title: "Erreur de validation",
         description: Object.values(errors)[0] || "Veuillez vérifier les informations saisies",
         color: "red",
       });
-    } 
+    }
     // Erreur d'authentification (401)
     else if (error.status === 401 || error.statusCode === 401) {
       useToast().add({
@@ -587,7 +538,7 @@ const handleSubmit = async () => {
         description: "Veuillez vous reconnecter",
         color: "red",
       });
-      
+
       setTimeout(() => {
         navigateTo('/login');
       }, 1500);
@@ -595,13 +546,13 @@ const handleSubmit = async () => {
     // Autres erreurs
     else {
       const errorMessage = error.data?.message || error.message || "Une erreur inattendue s'est produite";
-      
+
       useToast().add({
         title: "Erreur",
         description: errorMessage,
         color: "red",
       });
-      
+
       console.error('Détails de l\'erreur:', {
         status: error.status || error.statusCode,
         message: errorMessage,

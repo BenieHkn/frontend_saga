@@ -77,7 +77,7 @@ export function useApi(endpoint, options = {}) {
   const config = useRuntimeConfig()
 
   const {
-    baseUrl = config.public.apiBaseUrl,
+    baseUrl = config.public.apiBase,
     transform = null,
     immediate = false,
     onError = null,

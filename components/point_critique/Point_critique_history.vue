@@ -434,7 +434,7 @@ const transformPointsCritiques = (response) => {
   })
 }
 
-const { data: pointsCritiques, loading, error, refresh } = useApi('api/point-critique-user', {
+const { data: pointsCritiques, loading, error, refresh } = useApi('point-critique-user', {
   transform: transformPointsCritiques,
   immediate: true,
 })
