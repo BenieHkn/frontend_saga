@@ -57,16 +57,17 @@
       <template #actions="{ item }">
         <div class="flex gap-1.5 justify-end">
           <button @click="handleView(item)" title="Voir les détails"
-            class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-transparent hover:bg-blue-50 hover:border-blue-200 transition-all group">
-            <Icon name="i-heroicons-eye" class="w-4 h-4 text-slate-500 group-hover:text-blue-600" />
+            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border-amber-100 rounded-md hover:bg-amber-200 :hover:text-amber-900 hover:border-amber-900 transition-all group">
+            <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
-          <button @click="handleEdit(item)" title="Modifier"
-            class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-transparent hover:bg-blue-50 hover:border-blue-200 transition-all group">
-            <Icon name="i-heroicons-pencil" class="w-4 h-4 text-slate-500 group-hover:text-blue-600" />
+          <button @click="handleEdit(item)"
+            class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border-emerald-100 rounded-md hover:bg-emerald-200 :hover:text-emerald-900 hover:border-emerald-900 transition-all group"
+            title="Modifier">
+            <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-green-600" />
           </button>
           <button @click="handleDelete(item)" title="Supprimer"
-            class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-transparent hover:bg-red-50 hover:border-red-200 transition-all group">
-            <Icon name="i-heroicons-trash" class="w-4 h-4 text-slate-500 group-hover:text-red-600" />
+            class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border-red-100 rounded-md hover:bg-red-200 :hover:text-red-900 hover:border-red-900 transition-all group">
+            <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
           </button>
         </div>
       </template>

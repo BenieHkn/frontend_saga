@@ -493,8 +493,6 @@ import SortIcon from '~/components/SortIcon.vue';
 import Pagination from '~/components/Pagination.vue';
 import Swal from 'sweetalert2';
 
-const config = useRuntimeConfig()
-
 useHead({
   title: "Liste des Affectations - Sagar Revolution",
 });
@@ -615,7 +613,7 @@ const transformerDonneesAPI = (reponseAPI) => {
       reference_courrier: affectation?.courrier_arrive?.document?.reference || '',
       objet_courrier: affectation?.courrier_arrive?.document?.objet || '',
       doc_courrier: affectation?.courrier_arrive?.document?.url 
-        ? `${config.public.baseUrl}${affectation.courrier_arrive.document.url}` 
+        ? `http://localhost:8000${affectation.courrier_arrive.document.url}` 
         : '',
       date_affect: formatDate(affectation.date_affect),
       instructions: affectation.instructions || '',
