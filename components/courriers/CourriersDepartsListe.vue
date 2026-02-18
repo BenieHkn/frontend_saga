@@ -254,7 +254,7 @@ const transformCourriers = (response) => {
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────
-const { data: courriers, loading, error, refresh } = useApi('api/courriers-departs', {
+const { data: courriers, loading, error, refresh } = useApi('/courriers-departs', {
   transform: transformCourriers,
   immediate: true,
 })
