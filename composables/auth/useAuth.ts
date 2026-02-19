@@ -47,6 +47,12 @@ export interface AuthResponse {
   entite_user: any | null
 }
 
+declare global {
+  interface Window {
+    OneSignalDeferred: any[]
+  }
+}
+
 export const useAuth = () => {
 
   // =====================
@@ -106,8 +112,8 @@ export const useAuth = () => {
 
   const getStoredToken = (): string | null => {
     if (!process.client) return null
-    if(process.client)
-        return localStorage.getItem('auth_token')
+    if (process.client)
+      return localStorage.getItem('auth_token')
     return null
   }
 
@@ -220,6 +226,37 @@ export const useAuth = () => {
   }
 
   // =====================
+  // ONESIGNAL
+  // =====================
+
+  const enregistrerOneSignal = async (token: string) => {
+    if (!process.client) return
+
+    window.OneSignalDeferred = window.OneSignalDeferred || []
+    window.OneSignalDeferred.push(async (OneSignal: any) => {
+      try {
+        // Demande la permission push à l'utilisateur
+        await OneSignal.Notifications.requestPermission()
+
+        // Récupère le player_id du navigateur
+        const playerId = OneSignal.User.PushSubscription.id
+
+        if (playerId) {
+          // Envoie le player_id au backend Laravel pour le sauvegarder
+          await $fetch('/api/user/onesignal', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: { player_id: playerId }
+          })
+          console.log('✅ OneSignal player_id enregistré:', playerId)
+        }
+      } catch (e) {
+        console.error('❌ Erreur OneSignal:', e)
+      }
+    })
+  }
+
+  // =====================
   // LOGIN
   // =====================
 
@@ -251,7 +288,11 @@ export const useAuth = () => {
         throw new Error('Données de réponse incomplètes')
       }
 
+      // Sauvegarde la session en localStorage
       persistSession(response)
+
+      // Enregistre le navigateur sur OneSignal et sauvegarde le player_id
+      await enregistrerOneSignal(response.token)
 
       const activePostes = getActiveEntiteUsers()
 

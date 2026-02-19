@@ -63,17 +63,20 @@
       <template #actions="{ item }">
         <div class="flex gap-1.5 justify-end">
           <button @click="handleView(item)" title="Voir les détails"
-            class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-transparent hover:bg-blue-50 hover:border-blue-200 transition-all group">
-            <Icon name="i-heroicons-eye" class="w-4 h-4 text-slate-500 group-hover:text-blue-600" />
+            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border-amber-100 rounded-md hover:bg-amber-200 :hover:text-amber-900 hover:border-amber-900 transition-all group">
+            <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
 
           <button @click="handleQuickAssign(item.id)" title="Affecter ce courrier"
-            class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-transparent hover:bg-purple-50 hover:border-purple-200 transition-all group">
-            <svg class="w-4 h-4 text-slate-500 group-hover:text-purple-600" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-            </svg>
+            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 :hover:text-sky-900 hover:border-sky-900 transition-all group">
+            <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
+
+          <button @click="handleQuickAssign(item.id)" title="Répondre au courrier"
+            class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border-emerald-100 rounded-md hover:bg-emerald-200 :hover:text-emerald-900 hover:border-emerald-900 transition-all group">
+            <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
+          </button>
+
         </div>
       </template>
 
@@ -146,11 +149,6 @@ const columns = [
     inputPlaceholder: 'Réf...',
   },
   {
-    key: 'structure',
-    label: 'Structure / Usager',
-    visible: true,
-  },
-  {
     key: 'numeroEnregistrement',
     label: "N° d'enreg.",
     visible: false,
@@ -188,6 +186,11 @@ const columns = [
     visible: true,
     type: 'badge',
   },
+  {
+    key: 'structure',
+    label: 'Structure / Usager',
+    visible: true,
+  },
 ]
 
 // --- Transformation ---
@@ -213,7 +216,7 @@ const transformCourriers = (response) => {
     date_enregistrement: formatDate(courrier.document?.date_enreg),
     objet: courrier.document?.objet || '',
     date_courrier: formatDate(courrier.document?.date_courrier),
-    url: courrier.document?.url ? `${config.public.apiBase}${courrier.document.url}` : '',
+    url: courrier.document?.url ? `${config.public.baseUrl}${courrier.document.url}` : '',
     type_arrivee: courrier.type_arrivee || '',
     priority: courrier.priority || '',
     // Garder les données complètes

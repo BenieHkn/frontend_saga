@@ -52,6 +52,8 @@ import AffectationsFormPanel from '~/components/affectations/AffectationsFormPan
 import AffectationsSummaryBar from '~/components/affectations/AffectationsSummaryBar.vue'
 import PageHeader from '~/components/PageHeader.vue'
 
+const config = useRuntimeConfig()
+
 useHead({
   title: 'Nouvelle Affectation',
 })

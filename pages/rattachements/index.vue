@@ -38,62 +38,64 @@
     </div>
 
     <!-- DataTable -->
-    <DataTable 
-      v-else
-      ref="dataTableRef" 
-      :default-sort-column="null" 
-      :show-row-numbers="true" 
-      :data="rattachementData" 
-      :columns="columns" 
-      :selectable="false"
-      :default-items-per-page="10" 
-      :items-per-page-options="[10, 25, 50, 100]"
-      :left-aligned-columns="['objet_arrivee', 'objet_depart', 'ref_depart', 'ref_arrivee']"
-      @view="viewDetails" 
-      @delete="deleteItem" 
-      @open-document="openDocument"
-      @selection-change="handleSelectionChange"
-    >
+    <DataTable v-else ref="dataTableRef" :default-sort-column="null" :show-row-numbers="true" :data="rattachementData"
+      :columns="columns" :selectable="false" :default-items-per-page="10" :items-per-page-options="[10, 25, 50, 100]"
+      :left-aligned-columns="['objet_arrivee', 'objet_depart', 'ref_depart', 'ref_arrivee']" @view="viewDetails"
+      @delete="deleteItem" @open-document="openDocument" @selection-change="handleSelectionChange">
       <!-- Filtres avancés -->
       <template #advanced-filters="{ filters, onFilter }">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Date de création</label>
-            <input 
-              v-model="filters.created_at" 
-              type="date"
+            <input v-model="filters.created_at" type="date"
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              @input="onFilter" 
-            />
+              @input="onFilter" />
           </div>
         </div>
       </template>
 
       <!-- Actions de sélection -->
       <template #selection-actions="{ selected }">
-        <button 
-          @click="deleteSelected(selected)"
-          class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 transition-all"
-        >
+        <button @click="deleteSelected(selected)"
+          class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 transition-all">
           <Icon name="i-heroicons-trash" class="w-4 h-4" />
           Supprimer ({{ selected.length }})
         </button>
       </template>
 
-      <!-- Cellule personnalisée: Référence arrivée -->
-      <template #cell-ref_arrivee="{ value }">
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+      <!-- ✅ Cellule personnalisée: Référence arrivée CLIQUABLE -->
+      <template #cell-ref_arrivee="{ value, item }">
+        <button v-if="item.doc_arrivee" @click="openDocument(item.doc_arrivee)"
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 rounded-full transition-all group"
+          :title="`Ouvrir le document ${value}`">
+          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+          <span>{{ value }}</span>
+          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 opacity-60 group-hover:opacity-100" />
+        </button>
+        <span v-else
+          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600"
+          :title="value">
+          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 opacity-50" />
           {{ value }}
         </span>
       </template>
 
-      <!-- Cellule personnalisée: Référence départ -->
-      <template #cell-ref_depart="{ value }">
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+      <!-- ✅ Cellule personnalisée: Référence départ CLIQUABLE -->
+      <template #cell-ref_depart="{ value, item }">
+        <button v-if="item.doc_depart" @click="openDocument(item.doc_depart)"
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 hover:border-green-300 rounded-full transition-all group"
+          :title="`Ouvrir le document ${value}`">
+          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+          <span>{{ value }}</span>
+          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 opacity-60 group-hover:opacity-100" />
+        </button>
+        <span v-else
+          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600"
+          :title="value">
+          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 opacity-50" />
           {{ value }}
         </span>
       </template>
-      
 
       <!-- Cellule personnalisée: Lien -->
       <template #cell-link>
@@ -119,21 +121,16 @@
       <!-- Actions personnalisées -->
       <template #actions="{ item }">
         <div class="flex gap-1.5 justify-end">
-          <button 
-            @click="viewDetails(item)" 
-            title="Voir les détails"
-            class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-transparent hover:bg-blue-50 hover:border-blue-200 transition-all group"
-          >
-            <Icon name="i-heroicons-eye" class="w-4 h-4 text-slate-500 group-hover:text-blue-600" />
+          <button @click="viewDetails(item)" title="Voir les détails"
+            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border-amber-100 rounded-md hover:bg-amber-200 hover:border-amber-900 transition-all group">
+            <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
 
-          <button 
-            @click="deleteItem(item)"
-            title="Supprimer"
-            class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-transparent hover:bg-red-50 hover:border-red-200 transition-all group"
-          >
-            <Icon name="i-heroicons-trash" class="w-4 h-4 text-slate-500 group-hover:text-red-600" />
+          <button @click="deleteItem(item)" title="Supprimer"
+            class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border-red-100 rounded-md hover:bg-red-200 hover:border-red-900 transition-all group">
+            <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
           </button>
+
         </div>
       </template>
 
@@ -234,7 +231,6 @@ const loading = ref(false);
 const error = ref(null);
 const dataTableRef = ref(null);
 const toast = useToast();
-const config = useRuntimeConfig();
 
 // ============================================================================
 // FONCTIONS UTILITAIRES
@@ -259,13 +255,13 @@ const transformerDonneesAPI = (reponseAPI) => {
     ref_arrivee: rattachement?.document?.reference || '',
     objet_arrivee: rattachement?.document?.objet || '',
     doc_arrivee: rattachement?.document?.url
-      ? `${config.public.apiBase}${rattachement.document.url}`
+      ? `http://localhost:8000${rattachement.document.url}`
       : '',
     link: '→',
     ref_depart: rattachement?.reponse?.reference || '',
     objet_depart: rattachement?.reponse?.objet || '',
     doc_depart: rattachement?.reponse?.url
-      ? `${config.public.apiBase}${rattachement.reponse.url}`
+      ? `http://localhost:8000${rattachement.reponse.url}`
       : '',
     created_at: formatDate(rattachement.created_at),
     created_by: rattachement.user?.name || 'Système',
@@ -294,7 +290,7 @@ const loadData = async () => {
   error.value = null;
 
   try {
-    const reponse = await $fetch(`${config.public.apiBase}/reponses`, {
+    const reponse = await $fetch('http://localhost:8000/api/reponses', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -419,7 +415,7 @@ const deleteItem = async (item) => {
   if (!result.isConfirmed) return;
 
   try {
-    await $fetch(`${config.public.apiBase}/reponses/${item.id}`, {
+    await $fetch(`http://localhost:8000/api/reponses/${item.id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -473,7 +469,7 @@ const deleteSelected = async (selectedIds) => {
   try {
     await Promise.all(
       selectedIds.map(id =>
-        $fetch(`${config.public.apiBase}/reponses/${id}`, {
+        $fetch(`http://localhost:8000/api/reponses/${id}`, {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${authToken.value}`,

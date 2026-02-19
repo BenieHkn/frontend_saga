@@ -11,7 +11,7 @@ let nextId = 0
 
 export const useToast = () => {
 
-  const add = (message: string, type: Toast['type'] = 'info', duration = 3000) => {
+  const add = (message: string, type: Toast['type'] = 'info', duration = 1500) => {
     const id = `toast-${nextId++}`
     const toast: Toast = { id, message, type, duration }
     
