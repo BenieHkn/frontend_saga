@@ -5,12 +5,24 @@
         <div class="lg:col-span-12">
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
 
-            <PageHeader
+            <!-- <PageHeader
               title="Assignation d'un Point Critique"
               subtitle="Gestion des assignations"
               to="/point-critique"
               btn-text="Retour à la liste"
-            />
+            /> -->
+
+            <div class="flex justify-end">
+               <UButton 
+                  to="/point-critique" 
+                  icon="i-heroicons-arrow-left"
+                  color="green"
+                  variant="soft"
+                >
+                Retour à la liste
+                </UButton>
+            </div>
+
 
             <!-- Loading initial -->
             <div v-if="loadingInitial" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
@@ -83,12 +95,12 @@
                     <div class="flex flex-col py-1">
                       <span class="font-semibold text-sm text-gray-900">{{ option.code }}</span>
                       <span class="text-xs text-gray-500">{{ option.libelle }}</span>
-                      <span class="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-red-50 text-red-700 border border-red-200 w-fit">
+                      <!-- <span class="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-red-50 text-red-700 border border-red-200 w-fit">
                         <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                           <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                         </svg>
                         Critique
-                      </span>
+                      </span> -->
                     </div>
                   </template>
                 </USelectMenu>
@@ -190,13 +202,25 @@
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Pièce jointe
-                  <span class="text-xs font-normal text-gray-500 ml-2">(Optionnel)</span>
+                  <span v-if="assignationType === 'interim'" class="text-red-600 ml-1">*</span>
+                  <span v-else class="text-xs font-normal text-gray-500 ml-2">(Optionnel)</span>
                 </label>
+                
+                <!-- Message d'information pour intérim -->
+                <p v-if="assignationType === 'interim'" class="text-xs text-orange-600 flex items-center gap-1 mb-2">
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                  Un document justificatif est obligatoire pour tout intérim.
+                </p>
+
                 <div
                   class="border-2 border-dashed rounded-lg p-5 text-center cursor-pointer transition-colors"
                   :class="selectedFile
                     ? 'border-green-300 bg-green-50'
-                    : 'border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50'"
+                    : assignationType === 'interim' && !selectedFile
+                      ? 'border-orange-300 bg-orange-50 hover:border-orange-400'
+                      : 'border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50'"
                   @click="fileInputRef?.click()"
                   @dragover.prevent
                   @drop.prevent="onFileDrop"
@@ -234,14 +258,16 @@
 
                   <!-- Aucun fichier -->
                   <div v-else class="flex flex-col items-center gap-2 py-2">
-                    <svg class="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="w-10 h-10" :class="assignationType === 'interim' ? 'text-orange-400' : 'text-gray-300'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                         d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                     </svg>
-                    <p class="text-sm text-gray-500">
-                      <span class="font-semibold text-indigo-600">Cliquez</span> ou glissez un fichier ici
+                    <p class="text-sm" :class="assignationType === 'interim' ? 'text-gray-700' : 'text-gray-500'">
+                      <span class="font-semibold" :class="assignationType === 'interim' ? 'text-orange-600' : 'text-indigo-600'">Cliquez</span> ou glissez un fichier ici
                     </p>
-                    <p class="text-xs text-gray-400">PDF, Word, Images — max 5 Mo</p>
+                    <p class="text-xs" :class="assignationType === 'interim' ? 'text-orange-600 font-medium' : 'text-gray-400'">
+                      {{ assignationType === 'interim' ? 'Document obligatoire — PDF, Word, Images — max 5 Mo' : 'PDF, Word, Images — max 5 Mo' }}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -466,6 +492,10 @@ const validateForm = () => {
     if (!form.value.date_fin) {
       newErrors.push('La date de fin est obligatoire pour un intérim')
     }
+    // ✅ Validation pièce jointe obligatoire pour intérim
+    if (!selectedFile.value) {
+      newErrors.push('Une pièce jointe est obligatoire pour un intérim')
+    }
   }
   
   if (form.value.date_debut && form.value.date_fin) {
@@ -625,7 +655,7 @@ const handleSubmit = async () => {
       }
     }
 
-    // Fichier optionnel
+    // Fichier (obligatoire pour intérim, optionnel pour fonction)
     if (selectedFile.value instanceof File) {
       formData.append('piece_jointe', selectedFile.value)
       console.log('📎 Fichier ajouté:', selectedFile.value.name, formatFileSize(selectedFile.value.size))

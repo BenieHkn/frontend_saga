@@ -7,12 +7,22 @@
         <div class="lg:col-span-6">
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
 
-            <PageHeader 
+            <!-- <PageHeader 
               title="Création d'une Entité" 
               subtitle="Gestion des entités organisationnelles"
               to="/entites" 
               btn-text="Retour à la liste" 
-            />
+            /> -->
+          <div class="flex justify-end">
+               <UButton 
+                  to="/entites" 
+                  icon="i-heroicons-arrow-left"
+                  color="green"
+                  variant="soft"
+                >
+                Retour à la liste
+                </UButton>
+            </div>
 
             <form @submit.prevent="handleSubmit" class="space-y-4">
               <!-- Code/Sigle -->
