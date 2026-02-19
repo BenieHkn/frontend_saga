@@ -37,7 +37,7 @@ const AllCourriers = defineAsyncComponent(() =>
   import('~/components/documents/AllCourriers.vue')
 )
 const AffectationsListe = defineAsyncComponent(() => 
-  import('~/components/documents/AffectationsListe.vue')
+  import('~/components/documents/MyDocuments.vue')
 )
 
 // État
