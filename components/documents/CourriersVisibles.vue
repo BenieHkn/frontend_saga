@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between mb-6">
             <h1 class="flex items-center gap-3 text-2xl font-bold text-slate-800">
                 <Icon name="i-heroicons-eye" class="w-7 h-7 text-blue-600" />
-                Courriers en visibilité
+                Initiés/Paraphés
             </h1>
             <div class="flex items-center gap-3">
                 <button @click="loadData"

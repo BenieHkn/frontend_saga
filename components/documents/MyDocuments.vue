@@ -50,7 +50,7 @@ const tabList = ref([
   },
   {
     id: 'visibilite',
-    label: 'Courriers en visibilité',
+    label: 'Initiés/Paraphés',
     icon: 'i-heroicons-eye',
     count: null,
   },

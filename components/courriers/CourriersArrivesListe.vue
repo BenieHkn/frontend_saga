@@ -66,16 +66,14 @@
                   <div class="w-1 h-full min-h-[2rem] rounded-full bg-indigo-400 shrink-0 self-stretch"></div>
                   <div>
                     <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-0.5">Référence</p>
-                    <p class="text-sm font-bold text-indigo-900">{{ selectedCourrier.document?.reference || 'Sans
-                      référence' }}</p>
+                    <p class="text-sm font-bold text-indigo-900">{{ selectedCourrier.document?.reference || 'Sans référence' }}</p>
                   </div>
                 </div>
                 <div class="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
                   <div class="w-1 h-full min-h-[2rem] rounded-full bg-amber-400 shrink-0 self-stretch"></div>
                   <div>
                     <p class="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-0.5">Objet</p>
-                    <p class="text-sm text-gray-800 leading-relaxed">{{ selectedCourrier.document?.objet || 'Non
-                      spécifié' }}</p>
+                    <p class="text-sm text-gray-800 leading-relaxed">{{ selectedCourrier.document?.objet || 'Non spécifié' }}</p>
                   </div>
                 </div>
               </div>
@@ -88,8 +86,7 @@
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Structure / Usager</p>
-                  <p class="text-xs text-slate-800">{{ selectedCourrier.structure || selectedCourrier.autre_structure ||
-                    'Non spécifié' }}</p>
+                  <p class="text-xs text-slate-800">{{ selectedCourrier.structure || selectedCourrier.autre_structure || 'Non spécifié' }}</p>
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Type d'arrivée</p>
@@ -97,12 +94,10 @@
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">N° enregistrement</p>
-                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.document?.numero_enreg || '—' }}
-                  </p>
+                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.document?.numero_enreg || '—' }}</p>
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date d'enregistrement
-                  </p>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date d'enregistrement</p>
                   <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.document?.date_enreg) || '—' }}</p>
                 </div>
                 <div v-if="selectedCourrier.document?.date_courrier"
@@ -144,8 +139,7 @@
                 <div class="w-5 h-5 rounded bg-emerald-100 flex items-center justify-center">
                   <Icon name="i-heroicons-arrow-uturn-right" class="w-3 h-3 text-emerald-600" />
                 </div>
-                <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier de
-                  réponse</span>
+                <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier de réponse</span>
               </div>
               <span v-if="reponseData && !loadingReponse"
                 class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
@@ -284,12 +278,8 @@
       :hide-labels-when-input="true">
       <template #advanced-filters="{ filters, onFilter }">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div v-for="field in [
-            { id: 'source', label: 'Source' },
-            { id: 'structure', label: 'Structure / Usager' },
-            { id: 'objet', label: 'Objet' },
-            { id: 'type_arrivee', label: 'Type d\'arrivée' }
-          ]" :key="field.id">
+          <!-- ✅ CORRIGÉ : filterFields défini dans <script setup> pour éviter l'erreur de parsing -->
+          <div v-for="field in filterFields" :key="field.id">
             <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
               {{ field.label }}
             </label>
@@ -363,7 +353,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import DataTable from '~/components/DataTable.vue'
-import DocumentRpreview from '~/components/DocumentRpreview.vue'  // ✅ Un seul composant unifié, nom correct
+import DocumentRpreview from '~/components/DocumentRpreview.vue'
 import { useApi } from '~/composables/useApi'
 import { useAffectationsStore } from '~/stores/affectations'
 import { useCourriersStore } from '~/stores/courriers'
@@ -372,6 +362,15 @@ import Swal from 'sweetalert2'
 const store = useAffectationsStore()
 const courriersStore = useCourriersStore()
 const config = useRuntimeConfig()
+
+// ── Champs de filtres avancés ─────────────────────────────────────────────────
+// ✅ Défini ici pour éviter les problèmes de parsing des apostrophes dans le template
+const filterFields = [
+  { id: 'source', label: 'Source' },
+  { id: 'structure', label: 'Structure / Usager' },
+  { id: 'objet', label: 'Objet' },
+  { id: 'type_arrivee', label: "Type d'arrivée" },
+]
 
 // ── État modal détails ────────────────────────────────────────────────────────
 const detailsOpen = ref(false)
@@ -384,7 +383,7 @@ const reponseData = ref(null)
 // ── URL document courrier arrivé ──────────────────────────────────────────────
 const arriveeUrl = computed(() => {
   const raw = selectedCourrier.value?.document?.url
-  const url = raw?.trim?.() // 🔑 trim pour éliminer espaces/newlines invisibles
+  const url = raw?.trim?.()
   console.log('🔗 [arriveeUrl] url brute:', raw, '| après trim:', url)
 
   if (!url || url === 'Inconnu' || url === '') {
@@ -392,13 +391,12 @@ const arriveeUrl = computed(() => {
     return null
   }
 
-  // Évite le double préfixage si l'URL contient déjà baseUrl
   if (url.startsWith('http')) {
     console.log('✅ [arriveeUrl] URL absolue directe:', url)
     return url
   }
 
-  const base = config.public.baseUrl?.replace(/\/$/, '') // retire le slash final si présent
+  const base = config.public.baseUrl?.replace(/\/$/, '')
   const path = url.startsWith('/') ? url : `/${url}`
   const fullUrl = `${base}${path}`
   console.log('✅ [arriveeUrl] URL construite:', fullUrl)
@@ -422,7 +420,6 @@ const handleView = async (item) => {
   console.log('📨 [handleView] reponses trouvées:', reponses)
 
   if (reponses.length) {
-    // reponse_id = id du courrier-depart dans la table courriers_departs
     const courierDepartId = reponses[0]?.reponse_id
     console.log('🆔 [handleView] reponses[0] complet:', reponses[0])
     console.log('🆔 [handleView] courierDepartId utilisé:', courierDepartId)
@@ -448,8 +445,6 @@ const loadReponseData = async (documentId) => {
   loadingReponse.value = true
   try {
     const authToken = process.client ? localStorage.getItem('auth_token') : ''
-    // reponse_id dans la table reponses = document_id du courrier-départ
-    // Stratégie : récupérer tous les courriers-départs et trouver celui dont document_id === reponse_id
     const allDeparts = await $fetch(`${config.public.apiBase}/courriers-departs`, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
@@ -459,25 +454,15 @@ const loadReponseData = async (documentId) => {
     const allData = allDeparts?.data || allDeparts || []
     const list = Array.isArray(allData) ? allData : []
 
-    // Trouver le courrier-départ dont document_id correspond à notre reponse_id
     const doc = list.find(cd => cd.document_id === documentId) || null
     console.log('📄 [loadReponseData] courrier-départ trouvé pour document_id=' + documentId + ':', doc)
 
     if (!doc) {
       console.error('❌ Aucun courrier-départ trouvé avec document_id:', documentId)
       reponseData.value = null
-      return  // finally s'exécutera quand même → loadingReponse = false
+      return
     }
 
-    // Cherche la partie "courrier départ" dans toutes les clés possibles
-    const depart =
-      doc?.courrierDepart ||
-      doc?.courrier_depart ||
-      doc?.depart ||
-      {}
-
-    // Construction URL robuste avec trim + normalisation slash
-    // L'URL est dans doc.document.url selon la structure API
     const rawUrl = (doc?.document?.url || '').trim()
     console.log('🔗 [loadReponseData] url brute:', rawUrl)
 
@@ -489,7 +474,6 @@ const loadReponseData = async (documentId) => {
       return `${base}${path}`
     }
 
-    // Structure API : { id, type_depart, destinataire, date_depart, document: { reference, objet, url, ... } }
     reponseData.value = {
       reference: doc?.document?.reference || 'Sans référence',
       objet: doc?.document?.objet || 'Non spécifié',
