@@ -5,12 +5,31 @@
         <div class="lg:col-span-12">
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
 
-            <PageHeader
+            <!-- <PageHeader
               title="Modification d'un Utilisateur"
               subtitle="Gestion des utilisateurs"
               to="/utilisateurs"
               btn-text="Retour à la liste"
-            />
+            /> -->
+
+            <!-- <UBadge color="green" variant="soft" size="lg" class="ml-auto">
+              <Icon name="i-heroicons-arrow-left" class="h-4 w-4 mr-1" />
+               <UButton to="/utilisateurs" variant="text" size="sm" class="p-0 m-0 text-green-600">
+                 Retour à la liste
+               </UButton>
+            </UBadge> -->
+
+            <div class="flex justify-end">
+               <UButton 
+                  to="/utilisateurs" 
+                  icon="i-heroicons-arrow-left"
+                  color="green"
+                  variant="soft"
+                >
+                Retour à la liste
+                </UButton>
+            </div>
+
 
             <!-- Loading State -->
             <div v-if="loadingInitial" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
