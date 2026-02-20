@@ -68,7 +68,8 @@
           </button>
 
           <button @click="handleQuickAssign(item.id)" title="Affecter ce courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 :hover:text-sky-900 hover:border-sky-900 transition-all group">
+            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700
+             border-sky-100 rounded-md hover:bg-sky-200 :hover:text-sky-900 hover:border-sky-900 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
 
