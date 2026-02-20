@@ -1,0 +1,8 @@
+const dashboard_vue_vue_type_style_index_0_scoped_4369b24c_lang = ".liquid-container[data-v-4369b24c]{-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);background:linear-gradient(135deg,#ffffff0d,#ffffff03);border:1px solid hsla(0,0%,100%,.1);border-radius:1.5rem;box-shadow:0 20px 50px #0000004d,inset 0 1px 1px #ffffff1a}[data-v-4369b24c] .liquid-card{-webkit-backdrop-filter:blur(10px)!important;backdrop-filter:blur(10px)!important;background:linear-gradient(135deg,#ffffff1a,#ffffff08)!important;border:1px solid hsla(0,0%,100%,.2)!important;border-radius:1.25rem!important;color:#fff!important;padding:1.25rem!important;transition:all .4s cubic-bezier(.4,0,.2,1)!important}[data-v-4369b24c] .liquid-card:hover{background:#ffffff26!important;border-color:#10b98180!important;box-shadow:0 15px 30px #0006!important;transform:translateY(-5px) scale(1.02)}[data-v-4369b24c] .liquid-card p.text-gray-500,[data-v-4369b24c] .liquid-card p.text-gray-600{color:#fff9!important}[data-v-4369b24c] .liquid-card p.text-gray-900{color:#fff!important;text-shadow:0 2px 10px rgba(0,0,0,.3)}main[data-v-4369b24c]::-webkit-scrollbar{width:8px}main[data-v-4369b24c]::-webkit-scrollbar-track{background:transparent}main[data-v-4369b24c]::-webkit-scrollbar-thumb{background:#10b98133;background-clip:content-box;border:2px solid transparent;border-radius:20px}main[data-v-4369b24c]::-webkit-scrollbar-thumb:hover{background:#10b98180}";
+
+const dashboardStyles_CeeOejLI = [
+  dashboard_vue_vue_type_style_index_0_scoped_4369b24c_lang
+];
+
+export { dashboardStyles_CeeOejLI as default };
+//# sourceMappingURL=dashboard-styles.CeeOejLI.mjs.map

@@ -124,12 +124,23 @@
         </span>
       </template>
 
-      <template #cell-piece_jointe_url="{ value }">
+      <!-- <template #cell-piece_jointe_url="{ value }">
         <a v-if="value" :href="value" target="_blank"
           class="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 transition-colors">
           <Icon name="i-heroicons-paper-clip" class="w-3 h-3" />
           Voir
         </a>
+        <span v-else class="text-xs text-slate-400 italic">Aucun fichier</span>
+      </template> -->
+      <template #cell-piece_jointe_url="{ value }">
+        <button
+          v-if="value"
+          @click.stop="openAttachmentModal(value)"
+          class="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 active:scale-95 transition-all"
+        >
+          <Icon name="i-heroicons-paper-clip" class="w-3 h-3 !text-indigo-600" />
+          Voir
+        </button>
         <span v-else class="text-xs text-slate-400 italic">Aucun fichier</span>
       </template>
     </DataTable>
@@ -331,6 +342,85 @@
         </template>
       </UCard>
     </UModal>
+
+    <UModal v-model="showAttachmentModal" :ui="{ width: 'sm:max-w-4xl' }">
+      <UCard :ui="{ body: { padding: 'p-0' } }">
+        <!-- <template #header>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <Icon
+                :name="attachmentType === 'pdf' ? 'i-heroicons-document-text' : attachmentType === 'image' ? 'i-heroicons-photo' : 'i-heroicons-document'"
+                class="w-5 h-5 text-indigo-600"
+              />
+              <h3 class="text-base font-bold text-slate-900 truncate max-w-sm">
+                {{ attachmentFileName }}
+              </h3>
+            </div>
+            <div class="flex items-center gap-2">
+              
+              <a
+                v-if="attachmentBlobUrl"
+                :href="attachmentBlobUrl"
+                :download="attachmentFileName"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                <Icon name="i-heroicons-arrow-down-tray" class="w-3.5 h-3.5" />
+                Télécharger
+              </a>
+              <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" @click="closeAttachmentModal" />
+            </div>
+          </div>
+        </template> -->
+
+        <!-- Chargement -->
+        <div v-if="attachmentLoading" class="flex flex-col items-center justify-center gap-3 py-20 bg-slate-50">
+          <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+          <span class="text-sm text-slate-500 font-medium">Chargement du fichier...</span>
+        </div>
+
+        <!-- Erreur -->
+        <div v-else-if="attachmentError" class="flex flex-col items-center justify-center gap-4 py-16 bg-slate-50">
+          <div class="w-14 h-14 flex items-center justify-center rounded-full bg-red-100">
+            <Icon name="i-heroicons-exclamation-triangle" class="w-7 h-7 text-red-500" />
+          </div>
+          <p class="text-sm text-red-700 font-medium">{{ attachmentError }}</p>
+        </div>
+
+        <!-- PDF via Blob URL -->
+        <div v-else-if="attachmentBlobUrl && attachmentType === 'pdf'" class="w-full" style="height: 75vh;">
+          <iframe
+            :src="attachmentBlobUrl + '#toolbar=1&navpanes=0&view=FitH'"
+            class="w-full h-full border-0"
+            title="Pièce jointe PDF"
+          ></iframe>
+        </div>
+
+        <!-- Image via Blob URL -->
+        <div v-else-if="attachmentBlobUrl && attachmentType === 'image'" class="flex items-center justify-center p-6 bg-slate-50" style="min-height: 40vh;">
+          <img
+            :src="attachmentBlobUrl"
+            :alt="attachmentFileName"
+            class="max-w-full max-h-[65vh] object-contain rounded shadow-md"
+          />
+        </div>
+
+        <!-- Autre format -->
+        <div v-else-if="attachmentBlobUrl" class="flex flex-col items-center justify-center gap-4 py-16 bg-slate-50">
+          <div class="w-16 h-16 flex items-center justify-center rounded-full bg-slate-200">
+            <Icon name="i-heroicons-document" class="w-8 h-8 text-slate-500" />
+          </div>
+          <p class="text-sm text-slate-600 font-medium">Aperçu non disponible pour ce type de fichier</p>
+          <a
+            :href="attachmentBlobUrl"
+            :download="attachmentFileName"
+            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <Icon name="i-heroicons-arrow-down-tray" class="w-4 h-4" />
+            Télécharger le fichier
+          </a>
+        </div>
+      </UCard>
+    </UModal>
   </div>
 </template>
 
@@ -354,6 +444,97 @@ const editForm = ref({
   statut: false,
   newFile: null
 })
+
+// Voir
+// — Refs modal pièce jointe
+const showAttachmentModal = ref(false)
+const attachmentBlobUrl = ref('')   // URL blob locale (révoquée à la fermeture)
+const attachmentType = ref('')      // 'pdf' | 'image' | 'other'
+const attachmentFileName = ref('')
+const attachmentLoading = ref(false)
+const attachmentError = ref(null)
+
+// — Helpers
+const getToken = () => {
+  if (process.client) {
+    return useCookie('auth_token').value || localStorage.getItem('auth_token') || ''
+  }
+  return useCookie('auth_token').value || ''
+}
+
+const buildStorageUrl = (path) => {
+  const config = useRuntimeConfig()
+  // Retire les slashes échappés, le slash initial, et le préfixe "storage/"
+  const cleanPath = path
+    .replace(/\\\//g, '/')   // \/ → /
+    .replace(/^\//, '')      // retire le / initial  → "storage/assignations/xxx.pdf"
+    .replace(/^storage\//, '') // retire "storage/"  → "assignations/xxx.pdf"
+  
+  return `${config.public.apiBase}/file/${cleanPath}`
+}
+
+const detectFileType = (path) => {
+  const lower = path.toLowerCase().split('?')[0]
+  if (lower.endsWith('.pdf')) return 'pdf'
+  if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'].some(ext => lower.endsWith(ext))) return 'image'
+  return 'other'
+}
+
+const extractFileName = (path) => {
+  return path.replace(/\\\//g, '/').split('/').pop() || 'Fichier'
+}
+
+// — Ouverture : fetch avec Bearer token → Blob URL
+const openAttachmentModal = async (path) => {
+  const url = buildStorageUrl(path)
+  console.log('🔗 URL:', url)
+  console.log('📄 Path brut:', path)
+  
+  // Reset
+  attachmentBlobUrl.value = ''
+  attachmentError.value = null
+  attachmentLoading.value = true
+  attachmentType.value = detectFileType(path)
+  attachmentFileName.value = extractFileName(path)
+  showAttachmentModal.value = true
+
+  try {
+    const url = buildStorageUrl(path)
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Accept': '*/*',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Erreur ${response.status} : accès refusé ou fichier introuvable`)
+    }
+
+    const blob = await response.blob()
+    attachmentBlobUrl.value = URL.createObjectURL(blob)
+  } catch (err) {
+    console.error('❌ Erreur chargement pièce jointe:', err)
+    attachmentError.value = err.message || 'Impossible de charger le fichier'
+  } finally {
+    attachmentLoading.value = false
+  }
+}
+
+// — Fermeture : libère la mémoire du Blob
+const closeAttachmentModal = () => {
+  showAttachmentModal.value = false
+  setTimeout(() => {
+    if (attachmentBlobUrl.value) {
+      URL.revokeObjectURL(attachmentBlobUrl.value)
+      attachmentBlobUrl.value = ''
+    }
+    attachmentType.value = ''
+    attachmentFileName.value = ''
+    attachmentError.value = null
+  }, 200)
+}
+// Fin Voir
 
 // Configuration colonnes
 const columns = [
@@ -385,12 +566,12 @@ const formatDate = (dateString) => {
   }
 }
 
-const formatFileSize = (bytes) => {
-  if (!bytes) return ''
-  if (bytes < 1024) return bytes + ' o'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko'
-  return (bytes / (1024 * 1024)).toFixed(1) + ' Mo'
-}
+// const formatFileSize = (bytes) => {
+//   if (!bytes) return ''
+//   if (bytes < 1024) return bytes + ' o'
+//   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko'
+//   return (bytes / (1024 * 1024)).toFixed(1) + ' Mo'
+// }
 
 const transformPointsCritiques = (response) => {
   console.log('📦 Response complète assignations:', response)

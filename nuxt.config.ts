@@ -17,6 +17,8 @@ export default defineNuxtConfig({
     public: {
       apiBase: 'http://192.168.40.3:8000/api',
       baseUrl: 'http://192.168.40.3:8000'
+      // apiBase: 'http://localhost:8000/api',
+      // baseUrl: 'http://localhost:8000'
     }
   },
 
