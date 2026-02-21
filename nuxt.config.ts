@@ -2,23 +2,28 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
   colorMode: {
-    preference: 'light' // Par défaut en light mode comme la maquette
+    preference: 'light'
   },
   modules: [
     '@nuxt/ui',
     '@nuxtjs/tailwindcss',
-    '@nuxt/icon',
     '@nuxt/image',
-    '@pinia/nuxt'
+    '@pinia/nuxt',
+    'pinia-plugin-persistedstate/nuxt',
   ],
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     public: {
-      apiBase: 'http://192.168.40.3:8000/api',
-      baseUrl: 'http://192.168.40.3:8000'
+      apiBase: 'http://localhost:8000/api',
+      baseUrl: 'http://localhost:8000'
     }
   },
-
+  icon: {
+    collections: ['heroicons', 'simple-icons']
+  },
+  ui: {
+    global: true,
+  },
   tailwindcss: {
     config: {
       theme: {
@@ -30,7 +35,7 @@ export default defineNuxtConfig({
               200: '#bbf7d0',
               300: '#86efac',
               400: '#4ade80',
-              500: '#10b981', // emerald-500
+              500: '#10b981',
               600: '#059669',
               700: '#047857',
               800: '#065f46',
@@ -42,7 +47,7 @@ export default defineNuxtConfig({
               200: '#bfdbfe',
               300: '#93c5fd',
               400: '#60a5fa',
-              500: '#2563eb', // blue-600
+              500: '#2563eb',
               600: '#1d4ed8',
               700: '#1e40af',
               800: '#1e3a8a',
@@ -79,12 +84,6 @@ export default defineNuxtConfig({
         },
       },
     },
-  },
-
-
-  ui: {
-    global: true,
-    icons: ['heroicons', 'simple-icons']
   },
   app: {
     head: {
