@@ -7,17 +7,21 @@
         <div class="lg:col-span-12">
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
 
-            <PageHeader 
-              title="Création d'un Utilisateur" 
-              subtitle="Gestion des utilisateurs et administrateurs"
-              to="/utilisateurs" 
-              btn-text="Retour à la liste" 
-            />
+            <div class="flex justify-end">
+               <UButton 
+                  to="/utilisateurs" 
+                  icon="i-heroicons-arrow-left"
+                  color="green"
+                  variant="soft"
+                >
+                Retour à la liste
+                </UButton>
+            </div>
 
             <!-- Loading des données initiales -->
             <div v-if="loadingInitialData" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
               <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-              <span class="text-sm font-medium">Chargement des données...</span>
+              <span class="text-sm font-medium">Chargement des données... </span>   
             </div>
 
             <form v-else @submit.prevent="handleSubmit" class="space-y-4 mt-6">

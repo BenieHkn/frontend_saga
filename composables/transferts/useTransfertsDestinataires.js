@@ -29,7 +29,6 @@ export const useDestinataires = () => {
           
           // IDs séparés pour l'API
           user_id: user.id,
-          entite_id: entite.id,
           affectation_id: item.id,
           
           // Informations utilisateur

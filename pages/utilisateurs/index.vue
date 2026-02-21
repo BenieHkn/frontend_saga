@@ -256,7 +256,7 @@
 
             <!-- Pièce jointe -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Pièce jointe</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Pièce jointe <span class="text-red-600">*</span></label>
 
               <!-- Zone de drop ou clic -->
               <div
@@ -329,7 +329,7 @@
             type="button"
             @click="submitInterim"
             :loading="submittingInterim"
-            :disabled="!interimForm.fonction_id || !interimForm.date_debut"
+            :disabled="!interimForm.fonction_id || !interimForm.date_debut || !interimFile"
           >
             <svg v-if="!submittingInterim" class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -798,6 +798,10 @@ const submitInterim = async () => {
   if (!selectedUser.value || !interimForm.value.fonction_id || !interimForm.value.date_debut) {
     interimError.value = 'Veuillez remplir tous les champs obligatoires'
     return
+  }
+  if (!interimFile.value) {
+  interimError.value = 'Veuillez joindre une pièce justificative'
+  return
   }
 
   if (interimForm.value.date_fin && interimForm.value.date_fin < interimForm.value.date_debut) {

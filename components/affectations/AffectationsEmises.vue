@@ -87,19 +87,19 @@
       <template #actions="{ item }">
         <div class="flex gap-1.5 justify-end">
           <button @click="handleView(item)" title="Voir les détails"
-            class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-transparent hover:bg-blue-50 hover:border-blue-200 transition-all group">
-            <Icon name="i-heroicons-eye" class="w-4 h-4 text-slate-500 group-hover:text-blue-600" />
+            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border-amber-100 rounded-md hover:bg-amber-200 :hover:text-amber-900 hover:border-amber-900 transition-all group">
+            <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
 
           <button @click="handleQuickAssign(item.courrier_id)" title="Affecter ce courrier"
-            class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-transparent hover:bg-blue-50 hover:border-blue-200 transition-all group">
-            <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 text-slate-500 group-hover:text-blue-600" />
+            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 :hover:text-sky-900 hover:border-sky-900 transition-all group">
+            <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
 
           <button @click="handleEdit(item)"
-            class="inline-flex items-center justify-center w-8 h-8 text-yellow-600 hover:bg-yellow-50 rounded-md transition-colors"
+            class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border-emerald-100 rounded-md hover:bg-emerald-200 :hover:text-emerald-900 hover:border-emerald-900 transition-all group"
             title="Modifier le destinataire">
-            <Icon name="i-heroicons-pencil" class="h-4 w-4" />
+            <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-green-600" />
           </button>
         </div>
       </template>

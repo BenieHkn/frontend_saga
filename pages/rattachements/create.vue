@@ -612,7 +612,7 @@ const loadCourriersArrivee = async () => {
       structure: courrier.structure_emettrice || '',
       date_courrier: courrier.document?.date_courrier || '',
       url: courrier.document?.url
-        ? `${config.public.apiBase}${courrier.document.url}`
+        ? `${config.public.baseUrl}${courrier.document.url}`
         : '',
     }));
 
@@ -644,7 +644,7 @@ const loadCourriersDepart = async () => {
       destinataire: courrier.destinataire || '',
       date_depart: courrier.date_depart || '',
       url: courrier.document?.url
-        ? `${config.public.apiBase}${courrier.document.url}`
+        ? `${config.public.baseUrl}${courrier.document.url}`
         : '',
     }));
 

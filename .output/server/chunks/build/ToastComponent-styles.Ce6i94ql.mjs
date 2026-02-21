@@ -1,0 +1,8 @@
+const ToastComponent_vue_vue_type_style_index_0_scoped_e19b9f17_lang = ".toast-container[data-v-e19b9f17]{bottom:20px;position:fixed;right:20px;z-index:9999}.toast[data-v-e19b9f17]{align-items:center;animation:slideIn .3s ease;background:#333;border-radius:4px;box-shadow:0 2px 8px #00000026;color:#fff;display:flex;gap:12px;margin-bottom:8px;min-width:300px;padding:12px 16px}.toast--success[data-v-e19b9f17]{background:#10b981}.toast--error[data-v-e19b9f17]{background:#ef4444}.toast--warning[data-v-e19b9f17]{background:#f59e0b}.toast--info[data-v-e19b9f17]{background:#3b82f6}.toast-close[data-v-e19b9f17]{background:none;border:none;color:inherit;cursor:pointer;font-size:20px;margin-left:auto;padding:0}.toast-enter-active[data-v-e19b9f17],.toast-leave-active[data-v-e19b9f17]{transition:all .3s ease}.toast-enter-from[data-v-e19b9f17],.toast-leave-to[data-v-e19b9f17]{opacity:0;transform:translate(100%)}";
+
+const ToastComponentStyles_Ce6i94ql = [
+  ToastComponent_vue_vue_type_style_index_0_scoped_e19b9f17_lang
+];
+
+export { ToastComponentStyles_Ce6i94ql as default };
+//# sourceMappingURL=ToastComponent-styles.Ce6i94ql.mjs.map

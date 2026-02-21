@@ -7,12 +7,23 @@
         <div class="lg:col-span-6">
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
 
-            <PageHeader 
+            <!-- <PageHeader 
               title="Modification d'une Entité" 
               subtitle="Mise à jour des informations de l'entité"
               to="/entites" 
               btn-text="Retour à la liste" 
-            />
+            /> -->
+           <div class="flex justify-end">
+               <UButton 
+                  to="/entites" 
+                  icon="i-heroicons-arrow-left"
+                  color="green"
+                  variant="soft"
+                >
+                Retour à la liste
+                </UButton>
+            </div>
+
 
             <!-- Loading State -->
             <div v-if="loadingData" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">

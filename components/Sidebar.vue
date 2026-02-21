@@ -22,7 +22,7 @@
         </div>
       </NuxtLink>
 
-      <div class="pt-4 mt-4 border-t border-gray-200">
+      <div v-if="isAdmin" class="pt-4 mt-4 border-t border-gray-200">
         <button @click="toggleSettings"
           class="flex items-center justify-between w-full px-4 py-3.5 text-gray-700 hover:text-gray-900 rounded-xl hover:bg-gray-100 transition-all">
           <div class="flex items-center">
@@ -88,12 +88,20 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
 import { useRoute } from "vue-router";
+import { useAuth } from "~/composables/auth/useAuth"
 
 const route = useRoute();
 
 const isExpanded = ref(true);
 const settingsMenuOpen = ref(false);
 const emit = defineEmits(["sidebar-toggle"]);
+
+const { getUser } = useAuth()
+
+const isAdmin = computed(() => {
+  const u = getUser()
+  return !!u && !!u.is_superadmin
+})
 
 const menuItems = [
   { name: "Tableau de bord", path: "/dashboard", icon: "heroicons:home-20-solid" },

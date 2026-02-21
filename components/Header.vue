@@ -25,23 +25,58 @@
           <!-- Notifications -->
           <div class="relative">
             <button @click="toggleNotifications" type="button"
-              class="p-2.5 rounded-xl bg-gradient-to-br from-emerald-700 to-blue-700 text-white hover:bg-gray-400 transition-all border focus:outline-none">
+              class="p-2.5 rounded-xl bg-gradient-to-br from-emerald-700 to-blue-700 text-white transition-all border focus:outline-none">
               <Icon name="heroicons:bell" class="h-5 w-5" />
-              <span class="absolute top-2.5 right-2.5 flex h-2 w-2">
-                <span
-                  class="relative inline-flex rounded-full h-2 w-2 bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]"></span>
+              <span v-if="nonLues > 0"
+                class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[9px] font-bold text-white">
+                {{ nonLues > 9 ? '9+' : nonLues }}
               </span>
             </button>
 
             <div v-if="showNotifications"
-              class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 z-[110] overflow-hidden">
-              <div class="p-4 bg-slate-900 text-white font-bold text-xs uppercase tracking-widest">
-                Notifications
+              class="absolute right-0 mt-3 w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 z-[110] overflow-hidden">
+
+              <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+                <span class="font-bold text-xs uppercase tracking-widest">Notifications</span>
+                <button v-if="nonLues > 0" @click="toutLire"
+                  class="text-[10px] text-emerald-400 hover:text-emerald-300 font-semibold">
+                  Tout marquer comme lu
+                </button>
               </div>
-              <div class="max-h-64 overflow-y-auto">
+
+              <div class="max-h-80 overflow-y-auto divide-y divide-slate-50">
+                <div v-if="notifications.length === 0" class="p-8 text-center text-slate-400 text-sm">
+                  Aucune notification
+                </div>
+
                 <div v-for="n in notifications" :key="n.id"
-                  class="p-4 border-b border-slate-50 hover:bg-slate-50 text-slate-700">
-                  {{ n.message }}
+                  @click="ouvrirNotification(n)"
+                  class="p-4 hover:bg-slate-50 cursor-pointer transition-all flex gap-3"
+                  :class="n.lu ? 'opacity-60' : 'bg-emerald-50/40'">
+
+                  <div class="shrink-0 mt-0.5">
+                    <div class="h-8 w-8 rounded-full flex items-center justify-center text-white"
+                      :class="n.type === 'affectation' ? 'bg-emerald-600' : 'bg-blue-600'">
+                      <Icon :name="n.type === 'affectation' ? 'heroicons:clipboard-document' : 'heroicons:arrows-right-left'"
+                        class="h-4 w-4" />
+                    </div>
+                  </div>
+
+                  <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start gap-2">
+                      <p class="text-xs font-bold text-slate-700">{{ n.titre }}</p>
+                      <span class="text-[10px] text-slate-400 shrink-0">{{ n.time }}</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">{{ n.message }}</p>
+                    <span class="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                      :class="n.type === 'affectation' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'">
+                      {{ n.type === 'affectation' ? 'Affectation' : 'Transfert' }}
+                    </span>
+                  </div>
+
+                  <div v-if="!n.lu" class="shrink-0 mt-2">
+                    <span class="h-2 w-2 rounded-full bg-amber-400 block"></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -76,7 +111,6 @@
                   {{ selected_entite?.libelle }}
                 </p>
 
-                <!-- Affichage du rôle basé sur is_responsable dans entite_user -->
                 <p v-if="currentEntiteUser?.is_responsable" class="text-xs text-emerald-600 mt-1">
                   {{ selected_entite?.fonction }}
                 </p>
@@ -84,12 +118,7 @@
                   Agent
                 </p>
 
-                <!-- Badges optionnels -->
                 <div class="flex gap-1 mt-2">
-                  <!-- <span v-if="currentEntiteUser?.is_responsable"
-                    class="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full">
-                    Responsable
-                  </span> -->
                   <span v-if="currentEntiteUser?.is_interim"
                     class="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-full">
                     Intérim
@@ -160,6 +189,9 @@
 </template>
 
 <script setup>
+import { useNotifications } from '@/composables/useNotifications';
+
+
 const showNotifications = ref(false);
 const showUserMenu = ref(false);
 const user = ref(null);
@@ -168,27 +200,27 @@ const entite_user = ref(null);
 const entites = ref([]);
 const showModal = ref(false);
 
-const notifications = ref([
-  { id: 1, message: "Bienvenue sur SAGA Revolution", time: "Maintenant" },
-]);
+// ✅ Composable notifications
+const { notifications, nonLues, marquerLu, toutLire, demarrerPolling, arreterPolling } = useNotifications()
+
+const ouvrirNotification = async (notif) => {
+  if (!notif.lu) await marquerLu(notif.id)
+  showNotifications.value = false
+  navigateTo('/documents')
+}
 
 // ✅ Computed pour récupérer l'entite_user correspondant à l'entité sélectionnée
 const currentEntiteUser = computed(() => {
-  if (!selected_entite.value || !entites.value) {
-    return null;
-  }
-
-  // Trouver l'entite_user qui correspond à l'entité sélectionnée
+  if (!selected_entite.value || !entites.value) return null;
   const found = entites.value.find(e => e.id === selected_entite.value.id);
   return found || null;
 });
 
-// Computed pour afficher uniquement les autres entités actives
+// ✅ Computed pour afficher uniquement les autres entités actives
 const otherEntites = computed(() => {
   if (!selected_entite.value || !entites.value) {
     return entites.value?.filter(e => e.actif) || [];
   }
-
   return entites.value.filter((e) => e.id !== selected_entite.value.id && e.actif);
 });
 
@@ -208,20 +240,12 @@ const getInitials = (nom, prenom) => {
 };
 
 const switchEntite = (entite) => {
-  // Mettre à jour selected_entite
   selected_entite.value = entite;
-
-  // Sauvegarder dans localStorage
   if (process.client) {
     localStorage.setItem("selected_entite", JSON.stringify(entite));
   }
-
-  // Fermer le modal et le menu
   showModal.value = false;
   showUserMenu.value = false;
-
-  // Optionnel : rafraîchir la page ou recharger les données selon le contexte
-  // window.location.reload();
 };
 
 const logout = () => {
@@ -244,25 +268,22 @@ onMounted(() => {
     const saved_selected_entite = localStorage.getItem("selected_entite");
     const saved_entites = localStorage.getItem("entites");
 
-    if (savedUser) {
-      user.value = JSON.parse(savedUser);
-    }
-
-    if (saved_selected_entite) {
-      selected_entite.value = JSON.parse(saved_selected_entite);
-    }
-
-    if (saved_entites) {
-      entites.value = JSON.parse(saved_entites);
-    }
+    if (savedUser) user.value = JSON.parse(savedUser);
+    if (saved_selected_entite) selected_entite.value = JSON.parse(saved_selected_entite);
+    if (saved_entites) entites.value = JSON.parse(saved_entites);
 
     document.addEventListener("click", handleClickOutside);
+
+    // ✅ Démarrer le polling des notifications
+    demarrerPolling();
   }
 });
 
 onUnmounted(() => {
   if (process.client) {
     document.removeEventListener("click", handleClickOutside);
+    // ✅ Arrêter le polling
+    arreterPolling();
   }
 });
 </script>

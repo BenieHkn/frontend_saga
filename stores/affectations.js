@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 export const useAffectationsStore = defineStore('affectations', () => {
   // État
@@ -14,7 +14,7 @@ export const useAffectationsStore = defineStore('affectations', () => {
     instructions: '',
     statut: 'en cours',
     delai_traitement: '',
-    priority: 'Standard',
+    priority: 'standard',
     date_cloture: null,
   })
 
@@ -23,6 +23,37 @@ export const useAffectationsStore = defineStore('affectations', () => {
   // Dossier d'affectation
   const useFolder = ref(false)
   const folderName = ref(null)
+
+  // ✅ Priorité automatique basée sur les courriers sélectionnés
+  const autoPriority = computed(() => {
+    if (selectedCourriers.value.length === 0) return 'standard'
+
+    const priorityOrder = { 'urgent': 3, 'important': 2, 'standard': 1 }
+    
+    const selectedCourriersList = courriers.value.filter(c => 
+      selectedCourriers.value.includes(c.id)
+    )
+
+    if (selectedCourriersList.length === 0) return 'standard'
+
+    // Trouver la priorité la plus élevée parmi les courriers sélectionnés
+    const highestPriority = selectedCourriersList.reduce((highest, courrier) => {
+      const currentPrio = (courrier.priority || 'standard').toLowerCase()
+      const highestPrio = highest.toLowerCase()
+      
+      return priorityOrder[currentPrio] > priorityOrder[highestPrio] 
+        ? currentPrio 
+        : highestPrio
+    }, 'standard')
+
+    return highestPriority
+  })
+
+  // ✅ Watcher : Mettre à jour automatiquement la priorité du formulaire
+  watch(autoPriority, (newPriority) => {
+    formData.value.priority = newPriority
+    console.log(`🎯 Priorité automatiquement définie: ${newPriority}`)
+  })
 
   // Getters
   const selectedCourrierData = computed(() => {
@@ -149,7 +180,7 @@ export const useAffectationsStore = defineStore('affectations', () => {
       instructions: '',
       statut: 'en cours',
       delai_traitement: '',
-      priority: 'Standard',
+      priority: 'standard',
       date_cloture: null,
     }
     showDateCloture.value = false
@@ -189,6 +220,7 @@ export const useAffectationsStore = defineStore('affectations', () => {
     canSelectMultipleDestinataires,
     maxDestinatairesAllowed,
     canSend,
+    autoPriority, // ✅ Exposer la priorité calculée
     
     // Actions
     setCourriers,

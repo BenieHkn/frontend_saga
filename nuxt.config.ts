@@ -1,9 +1,13 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  plugins: ['~/plugins/onesignal.client.js'],
+
   devtools: { enabled: true },
+
   colorMode: {
     preference: 'light'
   },
+
   modules: [
     '@nuxt/ui',
     '@nuxtjs/tailwindcss',
@@ -11,19 +15,24 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt',
   ],
+
   css: ['~/assets/css/main.css'],
+
   runtimeConfig: {
     public: {
-      apiBase: 'http://localhost:8000/api',
-      baseUrl: 'http://localhost:8000'
+      apiBase: process.env.API_BASE_URL || 'http://192.168.40.3:8000/api',
+      baseUrl: process.env.BASE_URL || 'http://192.168.40.3:8000'
     }
   },
+
   icon: {
     collections: ['heroicons', 'simple-icons']
   },
+
   ui: {
     global: true,
   },
+
   tailwindcss: {
     config: {
       theme: {
@@ -85,13 +94,18 @@ export default defineNuxtConfig({
       },
     },
   },
+
   app: {
     head: {
-      title: 'Saga Revolution by Julio',
+      title: 'SAGA Revolution',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { hid: 'description', name: 'description', content: 'A modern admin dashboard template inspired by DeskApp' }
+        {
+          key: 'description',
+          name: 'description',
+          content: 'A modern admin dashboard template inspired by DeskApp'
+        }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }

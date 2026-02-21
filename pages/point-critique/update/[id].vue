@@ -7,12 +7,16 @@
         <div class="lg:col-span-6">
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
 
-            <PageHeader 
-              title="Modification d'un Point Critique" 
-              subtitle="Gestion des points critiques"
-              to="/point-critique" 
-              btn-text="Retour à la liste" 
-            />
+            <div class="flex justify-end">
+               <UButton 
+                  to="/point-critique" 
+                  icon="i-heroicons-arrow-left"
+                  color="green"
+                  variant="soft"
+                >
+                Retour à la liste
+                </UButton>
+            </div>
 
             <!-- Loading State -->
             <div v-if="loadingInitial" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
