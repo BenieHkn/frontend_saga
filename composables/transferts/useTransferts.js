@@ -3,20 +3,17 @@ import { ref, computed } from 'vue'
 import { useRuntimeConfig } from '#imports'
 import { useAuth } from '~/composables/auth/useAuth'
 
-
 export const useTransferts = () => {
   const transferts = ref([])
   const loading = ref(false)
   const error = ref(null)
-  const { isSecDir, getDirecteurEntiteUserId } = useAuth()
+  const { isSecDir, getDirecteurEntiteUserId, peutVoirConfig } = useAuth()
   const config = useRuntimeConfig()
 
-  // Récupérer le token depuis localStorage
   const getToken = () => {
     return localStorage.getItem('token') || localStorage.getItem('auth_token')
   }
 
-  // Transformer les données de l'API pour le DataTable
   const transformTransfertData = (data) => {
     return data.map(item => ({
       id: item.id,
@@ -27,22 +24,13 @@ export const useTransferts = () => {
       courrier: item.courrier_arrive?.document?.objet || 'N/A',
       emetteur: item.emetteur?.entite?.fonction || 'N/A',
       destinataire: item.destinataire?.entite?.fonction || 'N/A',
-      // Garder les données complètes pour les actions
       _raw: item
     }))
   }
 
-  // Récupérer les transferts depuis l'API
   const fetchTransferts = async () => {
     loading.value = true
     error.value = null
-
-    const entite_user = JSON.parse(localStorage.getItem("entite_user"))
-    const emetteurId = isSecDir()
-        ? (getDirecteurEntiteUserId() ?? entite_user.id)
-        : entite_user.id
-
-      console.log(`📝 Chargement affectations pour destinataire_id: ${emetteurId}`)
 
     try {
       const token = getToken()
@@ -51,7 +39,28 @@ export const useTransferts = () => {
         throw new Error('Token d\'authentification non trouvé')
       }
 
-      const response = await fetch(`${config.public.apiBase}/transferts/user/${emetteurId}/emitted`, {
+      // Admin → tous les transferts, sinon filtre par émetteur
+      let endpoint
+
+      if (peutVoirConfig()) {
+        // Admin : endpoint global
+        endpoint = `${config.public.apiBase}/transferts`
+      } else {
+        const entite_user = JSON.parse(localStorage.getItem('entite_user'))
+
+        if (!entite_user?.id) {
+          throw new Error('Aucune fonction utilisateur sélectionnée')
+        }
+
+        const emetteurId = isSecDir()
+          ? (getDirecteurEntiteUserId() ?? entite_user.id)
+          : entite_user.id
+
+        console.log(`📝 Chargement transferts pour emetteur_id: ${emetteurId}`)
+        endpoint = `${config.public.apiBase}/transferts/user/${emetteurId}/emitted`
+      }
+
+      const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -65,14 +74,14 @@ export const useTransferts = () => {
       }
 
       const result = await response.json()
-      console.log("Transferts récupérés", result.data)
+      console.log('Transferts récupérés:', result.data)
 
       if (result.data) {
         transferts.value = transformTransfertData(result.data)
-        console.log(transferts.value)
       } else {
         throw new Error('Format de réponse invalide')
       }
+
     } catch (err) {
       error.value = err.message
       console.error('Erreur lors du chargement des transferts:', err)
@@ -81,7 +90,6 @@ export const useTransferts = () => {
     }
   }
 
-  // Données formatées pour le DataTable
   const tableData = computed(() => transferts.value)
 
   return {

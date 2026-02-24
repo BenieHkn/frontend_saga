@@ -41,7 +41,7 @@
 
     <!-- DataTable -->
     <DataTable v-else :data="tableData" :default-sort-column="null" :show-row-numbers="true" :columns="columns"
-      :selectable="true" :default-items-per-page="10" :items-per-page-options="[10, 25, 50, 100]"
+      :selectable="false" :default-items-per-page="10" :items-per-page-options="[10, 25, 50, 100]"
       :left-aligned-columns="['objet', 'courrier', 'emetteur', 'destinataire']" @edit="handleEdit"
       @delete="handleDelete" @selection-change="handleSelectionChange">
 
@@ -66,17 +66,17 @@
           </button>
 
           <!-- Modifier : uniquement si peut transférer -->
-          <button v-if="peutTransferer()" @click="handleEdit(item)"
+          <button v-if="peutTransferer() && !isAdmin()" @click="handleEdit(item)"
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border-emerald-100 rounded-md hover:bg-emerald-200 hover:border-emerald-900 transition-all group"
             title="Modifier">
             <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-green-600" />
           </button>
 
           <!-- Supprimer : uniquement si peut transférer -->
-          <button v-if="peutTransferer()" @click="handleDelete(item)" title="Supprimer"
+          <!-- <button v-if="peutTransferer()" @click="handleDelete(item)" title="Supprimer"
             class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border-red-100 rounded-md hover:bg-red-200 hover:border-red-900 transition-all group">
             <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
-          </button>
+          </button> -->
         </div>
       </template>
 
@@ -109,7 +109,7 @@ import DataTable from '~/components/DataTable.vue'
 const { tableData, loading, error, fetchTransferts, config } = useTransferts()
 
 // ✅ Permission transfert
-const { peutTransferer } = useAuth()
+const { peutTransferer, isAdmin } = useAuth()
 
 // Colonnes du tableau
 const columns = ref([
