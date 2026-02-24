@@ -417,7 +417,7 @@ watch(assignationType, (newType) => {
     form.value.date_fin = ''
   } else if (newType === 'interim') {
     // Intérim: actif = false, is_interim = true, dates vides (à remplir)
-    form.value.actif = false
+    form.value.actif = true
     form.value.is_interim = true
     form.value.date_debut = ''
     form.value.date_fin = ''

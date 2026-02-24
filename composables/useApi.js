@@ -74,10 +74,8 @@ const getAuthToken = () => {
  * @returns {UseApiReturn}
  */
 export function useApi(endpoint, options = {}) {
-  const config = useRuntimeConfig()
-
   const {
-    baseUrl = config.public.apiBase,
+    baseUrl = useRuntimeConfig().public.apiBase,
     transform = null,
     immediate = false,
     onError = null,

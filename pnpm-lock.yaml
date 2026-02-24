@@ -29,6 +29,9 @@ importers:
       pinia:
         specifier: ^3.0.4
         version: 3.0.4(vue@3.5.26)
+      pinia-plugin-persistedstate:
+        specifier: ^4.7.1
+        version: 4.7.1(@nuxt/kit@4.2.2(magicast@0.5.1))(@pinia/nuxt@0.11.3(magicast@0.5.1)(pinia@3.0.4(vue@3.5.26)))(pinia@3.0.4(vue@3.5.26))
       sweetalert2:
         specifier: ^11.26.18
         version: 11.26.18
@@ -36,6 +39,12 @@ importers:
         specifier: ^5.3.0
         version: 5.3.3(chart.js@4.5.1)(vue@3.5.26)
     devDependencies:
+      '@iconify-json/heroicons':
+        specifier: ^1.2.3
+        version: 1.2.3
+      '@iconify-json/simple-icons':
+        specifier: ^1.2.71
+        version: 1.2.71
       '@nuxt/devtools':
         specifier: latest
         version: 3.1.1(vite@7.3.1(@types/node@25.0.8)(jiti@2.6.1)(terser@5.45.0)(yaml@2.8.2))(vue@3.5.26)
@@ -416,6 +425,9 @@ packages:
 
   '@iconify-json/heroicons@1.2.3':
     resolution: {integrity: sha512-n+vmCEgTesRsOpp5AB5ILB6srsgsYK+bieoQBNlafvoEhjVXLq8nIGN4B0v/s4DUfa0dOrjwE/cKJgIKdJXOEg==}
+
+  '@iconify-json/simple-icons@1.2.71':
+    resolution: {integrity: sha512-rNoDFbq1fAYiEexBvrw613/xiUOPEu5MKVV/X8lI64AgdTzLQUUemr9f9fplxUMPoxCBP2rWzlhOEeTHk/Sf0Q==}
 
   '@iconify/collections@1.0.639':
     resolution: {integrity: sha512-lFgPu8Rsgk+HKW4PzmzCjmAEXmDS7J7eH8vlMCFV6Qn/qOMH4esisWLyvf8vEBleAp7fF66nNqVEqXlWSCQihQ==}
@@ -4508,6 +4520,10 @@ snapshots:
     dependencies:
       '@iconify/types': 2.0.0
 
+  '@iconify-json/simple-icons@1.2.71':
+    dependencies:
+      '@iconify/types': 2.0.0
+
   '@iconify/collections@1.0.639':
     dependencies:
       '@iconify/types': 2.0.0
@@ -7597,14 +7613,6 @@ snapshots:
   picomatch@4.0.3: {}
 
   pify@2.3.0: {}
-
-  pinia-plugin-persistedstate@4.7.1(@nuxt/kit@3.20.2(magicast@0.5.1))(@pinia/nuxt@0.11.3(magicast@0.5.1)(pinia@3.0.4(vue@3.5.26)))(pinia@3.0.4(vue@3.5.26)):
-    dependencies:
-      defu: 6.1.4
-    optionalDependencies:
-      '@nuxt/kit': 3.20.2(magicast@0.5.1)
-      '@pinia/nuxt': 0.11.3(magicast@0.5.1)(pinia@3.0.4(vue@3.5.26))
-      pinia: 3.0.4(vue@3.5.26)
 
   pinia@3.0.4(vue@3.5.26):
     dependencies:

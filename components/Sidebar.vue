@@ -69,11 +69,12 @@
       </div>
     </nav>
 
+    <!-- Bouton toggle sidebar -->
     <button
       @click="toggleSidebar"
       class="absolute -right-5 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-[50] transition-all duration-500 group"
     >
-      <div class="absolute inset-0 rounded-full transition-all duration-300 bg-gradient-to-br from-emerald-700 to-blue-800 backdrop-blur-md border border-white/40 shadow-[0_8_32_0_rgba(0,0,0,0.2)] group-hover:scale-110 group-hover:bg-emerald-500/80 before:content-[''] before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-b before:from-white/40 before:to-transparent before:opacity-50">
+      <div class="absolute inset-0 rounded-full transition-all duration-300 bg-gradient-to-br from-emerald-700 to-blue-800 backdrop-blur-md border border-white/40 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] group-hover:scale-110 group-hover:bg-emerald-500/80">
         <div class="absolute inset-[2px] rounded-full bg-gradient-to-tr from-emerald-400/20 to-white/30 opacity-60"></div>
       </div>
       <Icon
@@ -96,7 +97,6 @@ const {
   peutRattacher,
   peutVoirCodir,
   voitStats,
-  isAdmin,
   isAgent,
   isSP,
   isSA,
@@ -106,21 +106,9 @@ const isExpanded = ref(true)
 const settingsMenuOpen = ref(false)
 const emit = defineEmits(['sidebar-toggle'])
 
-// ============================================================
-// Règles de visibilité par item
-// ✅ CORRECTION : isAdmin() court-circuite toutes les règles
-// ============================================================
-
-// Pré-archivage : SP, SA et admin uniquement
-const peutVoirPreArchivage = computed(() =>
-  isAdmin() || isSP() || isSA()
-)
-
-// Affectations & Transferts : tout le monde sauf agent simple
-// ✅ Admin inclus explicitement
-const peutVoirAffectations = computed(() =>
-  isAdmin() || !isAgent()
-)
+// ── Visibilité des items ──────────────────────────────────────────────────────
+const peutVoirPreArchivage = computed(() => isSP() || isSA() || peutVoirConfig())
+const peutVoirAffectations = computed(() => !isAgent())
 
 const allMenuItems = computed(() => [
   {
@@ -139,28 +127,24 @@ const allMenuItems = computed(() => [
     name: 'Affectations & Transferts',
     path: '/affectations-transferts',
     icon: 'heroicons:clipboard-document-check-20-solid',
-    // ✅ computed.value évalué ici correctement
     visible: peutVoirAffectations.value,
   },
   {
     name: 'Rattachement',
     path: '/rattachements',
     icon: 'heroicons:paper-clip-20-solid',
-    // ✅ peutRattacher() appelle hasPermission() qui court-circuite pour admin
     visible: peutRattacher(),
   },
   {
     name: 'CODIR',
     path: '/codir',
     icon: 'heroicons:user-group-20-solid',
-    // ✅ peutVoirCodir() appelle hasPermission() qui court-circuite pour admin
     visible: peutVoirCodir(),
   },
   {
     name: 'Statistiques',
     path: '/stats',
     icon: 'heroicons:chart-bar-20-solid',
-    // ✅ voitStats() appelle hasPermission() qui court-circuite pour admin
     visible: voitStats(),
   },
   {
@@ -175,6 +159,7 @@ const menuItems = computed(() =>
   allMenuItems.value.filter(item => item.visible)
 )
 
+// ── Actions ───────────────────────────────────────────────────────────────────
 const toggleSidebar = () => {
   isExpanded.value = !isExpanded.value
   emit('sidebar-toggle', isExpanded.value)
@@ -185,6 +170,7 @@ const toggleSettings = () => {
   settingsMenuOpen.value = !settingsMenuOpen.value
 }
 
+// ── Ouvrir config si on est sur une route config ──────────────────────────────
 const isSettingsRouteActive = computed(() =>
   ['/entites', '/utilisateurs', '/point-critique', '/interim'].some(
     path => route.path === path
