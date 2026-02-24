@@ -21,7 +21,6 @@
         </div>
 
         <div class="overflow-y-auto flex-1 p-5 space-y-5">
-
           <section class="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div class="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-100">
               <div class="flex items-center gap-2">
@@ -72,8 +71,7 @@
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Structure / Usager</p>
-                  <p class="text-xs text-slate-800">{{ selectedCourrier.structure || selectedCourrier.autre_structure ||
-                    'Non spécifié' }}</p>
+                  <p class="text-xs text-slate-800">{{ selectedCourrier.structure || selectedCourrier.autre_structure || 'Non spécifié' }}</p>
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Type d'arrivée</p>
@@ -81,16 +79,13 @@
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">N° enregistrement</p>
-                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.document?.numero_enreg || '—' }}
-                  </p>
+                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.document?.numero_enreg || '—' }}</p>
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date d'enregistrement
-                  </p>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date d'enregistrement</p>
                   <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.document?.date_enreg) || '—' }}</p>
                 </div>
-                <div v-if="selectedCourrier.document?.date_courrier"
-                  class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+                <div v-if="selectedCourrier.document?.date_courrier" class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date du courrier</p>
                   <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.document?.date_courrier) }}</p>
                 </div>
@@ -123,8 +118,7 @@
                 <div class="w-5 h-5 rounded bg-emerald-100 flex items-center justify-center">
                   <Icon name="i-heroicons-arrow-uturn-right" class="w-3 h-3 text-emerald-600" />
                 </div>
-                <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier de
-                  réponse</span>
+                <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier de réponse</span>
               </div>
               <span v-if="reponseData && !loadingReponse"
                 class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
@@ -193,8 +187,7 @@
               </div>
             </div>
 
-            <div v-else
-              class="flex items-center gap-2 m-4 p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
+            <div v-else class="flex items-center gap-2 m-4 p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
               <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
               Impossible de charger les détails du courrier de réponse.
             </div>
@@ -247,6 +240,7 @@
       :show-row-numbers="true" :left-aligned-columns="['reference', 'structure', 'numeroEnregistrement', 'objet']"
       @edit="onEdit" @delete="onDelete" @open-document="onOpenDocument" @selection-change="onSelectionChange"
       :hide-labels-when-input="true">
+
       <template #advanced-filters="{ filters, onFilter }">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div v-for="field in filterFields" :key="field.id">
@@ -266,25 +260,24 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
-          <button @click="handleQuickAssign(item.id)" v-if="!isAdmin()" title="Affecter ce courrier"
+          <button v-if="!isAdmin()" @click="handleQuickAssign(item.id)" title="Affecter ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
-
           <button v-if="!item._complete?.document?.reponses?.length && !isAdmin()" @click="handleReply(item)"
             title="Répondre au courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group">
             <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
           </button>
-          <div v-else title="Ce courrier a déjà une réponse" v-if="!isAdmin()"
+          <div v-else-if="!isAdmin()" title="Ce courrier a déjà une réponse"
             class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-500 border border-green-100 rounded-md cursor-default">
             <Icon name="i-heroicons-check-circle" class="w-4 h-4" />
           </div>
-          <button @click="onEdit(item)" v-if="isAdmin()" title="Modifier ce courrier"
+          <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
             <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
-          <button @click="onDelete(item)" v-if="isAdmin()" title="Supprimer ce courrier"
+          <button v-if="isAdmin()" @click="onDelete(item)" title="Supprimer ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border-red-100 rounded-md hover:bg-red-200 hover:text-red-900 transition-all group">
             <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
           </button>
@@ -292,8 +285,7 @@
       </template>
 
       <template #cell-source="{ value }">
-        <span
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+        <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
           {{ value }}
         </span>
       </template>
@@ -306,8 +298,7 @@
           <span>{{ value }}</span>
           <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 opacity-60 group-hover:opacity-100" />
         </button>
-        <span v-else
-          class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md">
+        <span v-else class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md">
           <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 opacity-50" />
           {{ value }}
         </span>
@@ -317,7 +308,8 @@
         <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full border uppercase" :class="{
           'bg-red-50 text-red-700 border-red-100': value?.toLowerCase() === 'urgent',
           'bg-amber-50 text-amber-700 border-amber-100': value?.toLowerCase() === 'important',
-          'bg-sky-50 text-sky-700 border-sky-100': value?.toLowerCase() === 'standard', }">
+          'bg-sky-50 text-sky-700 border-sky-100': value?.toLowerCase() === 'standard',
+        }">
           {{ value || 'Standard' }}
         </span>
       </template>
@@ -326,28 +318,22 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DataTable from '~/components/DataTable.vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
-import { useApi } from '~/composables/useApi'
 import { useAffectationsStore } from '~/stores/affectations'
 import { useCourriersStore } from '~/stores/courriers'
-import Swal from 'sweetalert2'
 import { useAuth } from '~/composables/auth/useAuth'
+import Swal from 'sweetalert2'
 
-const { isAdmin } = useAuth()
-
-// ── Prop optionnelle — si fournie, filtre par entité (cas SA) ─────────────────
 const props = defineProps({
-  entiteId: {
-    type: Number,
-    default: null,
-  }
+  entiteId: { type: Number, default: null }
 })
 
 const store = useAffectationsStore()
 const courriersStore = useCourriersStore()
 const config = useRuntimeConfig()
+const { isAdmin } = useAuth()
 
 const filterFields = [
   { id: 'source', label: 'Source' },
@@ -356,6 +342,10 @@ const filterFields = [
   { id: 'type_arrivee', label: "Type d'arrivée" },
 ]
 
+// ── État ──────────────────────────────────────────────────────────────────────
+const courriers = ref([])
+const loading = ref(false)
+const error = ref(null)
 const detailsOpen = ref(false)
 const selectedCourrier = ref(null)
 const showArriveeDoc = ref(false)
@@ -363,6 +353,7 @@ const showReponseDoc = ref(false)
 const loadingReponse = ref(false)
 const reponseData = ref(null)
 
+// ── Computed ──────────────────────────────────────────────────────────────────
 const arriveeUrl = computed(() => {
   const raw = selectedCourrier.value?.document?.url
   const url = raw?.trim?.()
@@ -373,6 +364,78 @@ const arriveeUrl = computed(() => {
   return `${base}${path}`
 })
 
+// ── Colonnes ──────────────────────────────────────────────────────────────────
+const columns = [
+  { key: 'source', label: 'Source', visible: true, type: 'badge', inputHidden: true },
+  { key: 'reference', label: 'Référence', visible: true, inputWidth: '80px', inputPlaceholder: 'Réf...' },
+  { key: 'numeroEnregistrement', label: "N° d'enreg.", visible: false, inputHidden: true },
+  { key: 'objet', label: 'Objet', visible: true },
+  { key: 'date_enregistrement', label: "Date d'enregistrement", visible: false },
+  { key: 'date_courrier', label: 'Date du Courrier', visible: false },
+  { key: 'url', label: 'Document', visible: false, type: 'document' },
+  { key: 'type_arrivee', label: "Type d'arrivée", visible: false },
+  { key: 'priority', label: 'Priorité', visible: true, type: 'badge' },
+  { key: 'structure', label: 'Structure / Usager', visible: true },
+]
+
+// ── Utilitaires ───────────────────────────────────────────────────────────────
+const formatDate = (date) => {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+}
+
+const transformCourriers = (response) => {
+  if (!response?.data) throw new Error('Format de réponse API invalide')
+  return response.data.map((courrier) => ({
+    id: courrier.id,
+    source: courrier.service_enreg || '',
+    numeroEnregistrement: courrier.document?.numero_enreg || '',
+    reference: courrier.document?.reference || '',
+    structure: courrier.structure || courrier.autre_structure || '',
+    date_enregistrement: formatDate(courrier.document?.date_enreg),
+    objet: courrier.document?.objet || '',
+    date_courrier: formatDate(courrier.document?.date_courrier),
+    url: courrier.document?.url ? `${config.public.baseUrl}${courrier.document.url}` : '',
+    type_arrivee: courrier.type_arrivee || '',
+    priority: courrier.priority || '',
+    _complete: courrier,
+  }))
+}
+
+// ── Chargement ────────────────────────────────────────────────────────────────
+const refresh = async () => {
+  loading.value = true
+  error.value = null
+
+  try {
+    const authToken = localStorage.getItem('auth_token') || ''
+
+    // Construire l'endpoint — SA filtre par code entité, autres voient tout
+    let endpoint = `${config.public.apiBase}/courriers-arrives`
+    if (props.entiteId) {
+      const selectedEntite = JSON.parse(localStorage.getItem('selected_entite') || 'null')
+      if (selectedEntite?.code) {
+        endpoint += `?service_enreg=${selectedEntite.code}`
+      }
+    }
+
+    console.log(`[CourriersArrivesListe] GET ${endpoint}`)
+
+    const response = await $fetch(endpoint, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    courriers.value = transformCourriers(response)
+
+  } catch (err) {
+    console.error('❌ Erreur chargement courriers arrivés:', err)
+    error.value = err.message || 'Erreur lors du chargement'
+  } finally {
+    loading.value = false
+  }
+}
+
+// ── Modal détails ─────────────────────────────────────────────────────────────
 const handleView = async (item) => {
   const courrier = item._complete || item
   selectedCourrier.value = courrier
@@ -400,7 +463,7 @@ const loadReponseData = async (documentId) => {
   if (!documentId) return
   loadingReponse.value = true
   try {
-    const authToken = process.client ? localStorage.getItem('auth_token') : ''
+    const authToken = localStorage.getItem('auth_token') || ''
     const allDeparts = await $fetch(`${config.public.apiBase}/courriers-departs`, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
@@ -417,13 +480,13 @@ const loadReponseData = async (documentId) => {
     }
 
     reponseData.value = {
-      reference: doc?.document?.reference || 'Sans référence',
-      objet: doc?.document?.objet || 'Non spécifié',
+      reference:    doc?.document?.reference || 'Sans référence',
+      objet:        doc?.document?.objet || 'Non spécifié',
       destinataire: doc?.destinataire || '—',
-      date_depart: doc?.date_depart || null,
-      type_depart: doc?.type_depart || null,
+      date_depart:  doc?.date_depart || null,
+      type_depart:  doc?.type_depart || null,
       service_emis: doc?.service_emis || null,
-      url: buildUrl((doc?.document?.url || '').trim()),
+      url:          buildUrl((doc?.document?.url || '').trim()),
     }
   } catch (e) {
     console.error('❌ Erreur chargement réponse:', e)
@@ -433,56 +496,7 @@ const loadReponseData = async (documentId) => {
   }
 }
 
-const columns = [
-  { key: 'source', label: 'Source', visible: true, type: 'badge', inputHidden: true },
-  { key: 'reference', label: 'Référence', visible: true, inputWidth: '80px', inputPlaceholder: 'Réf...' },
-  { key: 'numeroEnregistrement', label: "N° d'enreg.", visible: false, inputHidden: true },
-  { key: 'objet', label: 'Objet', visible: true },
-  { key: 'date_enregistrement', label: "Date d'enregistrement", visible: false },
-  { key: 'date_courrier', label: 'Date du Courrier', visible: false },
-  { key: 'url', label: 'Document', visible: false, type: 'document' },
-  { key: 'type_arrivee', label: "Type d'arrivée", visible: false },
-  { key: 'priority', label: 'Priorité', visible: true, type: 'badge' },
-  { key: 'structure', label: 'Structure / Usager', visible: true },
-]
-
-const formatDate = (date) => {
-  if (!date) return ''
-  return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-}
-
-const transformCourriers = (response) => {
-  if (!response?.data) throw new Error('Format de réponse API invalide')
-  return response.data.map((courrier) => ({
-    id: courrier.id,
-    source: courrier.service_enreg || '',
-    numeroEnregistrement: courrier.document?.numero_enreg || '',
-    reference: courrier.document?.reference || '',
-    structure: courrier.structure || courrier.autre_structure || '',
-    date_enregistrement: formatDate(courrier.document?.date_enreg),
-    objet: courrier.document?.objet || '',
-    date_courrier: formatDate(courrier.document?.date_courrier),
-    url: courrier.document?.url ? `${config.public.baseUrl}${courrier.document.url}` : '',
-    type_arrivee: courrier.type_arrivee || '',
-    priority: courrier.priority || '',
-    _complete: courrier,
-  }))
-}
-
-// Récupérer le code de l'entité depuis selected_entite
-const selectedEntite = process.client
-  ? JSON.parse(localStorage.getItem('selected_entite') || 'null')
-  : null
-
-const endpointStr = props.entiteId && selectedEntite?.code
-  ? `/courriers-arrives?service_enreg=${selectedEntite.code}`
-  : '/courriers-arrives'
-
-const { data: courriers, loading, error, refresh } = useApi(endpointStr, {
-  transform: transformCourriers,
-  immediate: true,
-})
-
+// ── Handlers ──────────────────────────────────────────────────────────────────
 const onOpenDocument = (url) => {
   if (url) window.open(url, '_blank', 'noopener,noreferrer')
 }
@@ -528,6 +542,7 @@ const onDelete = async (item) => {
     reverseButtons: true,
   })
   if (!result.isConfirmed) return
+
   try {
     const authToken = localStorage.getItem('auth_token')
     await $fetch(`${config.public.apiBase}/courriers-arrives/${item.id}`, {
@@ -537,26 +552,19 @@ const onDelete = async (item) => {
     await Swal.fire({ title: 'Supprimé !', text: 'Le courrier a été supprimé avec succès', icon: 'success', timer: 2000, showConfirmButton: false })
     refresh()
   } catch (err) {
-    // ✅ err.data contient le corps JSON du 422 renvoyé par Laravel
     const message = err.data?.message || err.message || 'Impossible de supprimer le courrier'
-    
-    // ✅ Si des affectations bloquent la suppression, on affiche le détail
     const affectationsCount = err.data?.data?.affectations_count
 
     await Swal.fire({
       title: 'Suppression impossible',
       html: affectationsCount
-        ? `
-          <div class="text-left">
+        ? `<div class="text-left">
             <p class="mb-3">${message}</p>
             <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
-              <p class="text-sm text-orange-800">
-                <strong>${affectationsCount}</strong> affectation(s) / transfert(s) associé(s) à ce courrier.
-              </p>
-              <p class="text-xs text-orange-600 mt-1">Supprimez d'abord les affectations avant de supprimer le courrier.</p>
+              <p class="text-sm text-orange-800"><strong>${affectationsCount}</strong> affectation(s) associée(s).</p>
+              <p class="text-xs text-orange-600 mt-1">Supprimez d'abord les affectations.</p>
             </div>
-          </div>
-        `
+           </div>`
         : `<p>${message}</p>`,
       icon: 'error',
       confirmButtonColor: '#7c3aed',
@@ -564,32 +572,23 @@ const onDelete = async (item) => {
     })
   }
 }
+
+// ── Lifecycle ─────────────────────────────────────────────────────────────────
+onMounted(() => {
+  refresh()
+})
 </script>
 
 <style scoped>
-:deep(.swal2-html-container) {
-  margin: 1rem 0;
-}
-
-:deep(.swal2-actions) {
-  gap: 0.75rem;
-}
-
-:deep(.swal2-confirm),
-:deep(.swal2-cancel) {
+:deep(.swal2-html-container) { margin: 1rem 0; }
+:deep(.swal2-actions) { gap: 0.75rem; }
+:deep(.swal2-confirm), :deep(.swal2-cancel) {
   padding: 0.625rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
   transition: all 0.2s;
 }
-
-:deep(.swal2-confirm):hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-:deep(.swal2-cancel):hover {
-  background-color: #4b5563 !important;
-}
+:deep(.swal2-confirm):hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+:deep(.swal2-cancel):hover { background-color: #4b5563 !important; }
 </style>
