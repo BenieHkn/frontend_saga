@@ -1,11 +1,14 @@
 // composables/useTransferts.js
 import { ref, computed } from 'vue'
 import { useRuntimeConfig } from '#imports'
+import { useAuth } from '~/composables/auth/useAuth'
+
 
 export const useTransferts = () => {
   const transferts = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const { isSecDir, getDirecteurEntiteUserId } = useAuth()
   const config = useRuntimeConfig()
 
   // Récupérer le token depuis localStorage
@@ -35,6 +38,11 @@ export const useTransferts = () => {
     error.value = null
 
     const entite_user = JSON.parse(localStorage.getItem("entite_user"))
+    const emetteurId = isSecDir()
+        ? (getDirecteurEntiteUserId() ?? entite_user.id)
+        : entite_user.id
+
+      console.log(`📝 Chargement affectations pour destinataire_id: ${emetteurId}`)
 
     try {
       const token = getToken()
@@ -43,7 +51,7 @@ export const useTransferts = () => {
         throw new Error('Token d\'authentification non trouvé')
       }
 
-      const response = await fetch(`${config.public.apiBase}/transferts/user/${entite_user.id}/emitted`, {
+      const response = await fetch(`${config.public.apiBase}/transferts/user/${emetteurId}/emitted`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -1,11 +1,15 @@
 import { ref } from 'vue'
 import { useTransfertsStore } from '~/stores/transferts'
 import { useRuntimeConfig } from '#imports'
+import { useAuth } from '~/composables/auth/useAuth'
+
 
 export const useTransfertsForm = () => {
   const store = useTransfertsStore()
   const config = useRuntimeConfig()
-  
+  const { isSecDir, getDirecteurEntiteUserId } = useAuth()
+
+
   const loading = ref(false)
   const error = ref(null)
   const success = ref(false)
@@ -16,17 +20,26 @@ export const useTransfertsForm = () => {
   }
 
   // 👤 Récupérer l'ID de l'émetteur depuis selected_entite
+
   const getEmetteurId = () => {
-    if (process.client) {
-      const savedFunction = localStorage.getItem('entite_user')
-      if (savedFunction) {
-        const entite_user = JSON.parse(savedFunction)
-        return entite_user.id
-      }
+    if (!process.client) return null
+
+    const saved = localStorage.getItem('entite_user')
+    if (!saved) return null
+
+    const entite_user = JSON.parse(saved)
+    if (!entite_user?.id) return null
+
+    // Si secrétariat de direction → utiliser l'ID du directeur
+    const directeurId = getDirecteurEntiteUserId()
+    if (isSecDir() && directeurId) {
+      return directeurId
     }
-    return null
+
+    return entite_user.entite_user_id ?? entite_user.id
   }
 
+  console.log(`... ${getEmetteurId()}`) 
   // 📤 Envoyer les transferts (un par un)
   const sendTransferts = async (additionalData = {}) => {
     loading.value = true
@@ -35,14 +48,14 @@ export const useTransfertsForm = () => {
 
     try {
       const token = getToken()
-      
+
       if (!token) {
         throw new Error('Token d\'authentification non trouvé')
       }
 
       // Récupérer l'émetteur automatiquement
       const emetteurId = getEmetteurId()
-      
+
       if (!emetteurId) {
         throw new Error('Fonction de l\'émetteur non trouvée. Veuillez sélectionner une fonction.')
       }
@@ -66,7 +79,7 @@ export const useTransfertsForm = () => {
         // } else if (d.entite_user_id) {
         //   destinataireId = d.entite_user_id
         // }
-        
+
         return {
           id: destinataireId,
           name: d.name || `${d.prenom} ${d.nom}`.trim()
@@ -162,10 +175,10 @@ export const useTransfertsForm = () => {
       return {
         success: errors.length === 0,
         type: errors.length === 0 ? 'success' : (successCount > 0 ? 'warning' : 'error'),
-        title: errors.length === 0 
-          ? 'Transferts envoyés' 
+        title: errors.length === 0
+          ? 'Transferts envoyés'
           : (successCount > 0 ? 'Transferts partiellement envoyés' : 'Échec des transferts'),
-        message: errors.length === 0 
+        message: errors.length === 0
           ? `${successCount} transfert(s) créé(s) avec succès`
           : `${successCount} réussi(s), ${errors.length} échec(s) sur ${totalTransferts}`,
         details: details.length > 10 ? [] : details, // Ne pas afficher les détails si trop nombreux
@@ -184,7 +197,7 @@ export const useTransfertsForm = () => {
     } catch (err) {
       error.value = err.message
       console.error('❌ Erreur globale envoi transferts:', err)
-      
+
       return {
         success: false,
         type: 'error',
@@ -227,7 +240,7 @@ export const useTransfertsForm = () => {
     removeCourrierFromSelection,
     removeDestataireFromSelection,
     resetForm,
-    
+
     // Helpers
     getEmetteurId
   }

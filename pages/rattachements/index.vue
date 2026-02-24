@@ -162,6 +162,8 @@ useHead({
   title: "Rattachements de Courriers - Sagar Revolution",
 });
 
+const config = useRuntimeConfig();
+
 // ============================================================================
 // CONFIGURATION DES COLONNES
 // ============================================================================
@@ -255,13 +257,13 @@ const transformerDonneesAPI = (reponseAPI) => {
     ref_arrivee: rattachement?.document?.reference || '',
     objet_arrivee: rattachement?.document?.objet || '',
     doc_arrivee: rattachement?.document?.url
-      ? `http://localhost:8000${rattachement.document.url}`
+      ? `$fetch(${config.public.baseUrl}/${rattachement.document.url}`
       : '',
     link: '→',
     ref_depart: rattachement?.reponse?.reference || '',
     objet_depart: rattachement?.reponse?.objet || '',
     doc_depart: rattachement?.reponse?.url
-      ? `http://localhost:8000${rattachement.reponse.url}`
+      ? `$fetch(${config.public.baseUrl}/${rattachement.reponse.url}`
       : '',
     created_at: formatDate(rattachement.created_at),
     created_by: rattachement.user?.name || 'Système',
@@ -290,7 +292,7 @@ const loadData = async () => {
   error.value = null;
 
   try {
-    const reponse = await $fetch('http://localhost:8000/api/reponses', {
+    const reponse = await $fetch(`${config.public.apiBase}/reponses`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -415,7 +417,7 @@ const deleteItem = async (item) => {
   if (!result.isConfirmed) return;
 
   try {
-    await $fetch(`http://localhost:8000/api/reponses/${item.id}`, {
+    await $fetch(`${config.public.apiBase}/reponses/${item.id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -469,7 +471,7 @@ const deleteSelected = async (selectedIds) => {
   try {
     await Promise.all(
       selectedIds.map(id =>
-        $fetch(`http://localhost:8000/api/reponses/${id}`, {
+        $fetch(`${config.public.apiBase}/reponses/${id}`, {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${authToken.value}`,

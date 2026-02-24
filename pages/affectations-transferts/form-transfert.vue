@@ -9,7 +9,7 @@
     <div class="max-w-7xl mx-auto px-6 py-8">
       <!-- Two Column Layout avec hauteur fixe -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8" style="height: calc(100vh - 300px); min-height: 600px;">
-        
+
         <!-- Courriers Selection Panel (gauche) -->
         <div class="flex flex-col">
           <AffectationsCheckboxListe :loading="affectationsLoading" />
@@ -19,11 +19,11 @@
         <div class="flex flex-col">
           <TransfertsDestinatairesSelectionPanel :loading="destinatairesLoading" />
         </div>
-        
+
       </div>
 
       <!-- Summary Bar -->
-      <TransfertsSummaryBar 
+      <TransfertsSummaryBar
         @save-draft="handleSaveDraft"
         @send-files="handleSendFiles"
         :loading="formLoading"
@@ -52,6 +52,7 @@ import { useTransfertsStore } from '~/stores/transferts'
 import { useAffectations } from '@/composables/affectations/useAffectations'
 import { useDestinataires } from '~/composables/transferts/useTransfertsDestinataires'
 import { useTransfertsForm } from '~/composables/transferts/useTransfertsForm'
+import { useAuth } from '~/composables/auth/useAuth'
 import AffectationsCheckboxListe from '~/components/affectations/AffectationsCheckboxListe.vue'
 import TransfertsDestinatairesSelectionPanel from '~/components/transferts/TransfertsDestinatairesSelectionPanel.vue'
 import TransfertsSummaryBar from '~/components/transferts/TransfertsSummaryBar.vue'
@@ -60,22 +61,25 @@ import PageHeader from '~/components/PageHeader.vue'
 
 const store = useTransfertsStore()
 const toast = useToast()
-const router = useRouter() // ✅ AJOUT : Pour la redirection
+const router = useRouter()
+
+// ✅ Permission transfert — source unique de vérité
+const { peutTransferer } = useAuth()
 
 // Composables pour les données
-const { 
-  tableData: affectationsData, 
-  loading: affectationsLoading, 
-  error: affectationsError, 
-  fetchAffectations 
+const {
+  tableData: affectationsData,
+  loading: affectationsLoading,
+  error: affectationsError,
+  fetchAffectations
 } = useAffectations()
 
-const { 
-  tableData: destinatairesData, 
-  loading: destinatairesLoading, 
+const {
+  tableData: destinatairesData,
+  loading: destinatairesLoading,
   error: destinatairesError,
   accessDenied,
-  fetchDestinataires 
+  fetchDestinataires
 } = useDestinataires()
 
 // Composable pour le formulaire
@@ -97,7 +101,6 @@ const notification = reactive({
   duration: 5000
 })
 
-// Fonction pour afficher une notification
 const showNotification = (data) => {
   notification.show = true
   notification.type = data.type || 'info'
@@ -109,14 +112,16 @@ const showNotification = (data) => {
   notification.duration = data.duration || (data.type === 'error' ? 5000 : 2500)
 }
 
-// Fonction pour fermer la notification
 const closeNotification = () => {
   notification.show = false
   notification.details = []
   notification.stats = null
 }
 
-// Afficher SweetAlert pour l'erreur 403
+// =====================================================================
+// ✅ CONTRÔLE D'ACCÈS — basé sur la permission faire_transfert
+// Remplace l'ancienne vérification uniquement via accessDenied (403 API)
+// =====================================================================
 const showAccessDeniedAlert = async () => {
   const result = await Swal.fire({
     icon: 'error',
@@ -126,21 +131,25 @@ const showAccessDeniedAlert = async () => {
         <div class="bg-red-50 border border-red-200 rounded-lg p-4">
           <div class="flex items-start gap-3">
             <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
             </svg>
             <div class="flex-1">
               <p class="font-semibold text-gray-900 mb-2">Vous ne pouvez pas effectuer de transfert</p>
               <p class="text-sm text-gray-700">
-                Seuls les <strong>responsables de service</strong> sont autorisés à effectuer des transferts de courriers.
+                Seuls les <strong>directeurs techniques</strong>, <strong>chefs de service/division</strong>
+                et les <strong>secrétariats des directions techniques</strong> sont autorisés à effectuer
+                des transferts de courriers.
               </p>
             </div>
           </div>
         </div>
-        
+
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <p class="text-xs text-blue-800">
             <strong>💡 Que faire ?</strong><br>
-            Si vous pensez que vous devriez avoir accès à cette fonctionnalité, veuillez contacter votre administrateur système.
+            Si vous pensez que vous devriez avoir accès à cette fonctionnalité,
+            veuillez contacter votre administrateur système.
           </p>
         </div>
       </div>
@@ -162,40 +171,32 @@ const showAccessDeniedAlert = async () => {
   }
 }
 
-// Présélection basée sur courrier_arrive_id
+// Présélection basée sur courrier_arrive_id (inchangé)
 const handlePreselectedCourrier = () => {
   if (!process.client) return
 
   const preselectedCourrierArrivId = sessionStorage.getItem('preselected_courrier_id_transfer')
-  
+
   if (preselectedCourrierArrivId) {
     console.log('🎯 Courrier présélectionné détecté (courrier_arrive_id):', preselectedCourrierArrivId)
-    
+
     const courrierIdNum = parseInt(preselectedCourrierArrivId, 10)
-    
-    const affectation = affectationsData.value?.find(a => 
+
+    const affectation = affectationsData.value?.find(a =>
       a._raw?.courrier_arrive_id === courrierIdNum
     )
-    
+
     if (affectation) {
       store.selectedAffectations = [affectation.id]
-      
-      console.log('✅ Affectation présélectionnée:', {
-        affectation_id: affectation.id,
-        courrier_arrive_id: courrierIdNum,
-        reference: affectation.reference || affectation._raw?.courrier_arrive?.document?.reference,
-        instructions: affectation.instructions
-      })
-      
+      console.log('✅ Affectation présélectionnée:', affectation.id)
       toast.add({
         title: 'Courrier présélectionné',
-        description: `Affectation sélectionnée automatiquement`,
+        description: 'Affectation sélectionnée automatiquement',
         color: 'green',
         timeout: 2000,
       })
     } else {
       console.warn('⚠️ Aucune affectation trouvée pour le courrier_arrive_id:', courrierIdNum)
-      
       toast.add({
         title: 'Attention',
         description: 'Le courrier présélectionné n\'a pas été trouvé dans vos affectations',
@@ -203,23 +204,35 @@ const handlePreselectedCourrier = () => {
         timeout: 3000,
       })
     }
-    
+
     sessionStorage.removeItem('preselected_courrier_id_transfer')
   }
 }
 
-// Charger les données au montage
+// =====================================================================
+// CHARGEMENT DES DONNÉES
+// =====================================================================
 onMounted(async () => {
-  console.log('🚀 Chargement des données...')
-  
+  console.log('🚀 Chargement de la page transfert...')
+
+  // ✅ 1. Vérification de la permission AVANT tout chargement
+  //    Cela évite des appels API inutiles pour les rôles non autorisés
+  if (!peutTransferer()) {
+    console.warn('🚫 Accès refusé : permission faire_transfert manquante pour le rôle', localStorage.getItem('role'))
+    await showAccessDeniedAlert()
+    return
+  }
+
   try {
     await Promise.all([
       fetchAffectations(),
       fetchDestinataires()
     ])
 
+    // ✅ 2. Double sécurité : vérification 403 renvoyé par l'API
+    //    (cas où les permissions locales seraient désynchronisées)
     if (accessDenied.value) {
-      console.error('🚫 Accès refusé détecté')
+      console.error('🚫 Accès refusé détecté côté API (403)')
       await showAccessDeniedAlert()
       return
     }
@@ -227,14 +240,6 @@ onMounted(async () => {
     if (affectationsData.value) {
       store.setAffectations(affectationsData.value)
       console.log('✅ Affectations chargées:', affectationsData.value.length)
-      
-      if (affectationsData.value.length > 0) {
-        console.log('📋 Exemple d\'affectation:', {
-          affectation_id: affectationsData.value[0].id,
-          courrier_arrive_id: affectationsData.value[0]._raw?.courrier_arrive_id,
-          reference: affectationsData.value[0].reference
-        })
-      }
     } else {
       console.warn('⚠️ Aucune affectation retournée')
       store.setAffectations([])
@@ -270,37 +275,34 @@ onMounted(async () => {
   }
 })
 
-// Gestionnaire pour sauvegarder le brouillon
+// =====================================================================
+// HANDLERS
+// =====================================================================
+
 const handleSaveDraft = async () => {
   console.log('💾 Sauvegarde du brouillon...')
-  
   const result = await saveDraft()
   showNotification(result)
 }
 
-// ✅ MODIFICATION : Gestionnaire avec redirection après succès
 const handleSendFiles = async () => {
   console.log('📤 Envoi des transferts...')
-  
+
   const result = await sendTransferts({
     objet: 'Transfert de courrier'
   })
-  
-  // Afficher la notification
+
   showNotification(result)
 
-  // ✅ REDIRECTION si succès complet (tous les transferts ont réussi)
+  // Redirection si succès complet
   if (result.success && result.type === 'success') {
     console.log('✅ Transferts envoyés avec succès, redirection dans 2 secondes...')
-    
-    // Attendre 2 secondes pour que l'utilisateur voie la notification
     setTimeout(() => {
       navigateTo('/affectations-transferts')
     }, 2000)
   } else if (result.type === 'warning') {
-    // ✅ Succès partiel : demander confirmation avant redirection
+    // Succès partiel : demander confirmation avant redirection
     console.log('⚠️ Transferts partiellement envoyés')
-    
     setTimeout(async () => {
       const confirmResult = await Swal.fire({
         icon: 'warning',
@@ -311,9 +313,7 @@ const handleSendFiles = async () => {
               <strong>${result.stats.success}</strong> transfert(s) envoyé(s) avec succès<br>
               <strong>${result.stats.error}</strong> transfert(s) en échec
             </p>
-            <p class="text-sm text-gray-600">
-              Voulez-vous consulter la liste des transferts ?
-            </p>
+            <p class="text-sm text-gray-600">Voulez-vous consulter la liste des transferts ?</p>
           </div>
         `,
         showCancelButton: true,
@@ -328,7 +328,7 @@ const handleSendFiles = async () => {
       }
     }, 2000)
   }
-  // ✅ Si erreur totale, pas de redirection
+  // Si erreur totale, pas de redirection
 }
 </script>
 
