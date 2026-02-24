@@ -12,7 +12,7 @@
           <Icon name="i-heroicons-arrow-path" class="w-4 h-4" />
           Actualiser
         </button>
-        <UBadge color="blue" variant="soft" size="lg" class="ml-auto">
+        <UBadge color="blue" v-if="!isAdmin()" variant="soft" size="lg" class="ml-auto">
           <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
           <UButton to="/affectations/create" variant="text" size="sm" class="p-0 m-0 text-blue-600">
             Nouveau

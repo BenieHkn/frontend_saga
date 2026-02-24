@@ -37,8 +37,7 @@
     </div>
 
     <DataTable v-else :default-sort-column="null" :show-row-numbers="true" :data="courriers" :columns="columns"
-      :selectable="false"
-      :left-aligned-columns="['reference', 'structure', 'numeroEnregistrement', 'objet', 'initiateurs']"
+      :selectable="false" :left-aligned-columns="['reference', 'structure', 'numeroEnregistrement', 'objet', 'initiateurs']"
       @open-document="onOpenDocument" @selection-change="onSelectionChange">
 
       <template #advanced-filters="{ filters, onFilter }">
@@ -50,18 +49,7 @@
               @input="onFilter" />
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type de
-              document</label>
-            <select v-model="filters.type_document_id"
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-              @change="onFilter">
-              <option value="">Tous les types</option>
-              <option v-for="type in documentTypesList" :key="type.id" :value="type.id">{{ type.libelle }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type de
-              départ</label>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type de départ</label>
             <select v-model="filters.type_depart"
               class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
               @change="onFilter">
@@ -71,9 +59,14 @@
             </select>
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de départ
-              (début)</label>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de départ (début)</label>
             <input v-model="filters.date_depart_from" type="date"
+              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+              @input="onFilter" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de départ (fin)</label>
+            <input v-model="filters.date_depart_to" type="date"
               class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
               @input="onFilter" />
           </div>
@@ -90,31 +83,25 @@
       </template>
 
       <template #cell-source="{ value }">
-        <span
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+        <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
           {{ value }}
         </span>
       </template>
 
       <template #cell-type_document="{ value }">
-        <span
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-green-50 text-green-700 border border-green-100">
+        <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-green-50 text-green-700 border border-green-100">
           {{ value || 'N/A' }}
         </span>
       </template>
 
       <template #cell-large_diffusion="{ value }">
-        <span v-if="value"
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">Oui</span>
-        <span v-else
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-gray-50 text-gray-700 border border-gray-100">Non</span>
+        <span v-if="value" class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">Oui</span>
+        <span v-else class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-gray-50 text-gray-700 border border-gray-100">Non</span>
       </template>
 
       <template #cell-confidentiel="{ value }">
-        <span v-if="value"
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-red-50 text-red-700 border border-red-100">Oui</span>
-        <span v-else
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-gray-50 text-gray-700 border border-gray-100">Non</span>
+        <span v-if="value" class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-red-50 text-red-700 border border-red-100">Oui</span>
+        <span v-else class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-gray-50 text-gray-700 border border-gray-100">Non</span>
       </template>
 
       <template #cell-reference="{ value, item }">
@@ -125,9 +112,7 @@
           <span>{{ value }}</span>
           <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 opacity-60 group-hover:opacity-100" />
         </button>
-        <span v-else
-          class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md"
-          :title="value">
+        <span v-else class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md" :title="value">
           <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 opacity-50" />
           {{ value }}
         </span>
@@ -148,39 +133,40 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import DataTable from '~/components/DataTable.vue'
-import { useApi } from '~/composables/useApi'
 import Swal from 'sweetalert2'
-import { ref, computed } from 'vue'
 
-// ── Prop optionnelle — si fournie, filtre par entité (cas SA) ─────────────────
 const props = defineProps({
-  entiteId: {
-    type: Number,
-    default: null,
-  }
+  entiteId: { type: Number, default: null }
 })
 
 const config = useRuntimeConfig()
-const documentTypesList = ref([])
 
+// ── État ──────────────────────────────────────────────────────────────────────
+const courriers = ref([])
+const loading = ref(false)
+const error = ref(null)
+
+// ── Colonnes ──────────────────────────────────────────────────────────────────
 const columns = [
-  { key: 'source', label: 'Source', visible: true, type: 'badge', inputHidden: true },
-  { key: 'reference', label: 'Référence', visible: true },
-  { key: 'structure', label: 'Destinataire', visible: true, inputHidden: true },
-  { key: 'numeroEnregistrement', label: "N° d'enregistrement", visible: true, inputHidden: true },
-  { key: 'objet', label: 'Objet', visible: true },
-  { key: 'type_document', label: 'Type de document', visible: true, inputHidden: true },
-  { key: 'initiateurs', label: 'Initiateurs', visible: true, inputHidden: true, sortable: false, filterable: false },
-  { key: 'date_enregistrement', label: "Date d'enregistrement", visible: false },
-  { key: 'date_courrier', label: 'Date du Courrier', visible: false },
-  { key: 'url', label: 'Document', visible: false, type: 'document' },
-  { key: 'type_depart', label: 'Type de départ', visible: false },
-  { key: 'date_depart', label: 'Date de départ', visible: false },
-  { key: 'large_diffusion', label: 'Large diffusion', visible: false },
-  { key: 'confidentiel', label: 'Confidentiel', visible: false },
+  { key: 'source',               label: 'Source',                visible: true,  type: 'badge', inputHidden: true },
+  { key: 'reference',            label: 'Référence',             visible: true },
+  { key: 'structure',            label: 'Destinataire',          visible: true,  inputHidden: true },
+  { key: 'numeroEnregistrement', label: "N° d'enregistrement",   visible: true,  inputHidden: true },
+  { key: 'objet',                label: 'Objet',                 visible: true },
+  { key: 'type_document',        label: 'Type de document',      visible: true,  inputHidden: true },
+  { key: 'initiateurs',          label: 'Initiateurs',           visible: true,  inputHidden: true, sortable: false, filterable: false },
+  { key: 'date_enregistrement',  label: "Date d'enregistrement", visible: false },
+  { key: 'date_courrier',        label: 'Date du Courrier',      visible: false },
+  { key: 'url',                  label: 'Document',              visible: false, type: 'document' },
+  { key: 'type_depart',          label: 'Type de départ',        visible: false },
+  { key: 'date_depart',          label: 'Date de départ',        visible: false },
+  { key: 'large_diffusion',      label: 'Large diffusion',       visible: false },
+  { key: 'confidentiel',         label: 'Confidentiel',          visible: false },
 ]
 
+// ── Utilitaires ───────────────────────────────────────────────────────────────
 const formatDate = (date) => {
   if (!date) return ''
   return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -190,46 +176,67 @@ const transformCourriers = (response) => {
   if (!response?.data) throw new Error('Format de réponse API invalide')
   return response.data.map((courrier) => {
     const initiateursList = (courrier.initiateurs || []).map(i => {
-      const nom = i.user?.nom || ''
+      const nom    = i.user?.nom    || ''
       const prenom = i.user?.prenom || ''
-      const code = i.entite?.code || i.entite?.libelle || ''
+      const code   = i.entite?.code || i.entite?.libelle || ''
       return `${nom} ${prenom}${code ? ` (${code})` : ''}`.trim()
     }).filter(Boolean)
 
     return {
-      id: courrier.id,
-      source: courrier.service_emis || '',
+      id:                   courrier.id,
+      source:               courrier.service_emis || '',
       numeroEnregistrement: courrier.document?.numero_enreg || '',
-      reference: courrier.document?.reference || '',
-      structure: courrier.destinataire || '',
-      date_enregistrement: formatDate(courrier.document?.date_enreg),
-      objet: courrier.document?.objet || '',
-      date_courrier: formatDate(courrier.document?.date_courrier),
-      url: courrier.document?.url ? `${config.public.baseUrl}${courrier.document.url}` : '',
-      type_depart: courrier.type_depart || '',
-      date_depart: formatDate(courrier.date_depart),
-      type_document: courrier.document?.type_document?.libelle || '',
-      large_diffusion: courrier.document?.large_diffusion || false,
-      confidentiel: courrier.confidentiel || false,
-      initiateurs: initiateursList,
-      _complete: courrier,
+      reference:            courrier.document?.reference || '',
+      structure:            courrier.destinataire || '',
+      date_enregistrement:  formatDate(courrier.document?.date_enreg),
+      objet:                courrier.document?.objet || '',
+      date_courrier:        formatDate(courrier.document?.date_courrier),
+      url:                  courrier.document?.url ? `${config.public.baseUrl}${courrier.document.url}` : '',
+      type_depart:          courrier.type_depart || '',
+      date_depart:          formatDate(courrier.date_depart),
+      type_document:        courrier.document?.type_document?.libelle || '',
+      large_diffusion:      courrier.document?.large_diffusion || false,
+      confidentiel:         courrier.confidentiel || false,
+      initiateurs:          initiateursList,
+      _complete:            courrier,
     }
   })
 }
 
-const selectedEntite = process.client
-  ? JSON.parse(localStorage.getItem('selected_entite') || 'null')
-  : null
+// ── Chargement ────────────────────────────────────────────────────────────────
+const refresh = async () => {
+  loading.value = true
+  error.value = null
 
-const endpointStr = props.entiteId && selectedEntite?.code
-  ? `/courriers-departs?service_emis=${selectedEntite.code}`
-  : '/courriers-departs'
+  try {
+    const authToken = localStorage.getItem('auth_token') || ''
 
-const { data: courriers, loading, error, refresh } = useApi(endpointStr, {
-  transform: transformCourriers,
-  immediate: true,
-})
+    // Construire l'endpoint — SA filtre par code entité, autres voient tout
+    let endpoint = `${config.public.apiBase}/courriers-departs`
+    if (props.entiteId) {
+      const selectedEntite = JSON.parse(localStorage.getItem('selected_entite') || 'null')
+      if (selectedEntite?.code) {
+        endpoint += `?service_emis=${selectedEntite.code}`
+      }
+    }
 
+    console.log(`[CourriersDepartsListe] GET ${endpoint}`)
+
+    const response = await $fetch(endpoint, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    courriers.value = transformCourriers(response)
+
+  } catch (err) {
+    console.error('❌ Erreur chargement courriers départs:', err)
+    error.value = err.message || 'Erreur lors du chargement'
+  } finally {
+    loading.value = false
+  }
+}
+
+// ── Handlers ──────────────────────────────────────────────────────────────────
 const onOpenDocument = (url) => {
   if (url) window.open(url, '_blank', 'noopener,noreferrer')
 }
@@ -241,10 +248,10 @@ const handleView = async (item) => {
 
   const initiateurHtml = courrier.initiateurs?.length > 0
     ? courrier.initiateurs.map(i =>
-      `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#f3e8ff;color:#7e22ce;border:1px solid #e9d5ff;border-radius:9999px;font-size:12px;margin:2px;">
+        `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#f3e8ff;color:#7e22ce;border:1px solid #e9d5ff;border-radius:9999px;font-size:12px;margin:2px;">
           👤 ${i.user?.nom || ''} ${i.user?.prenom || ''} ${i.entite?.code ? `(${i.entite.code})` : i.entite?.libelle ? `(${i.entite.libelle})` : ''}
         </span>`
-    ).join('')
+      ).join('')
     : '<span style="color:#9ca3af;font-style:italic;font-size:13px;">Aucun initiateur</span>'
 
   await Swal.fire({
@@ -309,17 +316,16 @@ const handleView = async (item) => {
     width: '600px',
   })
 }
+
+// ── Lifecycle ─────────────────────────────────────────────────────────────────
+onMounted(() => {
+  refresh()
+})
 </script>
 
 <style scoped>
-:deep(.swal2-html-container) {
-  margin: 1rem 0;
-}
-
-:deep(.swal2-actions) {
-  gap: 0.75rem;
-}
-
+:deep(.swal2-html-container) { margin: 1rem 0; }
+:deep(.swal2-actions) { gap: 0.75rem; }
 :deep(.swal2-confirm) {
   padding: 0.625rem 1.5rem;
   border-radius: 0.5rem;
@@ -327,9 +333,5 @@ const handleView = async (item) => {
   font-size: 0.875rem;
   transition: all 0.2s;
 }
-
-:deep(.swal2-confirm):hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
+:deep(.swal2-confirm):hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
 </style>

@@ -205,7 +205,7 @@
         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Courriers arrivés</h1>
         <p class="text-sm text-slate-500">Gestion et suivi des courriers entrants</p>
       </div>
-      <UBadge color="blue" variant="soft" size="lg" class="ml-auto">
+      <UBadge color="blue" variant="soft" size="lg" class="ml-auto" v-if="!isAdmin()">
         <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
         <UButton to="/courriers/form_courier_arrive" variant="text" size="sm" class="p-0 m-0 text-blue-600">
           Nouveau

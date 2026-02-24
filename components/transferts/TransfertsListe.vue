@@ -14,7 +14,7 @@
         </button>
 
         <!-- ✅ Bouton "Nouveau" visible uniquement si l'utilisateur peut transférer -->
-        <UBadge v-if="peutTransferer()" color="blue" variant="soft" size="lg" class="ml-auto">
+        <UBadge v-if="peutTransferer() && !isAdmin()" color="blue" variant="soft" size="lg" class="ml-auto">
           <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
           <UButton to="/affectations-transferts/form-transfert" variant="text" size="sm" class="p-0 m-0 text-blue-600">
             Nouveau
