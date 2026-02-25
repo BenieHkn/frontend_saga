@@ -37,7 +37,7 @@ definePageMeta({
 })
 const config = useRuntimeConfig()
 
-console.log('LARAVEL API URL:', config.public.laravelApiUrl)
+console.log('LARAVEL API URL:', config.public.apiBase)
 
 onMounted(async () => {
   if (process.client) {

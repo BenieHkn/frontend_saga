@@ -59,12 +59,17 @@
             route.path === '/point-critique'
               ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg'
               : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'
-          ]">Point Critique</NuxtLink>
+          ]">Points Critiques</NuxtLink>
           <NuxtLink to="/interim" class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors" :class="[
             route.path === '/interim'
               ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg'
               : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'
-          ]">Intérim</NuxtLink>
+          ]">Intérims</NuxtLink>
+          <NuxtLink to="/type-document" class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors" :class="[
+            route.path === '/type-document'
+              ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg'
+              : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'
+          ]">Types de documents</NuxtLink>
         </div>
       </div>
     </nav>
@@ -131,7 +136,7 @@ const menuItems = [
     icon: "heroicons:chart-bar-20-solid",
   },
   {
-    name: "Pré-Achivage",
+    name: "Pré-Archivage",
     path: "/archivage",
     icon: "heroicons:archive-box-20-solid",
   },
