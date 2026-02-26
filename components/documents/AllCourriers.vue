@@ -1,6 +1,6 @@
 <template>
   <UContainer>
-    <PageHeader 
+    <PageHeader
       title="Documents"
       subtitle="Gestion et suivi des documents"
     />
@@ -29,9 +29,8 @@
       </div>
     </div>
 
-    <!-- Contenu dynamique avec chargement paresseux -->
+    <!-- Contenu dynamique -->
     <div class="mt-10 space-y-4 border-t pt-8">
-      <!-- État de chargement -->
       <div v-if="isLoading" class="flex items-center justify-center py-12">
         <div class="text-center">
           <Icon name="i-heroicons-arrow-path" class="w-10 h-10 text-blue-500 mx-auto mb-3 animate-spin" />
@@ -39,10 +38,9 @@
         </div>
       </div>
 
-      <!-- Composants chargés dynamiquement -->
       <template v-else>
         <KeepAlive>
-          <component :is="currentComponent" />
+          <component :is="currentComponent" :entite-id="entiteId" />
         </KeepAlive>
       </template>
     </div>
@@ -50,7 +48,15 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, shallowRef } from 'vue'
+import { ref, shallowRef, onMounted } from 'vue'
+
+// Prop optionnelle — si fournie, filtre les courriers par entité (cas SA)
+const props = defineProps({
+  entiteId: {
+    type: Number,
+    default: null,
+  }
+})
 
 // Chargement paresseux des composants
 const CourriersArrivesListe = defineAsyncComponent({
@@ -112,23 +118,20 @@ const selectedType = ref(documentTypes[0])
 const isLoading = ref(false)
 const currentComponent = shallowRef(null)
 
-// Composant actuel basé sur la sélection
 const componentMap = {
   CourriersArrivesListe,
   CourriersDepartsListe,
   CourriersDocumentsInternes,
 }
 
-// Charger le composant initial
 onMounted(() => {
   loadComponent(selectedType.value.component)
 })
 
-// Fonction pour charger un composant
 const loadComponent = async (componentName) => {
   isLoading.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 100)) // Petit délai
+    await new Promise(resolve => setTimeout(resolve, 100))
     currentComponent.value = componentMap[componentName]
   } catch (error) {
     console.error('Erreur lors du chargement du composant:', error)
@@ -137,10 +140,8 @@ const loadComponent = async (componentName) => {
   }
 }
 
-// Changer de composant quand on change de type
 const handleClick = async (data) => {
-  if (selectedType.value.id === data.id) return // Éviter de recharger si déjà sélectionné
-  
+  if (selectedType.value.id === data.id) return
   selectedType.value = data
   await loadComponent(data.component)
 }

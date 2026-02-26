@@ -189,6 +189,9 @@
 </template>
 
 <script setup>
+import { useNotifications } from '@/composables/useNotifications';
+
+
 const showNotifications = ref(false);
 const showUserMenu = ref(false);
 const user = ref(null);

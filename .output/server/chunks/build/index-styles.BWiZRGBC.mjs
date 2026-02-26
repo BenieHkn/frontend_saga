@@ -1,8 +1,0 @@
-const index_vue_vue_type_style_index_0_scoped_cc2188bf_lang = ".line-clamp-2[data-v-cc2188bf]{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}[data-v-cc2188bf] .swal2-html-container{margin:1rem 0}[data-v-cc2188bf] .swal2-actions{gap:.75rem}[data-v-cc2188bf] .swal2-cancel,[data-v-cc2188bf] .swal2-confirm{border-radius:.5rem;font-size:.875rem;font-weight:500;padding:.625rem 1.5rem;transition:all .2s}[data-v-cc2188bf] .swal2-confirm:hover{box-shadow:0 4px 6px -1px #0000001a;transform:translateY(-1px)}[data-v-cc2188bf] .swal2-cancel:hover{background-color:#4b5563!important}";
-
-const indexStyles_BWiZRGBC = [
-  index_vue_vue_type_style_index_0_scoped_cc2188bf_lang
-];
-
-export { indexStyles_BWiZRGBC as default };
-//# sourceMappingURL=index-styles.BWiZRGBC.mjs.map

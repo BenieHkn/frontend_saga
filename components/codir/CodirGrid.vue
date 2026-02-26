@@ -1,0 +1,78 @@
+<script setup>
+import { formatDateFR, extractTime, getStatutConfig } from '@/composables/codirs/useCodir'
+
+defineProps({
+  codir: { type: Object, required: true }
+})
+
+const emit = defineEmits(['edit', 'view'])
+
+const GRADIENT = {
+  nouveau:   'from-blue-700 to-indigo-700',
+  'terminé': 'from-green-700 to-emerald-700',
+  clos:      'from-slate-600 to-gray-700',
+  en_cours:  'from-amber-600 to-orange-600',
+  'annulé':  'from-red-700 to-rose-700',
+}
+
+const gradient = (s) => GRADIENT[s] ?? 'from-slate-600 to-gray-700'
+</script>
+
+<template>
+  <UCard
+    :class="`relative rounded-2xl border-none shadow-sm hover:shadow-inner transition-all duration-300 group overflow-hidden bg-gradient-to-br ${gradient(codir.statut)} hover:scale-[0.97] cursor-pointer`"
+    @click="emit('view')"
+  >
+    <!-- Blob décoratif -->
+    <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
+
+    <div class="relative z-10">
+      <!-- Header statut + action -->
+      <div class="flex justify-between items-start mb-5">
+        <span class="text-white/90 text-[10px] font-semibold px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm capitalize">
+          {{ getStatutConfig(codir.statut).label }}
+        </span>
+        <UButton
+          color="white" variant="ghost" icon="i-heroicons-pencil" size="xs"
+          class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white/20"
+          @click.stop="emit('edit')"
+        />
+      </div>
+
+      <!-- Date principale -->
+      <h4 class="font-bold text-xl text-white mb-1 leading-tight">
+        {{ formatDateFR(codir.date) }}
+      </h4>
+
+      <!-- Horaire -->
+      <p class="text-xs text-white/65 flex items-center gap-1.5 mb-6">
+        <UIcon name="i-heroicons-clock" class="w-3.5 h-3.5" />
+        {{ extractTime(codir.heure_debut) }} – {{ extractTime(codir.heure_fin) }}
+      </p>
+
+      <!-- Footer compteurs + dot statut -->
+      <div class="flex items-center justify-between pt-4 border-t border-white/15">
+        <div class="flex items-center gap-4 text-white/60 text-xs">
+          <span class="flex items-center gap-1.5">
+            <UIcon name="i-heroicons-clipboard-document-list" class="w-3.5 h-3.5" />
+            {{ codir.ordres_du_jour?.length ?? 0 }} ODJ
+          </span>
+          <span class="flex items-center gap-1.5">
+            <UIcon name="i-heroicons-check-circle" class="w-3.5 h-3.5" />
+            {{ codir.taches?.length ?? 0 }} tâches
+          </span>
+        </div>
+
+        <div class="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full">
+          <div :class="`w-1.5 h-1.5 rounded-full animate-pulse ${getStatutConfig(codir.statut).dotClass}`" />
+          <span class="text-[10px] text-white/70">
+            <template v-if="codir.taches?.length">
+              {{ Math.round(codir.taches.reduce((a, t) => a + (t.pivot?.progression ?? 0), 0) / codir.taches.length) }}%
+            </template>
+            <template v-else>—</template>
+          </span>
+        </div>
+      </div>
+    </div>
+  </UCard>
+</template>

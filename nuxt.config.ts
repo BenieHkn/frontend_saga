@@ -1,22 +1,38 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   plugins: ['~/plugins/onesignal.client.js'],
+
   devtools: { enabled: true },
+
   colorMode: {
-    preference: 'light' // Par défaut en light mode comme la maquette
+    preference: 'light'
   },
+
   modules: [
     '@nuxt/ui',
     '@nuxtjs/tailwindcss',
     '@nuxt/image',
-    '@pinia/nuxt'
+    '@pinia/nuxt',
+    'pinia-plugin-persistedstate/nuxt',
   ],
+
   css: ['~/assets/css/main.css'],
+
   runtimeConfig: {
     public: {
-      apiBase: process.env.API_BASE_URL || 'http://192.168.40.3:8000/api',
-      baseUrl: process.env.BASE_URL || 'http://192.168.40.3:8000'
+      apiBase: process.env.API_BASE_URL || 'http://localhost:8000/api',
+      baseUrl: process.env.BASE_URL || 'http://localhost:8000'
+      // apiBase: process.env.API_BASE_URL || 'http://192.168.40.3:8000/api',
+      // baseUrl: process.env.BASE_URL || 'http://192.168.40.3:8000'
     }
+  },
+
+  icon: {
+    collections: ['heroicons', 'simple-icons']
+  },
+
+  ui: {
+    global: true,
   },
 
   tailwindcss: {
@@ -30,7 +46,7 @@ export default defineNuxtConfig({
               200: '#bbf7d0',
               300: '#86efac',
               400: '#4ade80',
-              500: '#10b981', // emerald-500
+              500: '#10b981',
               600: '#059669',
               700: '#047857',
               800: '#065f46',
@@ -42,7 +58,7 @@ export default defineNuxtConfig({
               200: '#bfdbfe',
               300: '#93c5fd',
               400: '#60a5fa',
-              500: '#2563eb', // blue-600
+              500: '#2563eb',
               600: '#1d4ed8',
               700: '#1e40af',
               800: '#1e3a8a',
@@ -81,18 +97,17 @@ export default defineNuxtConfig({
     },
   },
 
-
-  ui: {
-    global: true,
-    icons: ['heroicons', 'simple-icons']
-  },
   app: {
     head: {
       title: 'SAGA Revolution',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { hid: 'description', name: 'description', content: 'A modern admin dashboard template inspired by DeskApp' }
+        {
+          key: 'description',
+          name: 'description',
+          content: 'A modern admin dashboard template inspired by DeskApp'
+        }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }

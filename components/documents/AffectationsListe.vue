@@ -211,13 +211,13 @@ import { ref, onMounted } from 'vue';
 import Swal from 'sweetalert2';
 import { useAffectationsStore } from '~/stores/affectations.js'
 import { useTransfertsStore } from '~/stores/transferts.js'
+import { useAuth } from '~/composables/auth/useAuth'
 
 const affectationsStore = useAffectationsStore()
 const transfertsStore = useTransfertsStore()
+const { isSecDir, getDirecteurEntiteUserId } = useAuth()
 
-useHead({
-  title: "Documents reçus - Sagar Revolution",
-});
+useHead({ title: "Documents reçus - Sagar Revolution" });
 
 // ============================================================================
 // CONFIGURATION DES COLONNES
@@ -321,12 +321,6 @@ const transformerDonneesAPI = (reponseAPI) => {
 const loadData = async () => {
   if (!authToken.value) {
     error.value = 'Token d\'authentification manquant';
-    toast.add({
-      title: 'Erreur',
-      description: 'Session expirée. Veuillez vous reconnecter.',
-      color: 'red',
-      timeout: 1500,
-    });
     return;
   }
 
@@ -339,29 +333,25 @@ const loadData = async () => {
       const savedFunction = localStorage.getItem('entite_user')
       if (savedFunction) {
         entite_user = JSON.parse(savedFunction)
-        // ✅ NOUVEAU : Récupérer le statut responsable
         isResponsable.value = entite_user.is_responsable || false
-        console.log('👤 Utilisateur responsable:', isResponsable.value)
       }
     }
 
     if (!entite_user || !entite_user.id) {
-      console.error('❌ Aucune fonction user sélectionnée')
       error.value = 'Aucune fonction user sélectionnée'
-      toast.add({
-        title: 'Erreur',
-        description: 'Aucune fonction user sélectionnée. Veuillez vous reconnecter.',
-        color: 'red',
-        timeout: 1500,
-      })
       return
     }
 
-    const reponse = await $fetch(`${config.public.apiBase}/affectations/destinataire/` + entite_user.id, {
+    // SA → affectations reçues par le DT, sinon les siennes
+    const destinataireId = isSecDir()
+      ? (getDirecteurEntiteUserId() ?? entite_user.id)
+      : entite_user.id
+
+    console.log(`📝 Chargement affectations pour destinataire_id: ${destinataireId}`)
+
+    const reponse = await $fetch(`${config.public.apiBase}/affectations/destinataire/${destinataireId}`, {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${authToken.value}`,
-      },
+      headers: { Authorization: `Bearer ${authToken.value}` },
       timeout: 15000,
     });
 
@@ -370,13 +360,7 @@ const loadData = async () => {
 
   } catch (err) {
     error.value = err.message || 'Erreur lors du chargement des données';
-    console.error('❌ Erreur de chargement:', err);
-    toast.add({
-      title: "Erreur",
-      description: "Impossible de charger les affectations",
-      color: "red",
-      timeout: 1500,
-    });
+    toast.add({ title: "Erreur", description: "Impossible de charger les affectations", color: "red", timeout: 1500 });
   } finally {
     loading.value = false;
   }
