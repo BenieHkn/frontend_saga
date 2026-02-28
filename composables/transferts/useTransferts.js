@@ -18,12 +18,13 @@ export const useTransferts = () => {
     return data.map(item => ({
       id: item.id,
       date_transfert: new Date(item.date_affect).toLocaleDateString('fr-FR'),
-      objet: item.instructions,
+      objet: item.courrier_arrive?.document?.objet || 'N/A',
       statut: item.statut,
       type: item.type_affectation,
-      courrier: item.courrier_arrive?.document?.objet || 'N/A',
+      reference: item.courrier_arrive?.document?.reference || 'N/A',
       emetteur: item.emetteur?.entite?.fonction || 'N/A',
       destinataire: item.destinataire?.entite?.fonction || 'N/A',
+      priority: item.courrier_arrive?.priority || 'N/A',
       _raw: item
     }))
   }

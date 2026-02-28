@@ -323,7 +323,7 @@ const loadCourrier = async () => {
       description: 'Impossible de charger le courrier',
       color: 'red',
     })
-    navigateTo('/courriers')
+    navigateTo('/documents')
   } finally {
     loadingCourrier.value = false
   }
@@ -431,7 +431,7 @@ const handleSubmit = async () => {
         description: 'Le courrier a été modifié avec succès',
         color: 'green',
       })
-      navigateTo('/courriers')
+      navigateTo('/documents')
     }
 
   } catch (err) {
@@ -458,7 +458,7 @@ onMounted(async () => {
 
   if (!courrierId) {
     toast.add({ title: 'Erreur', description: 'ID du courrier manquant', color: 'red' })
-    navigateTo('/courriers')
+    navigateTo('/documents')
     return
   }
 

@@ -145,7 +145,7 @@
 
                 <div class="flex items-center space-x-4">
                   <UCheckbox v-model="form.large_diffusion" label="Large diffusion" />
-                  <UCheckbox v-model="form.confidentiel" label="Confidentiel" />
+                  <!-- <UCheckbox v-model="form.confidentiel" label="Confidentiel" /> -->
                 </div>
 
                 <!-- Initiateurs : uniquement en mode création (pas en réponse) -->
@@ -464,7 +464,7 @@ const resetForm = () => {
 
 const cancelReply = () => {
   courriersStore.clearReply()
-  navigateTo('/courriers')
+  navigateTo('/documents')
 }
 
 // ── Construction du FormData commun aux deux modes ────────────────────────────

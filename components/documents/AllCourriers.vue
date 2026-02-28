@@ -6,20 +6,20 @@
     />
 
     <!-- Types de documents -->
-    <div class="flex flex-wrap gap-4 justify-between">
-      <div
-        v-for="data in documentTypes"
-        :key="data.id"
-        @click="handleClick(data)"
-        class="cursor-pointer transition-all"
-      >
-        <UBadge
-          variant="soft"
-          color="blue"
-          size="lg"
-          class="p-4 hover:ring-2 hover:ring-secondary-500"
-          :class="selectedType.id === data.id ? 'ring-2 ring-secondary-500' : ''"
-        >
+    <div class="grid grid-cols-3 gap-8">
+  <div
+    v-for="data in documentTypes"
+    :key="data.id"
+    @click="handleClick(data)"
+    class="cursor-pointer transition-all"
+  >
+    <UBadge
+      variant="soft"
+      color="blue"
+      size="lg"
+      class="p-6 w-full min-h-24 hover:ring-2 hover:ring-secondary-500"
+      :class="selectedType.id === data.id ? 'ring-2 ring-secondary-500' : ''"
+    >
           <Icon :name="data.icon" class="h-8 w-8 mr-2" />
           <div>
             <h3 class="font-bold text-base">{{ data.title }}</h3>
@@ -58,10 +58,15 @@ const props = defineProps({
   }
 })
 
+const Documents = defineAsyncComponent({
+  loader: () => import('~/components/courriers/Documents.vue'),
+  delay: 100,
+  timeout: 15000,
+})
 // Chargement paresseux des composants
 const CourriersArrivesListe = defineAsyncComponent({
   loader: () => import('~/components/courriers/CourriersArrivesListe.vue'),
-  delay: 200,
+  delay: 100,
   timeout: 15000,
   loadingComponent: () => null,
   errorComponent: () => null,
@@ -69,15 +74,10 @@ const CourriersArrivesListe = defineAsyncComponent({
 
 const CourriersDepartsListe = defineAsyncComponent({
   loader: () => import('~/components/courriers/CourriersDepartsListe.vue'),
-  delay: 200,
+  delay: 100,
   timeout: 15000,
 })
 
-const CourriersDocumentsInternes = defineAsyncComponent({
-  loader: () => import('~/components/courriers/CourriersDocumentsInternes.vue'),
-  delay: 200,
-  timeout: 15000,
-})
 
 const documentTypes = [
   {
@@ -86,7 +86,7 @@ const documentTypes = [
     icon: 'i-heroicons-document-text',
     color: 'green',
     description: 'Rapports, PV, notes etc.',
-    component: 'CourriersArrivesListe'
+    component: 'Documents'
   },
   {
     id: 1,
@@ -103,14 +103,6 @@ const documentTypes = [
     color: 'orange',
     description: 'Gestion des courriers départs',
     component: 'CourriersDepartsListe'
-  },
-  {
-    id: 3,
-    title: 'Documents Internes',
-    icon: 'i-heroicons-document-text',
-    color: 'green',
-    description: 'Rapports, PV, notes etc.',
-    component: 'CourriersDocumentsInternes'
   }
 ]
 
@@ -119,9 +111,9 @@ const isLoading = ref(false)
 const currentComponent = shallowRef(null)
 
 const componentMap = {
+  Documents,
   CourriersArrivesListe,
   CourriersDepartsListe,
-  CourriersDocumentsInternes,
 }
 
 onMounted(() => {

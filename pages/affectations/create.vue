@@ -340,7 +340,7 @@ const handleSubmit = async () => {
           courrier_arrive_id: courrierId,
           destinataire_id: destinataireId, // ✅ C'est bien le entite_user.id
           emetteur_id: emetteurId,
-          date_affect: store.formData.date_affect,
+date_affect: new Date().toISOString().split('T')[0],
           instructions: store.formData.instructions,
           statut: store.formData.statut,
           delai_traitement: store.formData.delai_traitement,

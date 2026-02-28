@@ -174,12 +174,14 @@ const columns = [
     label: "Réf. Arrivée",
     visible: true,
     width: 'min-w-[150px]',
+    showLabel: false,
   },
   {
     key: "objet_arrivee",
     label: "Objet Arrivée",
     visible: true,
     width: 'min-w-[250px]',
+    showLabel: false,
   },
   {
     key: "doc_arrivee",
@@ -187,6 +189,7 @@ const columns = [
     visible: false,
     type: 'document',
     width: 'w-24',
+    showLabel: false,
   },
   {
     key: "link",
@@ -201,12 +204,14 @@ const columns = [
     label: "Réf. Départ",
     visible: true,
     width: 'min-w-[150px]',
+    showLabel: false,
   },
   {
     key: "objet_depart",
     label: "Objet Départ",
     visible: true,
     width: 'min-w-[250px]',
+    showLabel: false,
   },
   {
     key: "doc_depart",
@@ -257,13 +262,13 @@ const transformerDonneesAPI = (reponseAPI) => {
     ref_arrivee: rattachement?.document?.reference || '',
     objet_arrivee: rattachement?.document?.objet || '',
     doc_arrivee: rattachement?.document?.url
-      ? `$fetch(${config.public.baseUrl}/${rattachement.document.url}`
+      ? `${config.public.baseUrl}/${rattachement.document.url}`
       : '',
     link: '→',
     ref_depart: rattachement?.reponse?.reference || '',
     objet_depart: rattachement?.reponse?.objet || '',
     doc_depart: rattachement?.reponse?.url
-      ? `$fetch(${config.public.baseUrl}/${rattachement.reponse.url}`
+      ? `${config.public.baseUrl}/${rattachement.reponse.url}`
       : '',
     created_at: formatDate(rattachement.created_at),
     created_by: rattachement.user?.name || 'Système',

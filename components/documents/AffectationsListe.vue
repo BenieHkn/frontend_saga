@@ -224,18 +224,18 @@ useHead({ title: "Documents reçus - Sagar Revolution" });
 // ============================================================================
 
 const columns = [
-  { key: "reference_courrier", label: "Réf. Courrier", visible: true, width: 'min-w-[200px]' },
-  { key: "objet_courrier", label: "Objet", visible: true, width: 'min-w-[250px]' },
-  { key: "doc_courrier", label: "Document", visible: false, type: 'document', width: 'w-24' },
-  { key: "date_affect", label: "Date d'affectation", visible: true, width: 'min-w-[120px]' },
-  { key: "instructions", label: "Annotations", visible: true, width: 'min-w-[200px]' },
-  { key: "type", label: "Type", visible: true, width: 'min-w-[120px]' },
-  { key: "statut", label: "Statut", visible: true, type: 'badge', width: 'min-w-[120px]' },
-  { key: "priority", label: "Priorité", visible: true, type: 'badge', width: 'min-w-[120px]' },
-  { key: "delai_traitement", label: "Date de retour attendue", visible: true, width: 'min-w-[120px]' },
-  { key: "date_cloture", label: "Date clôture", visible: false, width: 'min-w-[120px]' },
-  { key: "emetteur", label: "Source", visible: true, width: 'min-w-[180px]' },
-  { key: "destinataire", label: "Destinataire", visible: false, width: 'min-w-[180px]' },
+  { key: "reference_courrier", label: "Réf. Courrier", visible: true, width: 'min-w-[200px]', showLabel: false, inputHidden: false },
+  { key: "objet_courrier", label: "Objet", visible: true, width: 'min-w-[250px]', showLabel: false, inputHidden: false },
+  { key: "doc_courrier", label: "Document", visible: false, type: 'document', width: 'w-24', showLabel: false, inputHidden: false },
+  { key: "date_affect", label: "Date d'affectation", visible: true, width: 'min-w-[120px]', showLabel: false, inputHidden: false },
+  { key: "instructions", label: "Annotations", visible: true, width: 'min-w-[200px]', showLabel: false, inputHidden: false },
+  { key: "type", label: "Type", visible: true, width: 'min-w-[120px]', showLabel: false, inputHidden: false },
+  { key: "statut", label: "Statut", visible: true, type: 'badge', width: 'min-w-[120px]', showLabel: false, inputHidden: false },
+  { key: "priority", label: "Priorité", visible: true, type: 'badge', width: 'min-w-[120px]', showLabel: false, inputHidden: false },
+  { key: "delai_traitement", label: "Date de retour attendue", visible: true, width: 'min-w-[120px]', showLabel: false, inputHidden: false },
+  { key: "date_cloture", label: "Date clôture", visible: false, width: 'min-w-[120px]', showLabel: false, inputHidden: false },
+  { key: "emetteur", label: "Source", visible: true, width: 'min-w-[180px]', showLabel: false, inputHidden: false },
+  { key: "destinataire", label: "Destinataire", visible: false, width: 'min-w-[180px]', showLabel: false, inputHidden: false },
 ];
 
 // ============================================================================

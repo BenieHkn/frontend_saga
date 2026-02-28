@@ -589,7 +589,7 @@ const handleCancel = () => {
   currentStep.value = 1;
 
   // Optionnel : rediriger
-  navigateTo("/courriers");
+  navigateTo("/documents");
 };
 
 // ============================================================================

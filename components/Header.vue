@@ -49,15 +49,15 @@
                   Aucune notification
                 </div>
 
-                <div v-for="n in notifications" :key="n.id"
-                  @click="ouvrirNotification(n)"
+                <div v-for="n in notifications" :key="n.id" @click="ouvrirNotification(n)"
                   class="p-4 hover:bg-slate-50 cursor-pointer transition-all flex gap-3"
                   :class="n.lu ? 'opacity-60' : 'bg-emerald-50/40'">
 
                   <div class="shrink-0 mt-0.5">
                     <div class="h-8 w-8 rounded-full flex items-center justify-center text-white"
                       :class="n.type === 'affectation' ? 'bg-emerald-600' : 'bg-blue-600'">
-                      <Icon :name="n.type === 'affectation' ? 'heroicons:clipboard-document' : 'heroicons:arrows-right-left'"
+                      <Icon
+                        :name="n.type === 'affectation' ? 'heroicons:clipboard-document' : 'heroicons:arrows-right-left'"
                         class="h-4 w-4" />
                     </div>
                   </div>
@@ -239,13 +239,44 @@ const getInitials = (nom, prenom) => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ffffff&color=065f46`;
 };
 
-const switchEntite = (entite) => {
-  selected_entite.value = entite;
-  if (process.client) {
+// Après — appelle switch-profile pour récupérer les bonnes permissions
+const switchEntite = async (entite) => {
+  try {
+    const token = localStorage.getItem("auth_token");
+    const config = useRuntimeConfig();
+
+    const response = await $fetch(`${config.public.apiBase}/auth/switch-profile`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: { entite_user_id: entite.entite_user_id },
+    });
+
+    if (!response.success) {
+      console.error("Erreur switch-profile");
+      return;
+    }
+
+    // Mettre à jour l'entité sélectionnée
+    selected_entite.value = entite;
     localStorage.setItem("selected_entite", JSON.stringify(entite));
+    localStorage.setItem("entite_user", JSON.stringify(entite));
+
+    // ✅ Mettre à jour role et permissions
+    localStorage.setItem("role", response.role);
+    localStorage.setItem("permissions", JSON.stringify(response.permissions));
+
+    if (response.directeur_entite_user_id) {
+      localStorage.setItem("directeur_entite_user_id", String(response.directeur_entite_user_id));
+    } else {
+      localStorage.removeItem("directeur_entite_user_id");
+    }
+    await navigateTo("/");
+  } catch (error) {
+    console.error("❌ Erreur lors du changement d'entité:", error);
+  } finally {
+    showModal.value = false;
+    showUserMenu.value = false;
   }
-  showModal.value = false;
-  showUserMenu.value = false;
 };
 
 const logout = () => {

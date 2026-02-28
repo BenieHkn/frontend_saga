@@ -3,7 +3,7 @@
     <!-- En-tête -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="flex items-center gap-3 text-2xl font-bold text-slate-800">
-        <Icon name="i-heroicons-document-arrow-down" class="w-7 h-7 text-blue-600" />
+        <!-- <Icon name="i-heroicons-arrow-path" class="w-7 h-7 text-blue-600" /> -->
         Affectations
       </h1>
       <div class="flex items-center gap-3">
@@ -275,17 +275,17 @@ const submitting = ref(false)
 // ============================================================================
 const columns = computed(() => {
   const base = [
-    { key: 'reference_courrier', label: 'Réf. Courrier', visible: true, width: 'min-w-[200px]' },
-    { key: 'dossier', label: 'Dossier', visible: true, width: 'min-w-[200px]' },
-    { key: 'objet_courrier', label: 'Objet', visible: true, width: 'min-w-[250px]' },
-    { key: 'doc_courrier', label: 'Document', visible: false, type: 'document', width: 'w-24' },
-    { key: 'date_affect', label: 'Date d\'affectation', visible: true, width: 'min-w-[120px]' },
-    { key: 'instructions', label: 'Instructions', visible: true, width: 'min-w-[200px]' },
-    { key: 'statut', label: 'Statut', visible: true, type: 'badge', width: 'min-w-[120px]' },
-    { key: 'priority', label: 'Priorité', visible: true, type: 'badge', width: 'min-w-[120px]' },
-    { key: 'delai_traitement', label: 'Date de retour attendue', visible: true, width: 'min-w-[120px]' },
-    { key: 'date_cloture', label: 'Date clôture', visible: false, width: 'min-w-[120px]' },
-    { key: 'destinataire', label: 'Destinataire', visible: true, width: 'min-w-[180px]' },
+    { key: 'reference_courrier', label: 'Réf. Courrier', visible: true, width: 'min-w-[200px]' , showLabel: false, inputHidden: false},
+    { key: 'dossier', label: 'Dossier', visible: true, width: 'min-w-[200px]', showLabel: false, inputHidden: false },
+    { key: 'objet_courrier', label: 'Objet', visible: true, width: 'min-w-[250px]' , showLabel: false, inputHidden: false},
+    { key: 'doc_courrier', label: 'Document', visible: false, type: 'document', width: 'w-24' , showLabel: false, inputHidden: false},
+    { key: 'date_affect', label: 'Date d\'affectation', visible: true, width: 'min-w-[120px]' , showLabel: false, inputHidden: false},
+    { key: 'instructions', label: 'Instructions', visible: true, width: 'min-w-[200px]' , showLabel: false, inputHidden: false},
+    { key: 'statut', label: 'Statut', visible: true, type: 'badge', width: 'min-w-[120px]' , showLabel: false, inputHidden: false},
+    { key: 'priority', label: 'Priorité', visible: true, type: 'badge', width: 'min-w-[120px]' , showLabel: false, inputHidden: false},
+    { key: 'delai_traitement', label: 'Date de retour attendue', visible: true, width: 'min-w-[120px]' , showLabel: false, inputHidden: false},
+    { key: 'date_cloture', label: 'Date clôture', visible: false, width: 'min-w-[120px]' , showLabel: false, inputHidden: false},
+    { key: 'destinataire', label: 'Destinataire', visible: true, width: 'min-w-[180px]' , showLabel: false, inputHidden: false},
   ]
 
   // ✅ Colonne émetteur visible uniquement pour l'admin

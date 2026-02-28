@@ -3,7 +3,7 @@
     <!-- En-tête -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="flex items-center gap-3 text-2xl font-bold text-slate-800">
-        <Icon name="i-heroicons-arrow-path" class="w-7 h-7 text-indigo-600" />
+        <!-- <Icon name="i-heroicons-arrow-path" class="w-7 h-7 text-indigo-600" /> -->
         Liste des Transferts
       </h1>
       <div class="flex items-center gap-3">
@@ -46,13 +46,20 @@
       @delete="handleDelete" @selection-change="handleSelectionChange">
 
       <!-- Slot pour la cellule statut avec badge coloré -->
-      <template #cell-statut="{ value }">
+      <!-- <template #cell-statut="{ value }">
         <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full uppercase tracking-wide" :class="{
           'bg-amber-100 text-amber-800': value === 'non traité',
           'bg-emerald-100 text-emerald-800': value === 'traité',
           'bg-red-100 text-red-800': value === 'annulé'
         }">
           {{ value }}
+        </span>
+      </template> -->
+      <template #cell-priority="{ value }">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
+          :class="getPriorityClasses(value)">
+          <span class="w-2 h-2 rounded-full mr-1.5" :class="getPriorityDotClass(value)"></span>
+          {{ getPriorityLabel(value) }}
         </span>
       </template>
 
@@ -113,13 +120,16 @@ const { peutTransferer, isAdmin } = useAuth()
 
 // Colonnes du tableau
 const columns = ref([
-  { key: 'date_transfert', label: 'Date',         visible: true },
-  { key: 'objet',          label: 'Objet',         visible: true },
-  { key: 'courrier',       label: 'Courrier',       visible: true },
-  { key: 'emetteur',       label: 'Émetteur',       visible: true },
-  { key: 'destinataire',   label: 'Destinataire',   visible: true },
-  { key: 'statut',         label: 'Statut',         visible: true, type: 'badge' },
+  { key: 'date_transfert', label: 'Date', visible: true, inputHidden: true },
+  { key: 'reference', label: 'Référence', visible: true, showLabel: false, inputHidden: false },
+  { key: 'objet', label: 'Objet', visible: true, showLabel: false, inputHidden: false },
+  { key: 'destinataire', label: 'Destinataire', visible: true, showLabel: false, inputHidden: false },
+  { key: 'priority', label: 'Priorité', visible: true, type: 'badge', width: 'min-w-[120px]', inputHidden: true },
+  { key: 'statut', label: 'Statut', visible: true, type: 'badge', inputHidden: true },
 ])
+ if (isAdmin()) {
+    columns.value.push({ key: 'emetteur', label: 'Émetteur', visible: true, width: 'min-w-[180px]' })
+  }
 
 // Handlers
 const handleView = (item) => {
@@ -198,6 +208,27 @@ const handleBulkDelete = (selected) => {
 
 const handleBulkExport = (selected) => {
   console.log('Export multiple:', selected)
+}
+
+const getPriorityLabel = (priority) => {
+  const labels = { 'urgent': 'Urgent', 'important': 'Important', 'standard': 'Standard' }
+  return labels[priority] || priority
+}
+
+const getPriorityClasses = (priority) => {
+  const classes = {
+    'urgent': 'bg-red-100 text-red-800',
+    'important': 'bg-orange-100 text-orange-800',
+    'standard': 'bg-blue-100 text-blue-800',
+  }
+  return classes[priority] || 'bg-blue-100 text-blue-800'
+}
+
+const getPriorityDotClass = (priority) => {
+  const classes = {
+    'urgent': 'bg-red-500', 'important': 'bg-orange-500', 'standard': 'bg-blue-500',
+  }
+  return classes[priority] || 'bg-gray-500'
 }
 
 const refreshData = () => {

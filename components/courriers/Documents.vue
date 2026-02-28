@@ -11,7 +11,7 @@
             </div>
             <div>
               <h2 class="text-base font-bold text-slate-900">Détails du courrier arrivé</h2>
-              <p class="text-xs text-slate-500">N° {{ selectedCourrier.document?.numero_enreg }}</p>
+              <p class="text-xs text-slate-500">N° {{ selectedCourrier.numero_enreg }}</p>
             </div>
           </div>
           <button @click="closeDetails"
@@ -31,18 +31,10 @@
               </div>
               <div class="flex items-center gap-1.5">
                 <span class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase" :class="{
-                  'bg-red-50 text-red-700 border-red-200': selectedCourrier.priority?.toLowerCase() === 'urgent',
-                  'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.priority?.toLowerCase() === 'important',
-                  'bg-sky-50 text-sky-700 border-sky-200': !selectedCourrier.priority || selectedCourrier.priority?.toLowerCase() === 'standard',
-                }">{{ selectedCourrier.priority || 'Standard' }}</span>
-                <span v-if="selectedCourrier.document?.reponses?.length"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-50 text-green-700 border border-green-200">
-                  <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Répondu
-                </span>
-                <span v-else
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                  <Icon name="i-heroicons-clock" class="w-3 h-3" /> En attente
-                </span>
+                  'bg-red-50 text-red-700 border-red-200': selectedCourrier.details?.priority?.toLowerCase() === 'urgent',
+                  'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.details?.priority?.toLowerCase() === 'important',
+                  'bg-sky-50 text-sky-700 border-sky-200': !selectedCourrier.details?.priority || selectedCourrier.details?.priority?.toLowerCase() === 'standard',
+                }">{{ selectedCourrier.details?.priority || 'Standard' }}</span>
               </div>
             </div>
 
@@ -52,14 +44,14 @@
                   <div class="w-1 h-full min-h-[2rem] rounded-full bg-indigo-400 shrink-0 self-stretch"></div>
                   <div>
                     <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-0.5">Référence</p>
-                    <p class="text-sm font-bold text-indigo-900">{{ selectedCourrier.document?.reference || 'Sans référence' }}</p>
+                    <p class="text-sm font-bold text-indigo-900">{{ selectedCourrier.reference || 'Sans référence' }}</p>
                   </div>
                 </div>
                 <div class="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
                   <div class="w-1 h-full min-h-[2rem] rounded-full bg-amber-400 shrink-0 self-stretch"></div>
                   <div>
                     <p class="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-0.5">Objet</p>
-                    <p class="text-sm text-gray-800 leading-relaxed">{{ selectedCourrier.document?.objet || 'Non spécifié' }}</p>
+                    <p class="text-sm text-gray-800 leading-relaxed">{{ selectedCourrier.objet || 'Non spécifié' }}</p>
                   </div>
                 </div>
               </div>
@@ -67,27 +59,31 @@
               <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Source</p>
-                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.service_enreg || 'N/A' }}</p>
+                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.details?.service_enreg || 'N/A' }}</p>
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Structure / Usager</p>
-                  <p class="text-xs text-slate-800">{{ selectedCourrier.structure || selectedCourrier.autre_structure || 'Non spécifié' }}</p>
+                  <p class="text-xs text-slate-800">{{ selectedCourrier.details?.structure || selectedCourrier.details?.autre_structure || 'Non spécifié' }}</p>
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Type d'arrivée</p>
-                  <p class="text-xs text-slate-800">{{ selectedCourrier.type_arrivee || 'Non spécifié' }}</p>
+                  <p class="text-xs text-slate-800">{{ selectedCourrier.details?.type_arrivee || 'Non spécifié' }}</p>
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">N° enregistrement</p>
-                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.document?.numero_enreg || '—' }}</p>
+                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.numero_enreg || '—' }}</p>
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date d'enregistrement</p>
-                  <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.document?.date_enreg) || '—' }}</p>
+                  <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.date_enreg) || '—' }}</p>
                 </div>
-                <div v-if="selectedCourrier.document?.date_courrier" class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+                <div v-if="selectedCourrier.date_courrier" class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date du courrier</p>
-                  <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.document?.date_courrier) }}</p>
+                  <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.date_courrier) }}</p>
+                </div>
+                <div v-if="selectedCourrier.type_document" class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Type de document</p>
+                  <p class="text-xs text-slate-800">{{ selectedCourrier.type_document.libelle }}</p>
                 </div>
               </div>
 
@@ -110,88 +106,6 @@
               </div>
             </div>
           </section>
-
-          <section v-if="selectedCourrier.document?.reponses?.length"
-            class="bg-white rounded-xl border border-emerald-200 overflow-hidden">
-            <div class="flex items-center justify-between px-4 py-2.5 bg-emerald-50 border-b border-emerald-100">
-              <div class="flex items-center gap-2">
-                <div class="w-5 h-5 rounded bg-emerald-100 flex items-center justify-center">
-                  <Icon name="i-heroicons-arrow-uturn-right" class="w-3 h-3 text-emerald-600" />
-                </div>
-                <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier de réponse</span>
-              </div>
-              <span v-if="reponseData && !loadingReponse"
-                class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
-                <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Chargé
-              </span>
-            </div>
-
-            <div v-if="loadingReponse" class="flex items-center justify-center gap-3 py-8 text-slate-400">
-              <div class="w-5 h-5 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
-              <span class="text-xs font-medium">Chargement du courrier de réponse...</span>
-            </div>
-
-            <div v-else-if="reponseData" class="p-4 space-y-3">
-              <div class="grid grid-cols-1 gap-2">
-                <div class="flex items-start gap-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
-                  <div class="w-1 min-h-[2rem] rounded-full bg-emerald-400 shrink-0 self-stretch"></div>
-                  <div>
-                    <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-0.5">Référence</p>
-                    <p class="text-sm font-bold text-emerald-900">{{ reponseData.reference || 'Sans référence' }}</p>
-                  </div>
-                </div>
-                <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                  <div class="w-1 min-h-[2rem] rounded-full bg-slate-300 shrink-0 self-stretch"></div>
-                  <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Objet</p>
-                    <p class="text-sm text-slate-800 leading-relaxed">{{ reponseData.objet || 'Non spécifié' }}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Destinataire</p>
-                  <p class="text-xs font-semibold text-slate-800">{{ reponseData.destinataire || '—' }}</p>
-                </div>
-                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date de départ</p>
-                  <p class="text-xs text-slate-800">{{ formatDate(reponseData.date_depart) || '—' }}</p>
-                </div>
-                <div v-if="reponseData.service_emis" class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Service émetteur</p>
-                  <p class="text-xs text-slate-800">{{ reponseData.service_emis }}</p>
-                </div>
-                <div v-if="reponseData.type_depart" class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Type de départ</p>
-                  <p class="text-xs text-slate-800">{{ reponseData.type_depart }}</p>
-                </div>
-              </div>
-
-              <div class="pt-1">
-                <div v-if="reponseData.url">
-                  <button v-if="!showReponseDoc" @click="showReponseDoc = true"
-                    class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all">
-                    <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />
-                    Charger le document de réponse
-                  </button>
-                  <div v-else class="mt-2 rounded-lg overflow-hidden border border-emerald-200">
-                    <DocumentRpreview :file-preview-url="reponseData.url" height="400px" />
-                  </div>
-                </div>
-                <div v-else
-                  class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-lg cursor-not-allowed">
-                  <Icon name="i-heroicons-document-text" class="w-4 h-4" />
-                  Aucun document disponible pour la réponse
-                </div>
-              </div>
-            </div>
-
-            <div v-else class="flex items-center gap-2 m-4 p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
-              <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
-              Impossible de charger les détails du courrier de réponse.
-            </div>
-          </section>
         </div>
 
         <div class="px-6 py-4 border-t border-slate-100 shrink-0 flex justify-end">
@@ -202,8 +116,8 @@
 
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Courriers arrivés</h1>
-        <p class="text-sm text-slate-500">Gestion et suivi des courriers entrants</p>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Tous les documents</h1>
+        <p class="text-sm text-slate-500">Gestion et suivi des documents</p>
       </div>
       <UBadge color="blue" variant="soft" size="lg" class="ml-auto" v-if="!isAdmin()">
         <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
@@ -260,32 +174,36 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
-          <button v-if="!isAdmin()" @click="handleQuickAssign(item.id)" title="Affecter ce courrier"
+          <!-- <button v-if="!isAdmin()" @click="handleQuickAssign(item.id)" title="Affecter ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
-          </button>
-          <button v-if="!item._complete?.document?.reponses?.length && !isAdmin()" @click="handleReply(item)"
-            title="Répondre au courrier"
+          </button> -->
+          <!-- <button v-if="!isAdmin()" @click="handleReply(item)" title="Répondre au courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group">
             <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
-          </button>
-          <div v-else-if="!isAdmin()" title="Ce courrier a déjà une réponse"
-            class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-500 border border-green-100 rounded-md cursor-default">
-            <Icon name="i-heroicons-check-circle" class="w-4 h-4" />
-          </div>
-          <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier"
+          </button> -->
+          <!-- <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
             <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
-          </button>
-          <button v-if="isAdmin()" @click="onDelete(item)" title="Supprimer ce courrier"
+          </button> -->
+          <!-- <button v-if="isAdmin()" @click="onDelete(item)" title="Supprimer ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border-red-100 rounded-md hover:bg-red-200 hover:text-red-900 transition-all group">
             <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
-          </button>
+          </button> -->
         </div>
       </template>
 
       <template #cell-source="{ value }">
         <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+          {{ value }}
+        </span>
+      </template>
+
+      <template #cell-type="{ value }">
+        <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full border uppercase" :class="{
+          'bg-blue-50 text-blue-700 border-blue-100': value === 'arrive',
+          'bg-orange-50 text-orange-700 border-orange-100': value === 'depart',
+        }">
           {{ value }}
         </span>
       </template>
@@ -337,7 +255,7 @@ const { isAdmin } = useAuth()
 
 const filterFields = [
   { id: 'source', label: 'Source' },
-  { id: 'structure', label: 'Structure / Usager' },
+  { id: 'structure', label: 'Structure' },
   { id: 'objet', label: 'Objet' },
   { id: 'type_arrivee', label: "Type d'arrivée" },
 ]
@@ -349,13 +267,10 @@ const error = ref(null)
 const detailsOpen = ref(false)
 const selectedCourrier = ref(null)
 const showArriveeDoc = ref(false)
-const showReponseDoc = ref(false)
-const loadingReponse = ref(false)
-const reponseData = ref(null)
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 const arriveeUrl = computed(() => {
-  const raw = selectedCourrier.value?.document?.url
+  const raw = selectedCourrier.value?.url
   const url = raw?.trim?.()
   if (!url || url === 'Inconnu' || url === '') return null
   if (url.startsWith('http')) return url
@@ -367,6 +282,7 @@ const arriveeUrl = computed(() => {
 // ── Colonnes ──────────────────────────────────────────────────────────────────
 const columns = [
   { key: 'source', label: 'Source', visible: true, type: 'badge', inputHidden: true },
+  { key: 'type', label: 'Type', visible: true, type: 'badge', inputHidden: true },
   { key: 'reference', label: 'Référence', visible: true, inputWidth: '80px', inputPlaceholder: 'Réf...' },
   { key: 'numeroEnregistrement', label: "N° d'enreg.", visible: false, inputHidden: true },
   { key: 'objet', label: 'Objet', visible: true },
@@ -384,22 +300,30 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
+// La nouvelle API /documents/type retourne une structure PLATE :
+// - Les champs principaux (reference, objet, date_enreg, url, type) sont directement sur l'objet
+// - Les détails spécifiques (service_enreg, structure, priority, type_arrivee...) sont dans `details`
 const transformCourriers = (response) => {
   if (!response?.data) throw new Error('Format de réponse API invalide')
-  return response.data.map((courrier) => ({
-    id: courrier.id,
-    source: courrier.service_enreg || '',
-    numeroEnregistrement: courrier.document?.numero_enreg || '',
-    reference: courrier.document?.reference || '',
-    structure: courrier.structure || courrier.autre_structure || '',
-    date_enregistrement: formatDate(courrier.document?.date_enreg),
-    objet: courrier.document?.objet || '',
-    date_courrier: formatDate(courrier.document?.date_courrier),
-    url: courrier.document?.url ? `${config.public.baseUrl}${courrier.document.url}` : '',
-    type_arrivee: courrier.type_arrivee || '',
-    priority: courrier.priority || '',
-    _complete: courrier,
-  }))
+
+  return response.data
+    .map((doc) => ({
+      id: doc.id,
+      source: doc.details?.service_enreg || doc.details?.service_emis ||'',
+      type: doc.type,
+      numeroEnregistrement: doc.numero_enreg || '',
+      reference: doc.reference || '',
+      structure: doc.details?.structure || doc.details?.autre_structure || '',
+      date_enregistrement: formatDate(doc.date_enreg),
+      objet: doc.objet || '',
+      date_courrier: formatDate(doc.date_courrier),
+      url: doc.url && doc.url !== 'Inconnu'
+        ? (doc.url.startsWith('http') ? doc.url : `${config.public.baseUrl}${doc.url}`)
+        : '',
+      type_arrivee: doc.details?.type_arrivee || '',
+      priority: doc.details?.priority || '',
+      _complete: doc, // On garde l'objet complet pour la modal
+    }))
 }
 
 // ── Chargement ────────────────────────────────────────────────────────────────
@@ -410,8 +334,7 @@ const refresh = async () => {
   try {
     const authToken = localStorage.getItem('auth_token') || ''
 
-    // Construire l'endpoint — SA filtre par code entité, autres voient tout
-    let endpoint = `${config.public.apiBase}/courriers-arrives/urgents-sans-reponse`
+    let endpoint = `${config.public.apiBase}/documents/type`
     if (props.entiteId) {
       const selectedEntite = JSON.parse(localStorage.getItem('selected_entite') || 'null')
       if (selectedEntite?.code) {
@@ -436,64 +359,16 @@ const refresh = async () => {
 }
 
 // ── Modal détails ─────────────────────────────────────────────────────────────
-const handleView = async (item) => {
-  const courrier = item._complete || item
-  selectedCourrier.value = courrier
+const handleView = (item) => {
+  selectedCourrier.value = item._complete || item
   showArriveeDoc.value = false
-  showReponseDoc.value = false
-  reponseData.value = null
   detailsOpen.value = true
-
-  const reponses = courrier.document?.reponses || []
-  if (reponses.length) {
-    const courierDepartId = reponses[0]?.reponse_id
-    if (courierDepartId) await loadReponseData(courierDepartId)
-  }
 }
 
 const closeDetails = () => {
   detailsOpen.value = false
   selectedCourrier.value = null
-  reponseData.value = null
   showArriveeDoc.value = false
-  showReponseDoc.value = false
-}
-
-const loadReponseData = async (documentId) => {
-  if (!documentId) return
-  loadingReponse.value = true
-  try {
-    const authToken = localStorage.getItem('auth_token') || ''
-    const allDeparts = await $fetch(`${config.public.apiBase}/courriers-departs`, {
-      headers: { Authorization: `Bearer ${authToken}` },
-    })
-    const list = Array.isArray(allDeparts?.data) ? allDeparts.data : []
-    const doc = list.find(cd => cd.document_id === documentId) || null
-    if (!doc) { reponseData.value = null; return }
-
-    const buildUrl = (raw) => {
-      if (!raw || raw === 'Inconnu') return null
-      if (raw.startsWith('http')) return raw
-      const base = config.public.baseUrl?.replace(/\/$/, '')
-      const path = raw.startsWith('/') ? raw : `/${raw}`
-      return `${base}${path}`
-    }
-
-    reponseData.value = {
-      reference:    doc?.document?.reference || 'Sans référence',
-      objet:        doc?.document?.objet || 'Non spécifié',
-      destinataire: doc?.destinataire || '—',
-      date_depart:  doc?.date_depart || null,
-      type_depart:  doc?.type_depart || null,
-      service_emis: doc?.service_emis || null,
-      url:          buildUrl((doc?.document?.url || '').trim()),
-    }
-  } catch (e) {
-    console.error('❌ Erreur chargement réponse:', e)
-    reponseData.value = null
-  } finally {
-    loadingReponse.value = false
-  }
 }
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
@@ -510,10 +385,6 @@ const handleQuickAssign = (courrierId) => {
 
 const handleReply = (item) => {
   const courrier = item._complete || item
-  if (courrier.document?.reponses?.length) {
-    Swal.fire({ title: 'Déjà répondu', text: 'Ce courrier a déjà reçu une réponse.', icon: 'info', confirmButtonColor: '#7c3aed' })
-    return
-  }
   courriersStore.setCourrierToReply(courrier)
   navigateTo('/courriers/form_courrier_depart')
 }

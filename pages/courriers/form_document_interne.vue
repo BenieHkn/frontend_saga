@@ -352,7 +352,7 @@ const onSubmit = async () => {
  */
 const handleCancel = () => {
     resetForm()
-    navigateTo("/courriers");
+    navigateTo("/documents");
 };
 
 /**

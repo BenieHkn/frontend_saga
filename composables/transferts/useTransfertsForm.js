@@ -61,7 +61,7 @@ export const useTransfertsForm = () => {
       }
 
       // Validation
-      if (store.selectedAffectations.length === 0) {
+      if (store.selectedCourriers.length === 0) {
         throw new Error('Veuillez sélectionner au moins un courrier')
       }
 
@@ -86,7 +86,7 @@ export const useTransfertsForm = () => {
         }
       }).filter(d => d.id)
 
-      const totalTransferts = store.selectedAffectations.length * destinataires.length
+      const totalTransferts = store.selectedCourriers.length * destinataires.length
 
       console.log(`📤 Envoi de ${totalTransferts} transfert(s)...`)
 
@@ -96,7 +96,7 @@ export const useTransfertsForm = () => {
       let successCount = 0
 
       // Créer un transfert pour chaque combinaison courrier-destinataire
-      for (const courrierId of store.selectedAffectations) {
+      for (const courrierId of store.selectedCourriers) {
         for (const destinataire of destinataires) {
           try {
             const transferData = {

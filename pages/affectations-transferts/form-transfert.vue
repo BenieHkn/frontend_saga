@@ -7,12 +7,11 @@
     />
 
     <div class="max-w-7xl mx-auto px-6 py-8">
-      <!-- Two Column Layout avec hauteur fixe -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8" style="height: calc(100vh - 300px); min-height: 600px;">
 
         <!-- Courriers Selection Panel (gauche) -->
         <div class="flex flex-col">
-          <AffectationsCheckboxListe :loading="affectationsLoading" />
+          <TransfertsCourriersSelectionPanel :loading="courriersLoading" />
         </div>
 
         <!-- Destinataires Selection Panel (droite) -->
@@ -22,7 +21,6 @@
 
       </div>
 
-      <!-- Summary Bar -->
       <TransfertsSummaryBar
         @save-draft="handleSaveDraft"
         @send-files="handleSendFiles"
@@ -30,7 +28,6 @@
       />
     </div>
 
-    <!-- Notification Component -->
     <FormNotification
       :show="notification.show"
       :type="notification.type"
@@ -49,40 +46,33 @@
 import { ref, reactive, onMounted } from 'vue'
 import Swal from 'sweetalert2'
 import { useTransfertsStore } from '~/stores/transferts'
-import { useAffectations } from '@/composables/affectations/useAffectations'
 import { useDestinataires } from '~/composables/transferts/useTransfertsDestinataires'
 import { useTransfertsForm } from '~/composables/transferts/useTransfertsForm'
 import { useAuth } from '~/composables/auth/useAuth'
-import AffectationsCheckboxListe from '~/components/affectations/AffectationsCheckboxListe.vue'
+import TransfertsCourriersSelectionPanel from '~/components/transferts/TransfertsCourriersSelectionPanel.vue'
 import TransfertsDestinatairesSelectionPanel from '~/components/transferts/TransfertsDestinatairesSelectionPanel.vue'
 import TransfertsSummaryBar from '~/components/transferts/TransfertsSummaryBar.vue'
 import FormNotification from '~/components/FormNotification.vue'
 import PageHeader from '~/components/PageHeader.vue'
 
+const config = useRuntimeConfig()
 const store = useTransfertsStore()
 const toast = useToast()
-const router = useRouter()
 
-// ✅ Permission transfert — source unique de vérité
-const { peutTransferer } = useAuth()
+const { peutTransferer, getEmetteurId } = useAuth()
 
-// Composables pour les données
-const {
-  tableData: affectationsData,
-  loading: affectationsLoading,
-  error: affectationsError,
-  fetchAffectations
-} = useAffectations()
+// États de chargement
+const courriersLoading = ref(false)
+const destinatairesLoading = ref(false)
 
 const {
   tableData: destinatairesData,
-  loading: destinatairesLoading,
+  loading: destinatairesLoadingComposable,
   error: destinatairesError,
   accessDenied,
   fetchDestinataires
 } = useDestinataires()
 
-// Composable pour le formulaire
 const {
   loading: formLoading,
   sendTransferts,
@@ -118,10 +108,113 @@ const closeNotification = () => {
   notification.stats = null
 }
 
-// =====================================================================
-// ✅ CONTRÔLE D'ACCÈS — basé sur la permission faire_transfert
-// Remplace l'ancienne vérification uniquement via accessDenied (403 API)
-// =====================================================================
+// ============================================================================
+// CHARGEMENT DES COURRIERS REÇUS — comme dans form-affectation
+// ============================================================================
+const loadCourriers = async () => {
+  courriersLoading.value = true
+
+  try {
+    let entite_user = null
+    if (process.client) {
+      const saved = localStorage.getItem('entite_user')
+      if (saved) entite_user = JSON.parse(saved)
+    }
+
+    if (!entite_user?.id) {
+      toast.add({
+        title: 'Erreur',
+        description: 'Aucune fonction utilisateur sélectionnée.',
+        color: 'red',
+        timeout: 1500,
+      })
+      return
+    }
+
+    const authToken = process.client ? localStorage.getItem('auth_token') || '' : ''
+    const emetteurId = getEmetteurId() ?? entite_user.id
+
+    console.log(`📝 Chargement des courriers reçus pour entite_user_id: ${emetteurId}`)
+
+    // On récupère les courriers affectés à cet utilisateur (= courriers reçus)
+    const response = await $fetch(
+      `${config.public.apiBase}/courriers-arrives/affectes/entite-user/${emetteurId}`,
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${authToken}` },
+      }
+    )
+
+    const courriers = response.data.map(courrier => ({
+      id: courrier.id,
+      reference: courrier.document?.reference || '',
+      objet: courrier.document?.objet || '',
+      structure: courrier.structure || courrier.autre_structure || '',
+      date_courrier: courrier.document?.date_courrier || '',
+      priority: courrier.priority || 'STANDARD',
+      confidentiel: courrier.document?.confidentiel || false,
+      url: courrier.document?.url
+        ? `${config.public.apiBase}${courrier.document.url}`
+        : '',
+    }))
+
+    store.setCourriers(courriers)
+    console.log(`✅ ${courriers.length} courriers reçus chargés`)
+
+    // Présélection depuis sessionStorage
+    handlePreselectedCourrier()
+
+  } catch (error) {
+    console.error('❌ Erreur lors du chargement des courriers:', error)
+    toast.add({
+      title: 'Erreur',
+      description: 'Impossible de charger les courriers reçus',
+      color: 'red',
+      timeout: 1500,
+    })
+  } finally {
+    courriersLoading.value = false
+  }
+}
+
+// ============================================================================
+// PRÉSÉLECTION — s'exécute après store.setCourriers()
+// ============================================================================
+const handlePreselectedCourrier = () => {
+  if (!process.client) return
+
+  const preselectedId = sessionStorage.getItem('preselected_courrier_id_transfer')
+  if (!preselectedId) return
+
+  const courrierIdNum = parseInt(preselectedId, 10)
+
+  const existe = store.courriers.some(c => c.id === courrierIdNum)
+
+  if (existe) {
+    store.selectedCourriers = [courrierIdNum]
+    console.log('✅ Courrier présélectionné dans le store:', courrierIdNum)
+    toast.add({
+      title: 'Courrier présélectionné',
+      description: 'Courrier sélectionné automatiquement',
+      color: 'green',
+      timeout: 2000,
+    })
+  } else {
+    console.warn('⚠️ Courrier non trouvé pour id:', courrierIdNum)
+    toast.add({
+      title: 'Attention',
+      description: "Le courrier présélectionné n'a pas été trouvé",
+      color: 'orange',
+      timeout: 3000,
+    })
+  }
+
+  sessionStorage.removeItem('preselected_courrier_id_transfer')
+}
+
+// ============================================================================
+// ACCÈS REFUSÉ
+// ============================================================================
 const showAccessDeniedAlert = async () => {
   const result = await Swal.fire({
     icon: 'error',
@@ -144,7 +237,6 @@ const showAccessDeniedAlert = async () => {
             </div>
           </div>
         </div>
-
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <p class="text-xs text-blue-800">
             <strong>💡 Que faire ?</strong><br>
@@ -171,95 +263,39 @@ const showAccessDeniedAlert = async () => {
   }
 }
 
-// Présélection basée sur courrier_arrive_id (inchangé)
-const handlePreselectedCourrier = () => {
-  if (!process.client) return
-
-  const preselectedCourrierArrivId = sessionStorage.getItem('preselected_courrier_id_transfer')
-
-  if (preselectedCourrierArrivId) {
-    console.log('🎯 Courrier présélectionné détecté (courrier_arrive_id):', preselectedCourrierArrivId)
-
-    const courrierIdNum = parseInt(preselectedCourrierArrivId, 10)
-
-    const affectation = affectationsData.value?.find(a =>
-      a._raw?.courrier_arrive_id === courrierIdNum
-    )
-
-    if (affectation) {
-      store.selectedAffectations = [affectation.id]
-      console.log('✅ Affectation présélectionnée:', affectation.id)
-      toast.add({
-        title: 'Courrier présélectionné',
-        description: 'Affectation sélectionnée automatiquement',
-        color: 'green',
-        timeout: 2000,
-      })
-    } else {
-      console.warn('⚠️ Aucune affectation trouvée pour le courrier_arrive_id:', courrierIdNum)
-      toast.add({
-        title: 'Attention',
-        description: 'Le courrier présélectionné n\'a pas été trouvé dans vos affectations',
-        color: 'orange',
-        timeout: 3000,
-      })
-    }
-
-    sessionStorage.removeItem('preselected_courrier_id_transfer')
-  }
-}
-
-// =====================================================================
-// CHARGEMENT DES DONNÉES
-// =====================================================================
+// ============================================================================
+// MONTAGE
+// ============================================================================
 onMounted(async () => {
   console.log('🚀 Chargement de la page transfert...')
 
-  // ✅ 1. Vérification de la permission AVANT tout chargement
-  //    Cela évite des appels API inutiles pour les rôles non autorisés
   if (!peutTransferer()) {
-    console.warn('🚫 Accès refusé : permission faire_transfert manquante pour le rôle', localStorage.getItem('role'))
+    console.warn('🚫 Accès refusé : permission faire_transfert manquante')
     await showAccessDeniedAlert()
     return
   }
 
   try {
+    // Chargement en parallèle
     await Promise.all([
-      fetchAffectations(),
+      loadCourriers(),
       fetchDestinataires()
     ])
 
-    // ✅ 2. Double sécurité : vérification 403 renvoyé par l'API
-    //    (cas où les permissions locales seraient désynchronisées)
     if (accessDenied.value) {
       console.error('🚫 Accès refusé détecté côté API (403)')
       await showAccessDeniedAlert()
       return
     }
 
-    if (affectationsData.value) {
-      store.setAffectations(affectationsData.value)
-      console.log('✅ Affectations chargées:', affectationsData.value.length)
-    } else {
-      console.warn('⚠️ Aucune affectation retournée')
-      store.setAffectations([])
-    }
+    store.setDestinataires(destinatairesData.value ?? [])
+    console.log('✅ Destinataires chargés:', store.destinataires.length)
 
-    if (destinatairesData.value) {
-      store.setDestinataires(destinatairesData.value)
-      console.log('✅ Destinataires chargés:', destinatairesData.value.length)
-    } else {
-      console.warn('⚠️ Aucun destinataire retourné')
-      store.setDestinataires([])
-    }
-
-    handlePreselectedCourrier()
-
-    if ((affectationsError.value || destinatairesError.value) && !accessDenied.value) {
+    if (destinatairesError.value && !accessDenied.value) {
       showNotification({
         type: 'error',
         title: 'Erreur de chargement',
-        message: affectationsError.value || destinatairesError.value,
+        message: destinatairesError.value,
         autoClose: false
       })
     }
@@ -275,34 +311,21 @@ onMounted(async () => {
   }
 })
 
-// =====================================================================
+// ============================================================================
 // HANDLERS
-// =====================================================================
-
+// ============================================================================
 const handleSaveDraft = async () => {
-  console.log('💾 Sauvegarde du brouillon...')
   const result = await saveDraft()
   showNotification(result)
 }
 
 const handleSendFiles = async () => {
-  console.log('📤 Envoi des transferts...')
-
-  const result = await sendTransferts({
-    objet: 'Transfert de courrier'
-  })
-
+  const result = await sendTransferts({ objet: 'Transfert de courrier' })
   showNotification(result)
 
-  // Redirection si succès complet
   if (result.success && result.type === 'success') {
-    console.log('✅ Transferts envoyés avec succès, redirection dans 2 secondes...')
-    setTimeout(() => {
-      navigateTo('/affectations-transferts')
-    }, 2000)
+    setTimeout(() => navigateTo('/affectations-transferts'), 2000)
   } else if (result.type === 'warning') {
-    // Succès partiel : demander confirmation avant redirection
-    console.log('⚠️ Transferts partiellement envoyés')
     setTimeout(async () => {
       const confirmResult = await Swal.fire({
         icon: 'warning',
@@ -323,12 +346,9 @@ const handleSendFiles = async () => {
         cancelButtonColor: '#6b7280',
       })
 
-      if (confirmResult.isConfirmed) {
-        navigateTo('/affectations-transferts')
-      }
+      if (confirmResult.isConfirmed) navigateTo('/affectations-transferts')
     }, 2000)
   }
-  // Si erreur totale, pas de redirection
 }
 </script>
 
@@ -337,12 +357,10 @@ const handleSendFiles = async () => {
   border-radius: 1rem;
   padding: 2rem;
 }
-
 :deep(.swal2-access-denied .swal2-icon.swal2-error) {
   border-color: #ef4444;
   color: #ef4444;
 }
-
 :deep(.swal2-access-denied .swal2-html-container) {
   margin: 1.5rem 0;
   max-width: 500px;
