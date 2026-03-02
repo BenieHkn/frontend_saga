@@ -49,24 +49,31 @@
                 
               </div>
               
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Entités <span class="text-red-600">*</span>
-                </label>
-                <select 
-                  v-model="form.entite_id"
-                  class="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                >
-                  <option value="" disabled>Sélectionner une entité</option>
-                  <option 
-                    v-for="entite in entites" 
-                    :key="entite.id" 
-                    :value="entite.id"
-                  >
-                    {{ entite.libelle }}
-                  </option>
-                </select>
-              </div>
+              <!-- APRÈS -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Entités <span class="text-red-600">*</span>
+          </label>
+      <USelectMenu
+         v-model="form.entite_id"
+         :options="entitesOptions"
+          placeholder="Sélectionner une entité"
+          value-attribute="id"
+          option-attribute="libelle"
+          searchable
+          searchable-placeholder="Rechercher une entité..."
+          class="w-full"
+  >
+       <template #option="{ option }">
+      <div class="flex flex-col py-0.5">
+        <span class="font-semibold text-sm">{{ option.libelle }}</span>
+      </div>
+      </template>
+      <template #empty>
+      <div class="text-sm text-gray-400 italic px-3 py-2">Aucune entité trouvée</div>
+      </template>
+      </USelectMenu>
+    </div>
 
               <!-- Matricule -->
               <div>
@@ -543,6 +550,13 @@ const fonctionsOptions = computed(() =>
     libelle:        f.libelle || f.code,
     code:           f.code,
     entite_libelle: f.entite?.libelle || f.entite_libelle || '',
+  }))
+)
+
+const entitesOptions = computed(() =>
+  entites.value.map(e => ({
+    id:      e.id,
+    libelle: e.libelle || e.code || e.nom,
   }))
 )
 
