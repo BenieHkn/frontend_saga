@@ -81,7 +81,7 @@
           class="liquid-card" infos="SP: 50 | SA: 302" />
       </div>
 
-      <div class="liquid-container p-1 overflow-hidden" v-if="isDG() || isSA() || isSP()">
+      <div class="liquid-container p-1 overflow-hidden" v-if="isDG() || isSA() || isSP() || isAdmin()">
         <div class="p-1 border-b border-white/10 bg-white/5 flex justify-between items-center">
           <h2 class="text-white -mt-6 font-bold flex items-center gap-2">
             Activités Récentes
@@ -114,7 +114,7 @@ const props = defineProps({
   entiteId: { type: Number, default: null }
 })
 
-const { isSP, isSA, isDG } = useAuth()
+const { isSP, isSA, isDG, isAdmin } = useAuth()
 
 // Dropdown state
 const dropdownOpen = ref(false)
