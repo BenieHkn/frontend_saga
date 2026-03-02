@@ -49,6 +49,21 @@
             :class="route.path === '/interim' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
             Intérim
           </NuxtLink>
+          <NuxtLink to="/type-document"
+            class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+            :class="route.path === '/type-document' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+            Types de documents
+          </NuxtLink>
+          <!-- <NuxtLink to="/modeles-document"
+            class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+            :class="route.path === '/modeles-document' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+            Modèles de documents
+          </NuxtLink> -->
+          <NuxtLink to="/permissions"
+            class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+            :class="route.path === '/permissions' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+            Permissions
+          </NuxtLink>
         </div>
       </div>
     </nav>
