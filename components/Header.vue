@@ -256,12 +256,22 @@ const switchEntite = async (entite) => {
       return;
     }
 
-    // Mettre à jour l'entité sélectionnée
-    selected_entite.value = entite;
-    localStorage.setItem("selected_entite", JSON.stringify(entite));
-    localStorage.setItem("entite_user", JSON.stringify(entite));
+    // ✅ Tout vient de la réponse API, pas des données locales
+    if (response.entite_user) {
+      localStorage.setItem("entite_user", JSON.stringify(response.entite_user));
+      entite_user.value = response.entite_user;
+    }
 
-    // ✅ Mettre à jour role et permissions
+    if (response.main_entite) {
+      localStorage.setItem("main_entite", JSON.stringify(response.main_entite));
+      localStorage.setItem("selected_entite", JSON.stringify(response.main_entite));
+      selected_entite.value = response.main_entite;
+    } else {
+      // fallback si main_entite absent
+      localStorage.setItem("selected_entite", JSON.stringify(entite));
+      selected_entite.value = entite;
+    }
+
     localStorage.setItem("role", response.role);
     localStorage.setItem("permissions", JSON.stringify(response.permissions));
 
@@ -270,7 +280,9 @@ const switchEntite = async (entite) => {
     } else {
       localStorage.removeItem("directeur_entite_user_id");
     }
+
     await navigateTo("/");
+
   } catch (error) {
     console.error("❌ Erreur lors du changement d'entité:", error);
   } finally {

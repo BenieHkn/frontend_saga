@@ -27,8 +27,8 @@
         'sm:grid-cols-2': activePostes.length === 2,
         'sm:grid-cols-2 lg:grid-cols-3': activePostes.length >= 3,
       }">
-        <div v-for="entiteUser in activePostes" :key="entiteUser.entite_user_id"
-          class="group relative cursor-pointer" @click="handleSelectPoste(entiteUser)">
+        <div v-for="entiteUser in activePostes" :key="entiteUser.entite_user_id" class="group relative cursor-pointer"
+          @click="handleSelectPoste(entiteUser)">
           <div
             class="glass-panel h-full p-6 rounded-2xl flex flex-col items-center text-center transition-all duration-300 border-2"
             :class="[
@@ -177,14 +177,33 @@ async function handleSelectPoste(entiteUser: EntiteUser) {
       return
     }
 
-    setSelectedEntiteUser(entiteUser)
-    localStorage.setItem('role', response.role)
-    localStorage.setItem('permissions', JSON.stringify(response.permissions))
+    // ✅ Mettre à jour toute la session depuis la réponse switch-profile
+    if (response.role) {
+      localStorage.setItem('role', response.role)
+    }
+
+    if (response.permissions) {
+      localStorage.setItem('permissions', JSON.stringify(response.permissions))
+    }
+
+    if (response.entite_user) {
+      localStorage.setItem('entite_user', JSON.stringify(response.entite_user))
+    }
+
+    if (response.main_entite) {
+      localStorage.setItem('main_entite', JSON.stringify(response.main_entite))
+      localStorage.setItem('selected_entite', JSON.stringify(response.main_entite))
+    }
 
     if (response.directeur_entite_user_id) {
       localStorage.setItem('directeur_entite_user_id', String(response.directeur_entite_user_id))
     } else {
       localStorage.removeItem('directeur_entite_user_id')
+    }
+
+    // ✅ setSelectedEntiteUser seulement comme fallback si main_entite absent
+    if (!response.main_entite) {
+      setSelectedEntiteUser(entiteUser)
     }
 
     await new Promise(resolve => setTimeout(resolve, 400))
@@ -249,7 +268,14 @@ function formatDate(iso: string | null | undefined): string {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>
