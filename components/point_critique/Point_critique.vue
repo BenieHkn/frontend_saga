@@ -143,12 +143,12 @@ useHead({
 
 // --- Configuration colonnes ---
 const columns = [
-  { key: 'code', label: 'Sigle', visible: true },
-  { key: 'libelle', label: 'Libellé', visible: true },
-  { key: 'responsable', label: 'Responsable', visible:false },
-  { key: 'statut', label: 'Statut', visible: false },
-  { key: 'date_debut', label: 'Date de début', visible: false },
-  { key: 'date_fin', label: 'Date de fin', visible: false },
+  { key: 'code', label: 'Sigle', visible: true, showLabel: false },
+  { key: 'libelle', label: 'Libellé', visible: true, showLabel: false },
+  { key: 'responsable', label: 'Responsable', visible:false, showLabel: false },
+  { key: 'statut', label: 'Statut', visible: false, showLabel: false },
+  { key: 'date_debut', label: 'Date de début', visible: false, showLabel: false },
+  { key: 'date_fin', label: 'Date de fin', visible: false, showLabel: false },
 ]
 
 // --- Fonction pour formater les dates ---

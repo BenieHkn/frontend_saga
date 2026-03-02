@@ -166,13 +166,13 @@ import DataTable from '~/components/DataTable.vue'
 
 // --- Configuration colonnes ---
 const columns = [
-  { key: 'id', label: 'N°', visible: true },
-  { key: 'code', label: 'Code', visible: true },
-  { key: 'libelle', label: 'Libellé', visible: true },
-  { key: 'fonction', label: 'Fonction', visible: true },
-  { key: 'parent_entite', label: 'Entité Parent', visible: true },
-  { key: 'is_critique', label: 'Point Critique', visible: false },
-  { key: 'users_count', label: 'Utilisateurs Actifs', visible: false },
+  // { key: 'id', label: 'N°', visible: true, showLabel: false },
+  { key: 'code', label: 'Code', visible: true, showLabel: false },
+  { key: 'libelle', label: 'Libellé', visible: true, showLabel: false },
+  { key: 'fonction', label: 'Fonction', visible: true, showLabel: false },
+  { key: 'parent_entite', label: 'Entité Parent', visible: true, showLabel: false },
+  { key: 'is_critique', label: 'Point Critique', visible: false, showLabel: false },
+  { key: 'users_count', label: 'Utilisateurs Actifs', visible: false, showLabel: false },
 ]
 
 // États
