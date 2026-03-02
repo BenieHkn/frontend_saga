@@ -1,5 +1,5 @@
 # Sagar Revolution
-update 02/03/2026 22h36
+update 02/03/2026 22h46
 A modern admin dashboard template inspired by DeskApp, built with Nuxt.js, NuxtUI, and Tailwind CSS.
 
 ## Features
