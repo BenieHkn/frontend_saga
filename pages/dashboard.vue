@@ -8,10 +8,61 @@
           <h1 class="text-3xl lg:text-4xl font-black text-emerald-500 tracking-tight drop-shadow-xl">
             Tableau de bord
           </h1>
+
           <div class="flex items-end">
-            <UBadge color="blue" variant="soft" size="lg" class="ml-auto">
+            <!-- Dropdown pour DG, SA, SP -->
+            <div v-if="isDG() || isSA() || isSP()" class="relative" ref="dropdownRef">
+              <UBadge color="blue" variant="soft" size="lg" class="ml-auto cursor-pointer"
+                @click="dropdownOpen = !dropdownOpen">
+                <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
+                <span class="text-blue-600 text-sm font-medium">Nouveau</span>
+                <Icon name="i-heroicons-chevron-down"
+                  class="h-4 w-4 ml-1 text-blue-600 transition-transform duration-200"
+                  :class="{ 'rotate-180': dropdownOpen }" />
+              </UBadge>
+
+              <!-- Menu dropdown -->
+              <transition enter-active-class="transition ease-out duration-150"
+                enter-from-class="opacity-0 translate-y-1" enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 translate-y-1">
+                <div v-if="dropdownOpen"
+                  class="absolute right-0 mt-2 w-52 rounded-xl bg-white shadow-xl border border-gray-100 z-50 overflow-hidden">
+                  <NuxtLink to="/courriers/form_courier_arrive"
+                    class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors duration-150"
+                    @click="dropdownOpen = false">
+                    <span
+                      class="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex-shrink-0">
+                      <Icon name="i-heroicons-inbox-arrow-down" class="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p class="font-semibold">Courrier Arrivée</p>
+                      <p class="text-xs text-gray-400">Nouveau courrier reçu</p>
+                    </div>
+                  </NuxtLink>
+
+                  <div class="mx-4 border-t border-gray-100"></div>
+
+                  <NuxtLink to="/courriers/form_courrier_depart"
+                    class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors duration-150"
+                    @click="dropdownOpen = false">
+                    <span
+                      class="flex items-center justify-center w-8 h-8 rounded-lg bg-green-100 text-green-600 flex-shrink-0">
+                      <Icon name="i-heroicons-paper-airplane" class="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p class="font-semibold">Courrier Départ</p>
+                      <p class="text-xs text-gray-400">Nouveau courrier envoyé</p>
+                    </div>
+                  </NuxtLink>
+                </div>
+              </transition>
+            </div>
+
+            <!-- Bouton simple pour les autres rôles -->
+            <UBadge v-else color="blue" variant="soft" size="lg" class="ml-auto">
               <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
-              <UButton to="/courriers/create" variant="text" size="sm" class="p-0 m-0 text-blue-600">
+              <UButton to="/courriers/form_document_interne" variant="text" size="sm" class="p-0 m-0 text-blue-600">
                 Nouveau
               </UButton>
             </UBadge>
@@ -54,17 +105,30 @@
   </div>
 </template>
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useCourriersStore } from '~/stores/courriers'
 import { useAuth } from '~/composables/auth/useAuth'
 import AffectationsListe from '~/components/documents/AffectationsListe.vue'
-
 
 const props = defineProps({
   entiteId: { type: Number, default: null }
 })
 
 const { isSP, isSA, isDG } = useAuth()
+
+// Dropdown state
+const dropdownOpen = ref(false)
+const dropdownRef = ref(null)
+
+// Fermer le dropdown si clic extérieur
+const handleClickOutside = (event) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+    dropdownOpen.value = false
+  }
+}
+
+onMounted(() => document.addEventListener('click', handleClickOutside))
+onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
 <style scoped>
