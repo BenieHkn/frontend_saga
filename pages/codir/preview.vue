@@ -5,6 +5,7 @@ definePageMeta({ title: 'Aperçu CODIR' })
 
 const router = useRouter()
 const toast  = useToast()
+const linkPdf = ref('')
 
 // ── Données depuis localStorage ───────────────────────────────────────────────
 const codir = ref(null)
@@ -76,7 +77,10 @@ const handleDownloadPdf = async () => {
   if (!codir.value) return
   pdfDownloading.value = true
   try {
-    await downloadPdf(codir.value)
+    const response = await downloadPdf(codir.value.id)
+    linkPdf.value = response.link
+    console.log(linkPdf.value)
+    window.open(linkPdf.value, '_blank')
     showPdfGeneratedModal.value = false
   } catch (e) {
     toast.add({ title: 'Erreur', description: e.message ?? 'Impossible de télécharger le PDF.', color: 'red', icon: 'i-heroicons-x-circle' })

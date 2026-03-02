@@ -104,6 +104,11 @@ const isExpanded = ref(true)
 const settingsMenuOpen = ref(false)
 const emit = defineEmits(['sidebar-toggle'])
 
+//pour définir l'item active
+const isItemActive = (item) => {
+  return route.path === item.path || route.path.startsWith(item.path + '/')
+}
+
 // ── Visibilité des items ──────────────────────────────────────────────────────
 const peutVoirPreArchivage = computed(() => isSP() || isSA() || peutVoirConfig())
 const peutVoirAffectations = computed(() => !isAgent())

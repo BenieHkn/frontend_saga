@@ -65,5 +65,8 @@ export function useCodir() {
     // Gestion des présences
     savePresences:    (id, presences)       => call(`/codirs/${id}/presences`, { method: 'POST', body: { presences } }),
     getPresences:     (id)                  => call(`/codirs/${id}/presences`),
+    downloadPdf: (id)                 => call(`/codirs/${id}/downloadPdf`, { method: 'GET' }),
+    generatePdf: (id)                 => call(`/codirs/${id}/generatePdf`, { method: 'GET' }),
+    cloturerCodir: (id)               => call(`/codirs/${id}/cloturerCodir`, { method: 'PUT' }),
   }
 }
