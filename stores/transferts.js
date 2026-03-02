@@ -3,58 +3,50 @@ import { defineStore } from 'pinia'
 
 export const useTransfertsStore = defineStore('transferts', {
   state: () => ({
-    affectations: [],              // Liste complète des affectations (type: transfert)
-    selectedAffectations: [],      // IDs des affectations sélectionnées pour transfert
+    courriers: [],                 // Courriers reçus disponibles pour transfert
+    selectedCourriers: [],         // IDs des courriers sélectionnés
     destinataires: [],             // Destinataires disponibles pour le transfert
     selectedDestinataires: []      // IDs des destinataires sélectionnés
   }),
 
   getters: {
-    // Données complètes des affectations sélectionnées
-    selectedAffectationsData(state) {
-      return state.affectations.filter(a =>
-        state.selectedAffectations.includes(a.id)
+    selectedCourriersData(state) {
+      return state.courriers.filter(c =>
+        state.selectedCourriers.includes(c.id)
       )
     },
 
-    // Données complètes des destinataires sélectionnés
     selectedDestinatairesData(state) {
       return state.destinataires.filter(d =>
         state.selectedDestinataires.includes(d.id)
       )
     },
 
-    // Vérifier si on peut envoyer le transfert
     canSend(state) {
-      return state.selectedAffectations.length > 0 &&
+      return state.selectedCourriers.length > 0 &&
         state.selectedDestinataires.length > 0
     },
 
     hasSelections(state) {
-      return state.selectedAffectations.length > 0 ||
+      return state.selectedCourriers.length > 0 ||
         state.selectedDestinataires.length > 0
     },
 
-    // Nombre total de courriers dans les affectations sélectionnées
     totalCourriers(state) {
-      return this.selectedAffectationsData.reduce((total, affectation) => {
-        return total + (affectation.nb_courriers || 0)
-      }, 0)
+      return state.selectedCourriers.length
     }
   },
 
   actions: {
-    // Toggle affectation
-    toggleAffectation(id) {
-      const index = this.selectedAffectations.indexOf(id)
+    toggleCourrier(id) {
+      const index = this.selectedCourriers.indexOf(id)
       if (index > -1) {
-        this.selectedAffectations.splice(index, 1)
+        this.selectedCourriers.splice(index, 1)
       } else {
-        this.selectedAffectations.push(id)
+        this.selectedCourriers.push(id)
       }
     },
 
-    // Toggle destinataire
     toggleDestinataire(id) {
       const index = this.selectedDestinataires.indexOf(id)
       if (index > -1) {
@@ -64,22 +56,19 @@ export const useTransfertsStore = defineStore('transferts', {
       }
     },
 
-    // Définir les listes
-    setAffectations(list) {
-      this.affectations = list
+    setCourriers(list) {
+      this.courriers = list
     },
 
     setDestinataires(list) {
       this.destinataires = list
     },
 
-    // Réinitialiser les sélections
     clearSelections() {
-      this.selectedAffectations = []
+      this.selectedCourriers = []
       this.selectedDestinataires = []
     },
 
-    // Réinitialiser tout le store
     resetStore() {
       this.$reset()
     }

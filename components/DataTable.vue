@@ -72,29 +72,29 @@
                 <div class="flex  gap-1">
 
                   <!-- Label + boutons -->
-                  <!-- <div class="flex items-center gap-0.5">
+                  <div class="flex items-center gap-0.5">
                     <span v-if="shouldShowLabel(col)" class="block text-center whitespace-nowrap">
                       {{ col.label }}
                     </span>
-                    
+                    <!-- ✅ Tri : icône SVG directe pour éviter les problèmes de rendu -->
                     <button v-if="showSorting && col.sortable !== false"
                       class="flex items-center justify-center w-6 h-6 rounded hover:bg-indigo-100 transition-colors flex-shrink-0"
                       :class="sortColumn === col.key ? 'text-indigo-600' : 'text-slate-400'"
                       :title="`Trier par ${col.label}`" @click="sortBy(col.key)">
-                      
+                      <!-- Pas de tri actif -->
                       <svg v-if="sortColumn !== col.key" class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M5 4l3-3 3 3H5zm6 8l-3 3-3-3h6z" />
                       </svg>
-                      
+                      <!-- Tri ascendant -->
                       <svg v-else-if="sortDirection === 'asc'" class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M8 2l4 6H4l4-6z" />
                       </svg>
-                      
+                      <!-- Tri descendant -->
                       <svg v-else class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M8 14l-4-6h8l-4 6z" />
                       </svg>
                     </button>
-                    
+                    <!-- Filtre multi-sélection -->
                     <button v-if="showMultiSelectFilters && col.multiSelect !== false"
                       class="flex items-center justify-center w-6 h-6 rounded hover:bg-indigo-100 transition-colors flex-shrink-0"
                       :class="multiSelectFilters[col.key]?.length > 0 ? 'text-indigo-600' : 'text-slate-400'"
@@ -105,7 +105,7 @@
                           clip-rule="evenodd" />
                       </svg>
                     </button>
-                  </div> -->
+                  </div>
 
                   <!-- Input de filtre -->
                   <div v-if="showColumnFilters && showColumnInputs && !col.inputHidden"

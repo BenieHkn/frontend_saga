@@ -14,7 +14,7 @@
       <!-- Dates et Délai -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <!-- Date d'affectation -->
-        <div>
+        <!-- <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
             Date d'affectation
             <span class="text-red-500">*</span>
@@ -28,7 +28,7 @@
             :max="today"
             required 
           />
-        </div>
+        </div> -->
 
         <!-- Date de retour attendue -->
         <div>
@@ -153,7 +153,7 @@
       </div> -->
 
       <!-- Date de clôture (optionnelle) -->
-      <div>
+      <!-- <div>
         <label class="flex items-center gap-3 cursor-pointer mb-3">
           <input
             type="checkbox"
@@ -182,7 +182,7 @@
             </p>
           </div>
         </Transition>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>

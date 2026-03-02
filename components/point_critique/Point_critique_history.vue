@@ -40,8 +40,8 @@
     </div>
 
     <!-- DataTable -->
-    <DataTable v-else :data="pointsCritiques" :columns="filteredColumns" :selectable="false"
-      :left-aligned-columns="['code', 'libelle', 'user_name', 'is_interim']"
+    <DataTable v-else :data="pointsCritiques" :columns="filteredColumns" :selectable="false" :show-row-numbers="true" :default-sort-column="null"
+      :left-aligned-columns="['code', 'libelle', 'user_name', 'is_interim']" 
       :show-delete-action="false"
       @edit="onEdit"
       @view="onView"
@@ -538,15 +538,15 @@ const closeAttachmentModal = () => {
 
 // Configuration colonnes
 const columns = [
-  { key: 'code', label: 'Code', visible: true },
-  { key: 'libelle', label: 'Libellé', visible: true },
-  { key: 'user_name', label: 'Agent', visible: true },
-  { key: 'matricule', label: 'Matricule', visible: true },
-  { key: 'is_interim', label: 'Type', visible: true },
-  { key: 'statut', label: 'Statut', visible: true },
-  { key: 'date_debut', label: 'Date de début', visible: true },
-  { key: 'date_fin', label: 'Date de fin', visible: true },
-  { key: 'piece_jointe_url', label: 'Fichier', visible: true },
+  { key: 'code', label: 'Code', visible: true, showLabel: false },
+  { key: 'libelle', label: 'Libellé', visible: true, showLabel: false },
+  { key: 'user_name', label: 'Agent', visible: true, showLabel: false },
+  { key: 'matricule', label: 'Matricule', visible: true, showLabel: false },
+  { key: 'is_interim', label: 'Type', visible: true, showLabel: false },
+  { key: 'statut', label: 'Statut', visible: true, showLabel: false },
+  { key: 'date_debut', label: 'Date de début', visible: true, showLabel: false },
+  { key: 'date_fin', label: 'Date de fin', visible: true, showLabel: false },
+  { key: 'piece_jointe_url', label: 'Fichier', visible: true, showLabel: false },
 ]
 
 // Helpers

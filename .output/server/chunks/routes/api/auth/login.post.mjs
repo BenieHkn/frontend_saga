@@ -12,7 +12,7 @@ import 'ipx';
 import 'node:path';
 
 const login_post = defineEventHandler(async (event) => {
-  var _a, _b, _c, _d, _e;
+  var _a, _b, _c, _d, _e, _f, _g, _h;
   const config = useRuntimeConfig();
   try {
     const body = await readBody(event);
@@ -51,18 +51,20 @@ const login_post = defineEventHandler(async (event) => {
         message: "Donn\xE9es utilisateur non re\xE7ues de l'API"
       };
     }
-    const main_entite = ((_c = (_b = response.user.entite_users) == null ? void 0 : _b[0]) == null ? void 0 : _c.entite) || null;
-    const entite_user = ((_d = response.user.entite_users) == null ? void 0 : _d[0]) || null;
+    const entitesActives = ((_b = response.user.entite_users) == null ? void 0 : _b.filter((eu) => eu.actif)) || [];
+    const isSuperAdmin = ((_c = response.user) == null ? void 0 : _c.is_superadmin) === true;
+    const main_entite = entitesActives.length === 1 ? ((_d = entitesActives[0]) == null ? void 0 : _d.entite) || null : null;
+    const entite_user = entitesActives.length === 1 ? entitesActives[0] || null : null;
     const entites = ((_e = response.user.entite_users) == null ? void 0 : _e.map((eu) => {
-      var _a2, _b2, _c2, _d2, _e2, _f, _g;
+      var _a2, _b2, _c2, _d2, _e2, _f2, _g2;
       return {
         id: (_a2 = eu.entite) == null ? void 0 : _a2.id,
         code: (_b2 = eu.entite) == null ? void 0 : _b2.code,
         libelle: (_c2 = eu.entite) == null ? void 0 : _c2.libelle,
         fonction: (_d2 = eu.entite) == null ? void 0 : _d2.fonction,
         is_critique: (_e2 = eu.entite) == null ? void 0 : _e2.is_critique,
-        parent_entite_id: (_f = eu.entite) == null ? void 0 : _f.parent_entite_id,
-        parent_libelle: (_g = eu.entite) == null ? void 0 : _g.parent_libelle,
+        parent_entite_id: (_f2 = eu.entite) == null ? void 0 : _f2.parent_entite_id,
+        parent_libelle: (_g2 = eu.entite) == null ? void 0 : _g2.parent_libelle,
         entite_user_id: eu.id,
         actif: eu.actif,
         is_interim: eu.is_interim,
@@ -71,7 +73,6 @@ const login_post = defineEventHandler(async (event) => {
         date_fin: eu.date_fin
       };
     })) || [];
-    console.log("entites:", entites);
     const formattedUser = {
       id: response.user.id,
       nom: response.user.nom,
@@ -83,10 +84,7 @@ const login_post = defineEventHandler(async (event) => {
       telephone: response.user.telephone,
       prise_service: response.user.prise_service
     };
-    console.log("formattedUser:", formattedUser);
-    console.log("main_entite:", main_entite);
-    console.log("entites:", entites);
-    console.log("entite_user:", entite_user);
+    const shouldIncludeRoleAndPermissions = isSuperAdmin || entitesActives.length === 1;
     return {
       success: true,
       message: "Connexion r\xE9ussie",
@@ -94,11 +92,13 @@ const login_post = defineEventHandler(async (event) => {
       user: formattedUser,
       main_entite,
       entites,
-      entite_user
+      entite_user,
+      role: shouldIncludeRoleAndPermissions ? (_f = response.role) != null ? _f : null : null,
+      permissions: shouldIncludeRoleAndPermissions ? (_g = response.permissions) != null ? _g : {} : null,
+      directeur_entite_user_id: (_h = response.directeur_entite_user_id) != null ? _h : null
     };
   } catch (error) {
     console.error("Erreur login:", error.message);
-    console.error("Erreur login:", error);
     return {
       success: false,
       message: "Erreur serveur lors de la connexion"

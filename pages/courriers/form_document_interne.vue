@@ -215,10 +215,8 @@
 <script setup lang="ts">
 import { useTypeDocuments } from "../../composables/courriers/useTypeDocuments";
 import { useFormDocumentInterne } from "../../composables/courriers/useFormDocumentInterne";
-import { useToast } from "../../composables/useToast";
 import ToastComponent from "../../components/ToastComponent.vue"
 
-const { add } = useToast()
 useHead({
     title: "Nouveau Document Interne - Sagar Revolution",
 });
@@ -333,7 +331,10 @@ const onSubmit = async () => {
             console.log("✅ Formulaire soumis avec succès")
             
             // Attendre un peu avant de rediriger
-           add('Document interne créé avec succès', 'success')
+           useToast().add({
+                title: 'Document interne créé avec succès',
+                color: 'green'
+            })
             selectedFile.value = null; // vide l'aperçu
             resetForm()
         } else {
@@ -351,7 +352,7 @@ const onSubmit = async () => {
  */
 const handleCancel = () => {
     resetForm()
-    navigateTo("/courriers");
+    navigateTo("/documents");
 };
 
 /**

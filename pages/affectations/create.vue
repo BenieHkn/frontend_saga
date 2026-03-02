@@ -51,6 +51,7 @@ import AffectationsDestinataireSelectionPanel from '~/components/affectations/Af
 import AffectationsFormPanel from '~/components/affectations/AffectationsFormPanel.vue'
 import AffectationsSummaryBar from '~/components/affectations/AffectationsSummaryBar.vue'
 import PageHeader from '~/components/PageHeader.vue'
+import { useAuth } from '~/composables/auth/useAuth'
 
 const config = useRuntimeConfig()
 
@@ -63,6 +64,7 @@ const toast = useToast()
 const router = useRouter()
 const route = useRoute()
 const authToken = ref('')
+const { getEmetteurId, voitTousCourriers, isSA } = useAuth()
 
 const courrierLoading = ref(false)
 const destinataireLoading = ref(false)
@@ -119,16 +121,18 @@ const loadCourriers = async () => {
 
     console.log(`📝 Chargement des courriers avec entite_user_id: ${entite_user.id}`)
 
-    const response = await $fetch(
-      selectedFunction.code === "DGML"
-        ? `${config.public.apiBase}/courriers-arrives/non-affectes`
-        : `${config.public.apiBase}/courriers-arrives/affectes/entite-user/${entite_user.id}`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${authToken.value}`,
-        },
-      })
+    const emetteurId = getEmetteurId() ?? entite_user.id
+
+    const endpoint = (voitTousCourriers() || isSA())
+      ? `${config.public.apiBase}/courriers-arrives/non-affectes`
+      : `${config.public.apiBase}/courriers-arrives/affectes/entite-user/${emetteurId}`
+
+    const response = await $fetch(endpoint, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${authToken.value}`,
+      },
+    })
 
     const courriers = response.data.map(courrier => ({
       id: courrier.id,
@@ -149,11 +153,11 @@ const loadCourriers = async () => {
     // ✅ Appliquer la pré-sélection si un courrier était spécifié
     if (preSelectedCourrierId.value) {
       const courrierExiste = courriers.some(c => c.id === preSelectedCourrierId.value)
-      
+
       if (courrierExiste) {
         console.log('✅ Application de la pré-sélection du courrier:', preSelectedCourrierId.value)
         store.selectCourrierFromQuickAction(preSelectedCourrierId.value)
-        
+
         // Scroll vers le courrier sélectionné après un court délai
         setTimeout(() => {
           const selectedCard = document.querySelector('[data-selected="true"]')
@@ -170,7 +174,7 @@ const loadCourriers = async () => {
           timeout: 1500,
         })
       }
-      
+
       // Nettoyer la pré-sélection
       preSelectedCourrierId.value = null
     }
@@ -202,17 +206,16 @@ const loadDestinataires = async () => {
     }
 
     if (!entite_user || !entite_user.id) {
-      console.error('❌ Aucune fonction utilisateur sélectionnée')
-      toast.add({
-        title: 'Erreur',
-        description: 'Aucune fonction utilisateur sélectionnée.',
-        color: 'red',
-        timeout: 1500,
-      })
-      courrierLoading.value = false
-      return
+      throw new Error('Aucune fonction sélectionnée. Veuillez vous reconnecter.')
     }
-    const response = await $fetch(`${config.public.apiBase}/entite-users/${entite_user.id}/subordinates`, {
+
+    // ← AJOUTER cette ligne (elle manque dans handleSubmit)
+    const emetteurId = getEmetteurId() ?? entite_user.id
+
+    console.log(`📝 Création d'affectations avec emetteur_id: ${emetteurId}`)
+    // Si secrétariat → on charge les subordonnés du directeur, pas les siens
+
+    const response = await $fetch(`${config.public.apiBase}/entite-users/${emetteurId}/subordinates`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${authToken.value}`,
@@ -233,7 +236,7 @@ const loadDestinataires = async () => {
 
     store.setDestinataires(destinataires)
     console.log(`✅ ${destinataires.length} destinataires actifs chargés`)
-    
+
     if (destinataires.length > 0) {
       console.log('📋 Exemple de destinataire:', {
         id: destinataires[0].id,
@@ -306,11 +309,14 @@ const handleSubmit = async () => {
       throw new Error('Aucune fonction sélectionnée. Veuillez vous reconnecter.')
     }
 
-    console.log(`📝 Création d'affectations avec emetteur_id: ${entite_user.id}`)
-    
+    // ← AJOUTER cette ligne (elle manque dans handleSubmit)
+    const emetteurId = getEmetteurId() ?? entite_user.id
+
+    console.log(`📝 Création d'affectations avec emetteur_id: ${emetteurId}`)
+
     // ✅ Log des destinataires sélectionnés
     console.log('📤 IDs des destinataires sélectionnés:', store.selectedDestinataires)
-    console.log('📤 Détails des destinataires:', 
+    console.log('📤 Détails des destinataires:',
       store.selectedDestinataires.map(id => {
         const dest = store.destinataires.find(d => d.id === id)
         return {
@@ -333,8 +339,8 @@ const handleSubmit = async () => {
         affectations.push({
           courrier_arrive_id: courrierId,
           destinataire_id: destinataireId, // ✅ C'est bien le entite_user.id
-          emetteur_id: entite_user.id,
-          date_affect: store.formData.date_affect,
+          emetteur_id: emetteurId,
+date_affect: new Date().toISOString().split('T')[0],
           instructions: store.formData.instructions,
           statut: store.formData.statut,
           delai_traitement: store.formData.delai_traitement,
@@ -430,7 +436,7 @@ const handleCancel = () => {
 onMounted(async () => {
   if (process.client) {
     authToken.value = localStorage.getItem('auth_token') || ''
-    
+
     // ✅ Récupérer l'ID du courrier depuis sessionStorage (mis par la page précédente)
     const savedCourrierId = sessionStorage.getItem('preselected_courrier_id')
     if (savedCourrierId) {

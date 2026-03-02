@@ -328,6 +328,9 @@ const loadInterims = async () => {
     const response = await $fetch('/entite-users', {
       baseURL: config.public.apiBase,
       method: 'GET',
+      params: {
+        is_interim: true
+      },
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'

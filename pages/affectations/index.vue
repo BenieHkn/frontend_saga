@@ -342,10 +342,10 @@
           <div v-if="paginatedData.length === 0" class="text-center py-12">
             <Icon name="i-heroicons-clipboard-document-list" class="mx-auto h-12 w-12 text-gray-400" />
             <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune affectation</h3>
-            <p class="mt-1 text-sm text-gray-500">
+            <p class="mt-1 text-sm text-gray-500" v-if="!isAdmin()">
               Commencez par créer une nouvelle affectation de courrier.
             </p>
-            <div class="mt-6">
+            <div class="mt-6" v-if="!isAdmin()">
               <UButton
                 to="/affectations/create"
                 icon="i-heroicons-plus"

@@ -21,7 +21,7 @@ export const useCourriersArrives = () => {
       objet: item.document?.objet || 'N/A',
       priority: item.priority || 'standard',
       type_arrivee: item.type_arrivee,
-      confidentiel: item.confidentiel,
+      confidentiel: item.confidentiel || false,
       structure: item.structure,
       date_sgm: item.date_sgm ? new Date(item.date_sgm).toLocaleDateString('fr-FR') : 'N/A',
       // ✅ Pour la compatibilité avec le store de transferts

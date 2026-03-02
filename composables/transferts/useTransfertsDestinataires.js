@@ -1,6 +1,7 @@
 // composables/transferts/useTransfertsDestinataires.js
 import { ref, computed } from 'vue'
 import { useRuntimeConfig } from '#app'
+import { useAuth } from '~/composables/auth/useAuth'
 
 export const useDestinataires = () => {
   const destinataires = ref([])
@@ -8,6 +9,8 @@ export const useDestinataires = () => {
   const error = ref(null)
   const accessDenied = ref(false) // ✅ NOUVEAU : Flag pour 403
   const config = useRuntimeConfig()
+  const { isSecDir, getDirecteurEntiteUserId } = useAuth()
+
 
   // 🔐 Récupérer le token
   const getToken = () => {
@@ -26,31 +29,31 @@ export const useDestinataires = () => {
         transformed.push({
           // ID composite pour éviter les doublons
           id: item.id,
-          
+
           // IDs séparés pour l'API
           user_id: user.id,
           affectation_id: item.id,
-          
+
           // Informations utilisateur
           name: `${user.prenom} ${user.nom}`,
           email: user.email,
           initials: getInitials(user.prenom, user.nom),
           matricule: user.matricule,
           telephone: user.telephone,
-          
+
           // Informations entité
           entite: entite.libelle,
           entite_code: entite.code,
           entite_id: entite.id,
           parent_entite_id: entite.parent_entite_id,
           parent_libelle: entite.parent_libelle,
-          
+
           // Informations d'affectation
           date_debut: item.date_debut,
           date_fin: item.date_fin,
           is_interim: item.is_interim,
           is_responsable: item.is_responsable,
-          
+
           // Données complètes pour référence
           _raw: {
             entiteUser: item,
@@ -79,7 +82,7 @@ export const useDestinataires = () => {
 
     try {
       const token = getToken()
-      
+
       if (!token) {
         throw new Error("Token d'authentification non trouvé. Veuillez vous reconnecter.")
       }
@@ -97,10 +100,14 @@ export const useDestinataires = () => {
         throw new Error('Aucune fonction utilisateur sélectionnée. Veuillez vous reconnecter.')
       }
 
-      console.log(`🎯 Recherche de collègues de même rang pour l'entité: ${entite_user.id}`)
+      const destinataireId = isSecDir()
+        ? (getDirecteurEntiteUserId() ?? entite_user.id)
+        : entite_user.id
+
+      console.log(`📝 Chargement affectations pour destinataire_id: ${destinataireId}`)
 
       // 📡 Appel à l'endpoint /entite-users/{id}/same-rank
-      const response = await fetch(`${config.public.apiBase}/entite-users/${entite_user.id}/same-rank`, {
+      const response = await fetch(`${config.public.apiBase}/entite-users/${destinataireId}/same-rank`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'

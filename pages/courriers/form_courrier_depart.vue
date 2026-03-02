@@ -138,11 +138,10 @@
                 <UInput v-model="docSignataire" placeholder="Nom du signataire" class="w-full h-12" />
               </div>
 
-              <!-- Checkboxes -->
-              <div class="flex items-center space-x-4">
-                <UCheckbox v-model="form.large_diffusion" label="Large diffusion" />
-                <UCheckbox v-model="form.confidentiel" label="Confidentiel" />
-              </div>
+                <div class="flex items-center space-x-4">
+                  <UCheckbox v-model="form.large_diffusion" label="Large diffusion" />
+                  <!-- <UCheckbox v-model="form.confidentiel" label="Confidentiel" /> -->
+                </div>
 
               <!-- Initiateurs -->
               <div v-if="!isReplyMode">
@@ -578,7 +577,104 @@ const validateForm = () => {
   return e.length === 0
 }
 
-// ── Submit ─────────────────────────────────────────────────────────────────────
+// ── Handlers ──────────────────────────────────────────────────────────────────
+const handleFileChange = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    selectedFile.value = file
+    form.value.url = file
+  }
+}
+
+const resetForm = () => {
+  form.value = {
+    type_depart: 'externe',
+    numero_enreg: '',
+    date_enreg: new Date().toISOString().split('T')[0],
+    reference: '',
+    date_courier: '',
+    objet: '',
+    large_diffusion: false,
+    url: null,
+    type_document_id: null,
+    date_depart: '',
+    destinataire: '',
+    confidentiel: false,
+    service_emis: '',
+    initiateurs: [],
+  }
+  selectedFile.value = null
+  errors.value = []
+  errorRequest.value = null
+}
+
+const cancelReply = () => {
+  courriersStore.clearReply()
+  navigateTo('/documents')
+}
+
+// ── Construction du FormData commun aux deux modes ────────────────────────────
+const buildBaseFormData = (selectedFunction) => {
+  const fd = new FormData()
+  fd.append('numero_enreg',     form.value.numero_enreg)
+  fd.append('date_enreg',       form.value.date_enreg)
+  fd.append('reference',        form.value.reference)
+  fd.append('date_courrier',    form.value.date_courier)
+  fd.append('date_depart',      form.value.date_depart)
+  fd.append('objet',            form.value.objet)
+  fd.append('large_diffusion',  form.value.large_diffusion ? '1' : '0')
+  fd.append('confidentiel',     form.value.confidentiel ? '1' : '0')
+  fd.append('type_document_id', String(form.value.type_document_id))
+  fd.append('type_depart',      form.value.type_depart)
+  fd.append('service_emis',     selectedFunction?.code || 'Non défini')
+  fd.append('destinataire',     form.value.destinataire || '')
+  if (form.value.url) fd.append('fichier', form.value.url)
+  return fd
+}
+
+// ── Soumission mode réponse : POST /courriers-departs/reponse ─────────────────
+const submitReponse = async (selectedFunction) => {
+  const fd = buildBaseFormData(selectedFunction)
+
+  // Identifiant du document du courrier arrivé auquel on répond
+  fd.append('courrier_arrive_document_id', String(courrierToReply.value.document.id))
+
+  const response = await $fetch(`${config.public.apiBase}/courriers-departs/reponse`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${authToken.value}` },
+    body: fd,
+  })
+
+  if (!response.success) {
+    throw new Error(response.message || "Erreur lors de la création de la réponse")
+  }
+
+  return response
+}
+
+// ── Soumission mode création standard : POST /courriers-departs ───────────────
+const submitCreation = async (selectedFunction) => {
+  const fd = buildBaseFormData(selectedFunction)
+
+  const initiateurIds = form.value.initiateurs.map(i => typeof i === 'object' ? i.id : i)
+  initiateurIds.forEach((id, index) => {
+    fd.append(`initiateurs[${index}]`, id)
+  })
+
+  const response = await $fetch(`${config.public.apiBase}/courriers-departs`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${authToken.value}` },
+    body: fd,
+  })
+
+  if (!response.success) {
+    throw new Error(response.message || "Erreur lors de la création du courrier")
+  }
+
+  return response
+}
+
+// ── Handler principal ─────────────────────────────────────────────────────────
 const handleSubmit = async () => {
   loading.value = true
   errors.value = []

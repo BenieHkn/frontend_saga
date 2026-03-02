@@ -1,11 +1,13 @@
 // composables/affectations/useAffectations.js
 import { ref, computed } from 'vue'
 import { useRuntimeConfig } from '#imports'
+import { useAuth } from '~/composables/auth/useAuth'
 
 export const useAffectations = () => {
   const affectations = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const { isSecDir, getDirecteurEntiteUserId } = useAuth()
   const config = useRuntimeConfig()
 
   // Récupérer le token depuis localStorage
@@ -32,14 +34,14 @@ export const useAffectations = () => {
   // ✅ CORRECTION : Formater avec entité et is_responsable
   const formatDestinataires = (destinataires) => {
     if (!destinataires || destinataires.length === 0) return 'Aucun destinataire'
-    
+
     return destinataires.map(d => {
       const nom = `${d.user?.nom || ''} ${d.user?.prenom || ''}`.trim()
       const code = d.entite?.code || ''
-      const roleOuFonction = d.is_responsable 
-        ? d.entite?.fonction 
+      const roleOuFonction = d.is_responsable
+        ? d.entite?.fonction
         : 'Agent'
-      
+
       return `${nom} (${code} - ${roleOuFonction})`
     }).join(', ')
   }
@@ -80,7 +82,7 @@ export const useAffectations = () => {
 
       return {
         id: affectation.id,
-        
+
         // Informations de base
         instructions: affectation.instructions || 'N/A',
         statut: affectation.statut || 'en_cours',
@@ -88,27 +90,27 @@ export const useAffectations = () => {
         date_affect: formatDate(affectation.date_affect),
         delai_traitement: formatDate(affectation.delai_traitement),
         date_cloture: formatDate(affectation.date_cloture),
-        
+
         // ✅ Émetteur formaté avec entité
         emetteur: emetteurFormate,
-        
+
         // Courriers (formaté pour affichage)
         courriers_text: formatCourriers(affectation.courriers || [affectation.courrier_arrive]),
         nb_courriers: affectation.courriers?.length || 1,
-        
+
         // Destinataires (formaté pour affichage)
         destinataires_text: formatDestinataires(affectation.destinataires || [affectation.destinataire]),
         nb_destinataires: affectation.destinataires?.length || 1,
-        
+
         // Badges pour l'affichage
         priority_badge: getPriorityBadge(affectation.priority),
         statut_badge: getStatutBadge(affectation.statut),
-        
+
         // Garder les données complètes pour les actions
         _raw: affectation,
         courriers_list: affectation.courriers || [affectation.courrier_arrive],
         destinataires_list: affectation.destinataires || [affectation.destinataire],
-        
+
         // ✅ Pour l'affichage dans la summary bar
         reference: affectation.courrier_arrive?.document?.reference || `#${affectation.id}`,
         name: affectation.courrier_arrive?.document?.objet || `Affectation #${affectation.id}`
@@ -120,7 +122,7 @@ export const useAffectations = () => {
   const fetchAffectations = async () => {
     loading.value = true
     error.value = null
-    
+
     try {
       const token = getToken()
       const entite_user = JSON.parse(localStorage.getItem('entite_user'))
@@ -134,7 +136,13 @@ export const useAffectations = () => {
         throw new Error('Entité utilisateur non trouvée')
       }
 
-      const response = await fetch(`${config.public.apiBase}/affectations/user/${entite_user.id}/pending`, {
+      const destinataireId = isSecDir()
+        ? (getDirecteurEntiteUserId() ?? entite_user.id)
+        : entite_user.id
+
+      console.log(`📝 Chargement affectations pour destinataire_id: ${destinataireId}`)
+
+      const response = await fetch(`${config.public.apiBase}/affectations/user/${destinataireId}/pending`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -152,7 +160,7 @@ export const useAffectations = () => {
       // Adapter selon le format de votre API
       if (result.success && result.data) {
         affectations.value = transformAffectationData(result.data)
-      } 
+      }
       else if (result.data) {
         affectations.value = transformAffectationData(result.data)
       }
@@ -164,7 +172,7 @@ export const useAffectations = () => {
       }
 
       console.log(`✅ ${affectations.value.length} affectations chargées`)
-      
+
       // ✅ Log d'exemple pour vérifier le formatage
       if (affectations.value.length > 0) {
         console.log('📋 Exemple d\'affectation formatée:', {

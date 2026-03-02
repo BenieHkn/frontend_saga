@@ -1,15 +1,11 @@
 <template>
-  <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-dark-900 font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300">
+  <div
+    class="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-dark-900 font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300">
 
     <!-- Toggle dark mode -->
     <div class="fixed top-6 right-6 z-50">
-      <UButton
-        :icon="isDark ? 'i-heroicons-moon' : 'i-heroicons-sun'"
-        color="white"
-        variant="solid"
-        class="rounded-full shadow-sm glass-panel"
-        @click="isDark = !isDark"
-      />
+      <UButton :icon="isDark ? 'i-heroicons-moon' : 'i-heroicons-sun'" color="white" variant="solid"
+        class="rounded-full shadow-sm glass-panel" @click="isDark = !isDark" />
     </div>
 
     <div class="max-w-4xl w-full mx-auto space-y-8 animate-fade-in">
@@ -26,44 +22,32 @@
       </div>
 
       <!-- Postes grid -->
-      <div
-        class="grid grid-cols-1 gap-4 items-stretch"
-        :class="{
-          'max-w-xs mx-auto': activePostes.length === 1,
-          'sm:grid-cols-2': activePostes.length === 2,
-          'sm:grid-cols-2 lg:grid-cols-3': activePostes.length >= 3,
-        }"
-      >
-        <div
-          v-for="entiteUser in activePostes"
-          :key="entiteUser.entite_user_id"
-          class="group relative cursor-pointer"
-          @click="handleSelectPoste(entiteUser)"
-        >
+      <div class="grid grid-cols-1 gap-4 items-stretch" :class="{
+        'max-w-xs mx-auto': activePostes.length === 1,
+        'sm:grid-cols-2': activePostes.length === 2,
+        'sm:grid-cols-2 lg:grid-cols-3': activePostes.length >= 3,
+      }">
+        <div v-for="entiteUser in activePostes" :key="entiteUser.entite_user_id" class="group relative cursor-pointer"
+          @click="handleSelectPoste(entiteUser)">
           <div
             class="glass-panel h-full p-6 rounded-2xl flex flex-col items-center text-center transition-all duration-300 border-2"
             :class="[
               confirming && selectedId === entiteUser.entite_user_id
                 ? 'border-brand-400/50 ring-4 ring-brand-400/20 -translate-y-1'
                 : 'border-transparent hover:-translate-y-1 hover:shadow-lg'
-            ]"
-          >
-            <!-- Spinner si en cours de redirection -->
-            <div
-              class="absolute top-4 right-4 transition-all duration-300"
-              :class="confirming && selectedId === entiteUser.entite_user_id ? 'opacity-100' : 'opacity-0'"
-            >
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="text-xl text-brand-400 animate-spin"
-              />
-              
+            ]">
+
+            <!-- Spinner -->
+            <div class="absolute top-4 right-4 transition-all duration-300"
+              :class="confirming && selectedId === entiteUser.entite_user_id ? 'opacity-100' : 'opacity-0'">
+              <UIcon name="i-heroicons-arrow-path" class="text-xl text-brand-400 animate-spin" />
             </div>
 
-            <!-- Avatar avec initiales -->
+            <!-- Avatar -->
             <div class="relative mb-4">
               <div class="w-16 h-16 rounded-full circle-badge flex items-center justify-center">
-                <span class="text-xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-br from-emerald-500 to-sky-600">
+                <span
+                  class="text-xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-br from-emerald-500 to-sky-600">
                   {{ getInitials(entiteUser.libelle) }}
                 </span>
               </div>
@@ -71,8 +55,7 @@
               <!-- Badge intérim ou responsable -->
               <div
                 class="absolute -top-2 left-1/2 -translate-x-1/2 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-md whitespace-nowrap"
-                :class="entiteUser.is_interim ? 'bg-orange-500' : 'bg-emerald-500'"
-              >
+                :class="entiteUser.is_interim ? 'bg-orange-500' : 'bg-emerald-500'">
                 {{ entiteUser.is_interim ? 'Intérim' : 'Responsable' }}
               </div>
             </div>
@@ -89,10 +72,8 @@
               </div>
 
               <!-- Entité parente -->
-              <div
-                v-if="entiteUser.parent_libelle && entiteUser.parent_libelle !== '-'"
-                class="flex items-center justify-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 pt-3 border-t border-slate-100 dark:border-slate-700/50 w-full"
-              >
+              <div v-if="entiteUser.parent_libelle && entiteUser.parent_libelle !== '-'"
+                class="flex items-center justify-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 pt-3 border-t border-slate-100 dark:border-slate-700/50 w-full">
                 <UIcon name="i-heroicons-building-office" class="text-sm shrink-0" />
                 <span class="font-medium leading-tight">{{ entiteUser.parent_libelle }}</span>
               </div>
@@ -114,7 +95,8 @@
 
     <!-- Footer système -->
     <div class="fixed bottom-6 left-1/2 -translate-x-1/2">
-      <div class="glass-panel px-4 py-2 rounded-full flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+      <div
+        class="glass-panel px-4 py-2 rounded-full flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
         <div class="flex items-center gap-1">
           <UIcon name="i-heroicons-chart-bar" class="text-sm" />
           <span>Système OK</span>
@@ -126,13 +108,8 @@
 
     <!-- Bouton déconnexion -->
     <div class="fixed bottom-6 left-6">
-      <UButton
-        variant="ghost"
-        color="gray"
-        icon="i-heroicons-arrow-left"
-        class="text-slate-400 hover:text-primary transition-colors font-medium text-sm"
-        @click="handleLogout"
-      >
+      <UButton variant="ghost" color="gray" icon="i-heroicons-arrow-left"
+        class="text-slate-400 hover:text-primary transition-colors font-medium text-sm" @click="handleLogout">
         Se déconnecter
       </UButton>
     </div>
@@ -158,8 +135,11 @@ const {
   getUser,
   getActiveEntiteUsers,
   setSelectedEntiteUser,
-  logout
+  getStoredToken,
+  logout,
 } = useAuth()
+
+const config = useRuntimeConfig()
 
 // ─── Data ─────────────────────────────────────────────────────────────────
 const user = getUser()
@@ -177,10 +157,63 @@ async function handleSelectPoste(entiteUser: EntiteUser) {
   selectedId.value = entiteUser.entite_user_id
   confirming.value = true
 
-  setSelectedEntiteUser(entiteUser)
+  try {
+    const response = await $fetch<{
+      success: boolean
+      role: string
+      permissions: Record<string, any>
+      entite_user: any
+      main_entite: any
+      directeur_entite_user_id: number | null
+    }>(`${config.public.apiBase}/auth/switch-profile`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${getStoredToken()}` },
+      body: { entite_user_id: entiteUser.entite_user_id }
+    })
 
-  await new Promise(resolve => setTimeout(resolve, 400))
-  await navigateTo('/')
+    if (!response.success) {
+      confirming.value = false
+      selectedId.value = null
+      return
+    }
+
+    // ✅ Mettre à jour toute la session depuis la réponse switch-profile
+    if (response.role) {
+      localStorage.setItem('role', response.role)
+    }
+
+    if (response.permissions) {
+      localStorage.setItem('permissions', JSON.stringify(response.permissions))
+    }
+
+    if (response.entite_user) {
+      localStorage.setItem('entite_user', JSON.stringify(response.entite_user))
+    }
+
+    if (response.main_entite) {
+      localStorage.setItem('main_entite', JSON.stringify(response.main_entite))
+      localStorage.setItem('selected_entite', JSON.stringify(response.main_entite))
+    }
+
+    if (response.directeur_entite_user_id) {
+      localStorage.setItem('directeur_entite_user_id', String(response.directeur_entite_user_id))
+    } else {
+      localStorage.removeItem('directeur_entite_user_id')
+    }
+
+    // ✅ setSelectedEntiteUser seulement comme fallback si main_entite absent
+    if (!response.main_entite) {
+      setSelectedEntiteUser(entiteUser)
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 400))
+    await navigateTo('/')
+
+  } catch (error) {
+    console.error('❌ Erreur switch-profile:', error)
+    confirming.value = false
+    selectedId.value = null
+  }
 }
 
 async function handleLogout() {
@@ -235,7 +268,14 @@ function formatDate(iso: string | null | undefined): string {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>
