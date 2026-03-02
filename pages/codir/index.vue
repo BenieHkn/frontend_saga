@@ -50,11 +50,22 @@ onMounted(() => store.getCodirs())
 // ── Handlers ──────────────────────────────────────────────────────────────
 
 const handleView = (item) => {
+  const STEP_KEY = "codir_step_" + item.id
+  const currentStep = ref(1)
   store.setCurrentCodir(item._raw)
   if(process.client){
     localStorage.setItem("currentCodir", JSON.stringify(item))
+    localStorage.setItem(STEP_KEY, 1)
+    currentStep.value = localStorage.getItem(STEP_KEY)
   }
-  navigateTo(`/codir/${item.id}`)
+
+  if(currentStep.value == 1){
+    navigateTo(`/codir/${item.id}`)
+  }else if(currentStep.value == 2){
+    navigateTo(`/codir/infos`)
+  }else if(currentStep.value == 3){
+    navigateTo(`/codir/preview`)
+  }
 }
 
 const handleDelete = async (item) => {

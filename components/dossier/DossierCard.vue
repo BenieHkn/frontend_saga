@@ -25,17 +25,17 @@ const clickDossier = () => {
 
 const confirmDelete = async () => {
   showDeleteModal.value = false
-  
+
   try {
     await codirStore.removeDossier(codirStore.currentOrdreDuJour.id, props.dossier.id)
-    
+
     toast.add({
       title: 'Dossier supprimé',
       description: `"${props.dossier.libelle}" a été supprimé avec succès`,
       color: 'green',
       icon: 'i-heroicons-check-circle',
     })
-    
+
     emit('deleted', props.dossier.id)
   } catch {
     toast.add({
@@ -60,7 +60,9 @@ const cancelDelete = () => {
 </script>
 
 <template>
-  <div class="flex items-center gap-3 bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-colors" @click="clickDossier">
+  <div
+    class="flex items-center gap-3 bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-colors"
+    @click="clickDossier">
     <div class="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center shrink-0">
       <UIcon name="i-heroicons-folder" class="w-4 h-4 text-violet-600 dark:text-violet-400" />
     </div>
@@ -87,10 +89,10 @@ const cancelDelete = () => {
           </div>
         </div>
       </template>
-      
+
       <div class="p-2">
         <p class="text-gray-700 dark:text-gray-300 mb-4">
-          Êtes-vous sûr de vouloir supprimer le dossier 
+          Êtes-vous sûr de vouloir supprimer le dossier
           <span class="font-semibold text-red-600 dark:text-red-400">"{{ dossier.libelle }}"</span> ?
         </p>
         <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -100,19 +102,10 @@ const cancelDelete = () => {
 
       <template #footer>
         <div class="flex justify-end gap-3">
-          <UButton 
-            color="gray" 
-            variant="ghost" 
-            @click="cancelDelete"
-            :disabled="codirStore.loading"
-          >
+          <UButton color="gray" variant="ghost" @click="cancelDelete" :disabled="codirStore.loading">
             Annuler
           </UButton>
-          <UButton 
-            color="red" 
-            @click="confirmDelete"
-            :loading="codirStore.loading"
-          >
+          <UButton color="red" @click="confirmDelete" :loading="codirStore.loading">
             <UIcon name="i-heroicons-trash" class="w-4 h-4 mr-2" />
             Supprimer
           </UButton>

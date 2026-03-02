@@ -7,7 +7,7 @@
     <nav class="flex-1 px-3 py-6 space-y-2 overflow-y-auto no-scrollbar">
       <NuxtLink v-for="item in menuItems" :key="item.path" :to="item.path"
         class="flex items-center group relative px-4 py-3.5 rounded-xl transition-all duration-200" :class="[
-          route.path === item.path
+          isItemActive(item)
             ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg'
             : 'text-gray-700 hover:bg-emerald-800 hover:text-white',
         ]">
@@ -40,16 +40,6 @@
               ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg'
               : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'
           ]">Entités</NuxtLink>
-          <!-- <NuxtLink
-            to="/fonctions"
-            class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors"
-            :class="[
-              route.path === '/fonctions' 
-                ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' 
-                : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'
-            ]"
-            >Fonctions</NuxtLink
-          > -->
           <NuxtLink to="/utilisateurs" class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors" :class="[
             route.path === '/utilisateurs'
               ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg'
@@ -105,37 +95,29 @@ const isAdmin = computed(() => {
 
 const menuItems = [
   { name: "Tableau de bord", path: "/dashboard", icon: "heroicons:home-20-solid" },
-  {
-    name: "Documents",
-    path: "/documents",
-    icon: "heroicons:folder-open-20-solid",
-  },
-  {
-    name: "Affectations & \n Transferts",
-    path: "/affectations-transferts",
-    icon: "heroicons:clipboard-document-check-20-solid",
-  },
-  {
-    name: "Rattachement",
-    path: "/rattachements",
-    icon: "heroicons:paper-clip-20-solid",
-  },
-  {
-    name: "CODIR",
-    path: "/codir",
-    icon: "heroicons:user-group-20-solid",
-  },
-  {
-    name: "Statistiques",
-    path: "/stats",
-    icon: "heroicons:chart-bar-20-solid",
-  },
-  {
-    name: "Pré-Achivage",
-    path: "/archivage",
-    icon: "heroicons:archive-box-20-solid",
-  },
+  { name: "Documents", path: "/documents", icon: "heroicons:folder-open-20-solid" },
+  { name: "Affectations & \n Transferts", path: "/affectations-transferts", icon: "heroicons:clipboard-document-check-20-solid" },
+  { name: "Rattachement", path: "/rattachements", icon: "heroicons:paper-clip-20-solid" },
+  { name: "CODIR", path: "/codir", icon: "heroicons:user-group-20-solid" },
+  { name: "Statistiques", path: "/stats", icon: "heroicons:chart-bar-20-solid" },
+  { name: "Pré-Achivage", path: "/archivage", icon: "heroicons:archive-box-20-solid" },
 ];
+
+const CODIR_PREFIXES = [
+  '/codir',
+  '/ordres-du-jour',
+  '/dossiers',
+  '/activites',
+  '/actions',
+  '/taches',
+]
+
+const isItemActive = (item) => {
+  if (item.path === '/codir') {
+    return CODIR_PREFIXES.some((prefix) => route.path.startsWith(prefix))
+  }
+  return route.path === item.path
+}
 
 const toggleSidebar = () => {
   isExpanded.value = !isExpanded.value;
@@ -147,7 +129,6 @@ const toggleSettings = () => {
   settingsMenuOpen.value = !settingsMenuOpen.value;
 };
 
-// Keep settings menu open when a sub-route is active
 const isSettingsRouteActive = computed(() => {
   return ['/entites', '/fonctions', '/utilisateurs'].some(path =>
     route.path === path
@@ -176,7 +157,6 @@ onMounted(() => {
     transform: translateY(-5px);
     opacity: 0;
   }
-
   to {
     transform: translateY(0);
     opacity: 1;

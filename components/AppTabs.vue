@@ -1,12 +1,12 @@
 <script setup>
-import { ref } from 'vue'
-
 const props = defineProps({
-  tabs: Array,
-  default: []
+  tabs: {
+    type: Array,
+    default: () => []
+  }
 })
 
-const activeTab = ref(props.tabs[0].id)
+const activeTab = ref(props.tabs?.[0]?.id)
 </script>
 
 <template>

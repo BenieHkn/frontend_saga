@@ -13,8 +13,12 @@ const ordreId = Number(route.params.ordreId)
 const currentOrdreDuJour = ref(null)
 const loading = ref(true)
 
+const currentCodir = ref(null)
+
+// Et dans onMounted, ajouter la ligne :
 onMounted(() => {
   currentOrdreDuJour.value = JSON.parse(localStorage.getItem('currentOrdreDuJour'))
+  currentCodir.value = JSON.parse(localStorage.getItem('currentCodir')) // ← ajouter
   loading.value = false
 })
 

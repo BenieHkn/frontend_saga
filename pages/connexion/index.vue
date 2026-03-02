@@ -24,7 +24,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-green-800 to-blue-900 relative overflow-hidden p-6">
+    class="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-green-800 to-blue-900 relative overflow-hidden p-6 font-['Montserrat']">
 
     <div class="absolute top-[-20px] left-[-20px] w-64 h-64 border-[16px] border-white/10 rounded-full"></div>
     <div class="absolute bottom-10 right-10 w-32 h-32 border-8 border-white/5 rounded-full"></div>
@@ -34,127 +34,96 @@ onMounted(() => {
 
     <div class="max-w-6xl w-full flex flex-col md:flex-row items-center justify-between gap-12 z-10">
 
-      <div class="text-white md:text-left text-center flex-1">
-        <h1 class="text-9xl lg:ms-7 font-bold tracking-tight mb-2 drop-shadow-xl">
+      <div class="text-white md:text-left text-center flex-1 select-none">
+        <h1 class="text-9xl lg:ms-7 font-bold tracking-tight mb-0 drop-shadow-2xl">
           SAGA
         </h1>
-        <p class="text-xl tracking-[0.2em] font-light text-white/80">
+
+        <h2
+          class="text-3xl lg:ms-9 font-bold tracking-[0.5em] animate-gold-sweep bg-clip-text text-transparent bg-[length:200%_auto] mb-8">
+          REVOLUTION
+        </h2>
+
+        <p class="text-xl tracking-[0.2em] font-light text-white/70 lg:ms-9">
           Bienvenue sur notre plateforme...
         </p>
       </div>
 
       <div class="w-full max-w-md bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-10 shadow-2xl">
         <div class="space-y-6">
-          <h1 class="text-5xl text-center text-white">Connexion</h1>
+          <h1 class="text-5xl text-center text-white font-bold">Connexion</h1>
 
           <UForm @submit="login" :state="form" class="space-y-6">
 
             <UFormGroup label="Email" name="email" :ui="{ label: { base: 'text-white font-medium mb-2' } }">
-              <UInput placeholder="Votre email" color="white" variant="outline" size="xl" v-model="form.email"
-                class="shadow-sm" :ui="{
-                  rounded: 'rounded-2xl',
-                  base: 'bg-white text-gray-900 focus:ring-emerald-400',
-                  placeholder: 'placeholder-gray-400'
-                }" />
+              <UInput v-model="form.email" placeholder="Votre email" color="white" variant="outline" size="xl" :ui="{
+                rounded: 'rounded-2xl',
+                base: 'bg-white text-gray-900 focus:ring-emerald-400',
+                placeholder: 'placeholder-gray-400'
+              }" />
             </UFormGroup>
 
             <UFormGroup label="Mot de passe" name="password" :ui="{ label: { base: 'text-white font-medium mb-2' } }">
-              <UInput :type="showPassword ? 'text' : 'password'" placeholder="••••••••" color="white" variant="outline"
-                v-model="form.password" size="xl" :disabled="loading" :ui="{
-                  rounded: 'rounded-2xl',
-                  base: 'bg-white text-gray-900 focus:ring-emerald-400',
-                  placeholder: 'placeholder-gray-400',
-                  trailing: {
-                    wrapper: 'pointer-events-none',
-                    padding: { xl: 'pr-12' }
-                  }
-                }">
-                <template #trailing>
-                  <button type="button" @click.stop="showPassword = !showPassword"
-                    class="pointer-events-auto text-gray-400 hover:text-emerald-500 transition-colors p-1 focus:outline-none z-10"
-                    tabindex="-1">
-                    <svg v-if="showPassword" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                      <path fill-rule="evenodd"
-                        d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                        clip-rule="evenodd" />
-                    </svg>
-                    <svg v-else class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                        d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
-                        clip-rule="evenodd" />
-                      <path
-                        d="M15.171 13.576l1.414 1.414a1 1 0 11-1.414 1.414l-14-14a1 1 0 111.414-1.414l.757.757A10 10 0 0110 18c4.478 0 8.268-2.943 9.542-7a9.971 9.971 0 00-1.371-2.424l.757-.757z" />
-                    </svg>
-                  </button>
-                </template>
-              </UInput>
+              <div class="relative w-full">
+                <UInput v-model="form.password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••"
+                  color="white" variant="outline" size="xl" :disabled="loading" :ui="{
+                    rounded: 'rounded-2xl',
+                    base: 'bg-white text-gray-900 focus:ring-emerald-400 pr-12',
+                    placeholder: 'placeholder-gray-400',
+                    wrapper: 'w-full',
+                  }" />
+                <button type="button" @click="showPassword = !showPassword"
+                  class="absolute top-1/2 -translate-y-1/2 right-4 text-gray-400 hover:text-emerald-500 transition-colors focus:outline-none cursor-pointer z-20"
+                  tabindex="-1">
+                  <svg v-if="showPassword" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path fill-rule="evenodd"
+                      d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                      clip-rule="evenodd" />
+                  </svg>
+                  <svg v-else class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                      d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
+                      clip-rule="evenodd" />
+                    <path
+                      d="M15.171 13.576l1.414 1.414a1 1 0 11-1.414 1.414l-14-14a1 1 0 111.414-1.414l.757.757A10 10 0 0110 18c4.478 0 8.268-2.943 9.542-7a9.971 9.971 0 00-1.371-2.424l.757-.757z" />
+                  </svg>
+                </button>
+              </div>
             </UFormGroup>
 
-            <!-- Message d'erreur -->
-            <Transition enter-active-class="transition duration-300 ease-out"
-              enter-from-class="transform opacity-0 -translate-y-2" enter-to-class="transform opacity-100 translate-y-0"
-              leave-active-class="transition duration-200 ease-in"
-              leave-from-class="transform opacity-100 translate-y-0"
-              leave-to-class="transform opacity-0 -translate-y-2">
-              <div v-if="authError" class="p-4 bg-red-500/20 border border-red-400 rounded-lg">
-                <div class="flex items-start gap-3">
-                  <div class="flex-shrink-0 mt-0.5">
-                    <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                        clip-rule="evenodd" />
-                    </svg>
-                  </div>
-                  <span class="text-white text-sm font-medium">{{ authError }}</span>
-                </div>
-              </div>
-            </Transition>
+            <div v-if="authError" class="p-4 bg-red-500/20 border border-red-400 rounded-xl flex items-center gap-3">
+              <span class="text-white text-sm font-medium">{{ authError }}</span>
+            </div>
 
-            <!-- Message de succès -->
-            <Transition enter-active-class="transition duration-300 ease-out"
-              enter-from-class="transform opacity-0 -translate-y-2" enter-to-class="transform opacity-100 translate-y-0"
-              leave-active-class="transition duration-200 ease-in"
-              leave-from-class="transform opacity-100 translate-y-0"
-              leave-to-class="transform opacity-0 -translate-y-2">
-              <div v-if="successMessage" class="p-4 bg-emerald-500/20 border border-emerald-400 rounded-lg">
-                <div class="flex items-start gap-3">
-                  <div class="flex-shrink-0 mt-0.5">
-                    <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clip-rule="evenodd" />
-                    </svg>
-                  </div>
-                  <span class="text-white text-sm font-medium">{{ successMessage }}</span>
-                </div>
-              </div>
-            </Transition>
+            <div v-if="successMessage"
+              class="p-4 bg-emerald-500/20 border border-emerald-400 rounded-xl flex items-center gap-3">
+              <span class="text-white text-sm font-medium">{{ successMessage }}</span>
+            </div>
 
             <div class="flex items-center">
-              <UCheckbox v-model="rememberMe" label="Se souvenir de moi" name="remember" :disabled="loading" :ui="{
+              <UCheckbox v-model="rememberMe" label="Se souvenir de moi" :disabled="loading" :ui="{
                 label: 'text-white text-sm',
-                base: 'h-5 w-5 border-white/30 checked:bg-emerald-500'
+                background: 'bg-white/10',
+                border: 'border-white/30',
+                ring: 'focus-visible:ring-2 focus-visible:ring-emerald-400',
+                color: 'text-emerald-500',
+                base: 'h-5 w-5 rounded-md'
               }" />
             </div>
 
-            <UButton type="submit" block size="xl" :loading="loading" :disabled="loading"
-              class="bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-500 disabled:cursor-not-allowed font-bold tracking-widest py-4 mt-4 transition-all duration-300 transform hover:scale-[1.02] disabled:hover:scale-100"
+            <UButton type="submit" block size="xl" :loading="loading"
+              class="border border-white/30 text-white font-bold tracking-widest py-4 mt-4 transition-all duration-300 transform hover:scale-[1.02] hover:bg-white/20 hover:border-white/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]"
               :ui="{ rounded: 'rounded-full' }">
-              <span v-if="!loading">Se connecter</span>
-              <span v-else class="flex items-center gap-2">
-                Connexion en cours...
-              </span>
+              {{ loading ? 'Connexion en cours...' : 'Se connecter' }}
             </UButton>
           </UForm>
 
-          <div class="text-center space-y-4">
-            <p>
-              <NuxtLink to="/connexion/mot_de_passe_oublie"
-                class="text-sm text-white hover:text-white transition-colors underline-offset-4 hover:underline">
-                Mot de passe oublié ? Cliquez ici.
-              </NuxtLink>
-            </p>
+          <div class="text-center">
+            <NuxtLink to="/connexion/mot_de_passe_oublie"
+              class="text-sm text-white/80 hover:text-white transition-colors underline-offset-4 hover:underline">
+              Mot de passe oublié ? Cliquez ici.
+            </NuxtLink>
           </div>
 
         </div>
@@ -164,15 +133,34 @@ onMounted(() => {
 </template>
 
 <style>
-/* Importation de la police Montserrat */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap');
 
 body {
   font-family: 'Montserrat', sans-serif;
-  margin: 0;
 }
 
-/* Optimisation du flou */
+/* Animation de balayage Gold & Emerald */
+.animate-gold-sweep {
+  background-image: linear-gradient(90deg,
+      #10b981 0%,
+      #f59e0b 25%,
+      #fef3c7 50%,
+      #f59e0b 75%,
+      #10b981 100%);
+  animation: sweep 4s linear infinite;
+  filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.5));
+}
+
+@keyframes sweep {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
 .backdrop-blur-2xl {
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);

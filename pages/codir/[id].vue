@@ -16,18 +16,61 @@ const route = useRoute()
 const router = useRouter()
 const store = useCodirsStore()
 const id = Number(route.params.id)
-const toast = useToast()
+const toast = useNuxtApp().$toast ?? useToast()
 
 const currentStep = ref(1)
 const steps = [
   { id: 1, label: 'Ordres du jour' },
   { id: 2, label: 'Informations générales' },
-  { id: 3, label: 'Tâches' }
+  { id: 3, label: 'PV du codir' }
 ]
 
-onMounted(() => store.fetchCodir(id))
+// ── Persistance du step en localStorage ───────────────────────────────────────
+const STEP_KEY = `codir_step_${id}`
+
+const saveStep = (step) => {
+  currentStep.value = step
+  if(process.client)
+    localStorage.setItem(STEP_KEY, String(step))
+}
+
+const goNext = () => {
+  if (currentStep.value < steps.length) {
+    saveStep(currentStep.value + 1)
+    navigateToStep(currentStep.value)
+  }
+}
+
+const goPrev = () => {
+  if (currentStep.value > 1) {
+    saveStep(currentStep.value - 1)
+    navigateToStep(currentStep.value)
+  }
+}
+
+const navigateToStep = (step) => {
+  if (step === 2) router.push(`/codir/infos`)
+  if (step === 3) router.push(`/codir/preview`)
+  // step 1 = page courante, on reste
+}
+
+onMounted(() => {
+  store.fetchCodir(id)
+  // Restaurer le step depuis localStorage
+  const saved = localStorage.getItem(STEP_KEY)
+  if (saved) currentStep.value = Number(saved)
+  // Sauvegarder le codir courant pour les pages enfants
+  if (codir.value) {
+    localStorage.setItem('currentCodir', JSON.stringify(codir.value))
+  }
+})
 
 const codir = computed(() => store.currentCodir)
+
+// Sauvegarder le codir dans localStorage dès qu'il est chargé
+watch(codir, (c) => {
+  if (c) localStorage.setItem('currentCodir', JSON.stringify(c))
+})
 
 const progressionGlobale = computed(() => {
   const taches = codir.value?.taches ?? []
@@ -36,7 +79,6 @@ const progressionGlobale = computed(() => {
 })
 
 // ── Edition CODIR ─────────────────────────────────────────────────────────────
-
 const editing = ref(false)
 const editForm = reactive({ date: '', heure_debut: '', heure_fin: '', statut: '' })
 
@@ -60,10 +102,9 @@ const saveCodir = async () => {
 }
 
 // ── Modales ───────────────────────────────────────────────────────────────────
-
 const ordreModal = ref(false)
 const ordreForm = reactive({ libelle: '', statut: 'actif', codir_id: id })
-const resetOrdreForm = () => Object.assign(ordreForm, { libelle: '', statut: 'actif', })
+const resetOrdreForm = () => Object.assign(ordreForm, { libelle: '', statut: 'actif' })
 
 const addOrdre = async () => {
   if (!ordreForm.libelle) return
@@ -80,29 +121,19 @@ const addOrdre = async () => {
   } catch {
     toast.add({
       title: 'Erreur',
-      description: 'Impossible de créer l\'ordre du jour',
+      description: "Impossible de créer l'ordre du jour",
       color: 'red',
       icon: 'i-heroicons-exclamation-circle',
     })
   }
 }
-// ── Handlers délégués par les composants enfants ──────────────────────────────
 
 const handleDetachOrdre = async (ordreId) => {
   try {
     await store.detachOrdreDuJour(id, ordreId)
-    toast.add({
-      title: 'Ordre du jour retiré',
-      color: 'green',
-      icon: 'i-heroicons-check-circle',
-    })
+    toast.add({ title: 'Ordre du jour retiré', color: 'green', icon: 'i-heroicons-check-circle' })
   } catch {
-    toast.add({
-      title: 'Erreur',
-      description: 'Impossible de retirer l\'ordre du jour',
-      color: 'red',
-      icon: 'i-heroicons-exclamation-circle',
-    })
+    toast.add({ title: 'Erreur', description: "Impossible de retirer l'ordre du jour", color: 'red', icon: 'i-heroicons-exclamation-circle' })
   }
 }
 </script>
@@ -110,7 +141,7 @@ const handleDetachOrdre = async (ordreId) => {
 <template>
   <div class="mx-auto py-10 px-6">
 
-    <!-- Back -->
+    <!-- Retour -->
     <div class="mb-6 flex items-center gap-3">
       <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" @click="router.push('/codir')" />
       <span class="text-gray-400 text-sm">Retour au listing</span>
@@ -134,8 +165,7 @@ const handleDetachOrdre = async (ordreId) => {
             <div>
               <div class="flex items-center gap-3 flex-wrap mb-1">
                 <h1 class="text-2xl font-bold">{{ formatDateFR(codir.date) }}</h1>
-                <span
-                  :class="`text-xs font-semibold px-3 py-1 rounded-full ${getStatutConfig(codir.statut).badgeClass}`">
+                <span :class="`text-xs font-semibold px-3 py-1 rounded-full ${getStatutConfig(codir.statut).badgeClass}`">
                   {{ getStatutConfig(codir.statut).label }}
                 </span>
               </div>
@@ -180,12 +210,50 @@ const handleDetachOrdre = async (ordreId) => {
         </div>
       </UCard>
 
-      <!-- ── Sections déléguées aux composants ──────────────────────── -->
+      <!-- ── Contenu step 1 ──────────────────────────────────────────── -->
       <div class="flex flex-col gap-8">
-
-          <CodirOrdreDuJour :ordres="codir.ordres_du_jour ?? []" :loading="store.loading" @attach="ordreModal = true"
-            @detach="handleDetachOrdre($event)" />
+        <CodirOrdreDuJour
+          :ordres="codir.ordres_du_jour ?? []"
+          :loading="store.loading"
+          @attach="ordreModal = true"
+          @detach="handleDetachOrdre($event)"
+        />
       </div>
+
+      <!-- ── Navigation stepper ──────────────────────────────────────── -->
+      <div class="flex items-center justify-between mt-10 pt-6 border-t border-gray-100 dark:border-gray-800">
+        <UButton
+          icon="i-heroicons-arrow-left"
+          color="gray"
+          variant="ghost"
+          :disabled="currentStep === 1"
+          @click="goPrev"
+        >
+          Précédent
+        </UButton>
+
+        <span class="text-sm text-gray-400">
+          Étape {{ currentStep }} sur {{ steps.length }}
+        </span>
+
+        <UButton
+          v-if="currentStep < steps.length"
+          trailing-icon="i-heroicons-arrow-right"
+          color="blue"
+          @click="goNext"
+        >
+          Suivant
+        </UButton>
+        <UButton
+          v-else
+          trailing-icon="i-heroicons-check"
+          color="green"
+          @click="saveStep(1); router.push('/codir')"
+        >
+          Terminer
+        </UButton>
+      </div>
+
     </template>
 
     <UAlert v-if="store.error" color="red" icon="i-heroicons-exclamation-circle" :title="store.error" class="mt-4" />
@@ -224,7 +292,6 @@ const handleDetachOrdre = async (ordreId) => {
 .slide-leave-active {
   transition: all 0.25s ease;
 }
-
 .slide-enter-from,
 .slide-leave-to {
   opacity: 0;
