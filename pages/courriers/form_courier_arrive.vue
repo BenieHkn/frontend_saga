@@ -474,7 +474,7 @@ const handleSubmit = async () => {
 }
 
 const handleCancel = () => {
-  navigateTo("/courriers")
+  navigateTo("/documents")
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────

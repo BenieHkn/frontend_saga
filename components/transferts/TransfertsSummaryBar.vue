@@ -1,55 +1,6 @@
 <template>
     <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/80 border border-slate-200 overflow-hidden">
-        <!-- Top Section: Actions principales -->
-        <div class="p-6 flex items-center justify-between border-b border-slate-200 bg-slate-50/50">
-            <!-- Left: Summary -->
-            <div class="flex items-center gap-6">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                        Prêt pour le transfert ?
-                    </p>
-
-                    <div class="flex items-center gap-4">
-                        <span class="text-2xl font-bold text-slate-900">
-                            {{ store.selectedAffectations.length }}
-                            Courrier{{ store.selectedAffectations.length !== 1 ? 's' : '' }}
-                        </span>
-
-                        <span class="text-2xl font-bold text-slate-400">•</span>
-
-                        <span class="text-2xl font-bold text-slate-900">
-                            {{ store.selectedDestinataires.length }}
-                            Destinataire{{ store.selectedDestinataires.length !== 1 ? 's' : '' }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right: Actions -->
-            <div class="flex items-center gap-3">
-                <button 
-                    @click="handleCancel" 
-                    :disabled="!store.hasSelections"
-                    class="px-6 py-3 rounded-xl font-semibold text-slate-700 bg-white border-2 border-slate-300 hover:border-slate-400 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                    Annuler
-                </button>
-
-                <button 
-                    @click="$emit('send-files')" 
-                    :disabled="!store.canSend || loading"
-                    class="group px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 flex items-center gap-2"
-                >
-                    {{ loading ? 'Envoi en cours...' : 'Transférer' }}
-                    <Icon v-if="!loading"
-                        name="heroicons:paper-airplane"
-                        class="w-5 h-5 transition-transform group-hover:translate-x-1" 
-                    />
-
-                    <div v-else class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                </button>
-            </div>
-        </div>
+        
 
         <!-- Bottom Section: Détails de la sélection -->
         <div v-if="store.hasSelections" class="p-6">
@@ -64,7 +15,7 @@
                     
                     <div class="flex flex-wrap items-center gap-2">
                         <div 
-                            v-for="affectation in selectedAffectationsWithData" 
+                            v-for="affectation in selectedCourriersWithData" 
                             :key="affectation.id"
                             class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg border border-blue-200"
                         >
@@ -76,7 +27,7 @@
                     </div>
 
                     <!-- Empty state pour courriers -->
-                    <div v-if="store.selectedAffectations.length === 0" 
+                    <div v-if="store.selectedCourriers.length === 0" 
                         class="text-sm text-slate-400 italic"
                     >
                         Aucun courrier sélectionné
@@ -129,14 +80,66 @@
 
             </div>
         </div>
-
-        <!-- Message quand aucune sélection -->
+          <!-- Message quand aucune sélection -->
         <div v-else class="p-6 text-center">
             <Icon name="heroicons:arrow-up" class="w-8 h-8 text-slate-300 mx-auto mb-2" />
             <p class="text-slate-400 text-sm">
                 Sélectionnez des courriers et des destinataires pour commencer le transfert
             </p>
         </div>
+
+        <!-- Top Section: Actions principales -->
+        <div class="p-6 flex items-center justify-between border-b border-slate-200 bg-slate-50/50">
+            <!-- Left: Summary -->
+            <div class="flex items-center gap-6">
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                        Prêt pour le transfert ?
+                    </p>
+
+                    <div class="flex items-center gap-4">
+                        <span class="text-2xl font-bold text-slate-900">
+                            {{ store.selectedCourriers.length }}
+                            Courrier{{ store.selectedCourriers.length !== 1 ? 's' : '' }}
+                        </span>
+
+                        <span class="text-2xl font-bold text-slate-400">•</span>
+
+                        <span class="text-2xl font-bold text-slate-900">
+                            {{ store.selectedDestinataires.length }}
+                            Destinataire{{ store.selectedDestinataires.length !== 1 ? 's' : '' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Actions -->
+            <div class="flex items-center gap-3">
+                <button 
+                    @click="handleCancel" 
+                    :disabled="!store.hasSelections"
+                    class="px-6 py-3 rounded-xl font-semibold text-slate-700 bg-white border-2 border-slate-300 hover:border-slate-400 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                    Annuler
+                </button>
+
+                <button 
+                    @click="$emit('send-files')" 
+                    :disabled="!store.canSend || loading"
+                    class="group px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 flex items-center gap-2"
+                >
+                    {{ loading ? 'Envoi en cours...' : 'Transférer' }}
+                    <Icon v-if="!loading"
+                        name="heroicons:paper-airplane"
+                        class="w-5 h-5 transition-transform group-hover:translate-x-1" 
+                    />
+
+                    <div v-else class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                </button>
+            </div>
+        </div>
+
+      
     </div>
 </template>
 
@@ -156,8 +159,8 @@ const store = useTransfertsStore()
 const emit = defineEmits(['save-draft', 'send-files'])
 
 // ✅ Computed pour récupérer les affectations sélectionnées avec leurs données
-const selectedAffectationsWithData = computed(() => {
-  return store.selectedAffectationsData.map(affectation => ({
+const selectedCourriersWithData = computed(() => {
+  return store.selectedCourriersData.map(affectation => ({
     id: affectation.id,
     reference: affectation.reference || affectation.name || `#${affectation.id}`,
     name: affectation.name || affectation.instructions || `Affectation #${affectation.id}`
@@ -167,8 +170,8 @@ const selectedAffectationsWithData = computed(() => {
 // ✅ Computed pour récupérer les destinataires sélectionnés avec leurs données
 const selectedDestinatairesWithData = computed(() => {
   return store.selectedDestinatairesData.map(dest => {
-    const nom = `${dest.user?.nom || ''} ${dest.user?.prenom || ''}`.trim()
-    const initials = getInitials(dest.user?.nom, dest.user?.prenom)
+    const nom = `${dest._raw?.user?.nom || ''} ${dest._raw?.user?.prenom || ''}`.trim()
+    const initials = getInitials(dest._raw?.user?.nom, dest._raw?.user?.prenom)
     
     return {
       id: dest.id,

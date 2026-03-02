@@ -20,16 +20,15 @@ export interface EntiteInfo {
   parent_libelle: string
 }
 
-// ✅ Structure plate telle que retournée par le server handler
 export interface EntiteUser {
-  id: number              // id de entite
+  id: number
   code: string
   libelle: string
   fonction: string
   is_critique: boolean
   parent_entite_id: number | null
   parent_libelle: string
-  entite_user_id: number  // id de la relation entite_user
+  entite_user_id: number
   actif: boolean
   is_interim: boolean
   is_responsable: boolean
@@ -45,6 +44,9 @@ export interface AuthResponse {
   main_entite: EntiteInfo | null
   entites: EntiteUser[]
   entite_user: any | null
+  role?: string
+  permissions?: Record<string, any>
+  directeur_entite_user_id?: number | null
 }
 
 declare global {
@@ -71,13 +73,16 @@ export const useAuth = () => {
 
   // =====================
   // LOCALSTORAGE
-  // Clés existantes dans l'application — NE PAS RENOMMER
-  // - auth_token      → token Bearer pour les requêtes API
-  // - user            → infos de base de l'utilisateur connecté
-  // - main_entite     → entité principale de l'utilisateur
-  // - entite_user     → relation entite_user principale (objet complet du backend)
-  // - selected_entite → entité couramment sélectionnée (contexte actif)
-  // - entites         → tous les profils aplatis de l'utilisateur
+  // Clés :
+  // - auth_token                → token Bearer
+  // - user                      → infos utilisateur
+  // - main_entite               → entité principale
+  // - entite_user               → relation entite_user active
+  // - selected_entite           → entité couramment sélectionnée
+  // - entites                   → tous les profils aplatis
+  // - role                      → rôle déterminé par le backend
+  // - permissions               → permissions frontend
+  // - directeur_entite_user_id  → ID du directeur si secrétariat
   // =====================
 
   const persistSession = (response: AuthResponse) => {
@@ -96,6 +101,21 @@ export const useAuth = () => {
     }
 
     localStorage.setItem('entites', JSON.stringify(response.entites ?? []))
+
+    if (response.role) {
+      localStorage.setItem('role', response.role)
+    }
+
+    if (response.permissions) {
+      localStorage.setItem('permissions', JSON.stringify(response.permissions))
+    }
+
+    if (response.directeur_entite_user_id) {
+      localStorage.setItem(
+        'directeur_entite_user_id',
+        String(response.directeur_entite_user_id)
+      )
+    }
   }
 
   const clearSession = () => {
@@ -107,14 +127,15 @@ export const useAuth = () => {
       'entite_user',
       'selected_entite',
       'entites',
+      'role',
+      'permissions',
+      'directeur_entite_user_id',
     ].forEach(key => localStorage.removeItem(key))
   }
 
   const getStoredToken = (): string | null => {
     if (!process.client) return null
-    if (process.client)
-      return localStorage.getItem('auth_token')
-    return null
+    return localStorage.getItem('auth_token')
   }
 
   const getUser = (): User | null => {
@@ -123,14 +144,12 @@ export const useAuth = () => {
     return raw ? JSON.parse(raw) : null
   }
 
-  // Retourne tous les profils aplatis
   const getEntites = (): EntiteUser[] => {
     if (!process.client) return []
     const raw = localStorage.getItem('entites')
     return raw ? JSON.parse(raw) : []
   }
 
-  // Retourne uniquement les profils actifs
   const getActiveEntiteUsers = (): EntiteUser[] => {
     const today = new Date()
     return getEntites().filter(eu => {
@@ -141,29 +160,23 @@ export const useAuth = () => {
     })
   }
 
-  // Retourne l'entité couramment sélectionnée
   const getSelectedEntite = (): EntiteInfo | null => {
     if (!process.client) return null
     const raw = localStorage.getItem('selected_entite')
     return raw ? JSON.parse(raw) : null
   }
 
-  /**
-   * Met à jour selected_entite et entite_user depuis un profil plat
-   * Appelé depuis la page /choose-profile
-   */
   const setSelectedEntiteUser = (entiteUser: EntiteUser) => {
     if (!process.client) return
 
-    // Reconstruire l'objet EntiteInfo pour selected_entite
     const selectedEntite: EntiteInfo = {
-      id: entiteUser.id,
-      code: entiteUser.code,
-      libelle: entiteUser.libelle,
-      fonction: entiteUser.fonction,
-      is_critique: entiteUser.is_critique,
+      id:               entiteUser.id,
+      code:             entiteUser.code,
+      libelle:          entiteUser.libelle,
+      fonction:         entiteUser.fonction,
+      is_critique:      entiteUser.is_critique,
       parent_entite_id: entiteUser.parent_entite_id,
-      parent_libelle: entiteUser.parent_libelle,
+      parent_libelle:   entiteUser.parent_libelle,
     }
 
     localStorage.setItem('selected_entite', JSON.stringify(selectedEntite))
@@ -171,6 +184,101 @@ export const useAuth = () => {
   }
 
   const isAuthenticated = (): boolean => !!getStoredToken()
+
+  // =====================
+  // RÔLES & PERMISSIONS
+  // =====================
+
+  const getRole = (): string => {
+    if (!process.client) return 'agent'
+    return localStorage.getItem('role') ?? 'agent'
+  }
+
+  const getPermissions = (): Record<string, any> => {
+    if (!process.client) return {}
+    const raw = localStorage.getItem('permissions')
+    return raw ? JSON.parse(raw) : {}
+  }
+
+  // ✅ CORRECTION : court-circuit admin → toujours autorisé
+  const hasPermission = (permission: string): boolean => {
+    if (getRole() === 'administrateur') return true
+    return getPermissions()[permission] === true
+  }
+
+  // Retourne l'ID du directeur si l'utilisateur est un secrétariat
+  const getDirecteurEntiteUserId = (): number | null => {
+    if (!process.client) return null
+    const raw = localStorage.getItem('directeur_entite_user_id')
+    return raw ? parseInt(raw) : null
+  }
+
+  // ✅ CORRECTION : fonction propre sans return prématuré ni variable hors scope
+  // Retourne l'ID effectif à utiliser comme émetteur dans les requêtes.
+  // Si secrétariat → ID du directeur, sinon → ID propre de l'entite_user
+  const getEmetteurId = (): number | null => {
+    if (!process.client) return null
+
+    const raw = localStorage.getItem('entite_user')
+    if (!raw) return null
+
+    const entiteUser = JSON.parse(raw)
+    if (!entiteUser?.id) return null
+
+    const directeurId = getDirecteurEntiteUserId()
+
+    // Secrétariats agissent au nom du directeur
+    if (directeurId && (isSP() || isSA() || isSecDir())) {
+      return directeurId
+    }
+
+    return entiteUser.entite_user_id ?? entiteUser.id ?? null
+  }
+
+  // =====================
+  // RÔLES (helpers booléens)
+  // =====================
+  const isAdmin       = () => getRole() === 'administrateur'
+  const isDG          = () => getRole() === 'directeur_general'
+  const isSP          = () => getRole() === 'secretariat_particulier'
+  const isSA          = () => getRole() === 'secretariat_administratif'
+  const isSAP         = () => getRole() === 'sap'
+  const isDT          = () => getRole() === 'directeur_technique'
+  const isDCCIQ       = () => getRole() === 'directeur_cciq'
+  const isSecDir      = () => getRole() === 'secretariat_direction'
+  const isChefService = () => getRole() === 'chef_service'
+  const isAgent       = () => getRole() === 'agent'
+
+  // =====================
+  // PERMISSIONS (helpers booléens)
+  // =====================
+  const peutVoirConfig    = () => hasPermission('voir_configuration')
+  const peutModifier      = () => hasPermission('modifier_courriers')
+  const peutSupprimer     = () => hasPermission('supprimer_courriers')
+  const peutRattacher     = () => hasPermission('faire_rattachement')
+  const peutVoirCodir     = () => hasPermission('voir_codir')
+  const voitTousCourriers = () => hasPermission('voir_tous_courriers')
+  const voitCourriersSA   = () => hasPermission('voir_courriers_sa')
+  const voitStats         = () => hasPermission('voir_stats')
+  const voitAgents        = () => hasPermission('voir_agents')
+  const typeDashboard     = () => getPermissions().dashboard       ?? 'agent'
+  const champsVisibles    = () => getPermissions().champs_visibles  ?? null
+
+  /**
+   * Peut effectuer un transfert de courrier.
+   *
+   * Rôles autorisés :
+   *   - directeur_technique     ✅
+   *   - directeur_cciq          ✅
+   *   - chef_service            ✅ (chef de service / chef de division)
+   *   - secretariat_direction   ✅ (au nom de son directeur technique via getEmetteurId)
+   *   - administrateur          ✅ (court-circuit hasPermission)
+   *
+   * Rôles NON autorisés :
+   *   - directeur_general, secretariat_particulier, secretariat_administratif,
+   *     sap, agent
+   */
+  const peutTransferer = () => hasPermission('faire_transfert')
 
   // =====================
   // REMEMBER ME
@@ -235,14 +343,10 @@ export const useAuth = () => {
     window.OneSignalDeferred = window.OneSignalDeferred || []
     window.OneSignalDeferred.push(async (OneSignal: any) => {
       try {
-        // Demande la permission push à l'utilisateur
         await OneSignal.Notifications.requestPermission()
-
-        // Récupère le player_id du navigateur
         const playerId = OneSignal.User.PushSubscription.id
 
         if (playerId) {
-          // Envoie le player_id au backend Laravel pour le sauvegarder
           await $fetch('/api/user/onesignal', {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
@@ -274,7 +378,7 @@ export const useAuth = () => {
       const response = await $fetch<AuthResponse>('api/auth/login', {
         method: 'POST',
         body: {
-          email: form.email.trim(),
+          email:    form.email.trim(),
           password: form.password
         }
       })
@@ -288,10 +392,7 @@ export const useAuth = () => {
         throw new Error('Données de réponse incomplètes')
       }
 
-      // Sauvegarde la session en localStorage
       persistSession(response)
-
-      // Enregistre le navigateur sur OneSignal et sauvegarde le player_id
       await enregistrerOneSignal(response.token)
 
       const activePostes = getActiveEntiteUsers()
@@ -299,6 +400,9 @@ export const useAuth = () => {
       successMessage.value = 'Connexion réussie, redirection en cours...'
       await new Promise(resolve => setTimeout(resolve, 800))
 
+      // ✅ Admin (pas d'entités) → redirection directe vers /
+      // Utilisateur avec 0 ou 1 entité → redirection directe vers /
+      // Utilisateur avec plusieurs entités → choix de profil
       if (activePostes.length <= 1) {
         await navigateTo('/')
         return
@@ -340,15 +444,24 @@ export const useAuth = () => {
     if (authError.value) authError.value = ''
   })
 
+  // =====================
+  // RETURN
+  // =====================
+
   return {
+    // State
     form,
     rememberMe,
     loading,
     authError,
     successMessage,
+
+    // Actions
     login,
     logout,
     loadRememberedEmail,
+
+    // Session
     getStoredToken,
     getUser,
     getEntites,
@@ -357,5 +470,38 @@ export const useAuth = () => {
     setSelectedEntiteUser,
     isAuthenticated,
     clearSession,
+
+    // Rôles
+    getRole,
+    isAdmin,
+    isDG,
+    isSP,
+    isSA,
+    isSAP,
+    isDT,
+    isDCCIQ,
+    isSecDir,
+    isChefService,
+    isAgent,
+
+    // Permissions
+    getPermissions,
+    hasPermission,
+    peutVoirConfig,
+    peutModifier,
+    peutSupprimer,
+    peutRattacher,
+    peutVoirCodir,
+    voitTousCourriers,
+    voitCourriersSA,
+    voitStats,
+    voitAgents,
+    typeDashboard,
+    champsVisibles,
+    peutTransferer,
+
+    // Secrétariat → directeur
+    getDirecteurEntiteUserId,
+    getEmetteurId,
   }
 }

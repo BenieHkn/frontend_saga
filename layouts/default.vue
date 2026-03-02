@@ -34,7 +34,7 @@ const handleSidebarToggle = (state) => {
 // Client-side guard: prevent non-admin users accessing admin routes via direct URL
 const route = useRoute()
 const { getUser } = useAuth()
-const adminOnlyRoutes = ['/entites', '/utilisateurs', '/point-critique', '/interim']
+const adminOnlyRoutes = ['/entites', '/utilisateurs', '/point-critique', '/interim', '/type-document']
 
 const checkAdminAccess = () => {
   const user = getUser()

@@ -1,0 +1,8 @@
+const index_vue_vue_type_style_index_0_scoped_da07f87b_lang = ".line-clamp-2[data-v-da07f87b]{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}[data-v-da07f87b] .swal2-popup-custom{border-radius:1rem;padding:2rem}[data-v-da07f87b] .swal2-html-container{margin:1rem 0}[data-v-da07f87b] .swal2-actions{gap:.75rem}[data-v-da07f87b] .swal2-cancel,[data-v-da07f87b] .swal2-confirm{border-radius:.5rem;font-size:.875rem;font-weight:500;padding:.625rem 1.5rem;transition:all .2s}[data-v-da07f87b] .swal2-confirm:hover{box-shadow:0 4px 6px -1px #0000001a;transform:translateY(-1px)}[data-v-da07f87b] .swal2-cancel:hover{background-color:#4b5563!important}";
+
+const indexStyles_ZkjSLRHy = [
+  index_vue_vue_type_style_index_0_scoped_da07f87b_lang
+];
+
+export { indexStyles_ZkjSLRHy as default };
+//# sourceMappingURL=index-styles.ZkjSLRHy.mjs.map

@@ -211,31 +211,31 @@ import { ref, onMounted } from 'vue';
 import Swal from 'sweetalert2';
 import { useAffectationsStore } from '~/stores/affectations.js'
 import { useTransfertsStore } from '~/stores/transferts.js'
+import { useAuth } from '~/composables/auth/useAuth'
 
 const affectationsStore = useAffectationsStore()
 const transfertsStore = useTransfertsStore()
+const { isSecDir, getDirecteurEntiteUserId } = useAuth()
 
-useHead({
-  title: "Documents reçus - Sagar Revolution",
-});
+useHead({ title: "Documents reçus - Sagar Revolution" });
 
 // ============================================================================
 // CONFIGURATION DES COLONNES
 // ============================================================================
 
 const columns = [
-  { key: "reference_courrier", label: "Réf. Courrier", visible: true, width: 'min-w-[200px]' },
-  { key: "objet_courrier", label: "Objet", visible: true, width: 'min-w-[250px]' },
-  { key: "doc_courrier", label: "Document", visible: false, type: 'document', width: 'w-24' },
-  { key: "date_affect", label: "Date d'affectation", visible: true, width: 'min-w-[120px]' },
-  { key: "instructions", label: "Annotations", visible: true, width: 'min-w-[200px]' },
-  { key: "type", label: "Type", visible: true, width: 'min-w-[120px]' },
-  { key: "statut", label: "Statut", visible: true, type: 'badge', width: 'min-w-[120px]' },
-  { key: "priority", label: "Priorité", visible: true, type: 'badge', width: 'min-w-[120px]' },
-  { key: "delai_traitement", label: "Date de retour attendue", visible: true, width: 'min-w-[120px]' },
-  { key: "date_cloture", label: "Date clôture", visible: false, width: 'min-w-[120px]' },
-  { key: "emetteur", label: "Source", visible: true, width: 'min-w-[180px]' },
-  { key: "destinataire", label: "Destinataire", visible: false, width: 'min-w-[180px]' },
+  { key: "reference_courrier", label: "Réf. Courrier", visible: true, width: 'min-w-[200px]', showLabel: false, inputHidden: false },
+  { key: "objet_courrier", label: "Objet", visible: true, width: 'min-w-[250px]', showLabel: false, inputHidden: false },
+  { key: "doc_courrier", label: "Document", visible: false, type: 'document', width: 'w-24', showLabel: false, inputHidden: false },
+  { key: "date_affect", label: "Date d'affectation", visible: true, width: 'min-w-[120px]', showLabel: false, inputHidden: false },
+  { key: "instructions", label: "Annotations", visible: true, width: 'min-w-[200px]', showLabel: false, inputHidden: false },
+  { key: "type", label: "Type", visible: true, width: 'min-w-[120px]', showLabel: false, inputHidden: false },
+  { key: "statut", label: "Statut", visible: true, type: 'badge', width: 'min-w-[120px]', showLabel: false, inputHidden: false },
+  { key: "priority", label: "Priorité", visible: true, type: 'badge', width: 'min-w-[120px]', showLabel: false, inputHidden: false },
+  { key: "delai_traitement", label: "Date de retour attendue", visible: true, width: 'min-w-[120px]', showLabel: false, inputHidden: false },
+  { key: "date_cloture", label: "Date clôture", visible: false, width: 'min-w-[120px]', showLabel: false, inputHidden: false },
+  { key: "emetteur", label: "Source", visible: true, width: 'min-w-[180px]', showLabel: false, inputHidden: false },
+  { key: "destinataire", label: "Destinataire", visible: false, width: 'min-w-[180px]', showLabel: false, inputHidden: false },
 ];
 
 // ============================================================================
@@ -321,12 +321,6 @@ const transformerDonneesAPI = (reponseAPI) => {
 const loadData = async () => {
   if (!authToken.value) {
     error.value = 'Token d\'authentification manquant';
-    toast.add({
-      title: 'Erreur',
-      description: 'Session expirée. Veuillez vous reconnecter.',
-      color: 'red',
-      timeout: 1500,
-    });
     return;
   }
 
@@ -339,29 +333,25 @@ const loadData = async () => {
       const savedFunction = localStorage.getItem('entite_user')
       if (savedFunction) {
         entite_user = JSON.parse(savedFunction)
-        // ✅ NOUVEAU : Récupérer le statut responsable
         isResponsable.value = entite_user.is_responsable || false
-        console.log('👤 Utilisateur responsable:', isResponsable.value)
       }
     }
 
     if (!entite_user || !entite_user.id) {
-      console.error('❌ Aucune fonction user sélectionnée')
       error.value = 'Aucune fonction user sélectionnée'
-      toast.add({
-        title: 'Erreur',
-        description: 'Aucune fonction user sélectionnée. Veuillez vous reconnecter.',
-        color: 'red',
-        timeout: 1500,
-      })
       return
     }
 
-    const reponse = await $fetch(`${config.public.apiBase}/affectations/destinataire/` + entite_user.id, {
+    // SA → affectations reçues par le DT, sinon les siennes
+    const destinataireId = isSecDir()
+      ? (getDirecteurEntiteUserId() ?? entite_user.id)
+      : entite_user.id
+
+    console.log(`📝 Chargement affectations pour destinataire_id: ${destinataireId}`)
+
+    const reponse = await $fetch(`${config.public.apiBase}/affectations/destinataire/${destinataireId}`, {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${authToken.value}`,
-      },
+      headers: { Authorization: `Bearer ${authToken.value}` },
       timeout: 15000,
     });
 
@@ -370,13 +360,7 @@ const loadData = async () => {
 
   } catch (err) {
     error.value = err.message || 'Erreur lors du chargement des données';
-    console.error('❌ Erreur de chargement:', err);
-    toast.add({
-      title: "Erreur",
-      description: "Impossible de charger les affectations",
-      color: "red",
-      timeout: 1500,
-    });
+    toast.add({ title: "Erreur", description: "Impossible de charger les affectations", color: "red", timeout: 1500 });
   } finally {
     loading.value = false;
   }

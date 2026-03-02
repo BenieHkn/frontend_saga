@@ -8,18 +8,12 @@
 
     <AppTabs :tabs="tabList">
 
-      <!-- ==============================
-           AFFECTATIONS REÇUES
-      ============================== -->
       <template #affectations>
         <div class="space-y-4">
           <AffectationsListe />
         </div>
       </template>
 
-      <!-- ==============================
-           COURRIERS EN VISIBILITÉ
-      ============================== -->
       <template #visibilite>
         <div class="space-y-4">
           <CourriersVisibles />
@@ -37,22 +31,10 @@ import CourriersVisibles from '~/components/documents/CourriersVisibles.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import AppTabs from '~/components/AppTabs.vue'
 
-useHead({
-  title: 'Mes Documents - Sagar Revolution',
-})
+useHead({ title: 'Mes Documents - Sagar Revolution' })
 
 const tabList = ref([
-  {
-    id: 'affectations',
-    label: 'Documents reçus',
-    icon: 'i-heroicons-inbox',
-    count: null,
-  },
-  {
-    id: 'visibilite',
-    label: 'Initiés/Paraphés',
-    icon: 'i-heroicons-eye',
-    count: null,
-  },
+  { id: 'affectations', label: 'Documents reçus', icon: 'i-heroicons-inbox', count: null },
+  { id: 'visibilite', label: 'Initiés/Paraphés', icon: 'i-heroicons-eye', count: null },
 ])
 </script>
