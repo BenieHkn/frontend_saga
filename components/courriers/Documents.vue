@@ -114,7 +114,7 @@
       </div>
     </UModal>
 
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <!-- <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Tous les documents</h1>
         <p class="text-sm text-slate-500">Gestion et suivi des documents</p>
@@ -125,7 +125,10 @@
           Nouveau
         </UButton>
       </UBadge>
-    </div>
+    </div> -->
+
+    <PageHeader v-if="!isAdmin()" title="Tous les documents" subtitle="Gestion et suivi des documents" btnText="Nouveau" to="/courriers/form_courier_arrive"/>
+    <PageHeader title="Tous les documents" subtitle="Gestion et suivi des documents" v-else/>
 
     <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
       <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>

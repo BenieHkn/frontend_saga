@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-slate-100 p-6 font-sans">
     
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <!-- <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Documents internes</h1>
         <p class="text-sm text-slate-500">Gestion et suivi des documents internes</p>
@@ -14,7 +14,9 @@
           Nouveau
         </UButton>
       </UBadge>
-    </div>
+    </div> -->
+
+    <PageHeader  title="Documents internes" subtitle="Gestion des courriers entrants" btnText="Nouveau" to="/courriers/form_document_interne"/>
 
     <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
       <div class="w-8 h-8 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>

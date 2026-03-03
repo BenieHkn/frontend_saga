@@ -200,18 +200,20 @@
       </div>
     </UModal>
 
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <!-- <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Courriers arrivés</h1>
         <p class="text-sm text-slate-500">Gestion et suivi des courriers entrants</p>
       </div>
       <UBadge color="blue" variant="soft" size="lg" class="ml-auto" v-if="!isAdmin()">
-        <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
-        <UButton to="/courriers/form_courier_arrive" variant="text" size="sm" class="p-0 m-0 text-blue-600">
+        <UButton to="/courriers/form_courier_arrive" variant="text" icon="i-heroicons-plus" size="sm" class="p-0 m-0 text-blue-600">
           Nouveau
         </UButton>
       </UBadge>
-    </div>
+    </div> -->
+
+    <PageHeader v-if="!isAdmin()" title="Courriers arrivés" subtitle="Gestion des courriers entrants" btnText="Nouveau" to="/courriers/form_courier_arrive"/>
+    <PageHeader title="Courriers arrivés" subtitle="Gestion des courriers entrants" v-else/>
 
     <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
       <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>

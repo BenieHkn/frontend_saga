@@ -58,8 +58,9 @@
 
             <!-- Bouton simple pour les autres rôles -->
             <UBadge v-else-if="!isAdmin()" color="blue" variant="soft" size="lg" class="ml-auto">
-              <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
+              
               <UButton to="/courriers/form_document_interne" variant="text" size="sm" class="p-0 m-0 text-blue-600">
+                <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
                 Nouveau
               </UButton>
             </UBadge>
