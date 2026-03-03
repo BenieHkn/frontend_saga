@@ -141,7 +141,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useCourriersStore } from '~/stores/courriers'
 import { useAuth } from '~/composables/auth/useAuth'
 import { useApi } from '~/composables/useApi'
 import AffectationsListe from '~/components/documents/AffectationsListe.vue'
