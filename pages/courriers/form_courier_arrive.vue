@@ -7,8 +7,7 @@
         <div class="lg:col-span-6">
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
 
-            <PageHeader title="Formulaire de Courriers Arrivés" subtitle="Gestion et suivi des courriers sortants"
-              to="/courriers/form_courrier_depart" btn-text="Nouveau courrier" />
+            <PageHeader title="Formulaire de Courriers Arrivés" subtitle="Gestion et suivi des courriers sortants" />
 
             <form @submit.prevent="handleSubmit" class="space-y-4">
               <!-- Type d'arrivée -->

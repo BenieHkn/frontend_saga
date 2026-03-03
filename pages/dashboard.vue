@@ -143,7 +143,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useCourriersStore } from '~/stores/courriers'
 import { useAuth } from '~/composables/auth/useAuth'
-import { useApi } from '~/composables/useApi'
 import AffectationsListe from '~/components/documents/AffectationsListe.vue'
 
 const props = defineProps({
@@ -151,7 +150,6 @@ const props = defineProps({
 })
 
 const { isSP, isSA, isDG, isAdmin } = useAuth()
-const { apiFetch } = useApi()
 
 // Dropdown state
 const dropdownOpen = ref(false)
@@ -173,7 +171,16 @@ const stats = ref({
 const fetchStats = async () => {
   try {
     statsLoading.value = true
-    const response = await apiFetch('/statistiques/generales')
+    const token = localStorage.getItem('auth_token')
+    const config = useRuntimeConfig()
+
+    const response = await $fetch(`${config.public.apiBase}/statistiques/generales`, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
+      }
+    })
+
     if (response?.success) {
       stats.value = response.data
     }
@@ -183,7 +190,6 @@ const fetchStats = async () => {
     statsLoading.value = false
   }
 }
-
 // Fermer le dropdown si clic extérieur
 const handleClickOutside = (event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
