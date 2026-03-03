@@ -1,4 +1,3 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   plugins: ['~/plugins/onesignal.client.js'],
 
@@ -22,8 +21,6 @@ export default defineNuxtConfig({
     public: {
       apiBase: process.env.API_BASE_URL || 'http://localhost:8000/api',
       baseUrl: process.env.BASE_URL || 'http://localhost:8000'
-      // apiBase: process.env.API_BASE_URL || 'http://192.168.40.3:8000/api',
-      // baseUrl: process.env.BASE_URL || 'http://192.168.40.3:8000'
     }
   },
 
@@ -66,7 +63,7 @@ export default defineNuxtConfig({
             }
           },
           fontFamily: {
-            sans: ['Inter var', 'system-ui', 'sans-serif'],
+            sans: ['Montserrat', 'system-ui', 'sans-serif'], // ← modifié
           },
           animation: {
             'slide-in-up': 'slideInUp 0.4s ease-out',
@@ -110,7 +107,21 @@ export default defineNuxtConfig({
         }
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        // ↓ Import Google Fonts Montserrat
+        {
+          rel: 'preconnect',
+          href: 'https://fonts.googleapis.com'
+        },
+        {
+          rel: 'preconnect',
+          href: 'https://fonts.gstatic.com',
+          crossorigin: ''
+        },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap'
+        }
       ]
     }
   }

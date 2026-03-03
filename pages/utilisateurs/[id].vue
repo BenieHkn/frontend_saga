@@ -709,14 +709,14 @@ const loadUser = async () => {
       password_confirmation: '',
       datePriseService: formatForInput(user.prise_service)   || '',
       estAdministrateur: user.is_superadmin   ?? false,
-      estResponsable: user.entite_users[0].is_responsable   ?? false,
+      estResponsable: user.entite_users?.[0]?.is_responsable ?? false,
       statut:           user.statut           ?? true,
       points_critiques: (user.points_critiques || []).map(p => ({
         id:  p.id,
         nom: p.libelle || p.code,
         code: p.code,
       })),
-      entite_id: user.entite_users[0]?.entite_id || null,
+      entite_id: user.entite_users?.[0]?.entite_id || null,
     }
 
     // ── Charger les fonctions déjà attribuées ─────────────────────────────

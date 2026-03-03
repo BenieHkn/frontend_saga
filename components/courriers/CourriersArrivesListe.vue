@@ -200,7 +200,7 @@
       </div>
     </UModal>
 
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <!-- <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Courriers arrivés</h1>
         <p class="text-sm text-slate-500">Gestion et suivi des courriers entrants</p>
@@ -211,7 +211,10 @@
           Nouveau
         </UButton>
       </UBadge>
-    </div>
+    </div> -->
+
+    <PageHeader v-if="!isAdmin()" title="Courriers arrivés" subtitle="Gestion des courriers entrants" btnText="Nouveau" to="/courriers/form_courier_arrive"/>
+    <PageHeader v-else title="Courriers arrivés" subtitle="Gestion des courriers entrants"/>
 
     <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
       <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -264,6 +267,14 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
+          <!-- Traiter button temporarily disabled: logic moved to AffectationsListe.vue -->
+          <!--
+          <button v-if="item._complete?.document?.type_document?.peut_etre_traite && !isSP() && !isSA()"
+            @click="handleProcess(item)" title="Traiter le courrier"
+            class="inline-flex items-center justify-center w-8 h-8 bg-violet-50 text-violet-700 border-violet-100 rounded-md hover:bg-violet-200 hover:text-violet-900 transition-all group">
+            <Icon name="i-heroicons-clipboard-check" class="w-4 h-4 group-hover:text-violet-600" />
+          </button>
+          -->
           <button v-if="!item._complete?.document?.reponses?.length && !isAdmin()" @click="handleReply(item)"
             title="Répondre au courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group">
@@ -333,7 +344,7 @@ const props = defineProps({
 const store = useAffectationsStore()
 const courriersStore = useCourriersStore()
 const config = useRuntimeConfig()
-const { isAdmin } = useAuth()
+const { isAdmin, isSP, isSA } = useAuth()
 
 const filterFields = [
   { id: 'source', label: 'Source' },
@@ -507,6 +518,12 @@ const handleQuickAssign = (courrierId) => {
   store.selectCourrierFromQuickAction(courrierId)
   navigateTo('/affectations/create')
 }
+
+// Processing logic moved to AffectationsListe.vue
+// const handleProcess = (item) => {
+//   const courrier = item._complete || item
+//   navigateTo(`/courriers/traiter/${courrier.id}`)
+// }
 
 const handleReply = (item) => {
   const courrier = item._complete || item

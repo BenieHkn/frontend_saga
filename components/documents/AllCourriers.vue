@@ -1,25 +1,13 @@
 <template>
   <UContainer>
-    <PageHeader
-      title="Documents"
-      subtitle="Gestion et suivi des documents"
-    />
+    <PageHeader title="Documents" subtitle="Gestion et suivi des documents" />
 
     <!-- Types de documents -->
     <div class="grid grid-cols-3 gap-8">
-  <div
-    v-for="data in documentTypes"
-    :key="data.id"
-    @click="handleClick(data)"
-    class="cursor-pointer transition-all"
-  >
-    <UBadge
-      variant="soft"
-      color="blue"
-      size="lg"
-      class="p-6 w-full min-h-24 hover:ring-2 hover:ring-secondary-500"
-      :class="selectedType.id === data.id ? 'ring-2 ring-secondary-500' : ''"
-    >
+      <div v-for="data in documentTypes" :key="data.id" @click="handleClick(data)"
+        class="cursor-pointer transition-all">
+        <UBadge variant="soft" color="blue" size="lg" class="p-6 w-full min-h-24 hover:ring-2 hover:ring-secondary-500"
+          :class="selectedType.id === data.id ? 'ring-2 ring-secondary-500' : ''">
           <Icon :name="data.icon" class="h-8 w-8 mr-2" />
           <div>
             <h3 class="font-bold text-base">{{ data.title }}</h3>

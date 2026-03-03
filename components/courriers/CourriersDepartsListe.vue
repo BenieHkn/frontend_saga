@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-slate-100 p-6 font-sans">
 
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <!-- <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Courriers Départs</h1>
         <p class="text-sm text-slate-500">Gestion et suivi des courriers sortants</p>
@@ -12,7 +12,9 @@
           Nouveau
         </UButton>
       </UBadge>
-    </div>
+    </div> -->
+    <PageHeader v-if="!isAdmin()" title="Courriers Départs" subtitle="Gestion et suivi des courriers sortants" btnText="Nouveau" to="/courriers/form_courrier_depart"/>
+    <PageHeader v-else title="Courriers Départs" subtitle="Gestion et suivi des courriers sortants"/>
 
     <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
       <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -148,12 +150,14 @@
 import { ref, onMounted } from 'vue'
 import DataTable from '~/components/DataTable.vue'
 import Swal from 'sweetalert2'
+import { useAuth } from '~/composables/auth/useAuth'
 
 const props = defineProps({
   entiteId: { type: Number, default: null }
 })
 
 const config = useRuntimeConfig()
+const { isAdmin } = useAuth()
 
 // ── État ──────────────────────────────────────────────────────────────────────
 const courriers = ref([])
