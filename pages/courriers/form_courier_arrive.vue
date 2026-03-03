@@ -7,11 +7,10 @@
         <div class="lg:col-span-6">
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
 
-<<<<<<< HEAD
+
             <PageHeader title="Formulaire de Courriers Arrivés" subtitle="Gestion et suivi des courriers sortants" />
-=======
-            <PageHeader title="Formulaire de Courriers Arrivés" subtitle="Gestion et suivi des courriers sortants"/>
->>>>>>> 6a5f41db0f5710ef33dab9d0de0c52f859320729
+
+
 
             <form @submit.prevent="handleSubmit" class="space-y-4">
               <!-- Type d'arrivée -->
