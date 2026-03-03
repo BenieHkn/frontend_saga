@@ -30,7 +30,8 @@
                   <NuxtLink to="/courriers/form_courier_arrive"
                     class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors duration-150"
                     @click="dropdownOpen = false">
-                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex-shrink-0">
+                    <span
+                      class="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex-shrink-0">
                       <Icon name="i-heroicons-inbox-arrow-down" class="h-4 w-4" />
                     </span>
                     <div>
@@ -44,7 +45,8 @@
                   <NuxtLink to="/courriers/form_courrier_depart"
                     class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors duration-150"
                     @click="dropdownOpen = false">
-                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-green-100 text-green-600 flex-shrink-0">
+                    <span
+                      class="flex items-center justify-center w-8 h-8 rounded-lg bg-green-100 text-green-600 flex-shrink-0">
                       <Icon name="i-heroicons-paper-airplane" class="h-4 w-4" />
                     </span>
                     <div>
@@ -58,7 +60,7 @@
 
             <!-- Bouton simple pour les autres rôles -->
             <UBadge v-else-if="!isAdmin()" color="blue" variant="soft" size="lg" class="ml-auto">
-              
+
               <UButton to="/courriers/form_document_interne" variant="text" size="sm" class="p-0 m-0 text-blue-600">
                 <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
                 Nouveau
@@ -71,47 +73,21 @@
       <!-- Stats Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <template v-if="statsLoading">
-          <div v-for="i in 4" :key="i"
-            class="liquid-card animate-pulse h-28 rounded-xl bg-white/10">
+          <div v-for="i in 4" :key="i" class="liquid-card animate-pulse h-28 rounded-xl bg-white/10">
           </div>
         </template>
         <template v-else>
-          <StatsCard
-            title="Arrivés"
-            :value="stats.total_courriers_arrives"
-            changeType="decrease"
-            icon="envelope-open-solid"
-            color="blue"
-            class="liquid-card"
-            :infos="`Sans réponse: ${stats.courriers_arrives_sans_reponse}`"
-          />
-          <StatsCard
-            title="Départs"
-            :value="stats.courriers_departs"
-            changeType="increase"
-            icon="envelope-open-solid"
-            color="green"
-            class="liquid-card"
-            :infos="`Répondus: ${stats.courriers_repondus}`"
-          />
-          <StatsCard
-            title="En attente"
-            :value="stats.affectations_en_cours"
-            changeType="hold"
-            icon="envelope-open-solid"
-            color="yellow"
-            class="liquid-card"
-            :infos="`Traitement: ${stats.taux_traitement_affectations}%`"
-          />
-          <StatsCard
-            title="Affectés"
-            :value="stats.total_affectations"
-            changeType="increase"
-            icon="envelope-open-solid"
-            color="purple"
-            class="liquid-card"
-            :infos="`Taux réponse: ${stats.taux_reponse}%`"
-          />
+          <StatsCard title="Arrivés" :value="stats.total_courriers_arrives" changeType="decrease"
+            icon="envelope-open-solid" color="blue" class="liquid-card" :infos="isDG() || isSA() || isSP() || isAdmin()
+              ? `Sans réponse: ${stats.courriers_arrives_sans_reponse}`
+              : `Affectés: ${stats.total_courriers_arrives}`" />
+          <StatsCard title="Départs" :value="stats.courriers_departs" changeType="increase" icon="envelope-open-solid"
+            color="green" class="liquid-card" :infos="`Répondus: ${stats.courriers_repondus}`" />
+          <StatsCard title="En attente" :value="stats.affectations_en_cours" changeType="hold"
+            icon="envelope-open-solid" color="yellow" class="liquid-card"
+            :infos="`Traitement: ${stats.taux_traitement_affectations}%`" />
+          <StatsCard title="Affectés" :value="stats.total_affectations" changeType="increase" icon="envelope-open-solid"
+            color="purple" class="liquid-card" :infos="`Taux réponse: ${stats.taux_reponse}%`" />
         </template>
       </div>
 
@@ -174,15 +150,47 @@ const fetchStats = async () => {
     const token = localStorage.getItem('auth_token')
     const config = useRuntimeConfig()
 
-    const response = await $fetch(`${config.public.apiBase}/statistiques/generales`, {
-      headers: { 
+    const isGenerales = isDG() || isSA() || isSP() || isAdmin()
+
+    let url = ''
+    if (isGenerales) {
+      url = `${config.public.apiBase}/statistiques/generales`
+    } else {
+      const entiteUser = JSON.parse(localStorage.getItem('entite_user') || '{}')
+      const entiteUserId = entiteUser?.entite_user_id ?? entiteUser?.id
+      if (!entiteUserId) {
+        console.warn('Aucun entite_user_id trouvé')
+        statsLoading.value = false
+        return
+      }
+      url = `${config.public.apiBase}/statistiques/entite-user/${entiteUserId}`
+    }
+
+    const response = await $fetch(url, {
+      headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/json'
       }
     })
 
     if (response?.success) {
-      stats.value = response.data
+      if (isGenerales) {
+        // Structure /statistiques/generales
+        stats.value = response.data
+      } else {
+        // Structure /statistiques/entite-user → mapper vers le même format
+        const d = response.data
+        stats.value = {
+          total_courriers_arrives: d.courriers?.affectes ?? 0,
+          courriers_arrives_sans_reponse: d.affectations?.en_cours ?? 0,
+          courriers_departs: d.transferts?.emis ?? 0,
+          courriers_repondus: d.reponses?.donnees ?? 0,
+          affectations_en_cours: d.affectations?.en_cours ?? 0,
+          total_affectations: d.affectations?.recues ?? 0,
+          taux_reponse: 0,
+          taux_traitement_affectations: d.affectations?.taux_traitement ?? 0,
+        }
+      }
     }
   } catch (error) {
     console.error('Erreur chargement statistiques:', error)
