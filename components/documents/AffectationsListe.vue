@@ -161,6 +161,16 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border-emerald-100 rounded-md hover:bg-emerald-200 :hover:text-emerald-900 hover:border-emerald-900 transition-all group">
             <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4 group-hover:text-green-600" />
           </button>
+
+          <!-- Traiter: visible si le document peut être traité et si l'utilisateur n'est pas SP/SA -->
+          <button
+            v-if="isResponsable && item._complete?.courrier_arrive?.document?.type_document?.peut_etre_traite && !isSP() && !isSA()"
+            @click="handleProcess(item)"
+            :disabled="!item.courrier_id"
+            title="Traiter le courrier"
+            class="inline-flex items-center justify-center w-8 h-8 bg-violet-50 text-violet-700 border-violet-100 rounded-md hover:bg-violet-200 hover:text-violet-900 transition-all group">
+            <Icon name="i-heroicons-clipboard-check" class="w-4 h-4 group-hover:text-violet-600" />
+          </button>
         </div>
       </template>
 
@@ -215,7 +225,7 @@ import { useAuth } from '~/composables/auth/useAuth'
 
 const affectationsStore = useAffectationsStore()
 const transfertsStore = useTransfertsStore()
-const { isSecDir, getDirecteurEntiteUserId } = useAuth()
+const { isSecDir, getDirecteurEntiteUserId, isSP, isSA } = useAuth()
 
 useHead({ title: "Documents reçus - Sagar Revolution" });
 
@@ -576,6 +586,25 @@ const handleQuickTransfer = (courrierId) => {
   }
   
   navigateTo('/affectations-transferts/form-transfert')
+}
+
+// Logic for processing a courrier — centralized here for now.
+// Accepts either an item object or a numeric id.
+const handleProcess = (itemOrId) => {
+  const courrierId = typeof itemOrId === 'object'
+    ? (itemOrId.courrier_id || itemOrId._complete?.courrier_arrive_id || itemOrId.id)
+    : itemOrId
+
+  if (!courrierId) {
+    toast.add({ title: 'Erreur', description: 'ID du courrier introuvable', color: 'red', timeout: 1500 })
+    return
+  }
+
+  if (process.client) {
+    sessionStorage.setItem('preselected_courrier_to_process', courrierId.toString())
+  }
+
+  navigateTo(`/courriers/traiter/${courrierId}`)
 }
 
 const handleDeleteSelected = async (selected) => {
