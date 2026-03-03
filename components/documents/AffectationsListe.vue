@@ -603,8 +603,9 @@ const handleProcess = (itemOrId) => {
   if (process.client) {
     sessionStorage.setItem('preselected_courrier_to_process', courrierId.toString())
   }
+  //dirirger vers le fichier modèle du dossier pages
 
-  navigateTo(`/courriers/traiter/${courrierId}`)
+  navigateTo('/modele')
 }
 
 const handleDeleteSelected = async (selected) => {
