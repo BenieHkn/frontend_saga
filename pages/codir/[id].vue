@@ -1,5 +1,4 @@
 <script setup>
-import { useCodirsStore } from '@/stores/codirs'
 import {
   formatDateFR,
   extractTime,
@@ -7,31 +6,59 @@ import {
   extractTimeInput,
   getStatutConfig,
   STATUT_OPTIONS,
+  useCodir,
 } from '@/composables/codirs/useCodir'
 import StepIndicator from '@/components/StepIndicator.vue'
 
 definePageMeta({ title: 'Détail CODIR' })
 
-const route = useRoute()
+const route  = useRoute()
 const router = useRouter()
-const store = useCodirsStore()
-const id = Number(route.params.id)
-const toast = useNuxtApp().$toast ?? useToast()
+const id     = Number(route.params.id)
+const toast  = useNuxtApp().$toast ?? useToast()
 
+const {
+  loading,
+  error,
+  getCodir,
+  updateCodir,
+  createOrdreDuJour,
+  detachODJ,
+} = useCodir()
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+const codir = ref(null)
+
+const fetchCodir = async () => {
+  const data = await getCodir(id)
+  codir.value = data
+}
+
+// Sync localStorage automatique
+watch(codir, (c) => {
+  if (c && process.client)
+    localStorage.setItem('currentCodir', JSON.stringify(c))
+})
+
+// ── Steps ─────────────────────────────────────────────────────────────────────
 const currentStep = ref(1)
 const steps = [
   { id: 1, label: 'Ordres du jour' },
   { id: 2, label: 'Informations générales' },
-  { id: 3, label: 'PV du codir' }
+  { id: 3, label: 'PV du codir' },
 ]
 
-// ── Persistance du step en localStorage ───────────────────────────────────────
 const STEP_KEY = `codir_step_${id}`
 
 const saveStep = (step) => {
   currentStep.value = step
-  if(process.client)
+  if (process.client)
     localStorage.setItem(STEP_KEY, String(step))
+}
+
+const navigateToStep = (step) => {
+  if (step === 2) router.push(`/codir/infos`)
+  if (step === 3) router.push(`/codir/preview`)
 }
 
 const goNext = () => {
@@ -48,71 +75,52 @@ const goPrev = () => {
   }
 }
 
-const navigateToStep = (step) => {
-  if (step === 2) router.push(`/codir/infos`)
-  if (step === 3) router.push(`/codir/preview`)
-  // step 1 = page courante, on reste
-}
-
-onMounted(() => {
-  store.fetchCodir(id)
-  // Restaurer le step depuis localStorage
-  const saved = localStorage.getItem(STEP_KEY)
-  if (saved) currentStep.value = Number(saved)
-  // Sauvegarder le codir courant pour les pages enfants
-  if (codir.value) {
-    localStorage.setItem('currentCodir', JSON.stringify(codir.value))
-  }
-})
-
-const codir = computed(() => store.currentCodir)
-
-// Sauvegarder le codir dans localStorage dès qu'il est chargé
-watch(codir, (c) => {
-  if (c) localStorage.setItem('currentCodir', JSON.stringify(c))
-})
-
+// ── Progression ───────────────────────────────────────────────────────────────
 const progressionGlobale = computed(() => {
   const taches = codir.value?.taches ?? []
   if (!taches.length) return 0
-  return Math.round(taches.reduce((a, t) => a + (t.pivot?.progression ?? 0), 0) / taches.length)
+  return Math.round(
+    taches.reduce((a, t) => a + (t.pivot?.progression ?? 0), 0) / taches.length
+  )
 })
 
-// ── Edition CODIR ─────────────────────────────────────────────────────────────
-const editing = ref(false)
+// ── Edition ───────────────────────────────────────────────────────────────────
+const editing  = ref(false)
 const editForm = reactive({ date: '', heure_debut: '', heure_fin: '', statut: '' })
 
 watch(codir, (c) => {
   if (!c) return
-  editForm.date = extractDateInput(c.date)
+  editForm.date        = extractDateInput(c.date)
   editForm.heure_debut = extractTimeInput(c.heure_debut)
-  editForm.heure_fin = extractTimeInput(c.heure_fin)
-  editForm.statut = c.statut
+  editForm.heure_fin   = extractTimeInput(c.heure_fin)
+  editForm.statut      = c.statut
 }, { immediate: true })
 
 const saveCodir = async () => {
-  await store.updateCodir(id, editForm)
+  const updated = await updateCodir(id, editForm)
+  codir.value   = updated
   toast.add({
     title: 'CODIR mis à jour',
-    description: 'Les informations du CODIR ont été mises à jour avec succès.',
+    description: 'Les informations ont été mises à jour avec succès.',
     color: 'green',
     icon: 'i-heroicons-check-circle',
   })
   editing.value = false
 }
 
-// ── Modales ───────────────────────────────────────────────────────────────────
+// ── Ordres du jour ────────────────────────────────────────────────────────────
 const ordreModal = ref(false)
-const ordreForm = reactive({ libelle: '', statut: 'actif', codir_id: id })
+const ordreForm  = reactive({ libelle: '', statut: 'actif', codir_id: id })
 const resetOrdreForm = () => Object.assign(ordreForm, { libelle: '', statut: 'actif' })
 
 const addOrdre = async () => {
   if (!ordreForm.libelle) return
   try {
-    await store.createOrdreDuJour(ordreForm)
+    await createOrdreDuJour(ordreForm)
+    await fetchCodir()
     toast.add({
       title: 'Ordre du jour créé',
-      description: `"${ordreForm.libelle}" a été ajouté au CODIR`,
+      description: `"${ordreForm.libelle}" a été ajouté`,
       color: 'green',
       icon: 'i-heroicons-check-circle',
     })
@@ -130,12 +138,28 @@ const addOrdre = async () => {
 
 const handleDetachOrdre = async (ordreId) => {
   try {
-    await store.detachOrdreDuJour(id, ordreId)
+    await detachODJ(id, ordreId)
+    await fetchCodir()
     toast.add({ title: 'Ordre du jour retiré', color: 'green', icon: 'i-heroicons-check-circle' })
   } catch {
-    toast.add({ title: 'Erreur', description: "Impossible de retirer l'ordre du jour", color: 'red', icon: 'i-heroicons-exclamation-circle' })
+    toast.add({
+      title: 'Erreur',
+      description: "Impossible de retirer l'ordre du jour",
+      color: 'red',
+      icon: 'i-heroicons-exclamation-circle',
+    })
   }
 }
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+onMounted(async () => {
+  await fetchCodir()
+
+  if (process.client) {
+    const saved = localStorage.getItem(STEP_KEY)
+    if (saved) currentStep.value = Number(saved)
+  }
+})
 </script>
 
 <template>
@@ -152,7 +176,7 @@ const handleDetachOrdre = async (ordreId) => {
       <StepIndicator :currentStep="currentStep" :steps="steps" />
     </div>
 
-    <div v-if="store.loading && !codir" class="flex justify-center py-20">
+    <div v-if="loading && !codir" class="flex justify-center py-20">
       <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-blue-500" />
     </div>
 
@@ -203,7 +227,7 @@ const handleDetachOrdre = async (ordreId) => {
               </div>
               <div class="flex justify-end gap-2">
                 <UButton color="gray" variant="ghost" size="sm" @click="editing = false">Annuler</UButton>
-                <UButton color="blue" size="sm" :loading="store.loading" @click="saveCodir">Enregistrer</UButton>
+                <UButton color="blue" size="sm" :loading="loading" @click="saveCodir">Enregistrer</UButton>
               </div>
             </div>
           </Transition>
@@ -214,7 +238,7 @@ const handleDetachOrdre = async (ordreId) => {
       <div class="flex flex-col gap-8">
         <CodirOrdreDuJour
           :ordres="codir.ordres_du_jour ?? []"
-          :loading="store.loading"
+          :loading="loading"
           @attach="ordreModal = true"
           @detach="handleDetachOrdre($event)"
         />
@@ -256,7 +280,7 @@ const handleDetachOrdre = async (ordreId) => {
 
     </template>
 
-    <UAlert v-if="store.error" color="red" icon="i-heroicons-exclamation-circle" :title="store.error" class="mt-4" />
+    <UAlert v-if="error" color="red" icon="i-heroicons-exclamation-circle" :title="error" class="mt-4" />
 
     <!-- ── Modale ordre du jour ─────────────────────────────────────── -->
     <UModal v-model="ordreModal">
@@ -279,11 +303,12 @@ const handleDetachOrdre = async (ordreId) => {
         <template #footer>
           <div class="flex justify-end gap-2">
             <UButton color="gray" variant="ghost" @click="ordreModal = false">Annuler</UButton>
-            <UButton color="blue" :loading="store.loading" @click="addOrdre">Créer</UButton>
+            <UButton color="blue" :loading="loading" @click="addOrdre">Créer</UButton>
           </div>
         </template>
       </UCard>
     </UModal>
+
   </div>
 </template>
 

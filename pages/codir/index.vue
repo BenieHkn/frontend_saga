@@ -1,15 +1,18 @@
 <script setup>
 import { useCodirsStore } from '@/stores/codirs'
-import { formatDateFR, extractTime, getStatutConfig } from '@/composables/codirs/useCodir'
+import { formatDateFR, extractTime, getStatutConfig, useCodir } from '@/composables/codirs/useCodir'
 
 definePageMeta({ title: 'Listing CODIR' })
 
 const store = useCodirsStore()
 const router = useRouter()
+const { downloadPdf } = useCodir()
+const config = useRuntimeConfig()
 
 const currentView = ref('table')
 const currentPage = ref(1)
 const PAGE_SIZE = 9
+
 
 // ── Colonnes pour la DataTable ────────────────────────────────────────────
 
@@ -50,27 +53,42 @@ onMounted(() => store.getCodirs())
 // ── Handlers ──────────────────────────────────────────────────────────────
 
 const handleView = (item) => {
-  const STEP_KEY = "codir_step_" + item.id
-  const currentStep = ref(1)
   store.setCurrentCodir(item._raw)
-  if(process.client){
-    localStorage.setItem("currentCodir", JSON.stringify(item))
-    localStorage.setItem(STEP_KEY, 1)
-    currentStep.value = localStorage.getItem(STEP_KEY)
+
+  if (process.client) {
+    const STEP_KEY = `codir_step_${item.id}`
+    // On lit le step AVANT d'écraser avec 1
+    const savedStep = localStorage.getItem(STEP_KEY)
+    const step = savedStep ? parseInt(savedStep) : 1
+
+    // On ne réinitialise pas à 1 si un step existant est sauvegardé
+    localStorage.setItem('currentCodir', JSON.stringify(item))
+
+    if (step === 2) {
+      return navigateTo('/codir/infos')
+    } else if (step === 3) {
+      return navigateTo('/codir/preview')
+    }
   }
 
-  if(currentStep.value == 1){
-    navigateTo(`/codir/${item.id}`)
-  }else if(currentStep.value == 2){
-    navigateTo(`/codir/infos`)
-  }else if(currentStep.value == 3){
-    navigateTo(`/codir/preview`)
-  }
+  navigateTo(`/codir/${item.id}`)
 }
 
-const handleDelete = async (item) => {
-  if (!confirm(`Supprimer le CODIR du ${item.date} ?`)) return
-  await store.deleteCodir(item.id)
+const handleDownload = async (item) => {
+  try {
+    const blob = await downloadPdf(item.id)  // reçoit directement un Blob
+    
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `codir_${item.id}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (e) {
+    console.error('Erreur téléchargement :', e)
+  }
 }
 
 const handleCreate = () => router.push('/codir/create')
@@ -143,6 +161,12 @@ const handleCreate = () => router.push('/codir/create')
             <span :class="`text-[11px] font-semibold px-2.5 py-1 rounded-full ${getStatutConfig(value).badgeClass}`">
               {{ getStatutConfig(value).label }}
             </span>
+          </template>
+
+          <!-- Correction : le slot actions reçoit { item }, pas { value } -->
+          <template #actions="{ item }">
+            <UButton v-if="item.statut === 'soumis'" @click="handleView(item)" color="blue" variant="ghost" icon="i-heroicons-eye" size="xs" class="rounded-lg" />
+            <UButton v-else @click="handleDownload(item)" color="blue" variant="ghost" icon="i-heroicons-arrow-down-tray" size="xs" class="rounded-lg" />
           </template>
         </DataTable>
       </div>

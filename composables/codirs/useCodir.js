@@ -15,9 +15,8 @@ export const formatDateShort = (iso) =>
 // ── Config statuts ────────────────────────────────────────────────────────────
 
 export const STATUT_CONFIG = {
-  nouveau:   { label: 'Nouveau',  uiColor: 'blue',  dotClass: 'bg-blue-400',  badgeClass: 'text-blue-600 bg-blue-50 dark:bg-blue-950/40' },
-  'terminé': { label: 'Terminé',  uiColor: 'green', dotClass: 'bg-green-400', badgeClass: 'text-green-600 bg-green-50 dark:bg-green-950/40' },
-  clos:      { label: 'Clos',     uiColor: 'gray',  dotClass: 'bg-gray-400',  badgeClass: 'text-gray-500 bg-gray-100 dark:bg-gray-800/60' },
+  soumis:    { label: 'Soumis',   uiColor: 'blue',   dotClass: 'bg-blue-400',   badgeClass: 'text-blue-600 bg-blue-50 dark:bg-blue-950/40' },
+  clos:      { label: 'Clos',     uiColor: 'green',  dotClass: 'bg-green-400',  badgeClass: 'text-green-600 bg-green-50 dark:bg-green-950/40' },
   en_cours:  { label: 'En cours', uiColor: 'amber', dotClass: 'bg-amber-400', badgeClass: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40' },
 }
 
@@ -25,10 +24,9 @@ export const getStatutConfig = (statut) =>
   STATUT_CONFIG[statut] ?? { label: statut, uiColor: 'gray', dotClass: 'bg-gray-400', badgeClass: 'text-gray-500 bg-gray-100' }
 
 export const STATUT_OPTIONS = [
-  { label: 'Nouveau',  value: 'nouveau' },
-  { label: 'En cours', value: 'en_cours' },
-  { label: 'Terminé',  value: 'terminé' },
+  { label: 'soumis',     value: 'soumis' },
   { label: 'Clos',     value: 'clos' },
+  { label: 'En cours', value: 'en_cours' },
 ]
 
 export const TACHE_STATUT_OPTIONS = [
@@ -65,7 +63,7 @@ export function useCodir() {
     // Gestion des présences
     savePresences:    (id, presences)       => call(`/codirs/${id}/presences`, { method: 'POST', body: { presences } }),
     getPresences:     (id)                  => call(`/codirs/${id}/presences`),
-    downloadPdf: (id)                 => call(`/codirs/${id}/downloadPdf`, { method: 'GET' }),
+    downloadPdf: (id) => call(`/codirs/${id}/downloadPdf`, { method: 'GET', blob: true }),
     generatePdf: (id)                 => call(`/codirs/${id}/generatePdf`, { method: 'GET' }),
     cloturerCodir: (id)               => call(`/codirs/${id}/cloturerCodir`, { method: 'PUT' }),
   }
