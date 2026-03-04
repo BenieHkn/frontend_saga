@@ -14,7 +14,7 @@ export const useAffectationsStore = defineStore('affectations', () => {
     instructions: '',
     statut: 'en cours',
     delai_traitement: '',
-    priority: 'standard',
+    priority: '',
     date_cloture: null,
   })
 

@@ -293,7 +293,7 @@ const columns = [
   { key: 'date_courrier', label: 'Date du Courrier', visible: false },
   { key: 'url', label: 'Document', visible: false, type: 'document' },
   { key: 'type_arrivee', label: "Type d'arrivée", visible: false },
-  { key: 'priority', label: 'Priorité', visible: true, type: 'badge' },
+  { key: 'priority', label: 'Priorité', visible: false, type: 'badge' },
   { key: 'structure', label: 'Structure / Usager', visible: true },
 ]
 
