@@ -350,6 +350,7 @@ date_affect: new Date().toISOString().split('T')[0],
           dossier: isMultiCourrier && store.folderName
             ? store.folderName
             : null,
+          priority: store.formData.priority
         })
       }
     }
