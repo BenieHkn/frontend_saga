@@ -162,14 +162,15 @@
             <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4 group-hover:text-green-600" />
           </button>
 
-          <!-- Traiter: visible si le document peut être traité et si l'utilisateur n'est pas SP/SA -->
+          <!-- Traiter: si l'utilisateur n'est pas SP/SA : isResponsable && item._complete?.courrier_arrive?.document?.type_document?.peut_etre_traite -->
           <button
-            v-if="isResponsable && item._complete?.courrier_arrive?.document?.type_document?.peut_etre_traite && !isSP() && !isSA()"
+            v-if="!isSP() && !isSA()"
             @click="handleProcess(item)"
             :disabled="!item.courrier_id"
             title="Traiter le courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-violet-50 text-violet-700 border-violet-100 rounded-md hover:bg-violet-200 hover:text-violet-900 transition-all group">
-            <Icon name="i-heroicons-clipboard-check" class="w-4 h-4 group-hover:text-violet-600" />
+            <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4 group-hover:text-violet-600" />
+            <!-- <Icon name="i-heroicons-clipboard-check" class="w-4 h-4 group-hover:text-violet-600" /> -->
           </button>
         </div>
       </template>
