@@ -1,48 +1,58 @@
 <script setup>
-import { useCodirsStore } from '@/stores/codirs'
+import { useOrdreDuJour } from '@/composables/ordres-du-jour/useOrdreDuJour'
 import { formatDateFR } from '@/composables/codirs/useCodir'
 
 definePageMeta({ title: "Détail ordre du jour" })
 
-const route = useRoute()
+const route  = useRoute()
 const router = useRouter()
-const store = useCodirsStore()
-const toast = useToast()
+const toast  = useToast()
 
-const ordreId = Number(route.params.ordreId)
+const ordreDuJourApi = useOrdreDuJour()
+
+const ordreId            = Number(route.params.ordreId)
 const currentOrdreDuJour = ref(null)
-const loading = ref(true)
+const currentCodir       = ref(null)
+const loading            = ref(true)
 
-const currentCodir = ref(null)
+// ── Fetch ─────────────────────────────────────────────────────────────────────
+const fetchOrdreDuJour = async () => {
+  try {
+    currentOrdreDuJour.value = localStorage.getItem("currentOrdreDuJour") ? JSON.parse(localStorage.getItem("currentOrdreDuJour")) : null
+  } catch {
+    console.warn("Impossible de rafraîchir l'ordre du jour, utilisation du cache")
+  }
+}
 
-// Et dans onMounted, ajouter la ligne :
-onMounted(() => {
-  currentOrdreDuJour.value = JSON.parse(localStorage.getItem('currentOrdreDuJour'))
-  currentCodir.value = JSON.parse(localStorage.getItem('currentCodir')) // ← ajouter
+onMounted(async () => {
+  currentCodir.value = JSON.parse(localStorage.getItem("currentCodir"))
+  await fetchOrdreDuJour()
   loading.value = false
 })
 
+// ── Computed ──────────────────────────────────────────────────────────────────
 const dossiers = computed(() => currentOrdreDuJour.value?.dossiers ?? [])
 
 // ── Statut badge ──────────────────────────────────────────────────────────────
 const statutClass = (statut) => {
   const map = {
-    actif: 'text-green-600 bg-green-50 dark:bg-green-950/40',
+    actif:   'text-green-600 bg-green-50 dark:bg-green-950/40',
     inactif: 'text-gray-500 bg-gray-100 dark:bg-gray-800/60',
     archivé: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40',
   }
   return map[statut] ?? 'text-gray-500 bg-gray-100'
 }
 
-// ── Ajout de dossier ──────────────────────────────────────────────────────────
+// ── Ajout dossier ─────────────────────────────────────────────────────────────
 const dossierModal = ref(false)
-const dossierForm = reactive({ libelle: '' })
+const dossierForm  = reactive({ libelle: '' })
 const resetDossierForm = () => Object.assign(dossierForm, { libelle: '' })
 
 const addDossier = async () => {
   if (!dossierForm.libelle.trim()) return
   try {
-    await store.addDossier(ordreId, { libelle: dossierForm.libelle.trim() })
+    await ordreDuJourApi.addDossier(ordreId, { libelle: dossierForm.libelle.trim() })
+    await fetchOrdreDuJour()  // refresh pour voir le nouveau dossier
     toast.add({
       title: 'Dossier créé',
       description: `"${dossierForm.libelle}" a été ajouté à l'ordre du jour`,
@@ -61,12 +71,30 @@ const addDossier = async () => {
   }
 }
 
-const handleClick = (dossier) => {
-  if (process.client) {
-    localStorage.setItem("currentDossier", JSON.stringify(dossier))
-    store.currentDossier = localStorage.getItem("currentDossier")
+// ── Suppression dossier ───────────────────────────────────────────────────────
+const handleRemoveDossier = async (dossierId) => {
+  try {
+    await ordreDuJourApi.removeDossier(ordreId, dossierId)
+    await fetchOrdreDuJour()  // refresh
+    toast.add({
+      title: 'Dossier retiré',
+      color: 'green',
+      icon: 'i-heroicons-check-circle',
+    })
+  } catch {
+    toast.add({
+      title: 'Erreur',
+      description: 'Impossible de retirer le dossier',
+      color: 'red',
+      icon: 'i-heroicons-exclamation-circle',
+    })
   }
-  
+}
+
+// ── Navigation vers dossier ───────────────────────────────────────────────────
+const handleClick = (dossier) => {
+  if (process.client)
+    localStorage.setItem("currentDossier", JSON.stringify(dossier))
   navigateTo(`/dossiers/${dossier.id}`)
 }
 </script>
@@ -94,20 +122,18 @@ const handleClick = (dossier) => {
 
     <template v-else>
 
-      <!-- ── En-tête ────────────────────────────────────────────────────── -->
+      <!-- ── En-tête ─────────────────────────────────────────────────────── -->
       <UCard class="rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 mb-6">
         <div class="p-2">
           <div class="flex items-center gap-4">
-            <div
-              class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
               <UIcon name="i-heroicons-clipboard-document-list" class="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 class="text-xl font-bold text-gray-900 dark:text-white">
                 {{ currentOrdreDuJour.libelle }}
               </h1>
-              <span
-                :class="`text-xs font-semibold px-2.5 py-1 rounded-full capitalize mt-1 inline-block ${statutClass(currentOrdreDuJour.statut)}`">
+              <span :class="`text-xs font-semibold px-2.5 py-1 rounded-full capitalize mt-1 inline-block ${statutClass(currentOrdreDuJour.statut)}`">
                 {{ currentOrdreDuJour.statut }}
               </span>
             </div>
@@ -130,7 +156,7 @@ const handleClick = (dossier) => {
         </div>
       </UCard>
 
-      <!-- ── Liste des dossiers ─────────────────────────────────────────── -->
+      <!-- ── Liste des dossiers ──────────────────────────────────────────── -->
       <section>
         <h2 class="text-base font-semibold flex items-center gap-2 mb-3">
           <UIcon name="i-heroicons-folder-open" class="text-violet-500" />
@@ -147,14 +173,19 @@ const handleClick = (dossier) => {
         </div>
 
         <div v-else class="flex flex-col gap-2">
-          <DossierCard v-for="dossier in dossiers" :key="dossier.id" :dossier="dossier" @click="handleClick(dossier)"
-            @deleted="(dossierId) => store.removeDossier(ordreId, dossierId)" />
+          <DossierCard
+            v-for="dossier in dossiers"
+            :key="dossier.id"
+            :dossier="dossier"
+            @click="handleClick(dossier)"
+            @deleted="handleRemoveDossier(dossier.id)"
+          />
         </div>
       </section>
 
     </template>
 
-    <UAlert v-if="store.error" color="red" icon="i-heroicons-exclamation-circle" :title="store.error" class="mt-4" />
+    <UAlert v-if="ordreDuJourApi.error.value" color="red" icon="i-heroicons-exclamation-circle" :title="ordreDuJourApi.error.value" class="mt-4" />
 
   </div>
 
@@ -172,7 +203,7 @@ const handleClick = (dossier) => {
       <template #footer>
         <div class="flex justify-end gap-2">
           <UButton color="gray" variant="ghost" @click="dossierModal = false">Annuler</UButton>
-          <UButton color="blue" :loading="store.loading" @click="addDossier">Ajouter</UButton>
+          <UButton color="blue" :loading="ordreDuJourApi.loading.value" @click="addDossier">Ajouter</UButton>
         </div>
       </template>
     </UCard>

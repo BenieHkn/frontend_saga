@@ -1,54 +1,15 @@
-<template>
-  <div class="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-emerald-900 via-slate-900 to-blue-900 overflow-hidden">
-    <div class="absolute top-[-10%] left-[-10%] w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-
-    <div class="flex flex-col items-center justify-center gap-10 z-10">
-      <div class="relative flex items-center justify-center">
-        <div class="absolute w-48 h-48 border-2 border-white/5 rounded-full"></div>
-        <div class="absolute w-48 h-48 border-t-2 border-emerald-400 rounded-full animate-[spin_3s_linear_infinite]"></div>
-        <div class="absolute w-40 h-40 border-b-2 border-blue-400 rounded-full animate-[spin_2s_linear_infinite_reverse]"></div>
-
-        <div class="relative p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl scale-110">
-          <img 
-            src="/images/saga_logo.png" 
-            alt="Logo SAGA" 
-            width="80" 
-            height="80" 
-            class="w-20 h-20 object-contain"
-          />
-        </div>
-      </div>
-      
-      <div class="text-center">
-        <h1 class="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-400 mb-2 tracking-tighter">
-          SAGA
-        </h1>
-        <p class="text-sm font-medium text-blue-200/60 tracking-[0.5em] uppercase">
-          Revolution
-        </p>
-      </div>
-      
-      <div class="flex items-center gap-3 px-6 py-2 bg-black/20 rounded-full border border-white/5">
-        <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_#34d399]"></div>
-        <p class="text-emerald-100/70 text-xs font-medium uppercase tracking-wide">Chargement...</p>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
-definePageMeta({
-  layout: false
-})
-const config = useRuntimeConfig()
+import { useAuth } from '~/composables/auth/useAuth'
 
-console.log('LARAVEL API URL:', config.public.apiBase)
+definePageMeta({
+  layout: false,
+})
+
+ const config = useRuntimeConfig()
 
 onMounted(async () => {
   if (process.client) {
     // 1. On crée le "petit délai" promis dans votre commentaire initial (par ex: 800ms)
-    await new Promise(resolve => setTimeout(resolve, 500))
 
     const token = localStorage.getItem('auth_token')
     
@@ -60,11 +21,164 @@ onMounted(async () => {
     }
   }
 })
+const showPassword = ref(false)
+
+const {
+  form,
+  rememberMe,
+  loading,
+  authError,
+  successMessage,
+  login,
+  loadRememberedEmail
+} = useAuth()
+
+onMounted(() => {
+  loadRememberedEmail()
+})
 </script>
 
-<style scoped>
-/* Le bloc style est désormais beaucoup plus propre */
-.bg-clip-text {
-  -webkit-background-clip: text;
+<template>
+  <div
+    class="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-green-800 to-blue-900 relative overflow-hidden p-6 font-['Montserrat']">
+
+    <div class="absolute top-[-20px] left-[-20px] w-64 h-64 border-[16px] border-white/10 rounded-full"></div>
+    <div class="absolute bottom-10 right-10 w-32 h-32 border-8 border-white/5 rounded-full"></div>
+    <div
+      class="absolute top-1/4 right-1/4 w-0 h-0 border-l-[20px] border-l-transparent border-b-[40px] border-b-white/10 border-r-[20px] border-r-transparent rotate-12">
+    </div>
+
+    <div class="max-w-6xl w-full flex flex-col md:flex-row items-center justify-between gap-12 z-10">
+
+      <div class="text-white md:text-left text-center flex-1 select-none">
+        <h1 class="text-9xl lg:ms-7 font-bold tracking-tight mb-0 drop-shadow-2xl">
+          SAGA
+        </h1>
+
+        <h2
+          class="text-3xl lg:ms-9 font-bold tracking-[0.5em] animate-gold-sweep bg-clip-text text-transparent bg-[length:200%_auto] mb-8">
+          REVOLUTION
+        </h2>
+
+        <p class="text-xl tracking-[0.2em] font-light text-white/70 lg:ms-9">
+          Bienvenue sur notre plateforme...
+        </p>
+      </div>
+
+      <div class="w-full max-w-md bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-10 shadow-2xl">
+        <div class="space-y-6">
+          <h1 class="text-5xl text-center text-white font-bold">Connexion</h1>
+
+          <UForm @submit="login" :state="form" class="space-y-6">
+
+            <UFormGroup label="Email" name="email" :ui="{ label: { base: 'text-white font-medium mb-2' } }">
+              <UInput v-model="form.email" placeholder="Votre email" color="white" variant="outline" size="xl" :ui="{
+                rounded: 'rounded-2xl',
+                base: 'bg-white text-gray-900 focus:ring-emerald-400',
+                placeholder: 'placeholder-gray-400'
+              }" />
+            </UFormGroup>
+
+            <UFormGroup label="Mot de passe" name="password" :ui="{ label: { base: 'text-white font-medium mb-2' } }">
+              <div class="relative w-full">
+                <UInput v-model="form.password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••"
+                  color="white" variant="outline" size="xl" :disabled="loading" :ui="{
+                    rounded: 'rounded-2xl',
+                    base: 'bg-white text-gray-900 focus:ring-emerald-400 pr-12',
+                    placeholder: 'placeholder-gray-400',
+                    wrapper: 'w-full',
+                  }" />
+                <button type="button" @click="showPassword = !showPassword"
+                  class="absolute top-1/2 -translate-y-1/2 right-4 text-gray-400 hover:text-emerald-500 transition-colors focus:outline-none cursor-pointer z-20"
+                  tabindex="-1">
+                  <svg v-if="showPassword" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path fill-rule="evenodd"
+                      d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                      clip-rule="evenodd" />
+                  </svg>
+                  <svg v-else class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                      d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
+                      clip-rule="evenodd" />
+                    <path
+                      d="M15.171 13.576l1.414 1.414a1 1 0 11-1.414 1.414l-14-14a1 1 0 111.414-1.414l.757.757A10 10 0 0110 18c4.478 0 8.268-2.943 9.542-7a9.971 9.971 0 00-1.371-2.424l.757-.757z" />
+                  </svg>
+                </button>
+              </div>
+            </UFormGroup>
+
+            <div v-if="authError" class="p-4 bg-red-500/20 border border-red-400 rounded-xl flex items-center gap-3">
+              <span class="text-white text-sm font-medium">{{ authError }}</span>
+            </div>
+
+            <div v-if="successMessage"
+              class="p-4 bg-emerald-500/20 border border-emerald-400 rounded-xl flex items-center gap-3">
+              <span class="text-white text-sm font-medium">{{ successMessage }}</span>
+            </div>
+
+            <div class="flex items-center">
+              <UCheckbox v-model="rememberMe" label="Se souvenir de moi" :disabled="loading" :ui="{
+                label: 'text-white text-sm',
+                background: 'bg-white/10',
+                border: 'border-white/30',
+                ring: 'focus-visible:ring-2 focus-visible:ring-emerald-400',
+                color: 'text-emerald-500',
+                base: 'h-5 w-5 rounded-md'
+              }" />
+            </div>
+
+            <UButton type="submit" block size="xl" :loading="loading"
+              class="border border-white/30 text-white font-bold tracking-widest py-4 mt-4 transition-all duration-300 transform hover:scale-[1.02] hover:bg-white/20 hover:border-white/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+              :ui="{ rounded: 'rounded-full' }">
+              {{ loading ? 'Connexion en cours...' : 'Se connecter' }}
+            </UButton>
+          </UForm>
+
+          <div class="text-center">
+            <NuxtLink to="/connexion/mot_de_passe_oublie"
+              class="text-sm text-white/80 hover:text-white transition-colors underline-offset-4 hover:underline">
+              Mot de passe oublié ? Cliquez ici.
+            </NuxtLink>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap');
+
+body {
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Animation de balayage Gold & Emerald */
+.animate-gold-sweep {
+  background-image: linear-gradient(90deg,
+      #10b981 0%,
+      #f59e0b 25%,
+      #fef3c7 50%,
+      #f59e0b 75%,
+      #10b981 100%);
+  animation: sweep 4s linear infinite;
+  filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.5));
+}
+
+@keyframes sweep {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.backdrop-blur-2xl {
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
 }
 </style>

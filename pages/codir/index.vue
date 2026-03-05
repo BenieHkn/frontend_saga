@@ -1,45 +1,66 @@
 <script setup>
-import { useCodirsStore } from '@/stores/codirs'
 import { formatDateFR, extractTime, getStatutConfig, useCodir } from '@/composables/codirs/useCodir'
 
 definePageMeta({ title: 'Listing CODIR' })
 
-const store = useCodirsStore()
 const router = useRouter()
-const { downloadPdf } = useCodir()
-const config = useRuntimeConfig()
+const { loading, error, getCodirs, downloadPdf } = useCodir()
 
+// ── State ─────────────────────────────────────────────────────────────────────
+const codirs = ref([])
+
+const fetchCodirs = async () => {
+  try {
+    const data = await getCodirs()
+    codirs.value = data
+    if (process.client)
+      localStorage.setItem('codirs', JSON.stringify(data))
+  } catch {
+    // Fallback cache
+    if (process.client) {
+      const cached = localStorage.getItem('codirs')
+      if (cached) codirs.value = JSON.parse(cached)
+    }
+  }
+}
+
+onMounted(async () => {
+  // Affichage immédiat depuis le cache
+  if (process.client) {
+    const cached = localStorage.getItem('codirs')
+    if (cached) codirs.value = JSON.parse(cached)
+  }
+  await fetchCodirs()
+})
+
+// ── Vue & Pagination ──────────────────────────────────────────────────────────
 const currentView = ref('table')
 const currentPage = ref(1)
-const PAGE_SIZE = 9
+const PAGE_SIZE   = 9
 
-
-// ── Colonnes pour la DataTable ────────────────────────────────────────────
-
+// ── Colonnes DataTable ────────────────────────────────────────────────────────
 const columns = [
-  { key: 'date', label: 'Date', sortable: true, filterable: true, showLabel: false, inputHidden: false },
+  { key: 'date',    label: 'Date',     sortable: true, filterable: true, showLabel: false, inputHidden: false },
   { key: 'horaire', label: 'Horaires', sortable: true, filterable: true, showLabel: false, inputHidden: false },
-  { key: 'statut', label: 'Statut', sortable: true, filterable: true, showLabel: false, inputHidden: false },
+  { key: 'statut',  label: 'Statut',   sortable: true, filterable: true, showLabel: false, inputHidden: false },
 ]
 
-// ── Tri décroissant par date ──────────────────────────────────────────────
-
+// ── Tri décroissant par date ──────────────────────────────────────────────────
 const sortedCodirs = computed(() =>
-  [...store.codirs].sort((a, b) => new Date(b.date) - new Date(a.date))
+  [...codirs.value].sort((a, b) => new Date(b.date) - new Date(a.date))
 )
 
-// ── Données normalisées pour la DataTable ─────────────────────────────────
-
+// ── Données normalisées pour la DataTable ─────────────────────────────────────
 const tableData = computed(() =>
   sortedCodirs.value.map(codir => ({
-    id: codir.id,
-    date: formatDateFR(codir.date),
+    id:       codir.id,
+    date:     formatDateFR(codir.date),
     _dateRaw: codir.date,
-    horaire: `${extractTime(codir.heure_debut)} – ${extractTime(codir.heure_fin)}`,
-    statut: codir.statut,
-    odj: codir.ordres_du_jour?.length ?? 0,
-    taches: codir.taches?.length ?? 0,
-    _raw: codir,
+    horaire:  `${extractTime(codir.heure_debut)} – ${extractTime(codir.heure_fin)}`,
+    statut:   codir.statut,
+    odj:      codir.ordres_du_jour?.length ?? 0,
+    taches:   codir.taches?.length ?? 0,
+    _raw:     codir,
   }))
 )
 
@@ -48,27 +69,17 @@ const paginatedCodirs = computed(() => {
   return sortedCodirs.value.slice(start, start + PAGE_SIZE)
 })
 
-onMounted(() => store.getCodirs())
-
-// ── Handlers ──────────────────────────────────────────────────────────────
-
+// ── Handlers ──────────────────────────────────────────────────────────────────
 const handleView = (item) => {
-  store.setCurrentCodir(item._raw)
-
   if (process.client) {
-    const STEP_KEY = `codir_step_${item.id}`
-    // On lit le step AVANT d'écraser avec 1
+    const STEP_KEY  = `codir_step_${item.id}`
     const savedStep = localStorage.getItem(STEP_KEY)
-    const step = savedStep ? parseInt(savedStep) : 1
+    const step      = savedStep ? parseInt(savedStep) : 1
 
-    // On ne réinitialise pas à 1 si un step existant est sauvegardé
-    localStorage.setItem('currentCodir', JSON.stringify(item))
+    localStorage.setItem('currentCodir', JSON.stringify(item._raw ?? item))
 
-    if (step === 2) {
-      return navigateTo('/codir/infos')
-    } else if (step === 3) {
-      return navigateTo('/codir/preview')
-    }
+    if (step === 2) return navigateTo('/codir/infos')
+    if (step === 3) return navigateTo('/codir/preview')
   }
 
   navigateTo(`/codir/${item.id}`)
@@ -76,11 +87,10 @@ const handleView = (item) => {
 
 const handleDownload = async (item) => {
   try {
-    const blob = await downloadPdf(item.id)  // reçoit directement un Blob
-    
-    const url = window.URL.createObjectURL(blob)
+    const blob = await downloadPdf(item.id)
+    const url  = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.href = url
+    link.href  = url
     link.setAttribute('download', `codir_${item.id}.pdf`)
     document.body.appendChild(link)
     link.click()
@@ -118,15 +128,15 @@ const handleCreate = () => router.push('/codir/create')
     </div>
 
     <!-- Loading -->
-    <div v-if="store.loading" class="flex justify-center py-20">
+    <div v-if="loading && !codirs.length" class="flex justify-center py-20">
       <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-blue-500" />
     </div>
 
     <!-- Erreur -->
-    <UAlert v-else-if="store.error" color="red" icon="i-heroicons-exclamation-circle" :title="store.error" class="mb-6" />
+    <UAlert v-else-if="error && !codirs.length" color="red" icon="i-heroicons-exclamation-circle" :title="error" class="mb-6" />
 
     <!-- Vide -->
-    <div v-else-if="store.codirs.length === 0" class="text-center py-20">
+    <div v-else-if="!codirs.length" class="text-center py-20">
       <UIcon name="i-heroicons-folder-open" class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
       <h3 class="text-lg font-semibold mb-2">Aucun CODIR</h3>
       <p class="text-gray-500 mb-6">Commencez par créer votre premier CODIR</p>
@@ -163,7 +173,6 @@ const handleCreate = () => router.push('/codir/create')
             </span>
           </template>
 
-          <!-- Correction : le slot actions reçoit { item }, pas { value } -->
           <template #actions="{ item }">
             <UButton v-if="item.statut === 'soumis'" @click="handleView(item)" color="blue" variant="ghost" icon="i-heroicons-eye" size="xs" class="rounded-lg" />
             <UButton v-else @click="handleDownload(item)" color="blue" variant="ghost" icon="i-heroicons-arrow-down-tray" size="xs" class="rounded-lg" />
@@ -178,8 +187,7 @@ const handleCreate = () => router.push('/codir/create')
           v-for="codir in paginatedCodirs"
           :key="codir.id"
           :codir="codir"
-          @edit="store.setCurrentCodir(codir); router.push(`/codir/${codir.id}/edit`)"
-          @view="store.setCurrentCodir(codir); router.push(`/codir/${codir.id}`)"
+          @view="handleView({ ...codir, _raw: codir })"
         />
       </div>
 
@@ -189,21 +197,20 @@ const handleCreate = () => router.push('/codir/create')
           v-for="codir in paginatedCodirs"
           :key="codir.id"
           :codir="codir"
-          @edit="store.setCurrentCodir(codir); router.push(`/codir/${codir.id}/edit`)"
-          @view="store.setCurrentCodir(codir); router.push(`/codir/${codir.id}`)"
+          @view="handleView({ ...codir, _raw: codir })"
         />
       </div>
 
     </Transition>
 
-    <!-- Pagination (grid + liste uniquement) -->
+    <!-- Pagination -->
     <UPagination
-      v-if="store.codirs.length > PAGE_SIZE && currentView !== 'table'"
+      v-if="codirs.length > PAGE_SIZE && currentView !== 'table'"
       class="mt-6"
       v-model="currentPage"
       color="blue"
       :page-count="PAGE_SIZE"
-      :total="store.codirs.length"
+      :total="codirs.length"
     />
 
   </div>

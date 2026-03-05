@@ -398,7 +398,7 @@ export const useAuth = () => {
       const activePostes = getActiveEntiteUsers()
 
       successMessage.value = 'Connexion réussie, redirection en cours...'
-      await new Promise(resolve => setTimeout(resolve, 400))
+      await new Promise(resolve => setTimeout(resolve, 200))
 
       // ✅ Admin (pas d'entités) → redirection directe vers /
       // Utilisateur avec 0 ou 1 entité → redirection directe vers /

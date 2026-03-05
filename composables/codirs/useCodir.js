@@ -41,6 +41,7 @@ export const PRIORITE_CONFIG = {
   Basse:   'text-green-600 bg-green-50 dark:bg-green-950/30',
 }
 
+
 // ── Composable ────────────────────────────────────────────────────────────────
 
 export function useCodir() {

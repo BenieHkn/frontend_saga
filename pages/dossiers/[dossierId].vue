@@ -25,25 +25,15 @@ const membres = ref([]);
 const loading = ref(true);
 
 onMounted(async () => {
+  dossier.value = JSON.parse(localStorage.getItem("currentDossier"));
   currentOrdreDuJour.value = JSON.parse(
     localStorage.getItem("currentOrdreDuJour"),
   );
   currentCodir.value = JSON.parse(localStorage.getItem("currentCodir"));
 
   // Toujours charger depuis l'API pour avoir les données fraîches
-  const dossierId =
-    Number(route.params.dossierId) ||
-    JSON.parse(localStorage.getItem("currentDossier"))?.id;
-
-  try {
-    dossier.value = await dossierApi.getDossier(dossierId);
-    localStorage.setItem("currentDossier", JSON.stringify(dossier.value));
-  } catch {
-    // Fallback sur le cache si l'API échoue
-    dossier.value = JSON.parse(localStorage.getItem("currentDossier"));
-  }
-
-  membres.value = await membreApi.getMembres();
+  
+  membres.value = localStorage.getItem("membres") ? JSON.parse(localStorage.getItem("membres")) : [];
   loading.value = false;
 });
 
