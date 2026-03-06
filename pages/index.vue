@@ -5,22 +5,6 @@ definePageMeta({
   layout: false,
 })
 
- const config = useRuntimeConfig()
-
-onMounted(async () => {
-  if (process.client) {
-    // 1. On crée le "petit délai" promis dans votre commentaire initial (par ex: 800ms)
-
-    const token = localStorage.getItem('auth_token')
-    
-    // 2. On effectue la redirection
-    if (token) {
-      await navigateTo('/dashboard')
-    } else {
-      await navigateTo('/connexion')
-    }
-  }
-})
 const showPassword = ref(false)
 
 const {
@@ -60,7 +44,7 @@ onMounted(() => {
           REVOLUTION
         </h2>
 
-        <p class="text-xl tracking-[0.2em] font-light text-white/70 lg:ms-9">
+        <p class="text-2xl tracking-[0.2em] font-light text-white/70 lg:ms-9">
           Bienvenue sur notre plateforme...
         </p>
       </div>
