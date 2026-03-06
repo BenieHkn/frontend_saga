@@ -679,9 +679,9 @@ const getStatutColor = (statut) => {
 
 const getPriorityColor = (priority) => {
   const colors = {
-    'Urgent': { color: 'red', dot: 'bg-red-500' },
-    'Important': { color: 'orange', dot: 'bg-orange-500' },
-    'Standard': { color: 'blue', dot: 'bg-blue-500' },
+    'URGENT': { color: 'red', dot: 'bg-red-500' },
+    'IMPORTANT': { color: 'orange', dot: 'bg-orange-500' },
+    'STANDARD': { color: 'blue', dot: 'bg-blue-500' },
   };
   return colors[priority] || { color: 'gray', dot: 'bg-gray-500' };
 };

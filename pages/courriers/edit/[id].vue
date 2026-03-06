@@ -31,9 +31,9 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Priorité *</label>
                   <USelect v-model="form.priorite" :options="[
-                    { label: 'Standard', value: 'standard' },
-                    { label: 'Urgent', value: 'urgent' },
-                    { label: 'Important', value: 'important' },
+                    { label: 'STANDARD', value: 'STANDARD' },
+                    { label: 'STANDARD', value: 'URGENT' },
+                    { label: 'IMPORTANT', value: 'IMPORTANT' },
                   ]" class="w-full h-12" />
                 </div>
               </div>
@@ -221,7 +221,7 @@ const fichierActuel = ref(null) // URL du fichier existant
 // ── Formulaire ────────────────────────────────────────────────────────────────
 const form = ref({
   type_arrivee: 'directe',
-  priorite: 'standard',
+  priorite: 'STANDARD',
   numero_enreg: '',
   date_enreg: new Date().toISOString().split('T')[0],
   reference: '',
@@ -283,7 +283,7 @@ const loadCourrier = async () => {
     // Pré-remplir le formulaire
     form.value = {
       type_arrivee:    courrier.type_arrivee || 'directe',
-      priorite:        courrier.priority || 'standard',
+      priorite:        courrier.priority || 'STANDARD',
       numero_enreg:    courrier.document?.numero_enreg || '',
       date_enreg:      courrier.document?.date_enreg?.split('T')[0] || '',
       reference:       courrier.document?.reference === 'sans reference' ? '' : (courrier.document?.reference || ''),

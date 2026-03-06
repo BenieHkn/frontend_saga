@@ -37,6 +37,7 @@
     <DataTable v-else :data="interims" :columns="columns" :selectable="false"
       :left-aligned-columns="['code', 'libelle', 'user_name', 'fonction']"
       :show-delete-action="false"
+      :hide-labels-when-input="true"
       @edit="onEdit"
       @view="onView">
      

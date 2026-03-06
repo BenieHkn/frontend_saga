@@ -34,7 +34,7 @@
                   'bg-red-50 text-red-700 border-red-200': selectedCourrier.priority?.toLowerCase() === 'urgent',
                   'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.priority?.toLowerCase() === 'important',
                   'bg-sky-50 text-sky-700 border-sky-200': !selectedCourrier.priority || selectedCourrier.priority?.toLowerCase() === 'standard',
-                }">{{ selectedCourrier.priority || 'Standard' }}</span>
+                }">{{ selectedCourrier.priority || 'STANDARD' }}</span>
                 <span v-if="selectedCourrier.document?.reponses?.length"
                   class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-50 text-green-700 border border-green-200">
                   <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Répondu
@@ -71,7 +71,8 @@
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Structure / Usager</p>
-                  <p class="text-xs text-slate-800">{{ selectedCourrier.structure || selectedCourrier.autre_structure || 'Non spécifié' }}</p>
+                  <p class="text-xs text-slate-800">{{ selectedCourrier.structure || selectedCourrier.autre_structure ||
+                    'Non spécifié' }}</p>
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Type d'arrivée</p>
@@ -79,13 +80,16 @@
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">N° enregistrement</p>
-                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.document?.numero_enreg || '—' }}</p>
+                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.document?.numero_enreg || '—' }}
+                  </p>
                 </div>
                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date d'enregistrement</p>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date d'enregistrement
+                  </p>
                   <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.document?.date_enreg) || '—' }}</p>
                 </div>
-                <div v-if="selectedCourrier.document?.date_courrier" class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+                <div v-if="selectedCourrier.document?.date_courrier"
+                  class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date du courrier</p>
                   <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.document?.date_courrier) }}</p>
                 </div>
@@ -118,7 +122,8 @@
                 <div class="w-5 h-5 rounded bg-emerald-100 flex items-center justify-center">
                   <Icon name="i-heroicons-arrow-uturn-right" class="w-3 h-3 text-emerald-600" />
                 </div>
-                <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier de réponse</span>
+                <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier de
+                  réponse</span>
               </div>
               <span v-if="reponseData && !loadingReponse"
                 class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
@@ -187,7 +192,8 @@
               </div>
             </div>
 
-            <div v-else class="flex items-center gap-2 m-4 p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
+            <div v-else
+              class="flex items-center gap-2 m-4 p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
               <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
               Impossible de charger les détails du courrier de réponse.
             </div>
@@ -213,8 +219,9 @@
       </UBadge>
     </div> -->
 
-    <PageHeader v-if="!isAdmin()" title="Courriers arrivés" subtitle="Gestion des courriers entrants" btnText="Nouveau" to="/courriers/form_courier_arrive"/>
-    <PageHeader v-else title="Courriers arrivés" subtitle="Gestion des courriers entrants"/>
+    <PageHeader v-if="!isAdmin()" title="Courriers arrivés" subtitle="Gestion des courriers entrants" btnText="Nouveau"
+      to="/courriers/form_courier_arrive" />
+    <PageHeader v-else title="Courriers arrivés" subtitle="Gestion des courriers entrants" />
 
     <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
       <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -267,14 +274,6 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
-          <!-- Traiter button temporarily disabled: logic moved to AffectationsListe.vue -->
-          <!--
-          <button v-if="item._complete?.document?.type_document?.peut_etre_traite && !isSP() && !isSA()"
-            @click="handleProcess(item)" title="Traiter le courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-violet-50 text-violet-700 border-violet-100 rounded-md hover:bg-violet-200 hover:text-violet-900 transition-all group">
-            <Icon name="i-heroicons-clipboard-check" class="w-4 h-4 group-hover:text-violet-600" />
-          </button>
-          -->
           <button v-if="!item._complete?.document?.reponses?.length && !isAdmin()" @click="handleReply(item)"
             title="Répondre au courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group">
@@ -296,22 +295,31 @@
       </template>
 
       <template #cell-source="{ value }">
-        <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+        <span
+          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+          {{ value }}
+        </span>
+      </template>
+
+      <template #cell-objet="{ value }">
+        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words" :title="value">
           {{ value }}
         </span>
       </template>
 
       <template #cell-reference="{ value, item }">
         <button v-if="item.url" @click="onOpenDocument(item.url)"
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group"
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
           :title="`Ouvrir le document ${value}`">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-          <span>{{ value }}</span>
-          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 opacity-60 group-hover:opacity-100" />
+          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+          <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
         </button>
-        <span v-else class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 opacity-50" />
-          {{ value }}
+        <span v-else
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
+          :title="value">
+          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
+          <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
         </span>
       </template>
 
@@ -321,7 +329,7 @@
           'bg-amber-50 text-amber-700 border-amber-100': value?.toLowerCase() === 'important',
           'bg-sky-50 text-sky-700 border-sky-100': value?.toLowerCase() === 'standard',
         }">
-          {{ value || 'Standard' }}
+          {{ value || 'STANDARD' }}
         </span>
       </template>
     </DataTable>
@@ -406,7 +414,9 @@ const transformCourriers = (response) => {
     date_enregistrement: formatDate(courrier.document?.date_enreg),
     objet: courrier.document?.objet || '',
     date_courrier: formatDate(courrier.document?.date_courrier),
-    url: courrier.document?.url ? `${config.public.baseUrl}${courrier.document.url}` : '',
+    url: courrier.document?.url && courrier.document?.url !== 'Inconnu'
+      ? (courrier.document?.url.startsWith('http') ? courrier.document?.url : `${config.public.baseUrl}${courrier.document?.url}`)
+      : '',
     type_arrivee: courrier.type_arrivee || '',
     priority: courrier.priority || '',
     _complete: courrier,
@@ -491,13 +501,13 @@ const loadReponseData = async (documentId) => {
     }
 
     reponseData.value = {
-      reference:    doc?.document?.reference || 'Sans référence',
-      objet:        doc?.document?.objet || 'Non spécifié',
+      reference: doc?.document?.reference || 'Sans référence',
+      objet: doc?.document?.objet || 'Non spécifié',
       destinataire: doc?.destinataire || '—',
-      date_depart:  doc?.date_depart || null,
-      type_depart:  doc?.type_depart || null,
+      date_depart: doc?.date_depart || null,
+      type_depart: doc?.type_depart || null,
       service_emis: doc?.service_emis || null,
-      url:          buildUrl((doc?.document?.url || '').trim()),
+      url: buildUrl((doc?.document?.url || '').trim()),
     }
   } catch (e) {
     console.error('❌ Erreur chargement réponse:', e)
@@ -597,15 +607,36 @@ onMounted(() => {
 </script>
 
 <style scoped>
-:deep(.swal2-html-container) { margin: 1rem 0; }
-:deep(.swal2-actions) { gap: 0.75rem; }
-:deep(.swal2-confirm), :deep(.swal2-cancel) {
+:deep(.swal2-html-container) {
+  margin: 1rem 0;
+}
+
+:deep(.swal2-actions) {
+  gap: 0.75rem;
+}
+
+:deep(.swal2-confirm),
+:deep(.swal2-cancel) {
   padding: 0.625rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
   transition: all 0.2s;
 }
-:deep(.swal2-confirm):hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-:deep(.swal2-cancel):hover { background-color: #4b5563 !important; }
+
+:deep(.swal2-confirm):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.swal2-cancel):hover {
+  background-color: #4b5563 !important;
+}
+
+:deep(.line-clamp-2) {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 </style>

@@ -24,36 +24,34 @@ export const useAffectationsStore = defineStore('affectations', () => {
   const useFolder = ref(false)
   const folderName = ref(null)
 
-  // ✅ Priorité automatique basée sur les courriers sélectionnés
-  const autoPriority = computed(() => {
-    if (selectedCourriers.value.length === 0) return 'standard'
+const autoPriority = computed(() => {
+  if (selectedCourriers.value.length === 0) return 'STANDARD'
 
-    const priorityOrder = { 'urgent': 3, 'important': 2, 'standard': 1 }
+  const priorityOrder = { 'URGENT': 3, 'IMPORTANT': 2, 'STANDARD': 1 }
+  
+  const selectedCourriersList = courriers.value.filter(c => 
+    selectedCourriers.value.includes(c.id)
+  )
+
+  if (selectedCourriersList.length === 0) return 'STANDARD'
+
+  const highestPriority = selectedCourriersList.reduce((highest, courrier) => {
+    // ✅ Tout en MAJUSCULES, cohérent avec les clés du dictionnaire
+    const currentPrio = (courrier.priority || 'STANDARD').toUpperCase()
+    const highestPrio = highest.toUpperCase()
     
-    const selectedCourriersList = courriers.value.filter(c => 
-      selectedCourriers.value.includes(c.id)
-    )
+    return priorityOrder[currentPrio] > priorityOrder[highestPrio]
+      ? currentPrio
+      : highestPrio
+  }, 'STANDARD')
 
-    if (selectedCourriersList.length === 0) return 'standard'
+  return highestPriority // ✅ Retourne 'URGENT' | 'IMPORTANT' | 'STANDARD'
+})
 
-    // Trouver la priorité la plus élevée parmi les courriers sélectionnés
-    const highestPriority = selectedCourriersList.reduce((highest, courrier) => {
-      const currentPrio = (courrier.priority || 'standard').toLowerCase()
-      const highestPrio = highest.toLowerCase()
-      
-      return priorityOrder[currentPrio] > priorityOrder[highestPrio] 
-        ? currentPrio 
-        : highestPrio
-    }, 'standard')
-
-    return highestPriority
-  })
-
-  // ✅ Watcher : Mettre à jour automatiquement la priorité du formulaire
-  watch(autoPriority, (newPriority) => {
-    formData.value.priority = newPriority
-    console.log(`🎯 Priorité automatiquement définie: ${newPriority}`)
-  })
+// ✅ immediate: true pour initialiser dès le montage
+watch(autoPriority, (newPriority) => {
+  formData.value.priority = newPriority
+}, { immediate: true })
 
   // Getters
   const selectedCourrierData = computed(() => {
@@ -180,7 +178,7 @@ export const useAffectationsStore = defineStore('affectations', () => {
       instructions: '',
       statut: 'en cours',
       delai_traitement: '',
-      priority: 'standard',
+      priority: 'STANDARD',
       date_cloture: null,
     }
     showDateCloture.value = false

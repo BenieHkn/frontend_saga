@@ -34,19 +34,31 @@
         <DataTable v-else :data="courrierData" :columns="columns" :selectable="false" :show-row-numbers="true"
             :default-items-per-page="10" :items-per-page-options="[10, 25, 50, 100]"
             :left-aligned-columns="['objet', 'destinataire', 'service_emis']">
-            <!-- Référence cliquable -->
+
+            <!-- ✅ Objet : retour à la ligne avec largeur minimale -->
+            <template #cell-objet="{ value }">
+                <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
+                {{ value }}
+                </span>
+            </template>
+
+            <!-- ✅ Référence : retour à la ligne, sans points de suspension -->
             <template #cell-reference="{ value, item }">
+                <div class="w-full">
                 <button v-if="item.url" @click="handleOpenDocument(item.url)"
-                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group">
-                    <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5" />
-                    <span>{{ value }}</span>
-                    <Icon name="i-heroicons-arrow-top-right-on-square"
-                        class="w-3 h-3 opacity-60 group-hover:opacity-100" />
+                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
+                    :title="`Ouvrir le document ${value}`">
+                    <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+                    <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
                 </button>
                 <span v-else
-                    class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md">
-                    {{ value }}
+                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
+                    :title="value">
+                    <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
+                    <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
                 </span>
+                </div>
             </template>
 
             <!-- Confidentiel -->
@@ -123,7 +135,7 @@ const transformerDonnees = (reponseAPI) => {
             objet: courrier.document?.objet || '',
             numero_enreg: courrier.document?.numero_enreg || '',
             url: courrier.document?.url
-                ? `${config.public.apiBase}${courrier.document.url}`
+                ? `${config.public.baseUrl}${courrier.document.url}`
                 : null,
             date_enreg: formatDate(courrier.document?.date_enreg),
             date_depart: formatDate(courrier.date_depart),

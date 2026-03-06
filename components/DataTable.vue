@@ -64,37 +64,31 @@
                 <span v-if="shouldShowLabel(col)" class="block text-center whitespace-nowrap">
                   {{ col.label }}
                 </span>
-
               </template>
 
               <!-- Colonne avec filtre + tri -->
               <template v-else>
-                <div class="flex  gap-1">
+                <div class="flex gap-1">
 
                   <!-- Label + boutons -->
                   <div class="flex items-center gap-0.5">
                     <span v-if="shouldShowLabel(col)" class="block text-center whitespace-nowrap">
                       {{ col.label }}
                     </span>
-                    <!-- ✅ Tri : icône SVG directe pour éviter les problèmes de rendu -->
                     <button v-if="showSorting && col.sortable !== false"
                       class="flex items-center justify-center w-6 h-6 rounded hover:bg-indigo-100 transition-colors flex-shrink-0"
                       :class="sortColumn === col.key ? 'text-indigo-600' : 'text-slate-400'"
                       :title="`Trier par ${col.label}`" @click="sortBy(col.key)">
-                      <!-- Pas de tri actif -->
                       <svg v-if="sortColumn !== col.key" class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M5 4l3-3 3 3H5zm6 8l-3 3-3-3h6z" />
                       </svg>
-                      <!-- Tri ascendant -->
                       <svg v-else-if="sortDirection === 'asc'" class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M8 2l4 6H4l4-6z" />
                       </svg>
-                      <!-- Tri descendant -->
                       <svg v-else class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M8 14l-4-6h8l-4 6z" />
                       </svg>
                     </button>
-                    <!-- Filtre multi-sélection -->
                     <button v-if="showMultiSelectFilters && col.multiSelect !== false"
                       class="flex items-center justify-center w-6 h-6 rounded hover:bg-indigo-100 transition-colors flex-shrink-0"
                       :class="multiSelectFilters[col.key]?.length > 0 ? 'text-indigo-600' : 'text-slate-400'"
@@ -145,9 +139,9 @@
               {{ startIndex + index + 1 }}
             </td>
 
-            <!-- Cellules -->
+            <!-- ✅ Cellules : whitespace-nowrap, overflow-hidden et text-ellipsis supprimés -->
             <td v-for="col in visibleColumns" :key="col.key"
-              class="px-3 py-2 border border-slate-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]"
+              class="px-3 py-2 border border-slate-100"
               :class="[col.cellClass, getCellAlignment(col.key)]">
               <slot :name="`cell-${col.key}`" :item="item" :value="item[col.key]" :column="col">
                 <template v-if="col.type === 'document'">
@@ -304,7 +298,6 @@ const props = defineProps({
   showColumnLabels: { type: Boolean, default: true },
   columnInputSize: { type: String, default: null },
   leftAlignedColumns: { type: Array, default: () => [] },
-  // Ajouter dans les props
   hideLabelsWhenInput: { type: Boolean, default: false },
   defaultActions: {
     type: Array,
@@ -470,14 +463,12 @@ const stickyBg = (id, index) => {
   return index % 2 === 0 ? 'bg-white group-hover:bg-indigo-50' : 'bg-slate-50 group-hover:bg-indigo-50'
 }
 
-// ✅ Largeur du container scrollable
 const getInputContainerWidth = (col) => {
   if (col.inputWidth) return `width: ${col.inputWidth}`
   if (props.columnInputSize) return `width: ${props.columnInputSize}`
   return 'width: 100%'
 }
 
-// ✅ Style de l'input (taille auto sur placeholder si pas de taille définie)
 const getInputStyle = (col) => {
   if (col.inputWidth) return `width: ${col.inputWidth}`
   if (props.columnInputSize) return `width: 100%`
@@ -486,18 +477,13 @@ const getInputStyle = (col) => {
   return `width: ${width}px`
 }
 
-// Remplacer la condition d'affichage du label dans le computed ou directement dans le template
 const shouldShowLabel = (col) => {
-  // Si hideLabelsWhenInput est actif :
-  // → afficher le label UNIQUEMENT si l'input est masqué (inputHidden ou filterable:false)
   if (props.hideLabelsWhenInput) {
     return col.inputHidden === true || col.filterable === false
   }
-  // Sinon, comportement normal : showColumnLabels global + col.showLabel par colonne
   return props.showColumnLabels && col.showLabel !== false
 }
 
-// ✅ Helper pour déterminer l'alignement des cellules
 const getCellAlignment = (columnKey) => {
   if (props.leftAlignedColumns.includes(columnKey)) {
     return 'text-left'

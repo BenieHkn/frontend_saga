@@ -84,7 +84,7 @@ const loadCourriers = async () => {
       objet: courrier.document?.objet || '',
       structure: courrier.structure || '',
       date_courrier: courrier.document?.date_courrier || '',
-      priority: courrier.document?.priority || 'standard',
+      priority: courrier.document?.priority || 'STANDARD',
       confidentiel: courrier.document?.confidentiel || false,
       url: courrier.document?.url
         ? `${config.public.apiBase}${courrier.document.url}`

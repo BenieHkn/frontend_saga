@@ -33,9 +33,9 @@
                     Priorité *
                   </label>
                   <USelect v-model="form.priorite" :options="[
-                    { label: 'Standard', value: 'standard' },
-                    { label: 'Urgent', value: 'urgent' },
-                    { label: 'Important', value: 'important' },
+                    { label: 'STANDARD', value: 'STANDARD' },
+                    { label: 'IMPORTANT', value: 'IMPORTANT' },
+                    { label: 'URGENT', value: 'URGENT' },
                   ]" class="w-full h-12" />
                 </div>
               </div>
@@ -228,7 +228,7 @@ const errors = ref([])
 // ── Formulaire ────────────────────────────────────────────────────────────────
 const form = ref({
   type_arrivee: "directe",
-  priorite: "standard",
+  priorite: "STANDARD",
   numero_enreg: "",
   date_enreg: new Date().toISOString().split("T")[0],
   reference: "",
@@ -245,7 +245,7 @@ const form = ref({
   autre_structure: "",
   confidentiel: false,
   service_enreg: "",
-  statut: "en_attente",
+  statut: "en cours",
   observation: "",
 })
 
@@ -339,7 +339,7 @@ const handleFileChange = (event) => {
 const resetForm = () => {
   form.value = {
     type_arrivee: "directe",
-    priorite: "standard",
+    priorite: "STANDARD",
     numero_enreg: "",
     date_enreg: new Date().toISOString().split("T")[0],
     reference: "",
@@ -356,7 +356,7 @@ const resetForm = () => {
     autre_structure: "",
     confidentiel: false,
     service_enreg: "",
-    statut: "en_attente",
+    statut: "en cours",
     observation: "",
   }
   selectedFile.value = null

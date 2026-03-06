@@ -34,7 +34,7 @@
                   'bg-red-50 text-red-700 border-red-200': selectedCourrier.details?.priority?.toLowerCase() === 'urgent',
                   'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.details?.priority?.toLowerCase() === 'important',
                   'bg-sky-50 text-sky-700 border-sky-200': !selectedCourrier.details?.priority || selectedCourrier.details?.priority?.toLowerCase() === 'standard',
-                }">{{ selectedCourrier.details?.priority || 'Standard' }}</span>
+                }">{{ selectedCourrier.details?.priority || 'STANDARD' }}</span>
               </div>
             </div>
 
@@ -211,18 +211,28 @@
         </span>
       </template>
 
-      <template #cell-reference="{ value, item }">
-        <button v-if="item.url" @click="onOpenDocument(item.url)"
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group"
-          :title="`Ouvrir le document ${value}`">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-          <span>{{ value }}</span>
-          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 opacity-60 group-hover:opacity-100" />
-        </button>
-        <span v-else class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 opacity-50" />
+      <template #cell-objet="{ value }">
+        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
           {{ value }}
         </span>
+      </template>
+
+      <template #cell-reference="{ value, item }">
+        <div class="w-full">
+          <button v-if="item.url" @click="onOpenDocument(item.url)"
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
+            :title="`Ouvrir le document ${value}`">
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+            <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
+          </button>
+          <span v-else
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
+            :title="value">
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+          </span>
+        </div>
       </template>
 
       <template #cell-priority="{ value }">
@@ -231,7 +241,7 @@
           'bg-amber-50 text-amber-700 border-amber-100': value?.toLowerCase() === 'important',
           'bg-sky-50 text-sky-700 border-sky-100': value?.toLowerCase() === 'standard',
         }">
-          {{ value || 'Standard' }}
+          {{ value || 'STANDARD' }}
         </span>
       </template>
     </DataTable>

@@ -19,7 +19,7 @@ export const useCourriersArrives = () => {
       id: item.id, // ✅ ID du courrier arrivé
       reference: item.document?.reference || 'N/A',
       objet: item.document?.objet || 'N/A',
-      priority: item.priority || 'standard',
+      priority: item.priority || 'STANDARD',
       type_arrivee: item.type_arrivee,
       confidentiel: item.confidentiel || false,
       structure: item.structure,
@@ -39,11 +39,11 @@ export const useCourriersArrives = () => {
   // Obtenir le badge de priorité
   const getPriorityBadge = (priority) => {
     const badges = {
-      'urgent': { label: 'Urgent', color: 'red' },
-      'important': { label: 'Important', color: 'orange' },
-      'standard': { label: 'Standard', color: 'blue' },
+      'URGENT': { label: 'URGENT', color: 'red' },
+      'IMPORTANT': { label: 'IMPORTANT', color: 'orange' },
+      'STANDARD': { label: 'STANDARD', color: 'blue' },
     }
-    return badges[priority?.toLowerCase()] || { label: priority || 'Standard', color: 'gray' }
+    return badges[priority?.toLowerCase()] || { label: priority || 'STANDARD', color: 'blue' }
   }
 
   // Récupérer les courriers depuis l'API

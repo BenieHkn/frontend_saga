@@ -31,10 +31,10 @@
               </div>
               <div class="flex items-center gap-1.5">
                 <span class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase" :class="{
-                  'bg-red-50 text-red-700 border-red-200': selectedCourrier.priority?.toLowerCase() === 'urgent',
-                  'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.priority?.toLowerCase() === 'important',
+                  'bg-red-50 text-red-700 border-red-200': selectedCourrier.priority?.toLowerCase() === 'URGENT',
+                  'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.priority?.toLowerCase() === 'IMPORTANT',
                   'bg-sky-50 text-sky-700 border-sky-200': !selectedCourrier.priority || selectedCourrier.priority?.toLowerCase() === 'standard',
-                }">{{ selectedCourrier.priority || 'Standard' }}</span>
+                }">{{ selectedCourrier.priority || 'STANDARD' }}</span>
                 <span v-if="selectedCourrier.document?.reponses?.length"
                   class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-50 text-green-700 border border-green-200">
                   <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Répondu
@@ -294,15 +294,15 @@
 
       <template #cell-reference="{ value, item }">
         <button v-if="item.url" @click="onOpenDocument(item.url)"
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group"
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[160px]"
           :title="`Ouvrir le document ${value}`">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-          <span>{{ value }}</span>
-          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 opacity-60 group-hover:opacity-100" />
+          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+          <span class="truncate">{{ value }}</span>
+          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
         </button>
-        <span v-else class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 opacity-50" />
-          {{ value }}
+        <span v-else class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[160px]" :title="value">
+          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 shrink-0 opacity-50" />
+          <span class="truncate">{{ value }}</span>
         </span>
       </template>
 
@@ -312,7 +312,7 @@
           'bg-amber-50 text-amber-700 border-amber-100': value?.toLowerCase() === 'important',
           'bg-sky-50 text-sky-700 border-sky-100': value?.toLowerCase() === 'standard',
         }">
-          {{ value || 'Standard' }}
+          {{ value || 'STANDARD' }}
         </span>
       </template>
     </DataTable>
@@ -397,7 +397,9 @@ const transformCourriers = (response) => {
     date_enregistrement: formatDate(courrier.document?.date_enreg),
     objet: courrier.document?.objet || '',
     date_courrier: formatDate(courrier.document?.date_courrier),
-    url: courrier.document?.url ? `${config.public.baseUrl}${courrier.document.url}` : '',
+    url: courrier.document?.url && courrier.document?.url !== 'Inconnu'
+        ? (courrier.document?.url.startsWith('http') ? courrier.document?.url : `${config.public.baseUrl}${courrier.document?.url}`)
+        : '',
     type_arrivee: courrier.type_arrivee || '',
     priority: courrier.priority || '',
     _complete: courrier,

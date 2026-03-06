@@ -49,11 +49,11 @@ export const useAffectations = () => {
   // Obtenir le badge de priorité
   const getPriorityBadge = (priority) => {
     const badges = {
-      'urgent': { label: 'Urgent', color: 'red' },
-      'important': { label: 'Important', color: 'orange' },
-      'standard': { label: 'Standard', color: 'blue' },
+      'URGENT': { label: 'URGENT', color: 'red' },
+      'IMPORTANT': { label: 'IMPORTANT', color: 'orange' },
+      'STANDARD': { label: 'STANDARD', color: 'blue' },
     }
-    return badges[priority?.toLowerCase()] || { label: priority || 'Standard', color: 'gray' }
+    return badges[priority?.toLowerCase()] || { label: priority || 'STANDARD', color: 'blue' }
   }
 
   // Obtenir le badge de statut
@@ -63,7 +63,7 @@ export const useAffectations = () => {
       'traite': { label: 'Traité', color: 'green' },
       'cloture': { label: 'Clôturé', color: 'purple' },
     }
-    return badges[statut?.toLowerCase()] || { label: statut || 'N/A', color: 'gray' }
+    return badges[statut?.toLowerCase()] || { label: statut || 'N/A', color: 'blue' }
   }
 
   // ✅ CORRECTION : Transformer avec entité
@@ -86,7 +86,7 @@ export const useAffectations = () => {
         // Informations de base
         instructions: affectation.instructions || 'N/A',
         statut: affectation.statut || 'en_cours',
-        priority: affectation.priority || 'standard',
+        priority: affectation.priority || 'STANDARD',
         date_affect: formatDate(affectation.date_affect),
         delai_traitement: formatDate(affectation.delai_traitement),
         date_cloture: formatDate(affectation.date_cloture),

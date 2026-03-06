@@ -41,12 +41,6 @@
       :left-aligned-columns="['instructions', 'objet_courrier', 'reference_courrier']" @edit="handleEdit"
       @delete="handleDelete" @open-document="handleOpenDocument" @selection-change="handleSelectionChange">
 
-      <template #cell-reference_courrier="{ value }">
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-          {{ value }}
-        </span>
-      </template>
-
       <template #cell-statut="{ value }">
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
           :class="getStatutClasses(value)">
@@ -101,20 +95,30 @@
         </div>
       </template>
 
-      <template #cell-reference="{ value, item }">
-        <button v-if="item.url" @click="onOpenDocument(item.url)"
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 rounded-md transition-all group"
-          :title="`Ouvrir le document ${value}`">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-          <span>{{ value }}</span>
-          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 opacity-60 group-hover:opacity-100" />
-        </button>
-        <span v-else
-          class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md"
-          :title="value">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 opacity-50" />
+      <!-- ✅ Objet : retour à la ligne avec largeur minimale -->
+      <template #cell-objet_courrier="{ value }">
+        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
           {{ value }}
         </span>
+      </template>
+
+      <!-- ✅ Référence : retour à la ligne, sans points de suspension -->
+      <template #cell-reference_courrier="{ value, item }">
+        <div class="w-full">
+          <button v-if="item.doc_courrier" @click="handleOpenDocument(item.doc_courrier)"
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
+            :title="`Ouvrir le document ${value}`">
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+            <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
+          </button>
+          <span v-else
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
+            :title="value">
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+          </span>
+        </div>
       </template>
 
       <template #selection-actions="{ selected }">
@@ -346,22 +350,22 @@ const getStatutDotClass = (statut) => {
 }
 
 const getPriorityLabel = (priority) => {
-  const labels = { 'urgent': 'Urgent', 'important': 'Important', 'standard': 'Standard' }
+  const labels = { 'URGENT': 'URGENT', 'IMPORTANT': 'IMPORTANT', 'STANDARD': 'STANDARD' }
   return labels[priority] || priority
 }
 
 const getPriorityClasses = (priority) => {
   const classes = {
-    'urgent': 'bg-red-100 text-red-800',
-    'important': 'bg-orange-100 text-orange-800',
-    'standard': 'bg-blue-100 text-blue-800',
+    'URGENT': 'bg-red-100 text-red-800',
+    'IMPORTANT': 'bg-orange-100 text-orange-800',
+    'STANDARD': 'bg-blue-100 text-blue-800',
   }
   return classes[priority] || 'bg-gray-100 text-gray-800'
 }
 
 const getPriorityDotClass = (priority) => {
   const classes = {
-    'urgent': 'bg-red-500', 'important': 'bg-orange-500', 'standard': 'bg-blue-500',
+    'URGENT': 'bg-red-500', 'IMPORTANT': 'bg-orange-500', 'STANDARD': 'bg-blue-500',
   }
   return classes[priority] || 'bg-gray-500'
 }
@@ -371,59 +375,59 @@ const getPriorityDotClass = (priority) => {
 // ============================================================================
 
 const transformAffectation = (affectation) => {
-  let fonctionDestinataire = ''
-  if (affectation.destinataire?.entite?.code) {
-    const code = affectation.destinataire.entite.code
-    const roleOuFonction = affectation.destinataire.is_responsable
-      ? affectation.destinataire.entite.fonction
-      : 'Agent'
-    fonctionDestinataire = `${code} - ${roleOuFonction}`
-  }
 
-  let fonctionEmetteur = ''
-  if (affectation.emetteur?.entite?.code) {
-    const code = affectation.emetteur.entite.code
-    const roleOuFonction = affectation.emetteur.is_responsable
-      ? affectation.emetteur.entite.fonction
-      : 'Agent'
-    fonctionEmetteur = `${code} - ${roleOuFonction}`
-  }
+  // ── Emetteur ──────────────────────────────────────────────────────────
+  const emetteurNom = affectation.emetteur?.user
+    ? `${affectation.emetteur.user.nom} ${affectation.emetteur.user.prenom || ''}`.trim()
+    : 'Non assigné'
+  const emetteurCode = affectation.emetteur?.entite?.code || ''
+  const emetteurFonction = affectation.emetteur?.is_responsable
+    ? affectation.emetteur.entite?.fonction || ''
+    : 'Agent'
+  const fonctionEmetteur = emetteurCode ? `${emetteurCode} - ${emetteurFonction}` : ''
+
+  // ── Destinataire ──────────────────────────────────────────────────────
+  const destinataireNom = affectation.destinataire?.user
+    ? `${affectation.destinataire.user.nom} ${affectation.destinataire.user.prenom || ''}`.trim()
+    : 'Non assigné'
+  const destinataireCode = affectation.destinataire?.entite?.code || ''
+  const destinataireFonction = affectation.destinataire?.is_responsable
+    ? affectation.destinataire.entite?.fonction || ''
+    : 'Agent'
+  const fonctionDestinataire = destinataireCode ? `${destinataireCode} - ${destinataireFonction}` : ''
+
+  // ── URL document ──────────────────────────────────────────────────────
+  const rawUrl = affectation.courrier_arrive?.document?.url
+  const docUrl = rawUrl && rawUrl !== 'Inconnu'
+    ? (rawUrl.startsWith('http') ? rawUrl : `${config.public.baseUrl}${rawUrl}`)
+    : ''
 
   return {
     id: affectation.id,
     courrier_id: affectation.courrier_arrive_id || null,
     reference_courrier: affectation.courrier_arrive?.document?.reference || '',
     objet_courrier: affectation.courrier_arrive?.document?.objet || '',
-    doc_courrier: affectation.courrier_arrive?.document?.url
-      ? (affectation.courrier_arrive.document.url !== 'Inconnu'
-        ? `${config.public.apiBase}${affectation.courrier_arrive.document.url}`
-        : '')
-      : '',
+    doc_courrier: docUrl,
     date_affect: formatDate(affectation.date_affect),
-    dossier: affectation.dossier || '__',
+    dossier: affectation.dossier || '—',
     instructions: affectation.instructions || '',
     statut: affectation.statut || 'en_cours',
-    priority: affectation.priority || 'standard',
+    priority: affectation.priority || 'STANDARD',
     delai_traitement: formatDate(affectation.delai_traitement),
     date_cloture: formatDate(affectation.date_cloture),
     destinataire: {
-      nom: affectation.destinataire?.user
-        ? `${affectation.destinataire.user.nom} ${affectation.destinataire.user.prenom || ''}`.trim()
-        : 'Non assigné',
+      nom: destinataireNom,
       fonction: fonctionDestinataire,
       entite: affectation.destinataire?.entite?.libelle || '',
     },
     emetteur: {
-      nom: affectation.emetteur?.user
-        ? `${affectation.emetteur.user.nom} ${affectation.emetteur.user.prenom || ''}`.trim()
-        : 'Non assigné',
+      nom: emetteurNom,
       fonction: fonctionEmetteur,
       entite: affectation.emetteur?.entite?.libelle || '',
     },
     _raw: affectation,
   }
 }
-
 
 const fetchAffectations = async () => {
   loading.value = true

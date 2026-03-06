@@ -197,9 +197,9 @@ const getAvatarColor = (user) => {
 // Couleurs des priorités
 const getPriorityColor = (priority) => {
   const colors = {
-    'Urgent': { dot: 'bg-red-500' },
-    'Important': { dot: 'bg-orange-500' },
-    'Standard': { dot: 'bg-blue-500' },
+    'URGENT': { dot: 'bg-red-500' },
+    'IMPORTANT': { dot: 'bg-orange-500' },
+    'STANDARD': { dot: 'bg-blue-500' },
   }
   return colors[priority] || { dot: 'bg-gray-500' }
 }
