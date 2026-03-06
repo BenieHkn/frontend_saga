@@ -1,10 +1,16 @@
 <script setup>
 import { formatDateFR, extractTime, getStatutConfig, useCodir } from '@/composables/codirs/useCodir'
+import { useAuth } from '~/composables/auth/useAuth'
 
 definePageMeta({ title: 'Listing CODIR' })
 
 const router = useRouter()
 const { loading, error, getCodirs, createCodir, downloadPdf } = useCodir()
+const createModal = ref(false)
+const createForm  = reactive({ heure_debut: '', heure_fin: '' })
+const resetCreate = () => Object.assign(createForm, { heure_debut: '', heure_fin: '' })
+const { peutVoirCodir, peutGererCodir } = useAuth()
+
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const codirs = ref([])
@@ -69,7 +75,7 @@ const paginatedCodirs = computed(() => {
 
 // ── Handlers navigation ───────────────────────────────────────────────────────
 const handleView = (item) => {
-  if (process.client) {
+    if (process.client) {
     const STEP_KEY  = `codir_step_${item.id}`
     const savedStep = localStorage.getItem(STEP_KEY)
     const step      = savedStep ? parseInt(savedStep) : 1
@@ -83,7 +89,7 @@ const handleView = (item) => {
 const handleDownload = async (item) => {
   try {
     const blob = await downloadPdf(item.id)
-    const url  = window.URL.createObjectURL(blob)
+    const url  = window.URL.createObjectURL(blob) 
     const link = document.createElement('a')
     link.href  = url
     link.setAttribute('download', `codir_${item.id}.pdf`)
@@ -92,15 +98,18 @@ const handleDownload = async (item) => {
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
   } catch (e) {
+    const message = ref("Impossible de télécharger le document")
+    toast.add({
+      title: 'Erreur',
+      description: message.value,
+      color: 'error'
+    })
     console.error('Erreur téléchargement :', e)
   }
-}
+} 
 
 // ── Modale création ───────────────────────────────────────────────────────────
-const createModal = ref(false)
-const createForm  = reactive({ heure_debut: '', heure_fin: '' })
-const resetCreate = () => Object.assign(createForm, { heure_debut: '', heure_fin: '' })
-const toast       = useToast()
+
 
 // Date du jour au format YYYY-MM-DD
 const today = new Date().toISOString().split('T')[0]
@@ -170,7 +179,7 @@ const handleCreate = async () => {
           color="white" icon="i-heroicons-table-cells" size="sm" class="rounded-lg" aria-label="Vue tableau" />
       </div>
 
-      <UButton @click="createModal = true" variant="ghost" color="blue" icon="i-heroicons-plus" label="Nouveau CODIR" size="sm" class="rounded-lg" />
+      <UButton v-if="peutGererCodir()" @click="createModal = true" variant="ghost" color="blue" icon="i-heroicons-plus" label="Nouveau CODIR" size="sm" class="rounded-lg" />
     </div>
 
     <!-- Loading -->
@@ -203,7 +212,6 @@ const handleCreate = async () => {
           :left-aligned-columns="['date', 'horaire', 'statut']"
           empty-state-title="Aucun CODIR"
           empty-state-text="Créez votre premier CODIR pour commencer."
-          @view="handleView"
         >
           <template #cell-date="{ value }">
             <span class="font-medium text-sm text-gray-800">{{ value }}</span>
@@ -233,6 +241,7 @@ const handleCreate = async () => {
           :key="codir.id"
           :codir="codir"
           @view="handleView({ ...codir, _raw: codir })"
+          @download="handleDownload(codir)"
         />
       </div>
 

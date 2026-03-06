@@ -1,15 +1,23 @@
 <script setup>
 import { formatDateFR, extractTime, getStatutConfig } from '@/composables/codirs/useCodir'
 
-defineProps({
+const props = defineProps({
   codir: { type: Object, required: true }
 })
 
-const emit = defineEmits(['edit', 'view'])
+const emit = defineEmits(['download', 'view'])
 
 const GRADIENT = {
   clos:      'from-green-900 to-blue-900',
   soumis:  'from-yellow-700/80 to-yellow-700/80',
+}
+
+const handleClick = ()=>{
+  if(props.codir.statut === 'soumis') {
+    emit('view')
+  } else {
+    emit('download')
+  }
 }
 
 const gradient = (s) => GRADIENT[s] ?? 'from-slate-600 to-gray-700'
@@ -18,7 +26,7 @@ const gradient = (s) => GRADIENT[s] ?? 'from-slate-600 to-gray-700'
 <template>
   <UCard
     :class="`relative rounded-2xl border-none shadow-sm hover:shadow-inner transition-all duration-300 group overflow-hidden bg-gradient-to-br ${gradient(codir.statut)} hover:scale-[0.97] cursor-pointer`"
-    @click="emit('view')"
+    @click="handleClick"
   >
     <!-- Blob décoratif -->
     <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
@@ -30,9 +38,9 @@ const gradient = (s) => GRADIENT[s] ?? 'from-slate-600 to-gray-700'
           {{ getStatutConfig(codir.statut).label }}
         </span>
         <UButton
-          color="white" variant="ghost" icon="i-heroicons-pencil" size="xs"
+          color="white" variant="solid" :icon="codir.statut!=='clos' ? 'i-heroicons-eye' : 'i-heroicons-arrow-down-tray'" size="xs"
           class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white/20"
-          @click.stop="emit('edit')"
+          @click="handleClick"
         />
       </div>
 

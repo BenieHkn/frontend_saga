@@ -4,13 +4,12 @@ import { useEntiteUser } from '@/composables/entite-user/useEntiteUser'
 
 definePageMeta({ title: 'Membres' })
 
-const router = useRouter()
-const toast = useToast()
-const membreApi = useMembre()
+const toast         = useToast()
+const membreApi     = useMembre()
 const entiteUserApi = useEntiteUser()
 
 // ── State ─────────────────────────────────────────────────────────────────────
-const membres = ref([])
+const membres     = ref([])
 const entiteUsers = ref([])
 const { loading, error } = membreApi
 
@@ -33,7 +32,6 @@ const fetchMembres = async () => {
 const fetchEntiteUsers = async () => {
   try {
     const res = await entiteUserApi.getEntiteUsers()
-    // L'API retourne { success: true, data: [...] }
     entiteUsers.value = res.data ?? res
   } catch {
     console.warn('Impossible de charger les entite-users')
@@ -50,7 +48,6 @@ onMounted(async () => {
 
 // ── Options pour le select ────────────────────────────────────────────────────
 const entiteUserOptions = computed(() => {
-  // Exclure les entite_user déjà membres
   const membreIds = new Set(membres.value.map(m => m.entite_user_id))
   return entiteUsers.value
     .filter(eu => !membreIds.has(eu.id))
@@ -62,34 +59,35 @@ const entiteUserOptions = computed(() => {
 
 // ── DataTable ─────────────────────────────────────────────────────────────────
 const columns = [
-  { key: 'nom', label: 'Nom & Prénom', sortable: true, filterable: true, showLabel: false, inputHidden: false },
-  { key: 'role', label: 'Rôle', sortable: true, filterable: true, showLabel: false, inputHidden: false },
-  { key: 'statut', label: 'Statut', sortable: false, filterable: false, showLabel: false, inputHidden: true },
+  { key: 'nom',    label: 'Nom & Prénom', sortable: true,  filterable: true,  showLabel: true, inputHidden: false },
+  { key: 'role',   label: 'Rôle',         sortable: true,  filterable: true,  showLabel: true, inputHidden: false },
+  { key: 'statut', label: 'Statut',       sortable: false, filterable: false, showLabel: true, inputHidden: true  },
 ]
 
 const tableData = computed(() =>
   membres.value.map(m => ({
-    id: m.id,
-    nom: `${m.entite_user?.user?.nom ?? ''} ${m.entite_user?.user?.prenom ?? ''}`.trim(),
-    role: m.role,
+    id:     m.id,
+    nom:    `${m.entite_user?.user?.nom ?? ''} ${m.entite_user?.user?.prenom ?? ''}`.trim(),
+    role:   m.role === 'secretaire_codir' ? 'Secrétaire CODIR' : 'Membre',
     statut: m.statut ? 'actif' : 'inactif',
-    _raw: m,
+    _raw:   m,
   }))
 )
 
 // ── Modale création ───────────────────────────────────────────────────────────
 const createModal = ref(false)
-const createForm = reactive({
-  entite_user_ids: [],  // ← tableau
-  role: '',
-  statut: true,
-  date_debut: '',
+const createForm  = reactive({
+  entite_user_ids:    [],
+  estSecretaireCodir: false,
+  statut:             true,
+  date_debut:         '',
 })
+
 const resetCreate = () => Object.assign(createForm, {
-  entite_user_ids: [],
-  role: '',
-  statut: true,
-  date_debut: '',
+  entite_user_ids:    [],
+  estSecretaireCodir: false,
+  statut:             true,
+  date_debut:         '',
 })
 
 const openCreate = () => {
@@ -98,24 +96,35 @@ const openCreate = () => {
 }
 
 const handleCreate = async () => {
-  if (!createForm.role.trim() || !createForm.entite_user_ids.length) {
+  if (!createForm.entite_user_ids.length || !createForm.date_debut) {
     toast.add({
       title: 'Champs requis manquants',
-      description: 'Sélectionnez au moins un utilisateur et saisissez un rôle',
+      description: 'Sélectionnez au moins un utilisateur et une date de début',
       color: 'orange',
       icon: 'i-heroicons-exclamation-triangle',
     })
     return
   }
+
+  // Un seul secrétaire possible
+  if (createForm.estSecretaireCodir && createForm.entite_user_ids.length > 1) {
+    toast.add({
+      title: 'Impossible',
+      description: 'Un seul secrétaire CODIR peut être désigné à la fois',
+      color: 'orange',
+      icon: 'i-heroicons-exclamation-triangle',
+    })
+    return
+  }
+
   try {
-    // Créer un membre pour chaque entite_user_id sélectionné
     await Promise.all(
       createForm.entite_user_ids.map(entite_user_id =>
         membreApi.createMembre({
           entite_user_id,
-          role: createForm.role,
-          statut: createForm.statut,
-          date_debut: createForm.date_debut,
+          role: createForm.estSecretaireCodir ? 'secretaire_codir' : 'membre',
+          statut:             createForm.statut,
+          date_debut:         createForm.date_debut,
         })
       )
     )
@@ -126,11 +135,12 @@ const handleCreate = async () => {
     })
     createModal.value = false
     resetCreate()
-    await fetchMembres()  // refresh pour avoir les relations chargées
-  } catch {
+    await fetchMembres()
+  } catch (e) {
+    const message = e?.data?.message ?? e?.message ?? 'Impossible de créer les membres'
     toast.add({
       title: 'Erreur',
-      description: 'Impossible de créer les membres',
+      description: message,
       color: 'red',
       icon: 'i-heroicons-exclamation-circle',
     })
@@ -138,21 +148,24 @@ const handleCreate = async () => {
 }
 
 // ── Modale édition ────────────────────────────────────────────────────────────
-const editModal = ref(false)
+const editModal  = ref(false)
 const editTarget = ref(null)
-const editForm = reactive({ role: '', statut: true, date_debut: '' })
+const editForm   = reactive({ statut: true, date_debut: '' })
 
 const openEdit = (item) => {
-  editTarget.value = item._raw
-  editForm.role = item._raw.role
-  editForm.statut = !!item._raw.statut
+  editTarget.value    = item._raw
+  editForm.statut     = !!item._raw.statut
   editForm.date_debut = item._raw.date_debut || ''
-  editModal.value = true
+  editModal.value     = true
 }
 
 const handleEdit = async () => {
-  if (!editForm.role.trim()) {
-    toast.add({ title: 'Le rôle est requis', color: 'orange', icon: 'i-heroicons-exclamation-triangle' })
+  if (!editForm.date_debut) {
+    toast.add({
+      title: 'La date de début est requise',
+      color: 'orange',
+      icon: 'i-heroicons-exclamation-triangle',
+    })
     return
   }
   const snapshot = JSON.parse(JSON.stringify(membres.value))
@@ -161,21 +174,20 @@ const handleEdit = async () => {
     if (idx !== -1) membres.value[idx] = { ...membres.value[idx], ...editForm }
     localStorage.setItem('membres', JSON.stringify(membres.value))
 
-    const updated = await membreApi.updateMembre(editTarget.value.id, { ...editForm })
+    const updated = await membreApi.updateMembre(editTarget.value.id, {
+      statut:     editForm.statut,
+      date_debut: editForm.date_debut,
+    })
     if (idx !== -1) membres.value[idx] = updated
     localStorage.setItem('membres', JSON.stringify(membres.value))
 
     toast.add({ title: 'Membre mis à jour', color: 'green', icon: 'i-heroicons-check-circle' })
     editModal.value = false
-  } catch {
+  } catch (e) {
     membres.value = snapshot
     localStorage.setItem('membres', JSON.stringify(snapshot))
-    toast.add({
-      title: 'Erreur',
-      description: 'Impossible de modifier le membre',
-      color: 'red',
-      icon: 'i-heroicons-exclamation-circle',
-    })
+    const message = e?.data?.message ?? e?.message ?? 'Impossible de modifier le membre'
+    toast.add({ title: 'Erreur', description: message, color: 'red', icon: 'i-heroicons-exclamation-circle' })
   }
 }
 
@@ -187,15 +199,11 @@ const handleDelete = async (item) => {
   try {
     await membreApi.deleteMembre(item.id)
     toast.add({ title: 'Membre supprimé', color: 'green', icon: 'i-heroicons-check-circle' })
-  } catch {
+  } catch (e) {
     membres.value = snapshot
     localStorage.setItem('membres', JSON.stringify(snapshot))
-    toast.add({
-      title: 'Erreur',
-      description: 'Impossible de supprimer le membre',
-      color: 'red',
-      icon: 'i-heroicons-exclamation-circle',
-    })
+    const message = e?.data?.message ?? e?.message ?? 'Impossible de supprimer le membre'
+    toast.add({ title: 'Erreur', description: message, color: 'red', icon: 'i-heroicons-exclamation-circle' })
   }
 }
 
@@ -211,11 +219,11 @@ const handleView = (item) => {
   <div class="mx-auto py-10 px-6">
 
     <!-- Header -->
-    <PageHeader 
-      title="Membres" 
-      description="Gérez les membres et leurs rôles" 
-      btnText="Nouveau membre" 
-      :modal="true" 
+    <PageHeader
+      title="Membres"
+      description="Gérez les membres et leurs rôles"
+      btnText="Nouveau membre"
+      :modal="true"
       @click="openCreate"
     />
 
@@ -225,8 +233,13 @@ const handleView = (item) => {
     </div>
 
     <!-- Erreur -->
-    <UAlert v-else-if="error && !membres.length" color="red" icon="i-heroicons-exclamation-circle" :title="error"
-      class="mb-6" />
+    <UAlert
+      v-else-if="error && !membres.length"
+      color="red"
+      icon="i-heroicons-exclamation-circle"
+      :title="error"
+      class="mb-6"
+    />
 
     <!-- Vide -->
     <div v-else-if="!membres.length" class="text-center py-20">
@@ -236,15 +249,26 @@ const handleView = (item) => {
     </div>
 
     <!-- DataTable -->
-    <DataTable v-else :data="tableData" :columns="columns" :default-actions="['view', 'edit', 'delete']"
-      :show-row-numbers="true" :default-items-per-page="10" :left-aligned-columns="['nom', 'role', 'statut']"
-      empty-state-title="Aucun membre" empty-state-text="Ajoutez votre premier membre." @view="handleView"
-      @edit="openEdit" @delete="handleDelete">
+    <DataTable
+      v-else
+      :data="tableData"
+      :columns="columns"
+      :default-actions="['view', 'edit', 'delete']"
+      :show-row-numbers="true"
+      :default-items-per-page="10"
+      :left-aligned-columns="['nom', 'role', 'statut']"
+      empty-state-title="Aucun membre"
+      empty-state-text="Ajoutez votre premier membre."
+      @view="handleView"
+      @edit="openEdit"
+      @delete="handleDelete"
+    >
       <template #cell-statut="{ value }">
-        <span :class="`text-[11px] font-semibold px-2.5 py-1 rounded-full ${value === 'actif'
-          ? 'text-green-600 bg-green-50 dark:bg-green-950/40'
-          : 'text-gray-500 bg-gray-100 dark:bg-gray-800/60'
-          }`">
+        <span :class="`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+          value === 'actif'
+            ? 'text-green-600 bg-green-50 dark:bg-green-950/40'
+            : 'text-gray-500 bg-gray-100 dark:bg-gray-800/60'
+        }`">
           {{ value }}
         </span>
       </template>
@@ -258,23 +282,35 @@ const handleView = (item) => {
       <template #header>
         <h3 class="font-semibold">Nouveau membre</h3>
       </template>
+
       <div class="p-2 flex flex-col gap-4">
 
-        <!-- Select entite-user -->
-        <!-- Modale création — champ utilisateur -->
         <UFormGroup label="Utilisateurs" required>
-          <AppSelectSearch v-model="createForm.entite_user_ids" :options="entiteUserOptions" :multiple="true"
-            :loading="entiteUserApi.loading.value" placeholder="Rechercher des utilisateurs..." />
+          <AppSelectSearch
+            v-model="createForm.entite_user_ids"
+            :options="entiteUserOptions"
+            :multiple="true"
+            :loading="entiteUserApi.loading.value"
+            placeholder="Rechercher des utilisateurs..."
+          />
           <p v-if="createForm.entite_user_ids.length" class="text-xs text-blue-600 mt-1">
             {{ createForm.entite_user_ids.length }} utilisateur(s) sélectionné(s)
           </p>
         </UFormGroup>
 
-        <UFormGroup label="Rôle" required>
-          <UInput v-model="createForm.role" placeholder="Ex: Directeur financier" size="md" />
+        <UFormGroup label="Est Secrétaire CODIR ?">
+          <div class="flex items-center gap-2">
+            <UToggle v-model="createForm.estSecretaireCodir" />
+            <span class="text-sm text-gray-500">
+              {{ createForm.estSecretaireCodir ? 'Oui — secrétaire CODIR' : 'Non — membre simple' }}
+            </span>
+          </div>
+          <p v-if="createForm.estSecretaireCodir" class="text-xs text-amber-600 mt-1">
+            ⚠ Un seul secrétaire CODIR actif est autorisé
+          </p>
         </UFormGroup>
 
-        <UFormGroup label="Date de début">
+        <UFormGroup label="Date de début" required>
           <UInput v-model="createForm.date_debut" type="date" size="md" />
         </UFormGroup>
 
@@ -286,9 +322,10 @@ const handleView = (item) => {
         </UFormGroup>
 
       </div>
+
       <template #footer>
         <div class="flex justify-end gap-2">
-          <UButton color="gray" variant="ghost" @click="createModal = false">Annuler</UButton>
+          <UButton color="gray" variant="ghost" @click="createModal = false; resetCreate()">Annuler</UButton>
           <UButton color="blue" :loading="membreApi.loading.value" @click="handleCreate">Créer</UButton>
         </div>
       </template>
@@ -301,6 +338,7 @@ const handleView = (item) => {
       <template #header>
         <h3 class="font-semibold">Modifier le membre</h3>
       </template>
+
       <div class="p-2 flex flex-col gap-4">
 
         <!-- Infos non modifiables -->
@@ -309,13 +347,16 @@ const handleView = (item) => {
             {{ editTarget.entite_user?.user?.nom }} {{ editTarget.entite_user?.user?.prenom }}
           </span>
           — {{ editTarget.entite_user?.entite?.libelle }}
+          <span :class="`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${
+            editTarget.role === 'secretaire_codir'
+              ? 'text-violet-600 bg-violet-50'
+              : 'text-blue-600 bg-blue-50'
+          }`">
+            {{ editTarget.role === 'secretaire_codir' ? 'Secrétaire CODIR' : 'Membre' }}
+          </span>
         </div>
 
-        <UFormGroup label="Rôle" required>
-          <UInput v-model="editForm.role" placeholder="Ex: Directeur financier" size="md" />
-        </UFormGroup>
-
-        <UFormGroup label="Date de début">
+        <UFormGroup label="Date de début" required>
           <UInput v-model="editForm.date_debut" type="date" size="md" />
         </UFormGroup>
 
@@ -327,6 +368,7 @@ const handleView = (item) => {
         </UFormGroup>
 
       </div>
+
       <template #footer>
         <div class="flex justify-end gap-2">
           <UButton color="gray" variant="ghost" @click="editModal = false">Annuler</UButton>
