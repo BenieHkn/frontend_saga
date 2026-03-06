@@ -116,7 +116,7 @@
                           class="p-3 border border-slate-200 rounded-xl hover:border-emerald-500 hover:bg-emerald-50 cursor-pointer transition-all"
                           @click="switchEntite(entite)">
                           <p class="font-bold text-emerald-700">{{ entite.libelle }}</p>
-                          <p class="text-xs text-emerald-600 font-medium">{{ entite.code }}</p>
+                          <p class="text-xs text-emerald-600 font-medium">{{ entite.is_responsable ? (entite.fonction ?? '—') : 'Agent' }} - {{ entite.code }}</p>
                           <div class="flex gap-1 mt-2">
                             <span v-if="entite.is_responsable" class="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full">Responsable</span>
                             <span v-if="entite.is_interim" class="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-full">Intérim</span>
@@ -572,7 +572,7 @@ const switchEntite = async (entite) => {
       } else {
         localStorage.removeItem('directeur_entite_user_id');
       }
-      window.location.href = '/';
+      window.location.href = '/dashboard';
     }
   } catch (error) {
     console.error('❌ Erreur lors du changement d\'entité:', error);

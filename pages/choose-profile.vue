@@ -64,7 +64,7 @@
             <div class="space-y-2 flex-grow">
               <div class="space-y-0.5">
                 <p class="text-xs font-bold text-emerald-500 uppercase tracking-wide">
-                  {{ entiteUser.fonction ?? '—' }}
+                  {{ entiteUser.is_responsable ? (entiteUser.fonction ?? '—') : 'Agent' }}
                 </p>
                 <p class="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
                   {{ entiteUser.code }}
@@ -207,7 +207,7 @@ async function handleSelectPoste(entiteUser: EntiteUser) {
     }
 
     await new Promise(resolve => setTimeout(resolve, 400))
-    await navigateTo('/')
+    await navigateTo('/dashboard')
 
   } catch (error) {
     console.error('❌ Erreur switch-profile:', error)
