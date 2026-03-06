@@ -1,0 +1,25 @@
+<template>
+   <UBadge :color="color" variant="soft" size="lg" class="ml-auto" v-if="btnText !== null">
+        <UButton :to="to" variant="text" :icon="icon" size="sm" :class="`p-0 m-0 text-${color}-600`" @click="handleClick">
+          {{btnText}}
+        </UButton>
+      </UBadge>
+</template>
+
+<script setup>
+const props = defineProps({
+  to: { type: String, default: null },
+  btnText: { type: String, default: null },
+  modal: { type: Boolean, default: false },
+  icon: { type: String, default: 'i-heroicons-plus' },
+  color: { type: String, default: 'blue' }
+})
+
+const emit = defineEmits(['click'])
+
+const handleClick = () => {
+  if (props.modal) {
+    emit('click')
+  }
+}
+</script>

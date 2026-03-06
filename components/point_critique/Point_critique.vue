@@ -7,8 +7,7 @@
         <p class="text-sm text-slate-500">Gestion des points critiques</p>
       </div>
       <UBadge color="green" variant="soft" size="lg" class="ml-auto">
-        <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
-        <UButton to="/point-critique/create" variant="text" size="sm" class="p-0 m-0 text-green-600">
+        <UButton to="/point-critique/create" icon="i-heroicons-plus" variant="text" size="sm" class="p-0 m-0 text-green-600">
           Nouveau
         </UButton>
       </UBadge>

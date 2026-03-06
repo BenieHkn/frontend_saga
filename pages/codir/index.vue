@@ -1,45 +1,64 @@
 <script setup>
-import { useCodirsStore } from '@/stores/codirs'
 import { formatDateFR, extractTime, getStatutConfig, useCodir } from '@/composables/codirs/useCodir'
 
 definePageMeta({ title: 'Listing CODIR' })
 
-const store = useCodirsStore()
 const router = useRouter()
-const { downloadPdf } = useCodir()
-const config = useRuntimeConfig()
+const { loading, error, getCodirs, createCodir, downloadPdf } = useCodir()
 
-const currentView = ref('table')
+// ── State ─────────────────────────────────────────────────────────────────────
+const codirs = ref([])
+
+const fetchCodirs = async () => {
+  try {
+    const data = await getCodirs()
+    codirs.value = data
+    if (process.client)
+      localStorage.setItem('codirs', JSON.stringify(data))
+  } catch {
+    if (process.client) {
+      const cached = localStorage.getItem('codirs')
+      if (cached) codirs.value = JSON.parse(cached)
+    }
+  }
+}
+
+onMounted(async () => {
+  if (process.client) {
+    const cached = localStorage.getItem('codirs')
+    if (cached) codirs.value = JSON.parse(cached)
+  }
+  await fetchCodirs()
+})
+
+// ── Vue & Pagination ──────────────────────────────────────────────────────────
+const currentView = ref('grid')
 const currentPage = ref(1)
-const PAGE_SIZE = 9
+const PAGE_SIZE   = 9
 
-
-// ── Colonnes pour la DataTable ────────────────────────────────────────────
-
+// ── Colonnes DataTable ────────────────────────────────────────────────────────
 const columns = [
-  { key: 'date', label: 'Date', sortable: true, filterable: true, showLabel: false, inputHidden: false },
+  { key: 'date',    label: 'Date',     sortable: true, filterable: true, showLabel: false, inputHidden: false },
   { key: 'horaire', label: 'Horaires', sortable: true, filterable: true, showLabel: false, inputHidden: false },
-  { key: 'statut', label: 'Statut', sortable: true, filterable: true, showLabel: false, inputHidden: false },
+  { key: 'statut',  label: 'Statut',   sortable: true, filterable: true, showLabel: false, inputHidden: false },
 ]
 
-// ── Tri décroissant par date ──────────────────────────────────────────────
-
+// ── Tri décroissant par date ──────────────────────────────────────────────────
 const sortedCodirs = computed(() =>
-  [...store.codirs].sort((a, b) => new Date(b.date) - new Date(a.date))
+  [...codirs.value].sort((a, b) => new Date(b.date) - new Date(a.date))
 )
 
-// ── Données normalisées pour la DataTable ─────────────────────────────────
-
+// ── Données normalisées pour la DataTable ─────────────────────────────────────
 const tableData = computed(() =>
   sortedCodirs.value.map(codir => ({
-    id: codir.id,
-    date: formatDateFR(codir.date),
+    id:       codir.id,
+    date:     formatDateFR(codir.date),
     _dateRaw: codir.date,
-    horaire: `${extractTime(codir.heure_debut)} – ${extractTime(codir.heure_fin)}`,
-    statut: codir.statut,
-    odj: codir.ordres_du_jour?.length ?? 0,
-    taches: codir.taches?.length ?? 0,
-    _raw: codir,
+    horaire:  `${extractTime(codir.heure_debut)} – ${extractTime(codir.heure_fin)}`,
+    statut:   codir.statut,
+    odj:      codir.ordres_du_jour?.length ?? 0,
+    taches:   codir.taches?.length ?? 0,
+    _raw:     codir,
   }))
 )
 
@@ -48,39 +67,25 @@ const paginatedCodirs = computed(() => {
   return sortedCodirs.value.slice(start, start + PAGE_SIZE)
 })
 
-onMounted(() => store.getCodirs())
-
-// ── Handlers ──────────────────────────────────────────────────────────────
-
+// ── Handlers navigation ───────────────────────────────────────────────────────
 const handleView = (item) => {
-  store.setCurrentCodir(item._raw)
-
   if (process.client) {
-    const STEP_KEY = `codir_step_${item.id}`
-    // On lit le step AVANT d'écraser avec 1
+    const STEP_KEY  = `codir_step_${item.id}`
     const savedStep = localStorage.getItem(STEP_KEY)
-    const step = savedStep ? parseInt(savedStep) : 1
-
-    // On ne réinitialise pas à 1 si un step existant est sauvegardé
-    localStorage.setItem('currentCodir', JSON.stringify(item))
-
-    if (step === 2) {
-      return navigateTo('/codir/infos')
-    } else if (step === 3) {
-      return navigateTo('/codir/preview')
-    }
+    const step      = savedStep ? parseInt(savedStep) : 1
+    localStorage.setItem('currentCodir', JSON.stringify(item._raw ?? item))
+    if (step === 2) return navigateTo('/codir/infos')
+    if (step === 3) return navigateTo('/codir/preview')
   }
-
   navigateTo(`/codir/${item.id}`)
 }
 
 const handleDownload = async (item) => {
   try {
-    const blob = await downloadPdf(item.id)  // reçoit directement un Blob
-    
-    const url = window.URL.createObjectURL(blob)
+    const blob = await downloadPdf(item.id)
+    const url  = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.href = url
+    link.href  = url
     link.setAttribute('download', `codir_${item.id}.pdf`)
     document.body.appendChild(link)
     link.click()
@@ -91,11 +96,62 @@ const handleDownload = async (item) => {
   }
 }
 
-const handleCreate = () => router.push('/codir/create')
+// ── Modale création ───────────────────────────────────────────────────────────
+const createModal = ref(false)
+const createForm  = reactive({ heure_debut: '', heure_fin: '' })
+const resetCreate = () => Object.assign(createForm, { heure_debut: '', heure_fin: '' })
+const toast       = useToast()
+
+// Date du jour au format YYYY-MM-DD
+const today = new Date().toISOString().split('T')[0]
+
+const handleCreate = async () => {
+  if (!createForm.heure_debut) {
+    toast.add({
+      title: 'Heure de début requise',
+      color: 'orange',
+      icon: 'i-heroicons-exclamation-triangle',
+    })
+    return
+  }
+  try {
+    const payload = {
+      date:        today,
+      heure_debut: createForm.heure_debut,
+      heure_fin:   createForm.heure_fin || null,  // nullable
+      statut:      'soumis',
+    }
+    const created = await createCodir(payload)
+
+    // Optimistic update
+    codirs.value.unshift(created)
+    localStorage.setItem('codirs', JSON.stringify(codirs.value))
+
+    toast.add({
+      title: 'CODIR créé',
+      description: `CODIR du ${formatDateFR(today)} créé avec succès`,
+      color: 'green',
+      icon: 'i-heroicons-check-circle',
+    })
+    createModal.value = false
+    resetCreate()
+
+    // Naviguer directement vers le CODIR créé
+    handleView({ id: created.id, _raw: created })
+
+  } catch {
+    toast.add({
+      title: 'Erreur',
+      description: 'Impossible de créer le CODIR',
+      color: 'red',
+      icon: 'i-heroicons-exclamation-circle',
+    })
+  }
+}
 </script>
 
 <template>
-  <div class="max-w-6xl mx-auto py-10 px-6">
+  <div class="mx-auto py-10 px-6">
 
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
@@ -106,31 +162,29 @@ const handleCreate = () => router.push('/codir/create')
 
       <!-- Sélecteur de vue -->
       <div class="flex items-center gap-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
-        <UButton @click="currentView = 'list'" :variant="currentView === 'list' ? 'solid' : 'ghost'"
-          color="white" icon="i-heroicons-queue-list" size="sm" class="rounded-lg" aria-label="Vue liste" />
         <UButton @click="currentView = 'grid'" :variant="currentView === 'grid' ? 'solid' : 'ghost'"
           color="white" icon="i-heroicons-squares-2x2" size="sm" class="rounded-lg" aria-label="Vue grille" />
         <UButton @click="currentView = 'table'" :variant="currentView === 'table' ? 'solid' : 'ghost'"
           color="white" icon="i-heroicons-table-cells" size="sm" class="rounded-lg" aria-label="Vue tableau" />
       </div>
 
-      <UButton @click="handleCreate" variant="ghost" color="blue" icon="i-heroicons-plus" label="Nouveau CODIR" size="sm" class="rounded-lg" />
+      <UButton @click="createModal = true" variant="ghost" color="blue" icon="i-heroicons-plus" label="Nouveau CODIR" size="sm" class="rounded-lg" />
     </div>
 
     <!-- Loading -->
-    <div v-if="store.loading" class="flex justify-center py-20">
+    <div v-if="loading && !codirs.length" class="flex justify-center py-20">
       <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-blue-500" />
     </div>
 
     <!-- Erreur -->
-    <UAlert v-else-if="store.error" color="red" icon="i-heroicons-exclamation-circle" :title="store.error" class="mb-6" />
+    <UAlert v-else-if="error && !codirs.length" color="red" icon="i-heroicons-exclamation-circle" :title="error" class="mb-6" />
 
     <!-- Vide -->
-    <div v-else-if="store.codirs.length === 0" class="text-center py-20">
+    <div v-else-if="!codirs.length" class="text-center py-20">
       <UIcon name="i-heroicons-folder-open" class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
       <h3 class="text-lg font-semibold mb-2">Aucun CODIR</h3>
       <p class="text-gray-500 mb-6">Commencez par créer votre premier CODIR</p>
-      <UButton @click="handleCreate" color="blue" icon="i-heroicons-plus">Créer un CODIR</UButton>
+      <UButton @click="createModal = true" color="blue" icon="i-heroicons-plus">Créer un CODIR</UButton>
     </div>
 
     <!-- Vues -->
@@ -163,7 +217,6 @@ const handleCreate = () => router.push('/codir/create')
             </span>
           </template>
 
-          <!-- Correction : le slot actions reçoit { item }, pas { value } -->
           <template #actions="{ item }">
             <UButton v-if="item.statut === 'soumis'" @click="handleView(item)" color="blue" variant="ghost" icon="i-heroicons-eye" size="xs" class="rounded-lg" />
             <UButton v-else @click="handleDownload(item)" color="blue" variant="ghost" icon="i-heroicons-arrow-down-tray" size="xs" class="rounded-lg" />
@@ -172,41 +225,88 @@ const handleCreate = () => router.push('/codir/create')
       </div>
 
       <!-- Vue grille -->
-      <div v-else-if="currentView === 'grid'" key="grid"
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-else key="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <CodirGrid
           v-for="codir in paginatedCodirs"
           :key="codir.id"
           :codir="codir"
-          @edit="store.setCurrentCodir(codir); router.push(`/codir/${codir.id}/edit`)"
-          @view="store.setCurrentCodir(codir); router.push(`/codir/${codir.id}`)"
-        />
-      </div>
-
-      <!-- Vue liste -->
-      <div v-else key="list" class="flex flex-col gap-4">
-        <CodirCard
-          v-for="codir in paginatedCodirs"
-          :key="codir.id"
-          :codir="codir"
-          @edit="store.setCurrentCodir(codir); router.push(`/codir/${codir.id}/edit`)"
-          @view="store.setCurrentCodir(codir); router.push(`/codir/${codir.id}`)"
+          @view="handleView({ ...codir, _raw: codir })"
         />
       </div>
 
     </Transition>
 
-    <!-- Pagination (grid + liste uniquement) -->
+    <!-- Pagination -->
     <UPagination
-      v-if="store.codirs.length > PAGE_SIZE && currentView !== 'table'"
+      v-if="codirs.length > PAGE_SIZE && currentView !== 'table'"
       class="mt-6"
       v-model="currentPage"
       color="blue"
       :page-count="PAGE_SIZE"
-      :total="store.codirs.length"
+      :total="codirs.length"
     />
 
   </div>
+
+  <!-- ── Modale création CODIR ──────────────────────────────────────────────── -->
+  <UModal v-model="createModal">
+    <UCard class="rounded-2xl">
+      <template #header>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+            <UIcon name="i-heroicons-calendar-days" class="w-4 h-4 text-blue-600" />
+          </div>
+          <div>
+            <h3 class="font-semibold">Nouveau CODIR</h3>
+            <p class="text-xs text-gray-400">{{ formatDateFR(today) }}</p>
+          </div>
+        </div>
+      </template>
+
+      <div class="p-2 flex flex-col gap-4">
+
+        <!-- Date auto — affichage uniquement -->
+        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg px-4 py-3 flex items-center gap-3">
+          <UIcon name="i-heroicons-calendar" class="w-4 h-4 text-gray-400" />
+          <div>
+            <p class="text-xs text-gray-400">Date</p>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ formatDateFR(today) }}</p>
+          </div>
+          <UBadge label="Aujourd'hui" color="blue" variant="soft" size="xs" class="ml-auto" />
+        </div>
+
+        <!-- Heure de début -->
+        <UFormGroup label="Heure de début" required>
+          <UInput
+            v-model="createForm.heure_debut"
+            type="time"
+            size="md"
+          />
+        </UFormGroup>
+
+        <!-- Heure de fin -->
+        <UFormGroup label="Heure de fin">
+          <UInput
+            v-model="createForm.heure_fin"
+            type="time"
+            size="md"
+            placeholder="Optionnel"
+          />
+          <template #hint>
+            <span class="text-xs text-gray-400">Optionnel — peut être renseigné plus tard</span>
+          </template>
+        </UFormGroup>
+
+      </div>
+
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton color="gray" variant="ghost" @click="createModal = false; resetCreate()">Annuler</UButton>
+          <CustomButton btnText="Créer et ouvrir" @click="handleCreate" :modal="false" icon="i-heroicons-folder-open"/>
+        </div>
+      </template>
+    </UCard>
+  </UModal>
 </template>
 
 <style scoped>

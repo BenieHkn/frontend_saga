@@ -9,11 +9,7 @@
       </p>
     </div>
 
-     <UBadge color="blue" variant="soft" size="lg" class="ml-auto" v-if="btnText !== null">
-        <UButton :to="to" variant="text" icon="i-heroicons-plus" size="sm" class="p-0 m-0 text-blue-600">
-          {{btnText}}
-        </UButton>
-      </UBadge>
+     <CustomButton :to="to" :btnText="btnText" :modal="modal" @click="$emit('click')" />
   </div>
 </template>
 
@@ -22,6 +18,9 @@ defineProps({
   title: { type: String, required: true },
   subtitle: { type: String, default: '' },
   to: { type: String, default: null },
-  btnText: { type: String, default: null }
+  btnText: { type: String, default: null },
+  modal: { type: Boolean, default: false }
 })
+
+defineEmits(['click'])
 </script>

@@ -8,7 +8,8 @@ import {
   STATUT_OPTIONS,
   useCodir,
 } from '@/composables/codirs/useCodir'
-import StepIndicator from '@/components/StepIndicator.vue'
+
+import {useMembre} from '@/composables/membres/useMembres'
 
 definePageMeta({ title: 'Détail CODIR' })
 
@@ -26,12 +27,17 @@ const {
   detachODJ,
 } = useCodir()
 
+const membreApi = useMembre()
+
 // ── Data ──────────────────────────────────────────────────────────────────────
 const codir = ref(null)
+const membres = ref([])
 
 const fetchCodir = async () => {
   const data = await getCodir(id)
   codir.value = data
+  if(process.client)
+    localStorage.setItem('currentCodir', JSON.stringify(data))
 }
 
 // Sync localStorage automatique
@@ -42,38 +48,23 @@ watch(codir, (c) => {
 
 // ── Steps ─────────────────────────────────────────────────────────────────────
 const currentStep = ref(1)
-const steps = [
-  { id: 1, label: 'Ordres du jour' },
-  { id: 2, label: 'Informations générales' },
-  { id: 3, label: 'PV du codir' },
-]
 
 const STEP_KEY = `codir_step_${id}`
 
-const saveStep = (step) => {
-  currentStep.value = step
-  if (process.client)
-    localStorage.setItem(STEP_KEY, String(step))
-}
-
-const navigateToStep = (step) => {
-  if (step === 2) router.push(`/codir/infos`)
-  if (step === 3) router.push(`/codir/preview`)
-}
-
-const goNext = () => {
-  if (currentStep.value < steps.length) {
-    saveStep(currentStep.value + 1)
-    navigateToStep(currentStep.value)
+const getMembres = async () => {
+  try {
+    const data = await membreApi.getMembres();
+    membres.value = data;
+    console.log(membres.value)
+    if (process.client) localStorage.setItem("membres", JSON.stringify(data));
+  } catch {
+    // Fallback cache
+    if (process.client) {
+      const cached = localStorage.getItem("membres");
+      if (cached) membres.value = JSON.parse(cached);
+    }
   }
-}
-
-const goPrev = () => {
-  if (currentStep.value > 1) {
-    saveStep(currentStep.value - 1)
-    navigateToStep(currentStep.value)
-  }
-}
+};
 
 // ── Progression ───────────────────────────────────────────────────────────────
 const progressionGlobale = computed(() => {
@@ -113,6 +104,7 @@ const ordreModal = ref(false)
 const ordreForm  = reactive({ libelle: '', statut: 'actif', codir_id: id })
 const resetOrdreForm = () => Object.assign(ordreForm, { libelle: '', statut: 'actif' })
 
+
 const addOrdre = async () => {
   if (!ordreForm.libelle) return
   try {
@@ -126,6 +118,7 @@ const addOrdre = async () => {
     })
     ordreModal.value = false
     resetOrdreForm()
+    fetchCodir()  // refresh pour voir le nouvel ordre du jour
   } catch {
     toast.add({
       title: 'Erreur',
@@ -140,6 +133,7 @@ const handleDetachOrdre = async (ordreId) => {
   try {
     await detachODJ(id, ordreId)
     await fetchCodir()
+    freshCodir()  // refresh pour voir les changements
     toast.add({ title: 'Ordre du jour retiré', color: 'green', icon: 'i-heroicons-check-circle' })
   } catch {
     toast.add({
@@ -153,9 +147,10 @@ const handleDetachOrdre = async (ordreId) => {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 onMounted(async () => {
-  await fetchCodir()
-
+  codir.value = localStorage.getItem('currentCodir') ? JSON.parse(localStorage.getItem('currentCodir')) : null
+  membres.value = localStorage.getItem("membres") ? JSON.parse(localStorage.getItem("membres")) : []
   if (process.client) {
+    if(membres.value.length === 0) await getMembres()
     const saved = localStorage.getItem(STEP_KEY)
     if (saved) currentStep.value = Number(saved)
   }
@@ -171,16 +166,12 @@ onMounted(async () => {
       <span class="text-gray-400 text-sm">Retour au listing</span>
     </div>
 
-    <!-- Step Indicator -->
-    <div class="mb-8">
-      <StepIndicator :currentStep="currentStep" :steps="steps" />
-    </div>
-
     <div v-if="loading && !codir" class="flex justify-center py-20">
       <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-blue-500" />
     </div>
 
     <template v-else-if="codir">
+      <CodirStepper :codirId="id">
 
       <!-- ── En-tête ─────────────────────────────────────────────────── -->
       <UCard class="rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 mb-6">
@@ -234,7 +225,8 @@ onMounted(async () => {
         </div>
       </UCard>
 
-      <!-- ── Contenu step 1 ──────────────────────────────────────────── -->
+      
+        <!-- ── Contenu step 1 ──────────────────────────────────────────── -->
       <div class="flex flex-col gap-8">
         <CodirOrdreDuJour
           :ordres="codir.ordres_du_jour ?? []"
@@ -243,40 +235,7 @@ onMounted(async () => {
           @detach="handleDetachOrdre($event)"
         />
       </div>
-
-      <!-- ── Navigation stepper ──────────────────────────────────────── -->
-      <div class="flex items-center justify-between mt-10 pt-6 border-t border-gray-100 dark:border-gray-800">
-        <UButton
-          icon="i-heroicons-arrow-left"
-          color="gray"
-          variant="ghost"
-          :disabled="currentStep === 1"
-          @click="goPrev"
-        >
-          Précédent
-        </UButton>
-
-        <span class="text-sm text-gray-400">
-          Étape {{ currentStep }} sur {{ steps.length }}
-        </span>
-
-        <UButton
-          v-if="currentStep < steps.length"
-          trailing-icon="i-heroicons-arrow-right"
-          color="blue"
-          @click="goNext"
-        >
-          Suivant
-        </UButton>
-        <UButton
-          v-else
-          trailing-icon="i-heroicons-check"
-          color="green"
-          @click="saveStep(1); router.push('/codir')"
-        >
-          Terminer
-        </UButton>
-      </div>
+      </CodirStepper>
 
     </template>
 

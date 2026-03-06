@@ -64,6 +64,12 @@
             :class="route.path === '/permissions' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
             Permissions
           </NuxtLink>
+
+          <NuxtLink to="/membres"
+            class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+            :class="route.path === '/membres' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+            Membres CODIR
+          </NuxtLink>
         </div>
       </div>
     </nav>
@@ -177,7 +183,7 @@ const toggleSettings = () => {
 
 // ── Ouvrir config si on est sur une route config ──────────────────────────────
 const isSettingsRouteActive = computed(() =>
-  ['/entites', '/utilisateurs', '/point-critique', '/interim'].some(
+  ['/entites', '/utilisateurs', '/point-critique', '/interim', 'membres_codir'].some(
     path => route.path === path
   )
 )
