@@ -4,8 +4,8 @@ import { formatDateFR, formatDateShort, extractTime, getStatutConfig, useCodir }
 definePageMeta({ title: 'Aperçu CODIR' })
 
 const router = useRouter()
-const toast  = useToast()
-const linkPdf = ref('')
+// ✅ Option 3 — fallback garanti
+const toast = useNuxtApp().$toast ?? useToast()
 
 // ── Données depuis localStorage ───────────────────────────────────────────────
 const codir = ref(null)
@@ -19,7 +19,7 @@ onMounted(() => {
 const { cloturerCodir, generatePdf, downloadPdf } = useCodir()
 
 // ── Clôture ───────────────────────────────────────────────────────────────────
-const showCloture    = ref(false)
+const showCloture = ref(false)
 const cloturePending = ref(false)
 
 const confirmerCloture = async () => {
@@ -40,9 +40,9 @@ const confirmerCloture = async () => {
 }
 
 // ── Génération PDF ────────────────────────────────────────────────────────────
-const pdfGenerating       = ref(false)
+const pdfGenerating = ref(false)
 const showPdfGeneratedModal = ref(false)
-const generatedPdfName    = ref('')
+const generatedPdfName = ref('')
 
 const handleGeneratePdf = async () => {
   if (!codir.value) return
@@ -56,8 +56,8 @@ const handleGeneratePdf = async () => {
     // Calcul du nom du fichier tel qu'il sera téléchargé
     const dateStr = codir.value.date
       ? new Date(codir.value.date)
-          .toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
-          .replace(/\//g, '-')
+        .toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
+        .replace(/\//g, '-')
       : String(codir.value.id)
     generatedPdfName.value = `CODIR_${dateStr}.pdf`
 
@@ -73,17 +73,20 @@ const handleGeneratePdf = async () => {
 // ── Téléchargement PDF ────────────────────────────────────────────────────────
 const pdfDownloading = ref(false)
 
-const handleDownloadPdf = async () => {
-  if (!codir.value) return
-  pdfDownloading.value = true
+const handleDownloadPdf = async (item) => {
   try {
-    const response = await downloadPdf(codir.value.id)
-    linkPdf.value = response.link
-    console.log(linkPdf.value)
-    window.open(linkPdf.value, '_blank')
-    showPdfGeneratedModal.value = false
+    pdfDownloading.value = true
+    const blob = await downloadPdf(item.id)
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `codir_${item.id}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
   } catch (e) {
-    toast.add({ title: 'Erreur', description: e.message ?? 'Impossible de télécharger le PDF.', color: 'red', icon: 'i-heroicons-x-circle' })
+    console.error('Erreur téléchargement :', e)
   } finally {
     pdfDownloading.value = false
   }
@@ -95,16 +98,17 @@ const getMembresLabel = (membres) =>
 
 const statutTacheLabel = (s) => ({
   en_attente: 'En attente', en_cours: 'En cours',
-  terminée:   'Terminée',   terminee: 'Terminée',
-  realise:    'Réalisé',    suspendu: 'Suspendu',
+  terminée: 'Terminée', terminee: 'Terminée',
+  realise: 'Réalisé', suspendu: 'Suspendu',
 }[s] ?? s ?? '')
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <div class="bg-gray-50 dark:bg-gray-900 p-6">
 
     <!-- ── Barre d'outils ─────────────────────────────────────────────────── -->
-    <div class="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between gap-4 shadow-sm">
+    <div
+      class="sticky top-20 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between gap-4 shadow-sm">
       <div class="flex items-center gap-3">
         <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" size="sm" @click="router.back()">
           Retour
@@ -115,47 +119,24 @@ const statutTacheLabel = (s) => ({
       <div class="flex items-center gap-2">
 
         <!-- Générer PDF -->
-        <UButton
-          icon="i-heroicons-document-arrow-up"
-          color="violet"
-          variant="soft"
-          size="sm"
-          :loading="pdfGenerating"
-          :disabled="pdfGenerating"
-          @click="handleGeneratePdf"
-        >
+        <UButton icon="i-heroicons-document-arrow-up" color="violet" variant="soft" size="sm" :loading="pdfGenerating"
+          :disabled="pdfGenerating" @click="handleGeneratePdf">
           {{ pdfGenerating ? 'Génération…' : 'Générer PDF' }}
         </UButton>
 
         <!-- Télécharger PDF (visible uniquement si url présente) -->
-        <UButton
-          v-if="codir?.url"
-          icon="i-heroicons-arrow-down-tray"
-          color="emerald"
-          variant="soft"
-          size="sm"
-          :loading="pdfDownloading"
-          :disabled="pdfDownloading"
-          @click="handleDownloadPdf"
-        >
+        <UButton v-if="codir?.url !== null" icon="i-heroicons-arrow-down-tray" color="emerald" variant="soft" size="sm"
+          :loading="pdfDownloading" :disabled="pdfDownloading" @click="handleDownloadPdf">
           {{ pdfDownloading ? 'Téléchargement…' : 'Télécharger PDF' }}
         </UButton>
 
         <!-- Clôturer -->
-        <UButton
-          v-if="codir && codir.statut !== 'clos'"
-          icon="i-heroicons-lock-closed"
-          color="red"
-          variant="soft"
-          size="sm"
-          @click="showCloture = true"
-        >
+        <UButton v-if="codir?.url !== null && codir?.statut !== 'clos'" icon="i-heroicons-lock-closed" color="red"
+          variant="soft" size="sm" :disabled="codir?.url === null" @click="showCloture = true">
           Clôturer
         </UButton>
-        <span
-          v-else-if="codir && codir.statut === 'clos'"
-          class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600"
-        >
+        <span v-else-if="codir && codir?.statut === 'clos'"
+          class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600">
           <UIcon name="i-heroicons-lock-closed" class="w-3.5 h-3.5" />
           Clôturé
         </span>
@@ -168,7 +149,8 @@ const statutTacheLabel = (s) => ({
       <UCard>
         <template #header>
           <div class="flex items-center gap-3">
-            <div class="flex-shrink-0 w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+            <div
+              class="flex-shrink-0 w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
               <UIcon name="i-heroicons-check-circle" class="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
@@ -179,7 +161,8 @@ const statutTacheLabel = (s) => ({
         </template>
 
         <!-- Nom du fichier -->
-        <div class="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3">
+        <div
+          class="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3">
           <UIcon name="i-heroicons-document-text" class="w-8 h-8 text-red-500 flex-shrink-0" />
           <div class="min-w-0">
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Nom du fichier</p>
@@ -193,22 +176,16 @@ const statutTacheLabel = (s) => ({
 
         <template #footer>
           <div class="flex justify-end gap-3">
-            <UButton
-              color="gray"
-              variant="ghost"
-              :disabled="pdfDownloading"
-              @click="showPdfGeneratedModal = false"
-            >
+            <UButton color="gray" variant="ghost" :disabled="pdfDownloading" @click="showPdfGeneratedModal = false">
               Plus tard
             </UButton>
-            <UButton
-              color="emerald"
-              icon="i-heroicons-arrow-down-tray"
-              :loading="pdfDownloading"
-              @click="handleDownloadPdf"
-            >
-              {{ pdfDownloading ? 'Téléchargement…' : 'Télécharger' }}
-            </UButton>
+
+            <div class="gap-3">
+              <UButton color="red" icon="i-heroicons-x-mark" @click="showPdfGeneratedModal = false"
+                btnText="Fermer" />
+              <CustomButton color="emerald" icon="i-heroicons-arrow-down-tray" :loading="pdfDownloading"
+                @click="handleDownloadPdf(codir)" :btnText="pdfDownloading ? 'Téléchargement' : 'Télécharger'" />
+            </div>
           </div>
         </template>
       </UCard>
@@ -219,7 +196,8 @@ const statutTacheLabel = (s) => ({
       <UCard>
         <template #header>
           <div class="flex items-center gap-3">
-            <div class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <div
+              class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
               <UIcon name="i-heroicons-lock-closed" class="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
@@ -250,7 +228,7 @@ const statutTacheLabel = (s) => ({
     </UModal>
 
     <!-- ── Contenu ────────────────────────────────────────────────────────── -->
-    <div v-if="codir" class="max-w-5xl mx-auto my-8 bg-white shadow-xl rounded-xl overflow-hidden">
+    <div v-if="codir" class="mx-auto my-8 bg-white shadow-xl rounded-xl overflow-hidden">
 
       <!-- En-tête -->
       <div class="bg-gradient-to-r from-slate-800 to-blue-900 text-white px-10 py-8">
@@ -263,15 +241,18 @@ const statutTacheLabel = (s) => ({
           </span>
           <span class="flex items-center gap-1.5">
             <span class="opacity-60">Horaire :</span>
-            <strong class="text-white">{{ extractTime(codir.heure_debut) }} – {{ extractTime(codir.heure_fin) }}</strong>
+            <strong class="text-white">{{ extractTime(codir.heure_debut) }} – {{ extractTime(codir.heure_fin)
+              }}</strong>
           </span>
-          <span class="text-xs font-semibold px-3 py-1 rounded-full capitalize bg-white/10 text-white border border-white/20">
+          <span
+            class="text-xs font-semibold px-3 py-1 rounded-full capitalize bg-white/10 text-white border border-white/20">
             {{ getStatutConfig(codir.statut).label }}
           </span>
         </div>
         <!-- Lien PDF si déjà généré -->
         <div v-if="codir.url" class="mt-4">
-          <a :href="codir.url" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-blue-200 hover:text-white underline underline-offset-2 transition-colors">
+          <a :href="codir.url" target="_blank"
+            class="inline-flex items-center gap-1.5 text-xs text-blue-200 hover:text-white underline underline-offset-2 transition-colors">
             <UIcon name="i-heroicons-document-arrow-down" class="w-3.5 h-3.5" />
             Voir le PDF enregistré
           </a>
@@ -302,22 +283,30 @@ const statutTacheLabel = (s) => ({
                 <td class="px-3 py-2 border border-slate-200 font-medium text-slate-800">{{ tache.intitule }}</td>
                 <td class="px-3 py-2 border border-slate-200 text-center">
                   <span :class="{
-                    'text-red-600 bg-red-50 px-2 py-0.5 rounded-full text-xs font-semibold':    tache.priorite === 'Haute',
+                    'text-red-600 bg-red-50 px-2 py-0.5 rounded-full text-xs font-semibold': tache.priorite === 'Haute',
                     'text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full text-xs font-semibold': tache.priorite === 'Moyenne',
                     'text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-xs font-semibold': tache.priorite === 'Basse',
                   }">{{ tache.priorite }}</span>
                 </td>
-                <td class="px-3 py-2 border border-slate-200 text-center text-xs">{{ statutTacheLabel(tache.pivot?.statut) }}</td>
+                <td class="px-3 py-2 border border-slate-200 text-center text-xs">{{
+                  statutTacheLabel(tache.pivot?.statut)
+                  }}</td>
                 <td class="px-3 py-2 border border-slate-200 text-center">
                   <div class="flex flex-col items-center gap-1">
-                    <span class="text-xs font-mono font-semibold text-blue-700">{{ tache.pivot?.progression ?? 0 }}%</span>
+                    <span class="text-xs font-mono font-semibold text-blue-700">{{ tache.pivot?.progression ?? 0
+                      }}%</span>
                     <div class="w-full bg-gray-200 rounded-full h-1.5">
-                      <div class="bg-blue-500 h-1.5 rounded-full" :style="`width:${tache.pivot?.progression ?? 0}%`"></div>
+                      <div class="bg-blue-500 h-1.5 rounded-full" :style="`width:${tache.pivot?.progression ?? 0}%`">
+                      </div>
                     </div>
                   </div>
                 </td>
-                <td class="px-3 py-2 border border-slate-200 text-xs text-slate-600">{{ getMembresLabel(tache.membres) }}</td>
-                <td class="px-3 py-2 border border-slate-200 text-xs text-slate-500 italic">{{ tache.pivot?.commentaire ?? '—' }}</td>
+                <td class="px-3 py-2 border border-slate-200 text-xs text-slate-600">{{ getMembresLabel(tache.membres)
+                  }}
+                </td>
+                <td class="px-3 py-2 border border-slate-200 text-xs text-slate-500 italic">{{ tache.pivot?.commentaire
+                  ??
+                  '—' }}</td>
               </tr>
             </tbody>
           </table>
@@ -341,7 +330,8 @@ const statutTacheLabel = (s) => ({
                 <span class="text-blue-500 text-xs font-bold uppercase tracking-wide shrink-0">Action</span>
                 <span class="font-medium text-slate-700 text-sm">{{ action.libelle }}</span>
               </div>
-              <div v-for="activite in action.activites" :key="activite.id" class="mb-3 pl-4 border-l-2 border-violet-100">
+              <div v-for="activite in action.activites" :key="activite.id"
+                class="mb-3 pl-4 border-l-2 border-violet-100">
                 <div class="text-xs font-semibold text-violet-600 mb-1.5">▸ {{ activite.libelle }}</div>
                 <table v-if="activite.taches?.length" class="w-full text-xs border-collapse">
                   <thead>
@@ -357,11 +347,17 @@ const statutTacheLabel = (s) => ({
                     <tr v-for="tache in activite.taches" :key="tache.id" class="even:bg-slate-50/40">
                       <td class="px-2 py-1.5 border border-slate-200 text-slate-700">{{ tache.intitule }}</td>
                       <td class="px-2 py-1.5 border border-slate-200 text-center">
-                        <span :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">{{ tache.priorite }}</span>
+                        <span
+                          :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">{{
+                          tache.priorite }}</span>
                       </td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_debut) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_fin) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
+                        formatDateShort(tache.date_debut) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
+                        formatDateShort(tache.date_fin) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres)
+                        }}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -388,11 +384,17 @@ const statutTacheLabel = (s) => ({
                     <tr v-for="tache in activite.taches" :key="tache.id" class="even:bg-slate-50/40">
                       <td class="px-2 py-1.5 border border-slate-200 text-slate-700">{{ tache.intitule }}</td>
                       <td class="px-2 py-1.5 border border-slate-200 text-center">
-                        <span :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">{{ tache.priorite }}</span>
+                        <span
+                          :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">{{
+                          tache.priorite }}</span>
                       </td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_debut) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_fin) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
+                        formatDateShort(tache.date_debut) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
+                        formatDateShort(tache.date_fin) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres)
+                        }}
+                      </td>
                     </tr>
                   </tbody>
                 </table>

@@ -17,8 +17,18 @@ const {
   loadRememberedEmail
 } = useAuth()
 
-onMounted(() => {
+onMounted(async () => {
   loadRememberedEmail()
+    if (process.client) {
+    const token = localStorage.getItem('auth_token')
+    
+    // 2. On effectue la redirection
+    if (token) {
+      await navigateTo('/dashboard')
+    } else {
+      await navigateTo('/connexion')
+    }
+  }
 })
 </script>
 

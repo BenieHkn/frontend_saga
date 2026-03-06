@@ -45,6 +45,7 @@ export interface AuthResponse {
   entites: EntiteUser[]
   entite_user: any | null
   role?: string
+  roles?: string[]   // ✅ nouveau
   permissions?: Record<string, any>
   directeur_entite_user_id?: number | null
 }
@@ -60,9 +61,9 @@ export const useAuth = () => {
   // =====================
   // STATE
   // =====================
-  const authError = ref<string>('')
+  const authError      = ref<string>('')
   const successMessage = ref<string>('')
-  const loading = ref<boolean>(false)
+  const loading        = ref<boolean>(false)
 
   const form = reactive({
     email: '',
@@ -73,26 +74,16 @@ export const useAuth = () => {
 
   // =====================
   // LOCALSTORAGE
-  // Clés :
-  // - auth_token                → token Bearer
-  // - user                      → infos utilisateur
-  // - main_entite               → entité principale
-  // - entite_user               → relation entite_user active
-  // - selected_entite           → entité couramment sélectionnée
-  // - entites                   → tous les profils aplatis
-  // - role                      → rôle déterminé par le backend
-  // - permissions               → permissions frontend
-  // - directeur_entite_user_id  → ID du directeur si secrétariat
   // =====================
 
   const persistSession = (response: AuthResponse) => {
     if (!process.client) return
 
-    localStorage.setItem('auth_token', response.token)
-    localStorage.setItem('user', JSON.stringify(response.user))
+    localStorage.setItem('auth_token',  response.token)
+    localStorage.setItem('user',        JSON.stringify(response.user))
 
     if (response.main_entite) {
-      localStorage.setItem('main_entite', JSON.stringify(response.main_entite))
+      localStorage.setItem('main_entite',    JSON.stringify(response.main_entite))
       localStorage.setItem('selected_entite', JSON.stringify(response.main_entite))
     }
 
@@ -104,6 +95,11 @@ export const useAuth = () => {
 
     if (response.role) {
       localStorage.setItem('role', response.role)
+    }
+
+    // ✅ Stocker tous les rôles
+    if (response.roles) {
+      localStorage.setItem('roles', JSON.stringify(response.roles))
     }
 
     if (response.permissions) {
@@ -128,6 +124,7 @@ export const useAuth = () => {
       'selected_entite',
       'entites',
       'role',
+      'roles',   // ✅ nouveau
       'permissions',
       'directeur_entite_user_id',
     ].forEach(key => localStorage.removeItem(key))
@@ -180,7 +177,7 @@ export const useAuth = () => {
     }
 
     localStorage.setItem('selected_entite', JSON.stringify(selectedEntite))
-    localStorage.setItem('entite_user', JSON.stringify(entiteUser))
+    localStorage.setItem('entite_user',     JSON.stringify(entiteUser))
   }
 
   const isAuthenticated = (): boolean => !!getStoredToken()
@@ -194,28 +191,35 @@ export const useAuth = () => {
     return localStorage.getItem('role') ?? 'agent'
   }
 
+  // ✅ Retourne tous les rôles
+  const getRoles = (): string[] => {
+    if (!process.client) return ['agent']
+    const raw = localStorage.getItem('roles')
+    return raw ? JSON.parse(raw) : [getRole()]
+  }
+
+  // ✅ Vérifie si l'utilisateur a un rôle spécifique
+  const hasRole = (role: string): boolean => {
+    return getRoles().includes(role)
+  }
+
   const getPermissions = (): Record<string, any> => {
     if (!process.client) return {}
     const raw = localStorage.getItem('permissions')
     return raw ? JSON.parse(raw) : {}
   }
 
-  // ✅ CORRECTION : court-circuit admin → toujours autorisé
   const hasPermission = (permission: string): boolean => {
     if (getRole() === 'administrateur') return true
     return getPermissions()[permission] === true
   }
 
-  // Retourne l'ID du directeur si l'utilisateur est un secrétariat
   const getDirecteurEntiteUserId = (): number | null => {
     if (!process.client) return null
     const raw = localStorage.getItem('directeur_entite_user_id')
     return raw ? parseInt(raw) : null
   }
 
-  // ✅ CORRECTION : fonction propre sans return prématuré ni variable hors scope
-  // Retourne l'ID effectif à utiliser comme émetteur dans les requêtes.
-  // Si secrétariat → ID du directeur, sinon → ID propre de l'entite_user
   const getEmetteurId = (): number | null => {
     if (!process.client) return null
 
@@ -227,7 +231,6 @@ export const useAuth = () => {
 
     const directeurId = getDirecteurEntiteUserId()
 
-    // Secrétariats agissent au nom du directeur
     if (directeurId && (isSP() || isSA() || isSecDir())) {
       return directeurId
     }
@@ -238,16 +241,21 @@ export const useAuth = () => {
   // =====================
   // RÔLES (helpers booléens)
   // =====================
-  const isAdmin       = () => getRole() === 'administrateur'
-  const isDG          = () => getRole() === 'directeur_general'
-  const isSP          = () => getRole() === 'secretariat_particulier'
-  const isSA          = () => getRole() === 'secretariat_administratif'
-  const isSAP         = () => getRole() === 'sap'
-  const isDT          = () => getRole() === 'directeur_technique'
-  const isDCCIQ       = () => getRole() === 'directeur_cciq'
-  const isSecDir      = () => getRole() === 'secretariat_direction'
-  const isChefService = () => getRole() === 'chef_service'
-  const isAgent       = () => getRole() === 'agent'
+  const isAdmin            = () => hasRole('administrateur')
+  const isDG               = () => hasRole('directeur_general')
+  const isSP               = () => hasRole('secretariat_particulier')
+  const isSA               = () => hasRole('secretariat_administratif')
+  const isSAP              = () => hasRole('sap')
+  const isDT               = () => hasRole('directeur_technique')
+  const isDCCIQ            = () => hasRole('directeur_cciq')
+  const isSecDir           = () => hasRole('secretariat_direction')
+  const isChefService      = () => hasRole('chef_service')
+  const isAgent            = () => hasRole('agent')
+  const isSecretaireCodir  = () => hasRole('secretaire_codir')  // ✅ remplace isSPCODIR
+
+  // ✅ Cas composite — chef service ET secrétaire codir simultanément
+  const isChefServiceEtSecretaireCodir = () =>
+    hasRole('chef_service') && hasRole('secretaire_codir')
 
   // =====================
   // PERMISSIONS (helpers booléens)
@@ -257,28 +265,14 @@ export const useAuth = () => {
   const peutSupprimer     = () => hasPermission('supprimer_courriers')
   const peutRattacher     = () => hasPermission('faire_rattachement')
   const peutVoirCodir     = () => hasPermission('voir_codir')
+  const peutGererCodir    = () => hasPermission('gerer_codir')
   const voitTousCourriers = () => hasPermission('voir_tous_courriers')
   const voitCourriersSA   = () => hasPermission('voir_courriers_sa')
   const voitStats         = () => hasPermission('voir_stats')
   const voitAgents        = () => hasPermission('voir_agents')
-  const typeDashboard     = () => getPermissions().dashboard       ?? 'agent'
+  const peutTransferer    = () => hasPermission('faire_transfert')
+  const typeDashboard     = () => getPermissions().dashboard        ?? 'agent'
   const champsVisibles    = () => getPermissions().champs_visibles  ?? null
-
-  /**
-   * Peut effectuer un transfert de courrier.
-   *
-   * Rôles autorisés :
-   *   - directeur_technique     ✅
-   *   - directeur_cciq          ✅
-   *   - chef_service            ✅ (chef de service / chef de division)
-   *   - secretariat_direction   ✅ (au nom de son directeur technique via getEmetteurId)
-   *   - administrateur          ✅ (court-circuit hasPermission)
-   *
-   * Rôles NON autorisés :
-   *   - directeur_general, secretariat_particulier, secretariat_administratif,
-   *     sap, agent
-   */
-  const peutTransferer = () => hasPermission('faire_transfert')
 
   // =====================
   // REMEMBER ME
@@ -288,7 +282,7 @@ export const useAuth = () => {
     if (!process.client) return
     const savedEmail = localStorage.getItem('rememberedEmail')
     if (savedEmail) {
-      form.email = savedEmail
+      form.email   = savedEmail
       rememberMe.value = true
     }
   }
@@ -348,9 +342,9 @@ export const useAuth = () => {
 
         if (playerId) {
           await $fetch('/api/user/onesignal', {
-            method: 'POST',
+            method:  'POST',
             headers: { Authorization: `Bearer ${token}` },
-            body: { player_id: playerId }
+            body:    { player_id: playerId }
           })
           console.log('✅ OneSignal player_id enregistré:', playerId)
         }
@@ -365,7 +359,7 @@ export const useAuth = () => {
   // =====================
 
   const login = async () => {
-    authError.value = ''
+    authError.value    = ''
     successMessage.value = ''
 
     if (!validateForm()) return
@@ -400,9 +394,6 @@ export const useAuth = () => {
       successMessage.value = 'Connexion réussie, redirection en cours...'
       await new Promise(resolve => setTimeout(resolve, 200))
 
-      // ✅ Admin (pas d'entités) → redirection directe vers /
-      // Utilisateur avec 0 ou 1 entité → redirection directe vers /
-      // Utilisateur avec plusieurs entités → choix de profil
       if (activePostes.length <= 1) {
         await navigateTo('/dashboard')
         return
@@ -473,6 +464,8 @@ export const useAuth = () => {
 
     // Rôles
     getRole,
+    getRoles,     // ✅ nouveau
+    hasRole,      // ✅ nouveau
     isAdmin,
     isDG,
     isSP,
@@ -482,6 +475,8 @@ export const useAuth = () => {
     isDCCIQ,
     isSecDir,
     isChefService,
+    isSecretaireCodir,              // ✅ remplace isSPCODIR
+    isChefServiceEtSecretaireCodir, // ✅ nouveau
     isAgent,
 
     // Permissions
@@ -492,6 +487,7 @@ export const useAuth = () => {
     peutSupprimer,
     peutRattacher,
     peutVoirCodir,
+    peutGererCodir,
     voitTousCourriers,
     voitCourriersSA,
     voitStats,
