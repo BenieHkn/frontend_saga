@@ -149,9 +149,9 @@ const getPriorityBadgeClass = (priority) => {
 // Labels pour les priorités
 const getPriorityLabel = (priority) => {
   const labels = {
-    'URGENT': 'Urgent',
-    'IMPORTANT': 'Important',
-    'STANDARD': 'Standard',
+    'URGENT': 'URGENT',
+    'IMPORTANT': 'IMPORTANT',
+    'STANDARD': 'STANDARD',
   }
   return labels[priority] || priority
 }

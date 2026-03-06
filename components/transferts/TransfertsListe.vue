@@ -63,6 +63,32 @@
         </span>
       </template>
 
+      <!-- ✅ Objet : retour à la ligne avec largeur minimale -->
+      <template #cell-objet="{ value }">
+        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
+          {{ value }}
+        </span>
+      </template>
+
+      <!-- ✅ Référence : retour à la ligne, sans points de suspension -->
+      <template #cell-reference="{ value, item }">
+        <div class="w-full">
+          <button v-if="item.url" @click="onOpenDocument(item.url)"
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
+            :title="`Ouvrir le document ${value}`">
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+            <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
+          </button>
+          <span v-else
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
+            :title="value">
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+          </span>
+        </div>
+      </template>
+
       <!-- Slot pour les actions personnalisées -->
       <template #actions="{ item }">
         <div class="flex gap-1.5 justify-end">
@@ -211,22 +237,22 @@ const handleBulkExport = (selected) => {
 }
 
 const getPriorityLabel = (priority) => {
-  const labels = { 'urgent': 'Urgent', 'important': 'Important', 'standard': 'Standard' }
+  const labels = { 'URGENT': 'URGENT', 'IMPORTANT': 'IMPORTANT', 'STANDARD': 'STANDARD' }
   return labels[priority] || priority
 }
 
 const getPriorityClasses = (priority) => {
   const classes = {
-    'urgent': 'bg-red-100 text-red-800',
-    'important': 'bg-orange-100 text-orange-800',
-    'standard': 'bg-blue-100 text-blue-800',
+    'URGENT': 'bg-red-100 text-red-800',
+    'IMPORTANT': 'bg-orange-100 text-orange-800',
+    'STANDARD': 'bg-blue-100 text-blue-800',
   }
   return classes[priority] || 'bg-blue-100 text-blue-800'
 }
 
 const getPriorityDotClass = (priority) => {
   const classes = {
-    'urgent': 'bg-red-500', 'important': 'bg-orange-500', 'standard': 'bg-blue-500',
+    'URGENT': 'bg-red-500', 'IMPORTANT': 'bg-orange-500', 'STANDARD': 'bg-blue-500',
   }
   return classes[priority] || 'bg-gray-500'
 }

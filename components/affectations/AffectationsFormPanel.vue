@@ -198,9 +198,9 @@ const today = new Date().toISOString().split('T')[0]
 
 // ✅ CORRECTION : Options avec valeurs en MINUSCULES pour correspondre à Laravel
 const priorityOptions = [
-  { label: 'Urgent', value: 'urgent' },
-  { label: 'Important', value: 'important' },
-  { label: 'Standard', value: 'standard' },
+  { label: 'URGENT', value: 'URGENT' },
+  { label: 'IMPORTANT', value: 'IMPORTANT' },
+  { label: 'STANDARD', value: 'STANDARD' },
 ]
 
 const statutOptions = [
@@ -234,36 +234,24 @@ const calculatedDelai = computed(() => {
   return diffDays.toString()
 })
 
-// ✅ CORRECTION : Couleurs mises à jour pour gérer les valeurs en minuscules
+
+
 const getPriorityColor = (priority) => {
   const colors = {
-    'urgent': { dot: 'bg-red-500' },
-    'important': { dot: 'bg-orange-500' },
-    'standard': { dot: 'bg-blue-500' },
+    'URGENT':    { dot: 'bg-red-500' },
+    'IMPORTANT': { dot: 'bg-orange-500' },
+    'STANDARD':  { dot: 'bg-blue-500' },
   }
-  return colors[priority?.toLowerCase()] || { dot: 'bg-gray-500' }
+  return colors[priority] || { dot: 'bg-gray-500' }  // ✅ pas de toLowerCase()
 }
 
-// ✅ CORRECTION : Labels mis à jour
 const getPriorityLabel = (priority) => {
   const labels = {
-    'urgent': 'Urgent',
-    'important': 'Important',
-    'standard': 'Standard',
+    'URGENT':    'URGENT',
+    'IMPORTANT': 'IMPORTANT',
+    'STANDARD':  'STANDARD',
   }
-  return labels[priority?.toLowerCase()] || priority
-}
-
-// Couleurs des statuts
-const getStatutColor = (statut) => {
-  const colors = {
-    'En attente': { dot: 'bg-gray-500' },
-    'En cours': { dot: 'bg-blue-500' },
-    'Traité': { dot: 'bg-green-500' },
-    'Clôturé': { dot: 'bg-blue-500' },
-    'Annulé': { dot: 'bg-red-500' },
-  }
-  return colors[statut] || { dot: 'bg-gray-500' }
+  return labels[priority] || priority  // ✅ pas de toLowerCase()
 }
 </script>
 

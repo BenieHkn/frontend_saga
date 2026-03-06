@@ -84,12 +84,12 @@
               <button @click="toggleUserMenu" type="button"
                 class="flex items-center pl-1 pr-3 py-1 bg-gradient-to-br from-emerald-700 to-blue-700 rounded-2xl hover:opacity-90 transition-all focus:outline-none">
                 <div class="p-0.5 rounded-xl">
-                  <img class="h-9 w-9 rounded-[10px] object-cover bg-white" :src="getInitials(user?.nom, user?.prenom)"
+                  <img class="h-9 w-9 rounded-[10px] object-cover bg-white" :src="getInitials(user?.prenom, user?.nom)"
                     alt="User" />
                 </div>
                 <div class="hidden md:block ml-3 text-left mr-2">
                   <p class="text-xs font-bold text-white leading-none uppercase">
-                    {{ user?.prenom }}
+                    {{ user?.nom }}
                   </p>
                   <p class="text-[10px] text-emerald-300 font-bold mt-1 uppercase tracking-tighter">
                     <span v-if="user?.is_superadmin">Administrateur</span>

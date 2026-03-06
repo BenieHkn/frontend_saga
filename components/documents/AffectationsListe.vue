@@ -36,79 +36,45 @@
     </div>
 
     <!-- DataTable Component -->
-    <DataTable 
-      v-else 
-      ref="dataTableRef" 
-      :default-sort-column="null" 
-      :show-row-numbers="true" 
-      :data="affectationData"
-      :columns="columns" 
-      :selectable="false" 
-      :items-per-page-options="[10, 25, 50, 100]" 
-      :default-items-per-page="10"
+    <DataTable v-else ref="dataTableRef" :default-sort-column="null" :show-row-numbers="true" :data="affectationData"
+      :columns="columns" :selectable="false" :items-per-page-options="[10, 25, 50, 100]" :default-items-per-page="10"
       :left-aligned-columns="['objet_courrier', 'instructions', 'reference_courrier', 'emetteur', 'destinataire']"
-      @edit="handleEdit" 
-      @delete="handleDelete" 
-      @open-document="handleOpenDocument"
-      @selection-change="handleSelectionChange"
-    >
+      @edit="handleEdit" @delete="handleDelete" @open-document="handleOpenDocument"
+      @selection-change="handleSelectionChange">
       <!-- Filtres avancés -->
       <template #advanced-filters="{ filters, onFilter }">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Date d'affectation</label>
-            <input 
-              v-model="filters.date_affect" 
-              type="date"
+            <input v-model="filters.date_affect" type="date"
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              @input="onFilter" 
-            />
+              @input="onFilter" />
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Date de retour attendue</label>
-            <input 
-              v-model="filters.delai_traitement" 
-              type="date"
+            <input v-model="filters.delai_traitement" type="date"
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              @input="onFilter" 
-            />
+              @input="onFilter" />
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Date de clôture</label>
-            <input 
-              v-model="filters.date_cloture" 
-              type="date"
+            <input v-model="filters.date_cloture" type="date"
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              @input="onFilter" 
-            />
+              @input="onFilter" />
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Émetteur</label>
-            <input 
-              v-model="filters.emetteur" 
-              placeholder="Filtrer par émetteur..."
+            <input v-model="filters.emetteur" placeholder="Filtrer par émetteur..."
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              @input="onFilter" 
-            />
+              @input="onFilter" />
           </div>
         </div>
       </template>
 
-      <!-- Actions de sélection supprimées (dupliquées plus bas) -->
-
-      <!-- Cellule personnalisée: Référence courrier -->
-      <template #cell-reference_courrier="{ value }">
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-          {{ value }}
-        </span>
-      </template>
-
       <!-- Cellule personnalisée: Statut -->
       <template #cell-statut="{ value }">
-        <span 
-          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
-          :class="getStatutClasses(value)"
-        >
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
+          :class="getStatutClasses(value)">
           <span class="w-2 h-2 rounded-full mr-1.5" :class="getStatutDotClass(value)"></span>
           {{ value }}
         </span>
@@ -116,10 +82,8 @@
 
       <!-- Cellule personnalisée: Priorité -->
       <template #cell-priority="{ value }">
-        <span 
-          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
-          :class="getPriorityClasses(value)"
-        >
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
+          :class="getPriorityClasses(value)">
           <span class="w-2 h-2 rounded-full mr-1.5" :class="getPriorityDotClass(value)"></span>
           {{ value }}
         </span>
@@ -135,28 +99,20 @@
       <!-- Actions personnalisées -->
       <template #actions="{ item }">
         <div class="flex gap-1.5 justify-end">
-          <button 
-            @click="handleViewDetails(item)" 
-            title="Voir les détails"
-             class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border-amber-100 rounded-md hover:bg-amber-200 :hover:text-amber-900 hover:border-amber-900 transition-all group">
+          <button @click="handleViewDetails(item)" title="Voir les détails"
+            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border-amber-100 rounded-md hover:bg-amber-200 :hover:text-amber-900 hover:border-amber-900 transition-all group">
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
 
           <!-- ✅ CONDITION : Afficher uniquement si responsable -->
-          <button 
-            v-if="isResponsable"
-            @click="handleQuickAssign(item.courrier_id)" 
-            :disabled="!item.courrier_id"
+          <button v-if="isResponsable" @click="handleQuickAssign(item.courrier_id)" :disabled="!item.courrier_id"
             title="Affecter ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 :hover:text-sky-900 hover:border-sky-900 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
 
           <!-- ✅ CONDITION : Afficher uniquement si responsable -->
-          <button 
-            v-if="isResponsable"
-            @click="handleQuickTransfer(item.courrier_id)" 
-            :disabled="!item.courrier_id"
+          <button v-if="isResponsable" @click="handleQuickTransfer(item.courrier_id)" :disabled="!item.courrier_id"
             title="Transférer ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border-emerald-100 rounded-md hover:bg-emerald-200 :hover:text-emerald-900 hover:border-emerald-900 transition-all group">
             <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4 group-hover:text-green-600" />
@@ -165,49 +121,49 @@
           <!-- Traiter: visible si le document peut être traité et si l'utilisateur n'est pas SP/SA -->
           <button
             v-if="isResponsable && item._complete?.courrier_arrive?.document?.type_document?.peut_etre_traite && !isSP() && !isSA()"
-            @click="handleProcess(item)"
-            :disabled="!item.courrier_id"
-            title="Traiter le courrier"
+            @click="handleProcess(item)" :disabled="!item.courrier_id" title="Traiter le courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-violet-50 text-violet-700 border-violet-100 rounded-md hover:bg-violet-200 hover:text-violet-900 transition-all group">
             <Icon name="i-heroicons-clipboard-check" class="w-4 h-4 group-hover:text-violet-600" />
           </button>
         </div>
       </template>
 
-      <template #cell-reference="{ value, item }">
-        <button
-          v-if="item.url"
-          @click="onOpenDocument(item.url)"
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 rounded-md transition-all group"
-          :title="`Ouvrir le document ${value}`"
-        >
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-          <span>{{ value }}</span>
-          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 opacity-60 group-hover:opacity-100" />
-        </button>
-        <span 
-          v-else
-          class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md"
-          :title="value"
-        >
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 opacity-50" />
+      <template #cell-reference_courrier="{ value, item }">
+        <div class="w-full">
+          <button v-if="item.doc_courrier" @click="handleOpenDocument(item.doc_courrier)"
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
+            :title="`Ouvrir le document ${value}`">
+            <Icon name="i-heroicons-document-text"
+              class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+            <Icon name="i-heroicons-arrow-top-right-on-square"
+              class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
+          </button>
+          <span v-else
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
+            :title="value">
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+          </span>
+        </div>
+      </template>
+
+      <template #cell-objet_courrier="{ value }">
+        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]"
+          :title="value">
           {{ value }}
         </span>
       </template>
 
       <!-- Slot pour les actions de sélection multiple -->
       <template #selection-actions="{ selected }">
-        <button 
-          @click="handleBulkDelete(selected)"
-          class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 transition-all"
-        >
+        <button @click="handleBulkDelete(selected)"
+          class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 transition-all">
           <Icon name="i-heroicons-trash" class="w-4 h-4" />
           Supprimer ({{ selected.length }})
         </button>
-        <button 
-          @click="handleBulkExport(selected)"
-          class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-all"
-        >
+        <button @click="handleBulkExport(selected)"
+          class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-all">
           <Icon name="i-heroicons-arrow-down-tray" class="w-4 h-4" />
           Exporter ({{ selected.length }})
         </button>
@@ -234,7 +190,7 @@ useHead({ title: "Documents reçus - Sagar Revolution" });
 // ============================================================================
 
 const columns = [
-  { key: "reference_courrier", label: "Réf. Courrier", visible: true, width: 'min-w-[200px]', showLabel: false, inputHidden: false },
+  { key: "reference_courrier", label: "Référence du Courrier", visible: true, width: 'min-w-[200px]', showLabel: false, inputHidden: false },
   { key: "objet_courrier", label: "Objet", visible: true, width: 'min-w-[250px]', showLabel: false, inputHidden: false },
   { key: "doc_courrier", label: "Document", visible: false, type: 'document', width: 'w-24', showLabel: false, inputHidden: false },
   { key: "date_affect", label: "Date d'affectation", visible: true, width: 'min-w-[120px]', showLabel: false, inputHidden: false },
@@ -286,20 +242,20 @@ const transformerDonneesAPI = (reponseAPI) => {
     if (affectation?.emetteur?.user?.nom && affectation?.emetteur?.entite?.code) {
       const nomComplet = `${affectation.emetteur.user.nom} ${affectation.emetteur.user.prenom || ''}`.trim();
       const codeEntite = affectation.emetteur.entite.code;
-      const roleOuFonction = affectation.emetteur.is_responsable
-        ? affectation.emetteur.entite.fonction
-        : 'Agent';
-      emetteurFormate = `${nomComplet} (${codeEntite} - ${roleOuFonction})`;
+      const isResponsable = affectation.emetteur.is_responsable;
+      emetteurFormate = isResponsable
+        ? `${nomComplet} (${codeEntite})`
+        : `${nomComplet} - Agent / ${codeEntite}`;
     }
 
     let destinataireFormate = '';
     if (affectation?.destinataire?.user?.nom && affectation?.destinataire?.entite?.code) {
       const nomComplet = `${affectation.destinataire.user.nom} ${affectation.destinataire.user.prenom || ''}`.trim();
       const codeEntite = affectation.destinataire.entite.code;
-      const roleOuFonction = affectation.destinataire.is_responsable
-        ? affectation.destinataire.entite.fonction
-        : 'Agent';
-      destinataireFormate = `${nomComplet} (${codeEntite} - ${roleOuFonction})`;
+      const isResponsable = affectation.emetteur.is_responsable;
+      destinataireFormate = isResponsable
+        ? `${nomComplet} (${codeEntite})`
+        : `${nomComplet} - Agent / ${codeEntite}`;
     }
 
     return {
@@ -307,8 +263,10 @@ const transformerDonneesAPI = (reponseAPI) => {
       courrier_id: affectation.courrier_arrive_id || null,
       reference_courrier: affectation?.courrier_arrive?.document?.reference || '',
       objet_courrier: affectation?.courrier_arrive?.document?.objet || '',
-      doc_courrier: affectation?.courrier_arrive?.document?.url
-        ? `${config.public.apiBase}${affectation.courrier_arrive.document.url}`
+      doc_courrier: affectation?.courrier_arrive?.document?.url && affectation?.courrier_arrive?.document?.url !== 'Inconnu'
+        ? (affectation?.courrier_arrive?.document?.url.startsWith('http')
+          ? affectation?.courrier_arrive?.document?.url
+          : `${config.public.baseUrl}${affectation?.courrier_arrive?.document?.url}`)
         : '',
       date_affect: formatDate(affectation.date_affect),
       instructions: affectation.instructions || '',
@@ -404,18 +362,18 @@ const getStatutDotClass = (statut) => {
 
 const getPriorityClasses = (priority) => {
   const classes = {
-    'urgent': 'bg-red-100 text-red-800',
-    'important': 'bg-orange-100 text-orange-800',
-    'standard': 'bg-blue-100 text-blue-800',
+    'URGENT': 'bg-red-100 text-red-800',
+    'IMPORTANT': 'bg-orange-100 text-orange-800',
+    'STANDARD': 'bg-blue-100 text-blue-800',
   };
   return classes[priority] || 'bg-gray-100 text-gray-800';
 };
 
 const getPriorityDotClass = (priority) => {
   const classes = {
-    'urgent': 'bg-red-500',
-    'important': 'bg-orange-500',
-    'standard': 'bg-blue-500',
+    'URGENT': 'bg-red-500',
+    'IMPORTANT': 'bg-orange-500',
+    'STANDARD': 'bg-blue-500',
   };
   return classes[priority] || 'bg-gray-500';
 };
@@ -560,11 +518,11 @@ const handleQuickAssign = (courrierId) => {
   }
 
   console.log('✅ Affectation rapide pour le courrier ID:', courrierId)
-  
+
   if (process.client) {
     sessionStorage.setItem('preselected_courrier_id', courrierId.toString())
   }
-  
+
   navigateTo('/affectations/create')
 }
 
@@ -580,11 +538,11 @@ const handleQuickTransfer = (courrierId) => {
   }
 
   console.log('✅ Transfert rapide pour le courrier ID:', courrierId)
-  
+
   if (process.client) {
     sessionStorage.setItem('preselected_courrier_id_transfer', courrierId.toString())
   }
-  
+
   navigateTo('/affectations-transferts/form-transfert')
 }
 
@@ -723,5 +681,12 @@ onMounted(async () => {
 
 :deep(.swal2-cancel):hover {
   background-color: #4b5563 !important;
+}
+
+:deep(.line-clamp-2) {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style>

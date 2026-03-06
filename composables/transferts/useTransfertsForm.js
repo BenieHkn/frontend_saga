@@ -106,7 +106,7 @@ export const useTransfertsForm = () => {
               date_affect: new Date().toISOString().split('T')[0],
               instructions: additionalData.objet || 'Transfert de courrier',
               type_affectation: 'transfert',
-              priority: "standard"
+              priority: "STANDARD"
             }
 
             console.log("les données de transfert", transferData)

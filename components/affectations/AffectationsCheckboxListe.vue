@@ -214,9 +214,9 @@ const getStatutBadgeClass = (statut) => {
 // Classes pour les badges de priorité
 const getPriorityBadgeClass = (priority) => {
   const classes = {
-    'urgent': 'bg-red-100 text-red-700 ring-1 ring-red-200',
-    'important': 'bg-orange-100 text-orange-700 ring-1 ring-orange-200',
-    'standard': 'bg-blue-100 text-blue-700 ring-1 ring-blue-200',
+    'URGENT': 'bg-red-100 text-red-700 ring-1 ring-red-200',
+    'IMPORTANT': 'bg-orange-100 text-orange-700 ring-1 ring-orange-200',
+    'STANDARD': 'bg-blue-100 text-blue-700 ring-1 ring-blue-200',
   }
   return classes[priority?.toLowerCase()] || 'bg-slate-100 text-slate-700 ring-1 ring-slate-200'
 }

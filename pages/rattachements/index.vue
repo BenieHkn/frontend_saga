@@ -63,39 +63,55 @@
         </button>
       </template>
 
-      <!-- ✅ Cellule personnalisée: Référence arrivée CLIQUABLE -->
-      <template #cell-ref_arrivee="{ value, item }">
-        <button v-if="item.doc_arrivee" @click="openDocument(item.doc_arrivee)"
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 rounded-full transition-all group"
-          :title="`Ouvrir le document ${value}`">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-          <span>{{ value }}</span>
-          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 opacity-60 group-hover:opacity-100" />
-        </button>
-        <span v-else
-          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600"
-          :title="value">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 opacity-50" />
-          {{ value }}
-        </span>
+      <!-- ✅ Référence : retour à la ligne, sans points de suspension -->
+      <template #cell-ref_depart="{ value, item }">
+          <div class="w-full">
+          <button v-if="item.doc_depart" @click="OpenDocument(item.doc_depart)"
+              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
+              :title="`Ouvrir le document ${value}`">
+              <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+              <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+              <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
+          </button>
+          <span v-else
+              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
+              :title="value">
+              <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
+              <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+          </span>
+          </div>
       </template>
 
-      <!-- ✅ Cellule personnalisée: Référence départ CLIQUABLE -->
-      <template #cell-ref_depart="{ value, item }">
-        <button v-if="item.doc_depart" @click="openDocument(item.doc_depart)"
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 hover:border-green-300 rounded-full transition-all group"
-          :title="`Ouvrir le document ${value}`">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-          <span>{{ value }}</span>
-          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 opacity-60 group-hover:opacity-100" />
-        </button>
-        <span v-else
-          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600"
-          :title="value">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 opacity-50" />
-          {{ value }}
-        </span>
+      <template #cell-objet_depart="{ value }">
+                <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
+                {{ value }}
+                </span>
+            </template>
+
+      <!-- ✅ Référence : retour à la ligne, sans points de suspension -->
+      <template #cell-ref_arrivee="{ value, item }">
+          <div class="w-full">
+          <button v-if="item.doc_arrivee" @click="OpenDocument(item.doc_arrivee)"
+              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
+              :title="`Ouvrir le document ${value}`">
+              <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+              <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+              <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
+          </button>
+          <span v-else
+              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
+              :title="value">
+              <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
+              <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+          </span>
+          </div>
       </template>
+
+      <template #cell-objet_arrivee="{ value }">
+                <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
+                {{ value }}
+                </span>
+            </template>
 
       <!-- Cellule personnalisée: Lien -->
       <template #cell-link>
@@ -105,18 +121,6 @@
       </template>
 
       <!-- Cellule personnalisée: Objet arrivée (tronqué) -->
-      <template #cell-objet_arrivee="{ value }">
-        <span class="block max-w-[300px] line-clamp-2 text-xs text-slate-700" :title="value">
-          {{ value || 'Sans objet' }}
-        </span>
-      </template>
-
-      <!-- Cellule personnalisée: Objet départ (tronqué) -->
-      <template #cell-objet_depart="{ value }">
-        <span class="block max-w-[300px] line-clamp-2 text-xs text-slate-700" :title="value">
-          {{ value || 'Sans objet' }}
-        </span>
-      </template>
 
       <!-- Actions personnalisées -->
       <template #actions="{ item }">
@@ -225,6 +229,7 @@ const columns = [
     label: "Date de création",
     visible: true,
     width: 'min-w-[140px]',
+    showLabel: false,
   },
 ];
 
@@ -261,15 +266,15 @@ const transformerDonneesAPI = (reponseAPI) => {
     id: rattachement.id,
     ref_arrivee: rattachement?.document?.reference || '',
     objet_arrivee: rattachement?.document?.objet || '',
-    doc_arrivee: rattachement?.document?.url
-      ? `${config.public.baseUrl}/${rattachement.document.url}`
+    doc_arrivee: rattachement.document?.url && rattachement.document?.url !== 'Inconnu'
+      ? (rattachement.document?.url.startsWith('http') ? rattachement.document?.url : `${config.public.baseUrl}${rattachement.document?.url}`)
       : '',
     link: '→',
     ref_depart: rattachement?.reponse?.reference || '',
     objet_depart: rattachement?.reponse?.objet || '',
-    doc_depart: rattachement?.reponse?.url
-      ? `${config.public.baseUrl}/${rattachement.reponse.url}`
-      : '',
+    doc_depart: rattachement?.reponse?.url && rattachement?.reponse?.url !== 'Inconnu'
+        ? (rattachement?.reponse?.url.startsWith('http') ? rattachement?.reponse?.url : `${config.public.baseUrl}${rattachement?.reponse?.url}`)
+        : '',
     created_at: formatDate(rattachement.created_at),
     created_by: rattachement.user?.name || 'Système',
     courrier_arrivee: rattachement.document,

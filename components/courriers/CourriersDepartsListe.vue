@@ -1,18 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-100 p-6 font-sans">
 
-    <!-- <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Courriers Départs</h1>
-        <p class="text-sm text-slate-500">Gestion et suivi des courriers sortants</p>
-      </div>
-      <UBadge color="blue" variant="soft" size="lg" class="ml-auto">
-        <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
-        <UButton to="/courriers/form_courrier_depart" variant="text" size="sm" class="p-0 m-0 text-blue-600">
-          Nouveau
-        </UButton>
-      </UBadge>
-    </div> -->
     <PageHeader v-if="!isAdmin()" title="Courriers Départs" subtitle="Gestion et suivi des courriers sortants" btnText="Nouveau" to="/courriers/form_courrier_depart"/>
     <PageHeader v-else title="Courriers Départs" subtitle="Gestion et suivi des courriers sortants"/>
 
@@ -52,8 +40,7 @@
               @input="onFilter" />
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type de
-              départ</label>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type de départ</label>
             <select v-model="filters.type_depart"
               class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
               @change="onFilter">
@@ -63,15 +50,13 @@
             </select>
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de départ
-              (début)</label>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de départ (début)</label>
             <input v-model="filters.date_depart_from" type="date"
               class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
               @input="onFilter" />
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de départ
-              (fin)</label>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de départ (fin)</label>
             <input v-model="filters.date_depart_to" type="date"
               class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
               @input="onFilter" />
@@ -89,59 +74,65 @@
       </template>
 
       <template #cell-source="{ value }">
-        <span
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+        <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
           {{ value }}
         </span>
       </template>
 
       <template #cell-type_document="{ value }">
-        <span
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-green-50 text-green-700 border border-green-100">
+        <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-green-50 text-green-700 border border-green-100">
           {{ value || 'N/A' }}
         </span>
       </template>
 
       <template #cell-large_diffusion="{ value }">
-        <span v-if="value"
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">Oui</span>
-        <span v-else
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-gray-50 text-gray-700 border border-gray-100">Non</span>
+        <span v-if="value" class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">Oui</span>
+        <span v-else class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-gray-50 text-gray-700 border border-gray-100">Non</span>
       </template>
 
       <template #cell-confidentiel="{ value }">
-        <span v-if="value"
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-red-50 text-red-700 border border-red-100">Oui</span>
-        <span v-else
-          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-gray-50 text-gray-700 border border-gray-100">Non</span>
+        <span v-if="value" class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-red-50 text-red-700 border border-red-100">Oui</span>
+        <span v-else class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-gray-50 text-gray-700 border border-gray-100">Non</span>
       </template>
 
-      <template #cell-reference="{ value, item }">
-        <button v-if="item.url" @click="onOpenDocument(item.url)"
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 rounded-md transition-all group"
-          :title="`Ouvrir le document ${value}`">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-          <span>{{ value }}</span>
-          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 opacity-60 group-hover:opacity-100" />
-        </button>
-        <span v-else
-          class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md"
-          :title="value">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 opacity-50" />
+      <!-- ✅ Objet : retour à la ligne avec largeur minimale -->
+      <template #cell-objet="{ value }">
+        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
           {{ value }}
         </span>
       </template>
 
+      <!-- ✅ Référence : retour à la ligne, sans points de suspension -->
+      <template #cell-reference="{ value, item }">
+        <div class="w-full">
+          <button v-if="item.url" @click="onOpenDocument(item.url)"
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
+            :title="`Ouvrir le document ${value}`">
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+            <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
+          </button>
+          <span v-else
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
+            :title="value">
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+          </span>
+        </div>
+      </template>
+
+      <!-- ✅ Initiateurs : largeur limitée pour ne pas écraser les autres colonnes -->
       <template #cell-initiateurs="{ value }">
-        <div v-if="value && value.length > 0" class="flex flex-col gap-1">
+        <div v-if="value && value.length > 0" class="flex flex-col gap-1 max-w-[150px]">
           <span v-for="(initiateur, index) in value" :key="index"
-            class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-purple-700 bg-purple-50 border border-purple-100 rounded-full whitespace-nowrap">
+            class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-purple-700 bg-purple-50 border border-purple-100 rounded-full whitespace-normal break-words min-w-0">
             <Icon name="i-heroicons-user" class="w-3 h-3 shrink-0" />
             {{ initiateur }}
           </span>
         </div>
         <span v-else class="text-xs text-slate-400 italic">—</span>
       </template>
+
     </DataTable>
   </div>
 </template>
@@ -168,9 +159,9 @@ const error = ref(null)
 const columns = [
   { key: 'source', label: 'Source', visible: true, type: 'badge', inputHidden: true },
   { key: 'reference', label: 'Référence', visible: true, showLabel: false },
+  { key: 'objet', label: 'Objet', visible: true, showLabel: false, minWidth: '200px' },
   { key: 'structure', label: 'Destinataire', visible: true, inputHidden: true },
   { key: 'numeroEnregistrement', label: "N° d'enregistrement", visible: true, showLabel: false },
-  { key: 'objet', label: 'Objet', visible: true, showLabel: false },
   { key: 'type_document', label: 'Type de document', visible: true, showLabel: false },
   { key: 'initiateurs', label: 'Initiateurs', visible: true, inputHidden: true, sortable: false, filterable: false },
   { key: 'date_enregistrement', label: "Date d'enregistrement", visible: false },
@@ -207,7 +198,9 @@ const transformCourriers = (response) => {
       date_enregistrement: formatDate(courrier.document?.date_enreg),
       objet: courrier.document?.objet || '',
       date_courrier: formatDate(courrier.document?.date_courrier),
-      url: courrier.document?.url ? `${config.public.baseUrl}${courrier.document.url}` : '',
+      url: courrier.document?.url && courrier.document?.url !== 'Inconnu'
+        ? (courrier.document?.url.startsWith('http') ? courrier.document?.url : `${config.public.baseUrl}${courrier.document?.url}`)
+        : '',
       type_depart: courrier.type_depart || '',
       date_depart: formatDate(courrier.date_depart),
       type_document: courrier.document?.type_document?.libelle || '',
@@ -227,7 +220,6 @@ const refresh = async () => {
   try {
     const authToken = localStorage.getItem('auth_token') || ''
 
-    // Construire l'endpoint — SA filtre par code entité, autres voient tout
     let endpoint = `${config.public.apiBase}/courriers-departs`
     if (props.entiteId) {
       const selectedEntite = JSON.parse(localStorage.getItem('selected_entite') || 'null')
@@ -359,5 +351,11 @@ onMounted(() => {
 :deep(.swal2-confirm):hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* ✅ Force les cellules du tableau à ne pas tronquer le contenu */
+:deep(td) {
+  overflow: visible !important;
+  white-space: normal !important;
 }
 </style>
