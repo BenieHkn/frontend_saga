@@ -90,7 +90,7 @@
             changeType="decrease"
             icon="envelope-open-solid"
             color="blue"
-            class="liquid-card"
+            class="liquid-card text-white"
             :infos="isGenerales ? formatInfo(stats.arrives_par_service) : ''"
           />
           <StatsCard
@@ -99,7 +99,7 @@
             changeType="increase"
             icon="envelope-open-solid"
             color="green"
-            class="liquid-card"
+            class="liquid-card text-white"
             :infos="isGenerales ? formatInfo(stats.departs_par_service) : ''"
           />
           <StatsCard
@@ -108,7 +108,7 @@
             changeType="hold"
             icon="envelope-open-solid"
             color="yellow"
-            class="liquid-card"
+            class="liquid-card text-white"
             :infos="isGenerales ? formatInfo(stats.en_attente_par_service) : ''"
           />
           <StatsCard
@@ -117,7 +117,7 @@
             changeType="increase"
             icon="envelope-open-solid"
             color="purple"
-            class="liquid-card"
+            class="liquid-card text-white"
             :infos="isGenerales ? formatInfo(stats.affectes_par_service) : ''"
           />
         </template>
