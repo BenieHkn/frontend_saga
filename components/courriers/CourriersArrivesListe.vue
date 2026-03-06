@@ -274,14 +274,6 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
-          <!-- Traiter button temporarily disabled: logic moved to AffectationsListe.vue -->
-          <!--
-          <button v-if="item._complete?.document?.type_document?.peut_etre_traite && !isSP() && !isSA()"
-            @click="handleProcess(item)" title="Traiter le courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-violet-50 text-violet-700 border-violet-100 rounded-md hover:bg-violet-200 hover:text-violet-900 transition-all group">
-            <Icon name="i-heroicons-clipboard-check" class="w-4 h-4 group-hover:text-violet-600" />
-          </button>
-          -->
           <button v-if="!item._complete?.document?.reponses?.length && !isAdmin()" @click="handleReply(item)"
             title="Répondre au courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group">
