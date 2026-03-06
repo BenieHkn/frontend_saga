@@ -17,7 +17,6 @@ export const formatDateShort = (iso) =>
 export const STATUT_CONFIG = {
   soumis:    { label: 'Soumis',   uiColor: 'blue',   dotClass: 'bg-blue-400',   badgeClass: 'text-blue-600 bg-blue-50 dark:bg-blue-950/40' },
   clos:      { label: 'Clos',     uiColor: 'green',  dotClass: 'bg-green-400',  badgeClass: 'text-green-600 bg-green-50 dark:bg-green-950/40' },
-  en_cours:  { label: 'En cours', uiColor: 'amber', dotClass: 'bg-amber-400', badgeClass: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40' },
 }
 
 export const getStatutConfig = (statut) =>
@@ -26,7 +25,6 @@ export const getStatutConfig = (statut) =>
 export const STATUT_OPTIONS = [
   { label: 'soumis',     value: 'soumis' },
   { label: 'Clos',     value: 'clos' },
-  { label: 'En cours', value: 'en_cours' },
 ]
 
 export const TACHE_STATUT_OPTIONS = [

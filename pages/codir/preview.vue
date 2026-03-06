@@ -73,17 +73,20 @@ const handleGeneratePdf = async () => {
 // ── Téléchargement PDF ────────────────────────────────────────────────────────
 const pdfDownloading = ref(false)
 
-const handleDownloadPdf = async () => {
-  if (!codir.value) return
-  pdfDownloading.value = true
+const handleDownloadPdf = async (item) => {
   try {
-    const response = await downloadPdf(codir.value.id)
-    linkPdf.value = response.link
-    console.log(linkPdf.value)
-    window.open(linkPdf.value, '_blank')
-    showPdfGeneratedModal.value = false
+    pdfDownloading.value = true
+    const blob = await downloadPdf(item.id)
+    const url  = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href  = url
+    link.setAttribute('download', `codir_${item.id}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
   } catch (e) {
-    toast.add({ title: 'Erreur', description: e.message ?? 'Impossible de télécharger le PDF.', color: 'red', icon: 'i-heroicons-x-circle' })
+    console.error('Erreur téléchargement :', e)
   } finally {
     pdfDownloading.value = false
   }
@@ -101,10 +104,10 @@ const statutTacheLabel = (s) => ({
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <div class="bg-gray-50 dark:bg-gray-900 p-6">
 
     <!-- ── Barre d'outils ─────────────────────────────────────────────────── -->
-    <div class="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between gap-4 shadow-sm">
+    <div class="sticky top-20 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between gap-4 shadow-sm">
       <div class="flex items-center gap-3">
         <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" size="sm" @click="router.back()">
           Retour
@@ -121,7 +124,7 @@ const statutTacheLabel = (s) => ({
           variant="soft"
           size="sm"
           :loading="pdfGenerating"
-          :disabled="pdfGenerating"
+          :disabled="pdfGenerating || !!codir?.url"
           @click="handleGeneratePdf"
         >
           {{ pdfGenerating ? 'Génération…' : 'Générer PDF' }}
@@ -201,14 +204,13 @@ const statutTacheLabel = (s) => ({
             >
               Plus tard
             </UButton>
-            <UButton
+            <CustomButton
               color="emerald"
               icon="i-heroicons-arrow-down-tray"
               :loading="pdfDownloading"
-              @click="handleDownloadPdf"
-            >
-              {{ pdfDownloading ? 'Téléchargement…' : 'Télécharger' }}
-            </UButton>
+              @click="handleDownloadPdf(codir)"
+              :btnText="pdfDownloading ? 'Téléchargement' : 'Télécharger'"
+            />
           </div>
         </template>
       </UCard>
@@ -250,7 +252,7 @@ const statutTacheLabel = (s) => ({
     </UModal>
 
     <!-- ── Contenu ────────────────────────────────────────────────────────── -->
-    <div v-if="codir" class="max-w-5xl mx-auto my-8 bg-white shadow-xl rounded-xl overflow-hidden">
+    <div v-if="codir" class="mx-auto my-8 bg-white shadow-xl rounded-xl overflow-hidden">
 
       <!-- En-tête -->
       <div class="bg-gradient-to-r from-slate-800 to-blue-900 text-white px-10 py-8">

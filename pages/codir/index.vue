@@ -114,14 +114,16 @@ const handleCreate = async () => {
     })
     return
   }
+
   try {
     const payload = {
       date:        today,
       heure_debut: createForm.heure_debut,
-      heure_fin:   createForm.heure_fin || null,  // nullable
+      heure_fin:   null,  // nullable
       statut:      'soumis',
     }
     const created = await createCodir(payload)
+    console.log('Payload envoyé :', payload)
 
     // Optimistic update
     codirs.value.unshift(created)
@@ -283,26 +285,12 @@ const handleCreate = async () => {
             size="md"
           />
         </UFormGroup>
-
-        <!-- Heure de fin -->
-        <UFormGroup label="Heure de fin">
-          <UInput
-            v-model="createForm.heure_fin"
-            type="time"
-            size="md"
-            placeholder="Optionnel"
-          />
-          <template #hint>
-            <span class="text-xs text-gray-400">Optionnel — peut être renseigné plus tard</span>
-          </template>
-        </UFormGroup>
-
       </div>
 
       <template #footer>
         <div class="flex justify-end gap-2">
           <UButton color="gray" variant="ghost" @click="createModal = false; resetCreate()">Annuler</UButton>
-          <CustomButton btnText="Créer et ouvrir" @click="handleCreate" :modal="false" icon="i-heroicons-folder-open"/>
+          <CustomButton btnText="Créer et ouvrir" @click="handleCreate" :modal="false" icon="i-heroicons-folder-open" :loading="loading"/>
         </div>
       </template>
     </UCard>

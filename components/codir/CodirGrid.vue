@@ -8,11 +8,8 @@ defineProps({
 const emit = defineEmits(['edit', 'view'])
 
 const GRADIENT = {
-  nouveau:   'from-blue-700 to-indigo-700',
-  'terminé': 'from-green-700 to-emerald-700',
-  clos:      'from-slate-600 to-gray-700',
-  en_cours:  'from-amber-600 to-orange-600',
-  'annulé':  'from-red-700 to-rose-700',
+  clos:      'from-green-900 to-blue-900',
+  soumis:  'from-yellow-700/80 to-yellow-700/80',
 }
 
 const gradient = (s) => GRADIENT[s] ?? 'from-slate-600 to-gray-700'
@@ -52,7 +49,7 @@ const gradient = (s) => GRADIENT[s] ?? 'from-slate-600 to-gray-700'
 
       <!-- Footer compteurs + dot statut -->
       <div class="flex items-center justify-between pt-4 border-t border-white/15">
-        <div class="flex items-center gap-4 text-white/60 text-xs">
+        <div class="flex items-center gap-4 text-white/70 text-xs">
           <span class="flex items-center gap-1.5">
             <UIcon name="i-heroicons-clipboard-document-list" class="w-3.5 h-3.5" />
             {{ codir.ordres_du_jour?.length ?? 0 }} ODJ
