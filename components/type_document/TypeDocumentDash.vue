@@ -58,7 +58,6 @@
               class="w-full h-10 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all bg-white">
               <option value="public">Public</option>
               <option value="prive">Privé</option>
-              <!-- <option value="interne">Interne</option> -->
             </select>
           </div>
 
@@ -137,6 +136,219 @@
     </UModal>
 
     <!-- ═══════════════════════════════════════════════════════════
+         MODAL : AJOUTER UN MODÈLE DE DOCUMENT
+    ════════════════════════════════════════════════════════════ -->
+    <div v-if="showModeleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="closeModeleModal">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900">Nouveau modèle de document</h3>
+              <p class="text-sm text-slate-500 mt-0.5">
+                Pour le type :
+                <span class="font-semibold text-indigo-600">{{ modeleTargetType?.libelle }}</span>
+              </p>
+            </div>
+          </div>
+          <button class="text-gray-400 hover:text-gray-600 transition-colors" @click="closeModeleModal">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Corps -->
+        <div class="px-6 py-5 space-y-5 flex-1">
+
+          <!-- Type de document (verrouillé) -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Type de document <span class="text-red-600">*</span>
+            </label>
+            <div class="flex items-center gap-2 px-3 py-2.5 bg-indigo-50 border border-indigo-200 rounded-lg">
+              <span class="inline-flex px-2 py-0.5 text-[11px] font-bold rounded bg-indigo-100 text-indigo-700">
+                {{ modeleTargetType?.code }}
+              </span>
+              <span class="text-sm font-semibold text-indigo-900">{{ modeleTargetType?.libelle }}</span>
+              <svg class="w-4 h-4 text-indigo-400 ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Code & Libellé -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Code <span class="text-red-600">*</span>
+              </label>
+              <input v-model="modeleForm.code" type="text" placeholder="MODELE_01"
+                class="w-full px-3 py-2 text-sm font-mono text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+              <p v-if="modeleErrors.code" class="mt-1 text-xs text-red-600">{{ modeleErrors.code[0] }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Libellé <span class="text-red-600">*</span>
+              </label>
+              <input v-model="modeleForm.libelle" type="text" placeholder="Nom du modèle"
+                class="w-full px-3 py-2 text-sm text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+              <p v-if="modeleErrors.libelle" class="mt-1 text-xs text-red-600">{{ modeleErrors.libelle[0] }}</p>
+            </div>
+          </div>
+
+          <!-- Orientation & Format -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Orientation</label>
+              <select v-model="modeleForm.orientation"
+                class="w-full px-3 py-2 text-sm text-slate-900 bg-white border border-slate-300 rounded-lg outline-none cursor-pointer">
+                <option value="portrait">Portrait</option>
+                <option value="paysage">Paysage</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Format de page</label>
+              <select v-model="modeleForm.format_page"
+                class="w-full px-3 py-2 text-sm text-slate-900 bg-white border border-slate-300 rounded-lg outline-none cursor-pointer">
+                <option value="A4">A4</option>
+                <option value="A3">A3</option>
+                <option value="Letter">Letter</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Signataire & Fonction -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Signataire</label>
+              <input v-model="modeleForm.signataire" type="text" placeholder="Nom du signataire"
+                class="w-full px-3 py-2 text-sm text-slate-900 bg-white border border-slate-300 rounded-lg outline-none" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Fonction du signataire</label>
+              <input v-model="modeleForm.fonction_signataire" type="text" placeholder="Ex : Directeur Général"
+                class="w-full px-3 py-2 text-sm text-slate-900 bg-white border border-slate-300 rounded-lg outline-none" />
+            </div>
+          </div>
+
+          <!-- En-tête HTML -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-medium text-gray-700">En-tête HTML</label>
+              <span class="text-[10px] text-slate-400 font-mono">Affiché en haut de chaque page</span>
+            </div>
+            <textarea v-model="modeleForm.entete_html" rows="4" placeholder="<table>…</table>"
+              class="w-full px-3 py-2.5 text-xs font-mono text-slate-800 bg-slate-50 border border-slate-300 rounded-lg outline-none resize-y leading-relaxed" />
+          </div>
+
+          <!-- Corps du document -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-medium text-gray-700">
+                Corps du document <span class="text-red-600">*</span>
+              </label>
+              <button type="button"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-md hover:bg-indigo-100 transition-colors"
+                @click="insertModeleVariable">
+                Insérer variable
+              </button>
+            </div>
+            <textarea v-model="modeleForm.template_html" rows="9" required placeholder="<p>Bonjour {{nom}},</p>"
+              class="w-full px-3 py-2.5 text-xs font-mono text-slate-800 bg-slate-50 border border-slate-300 rounded-lg outline-none resize-y leading-relaxed" />
+            <p v-if="modeleErrors.template_html" class="mt-1 text-xs text-red-600">{{ modeleErrors.template_html[0] }}</p>
+          </div>
+
+          <!-- Pied de page HTML -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-medium text-gray-700">Pied de page HTML</label>
+              <span class="text-[10px] text-slate-400 font-mono">Affiché en bas de chaque page</span>
+            </div>
+            <textarea v-model="modeleForm.pied_page_html" rows="3" placeholder="<div>…</div>"
+              class="w-full px-3 py-2 text-xs font-mono text-slate-800 bg-slate-50 border border-slate-300 rounded-lg outline-none resize-y" />
+          </div>
+
+          <!-- Marges -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Marges (mm)</label>
+            <div class="grid grid-cols-4 gap-3">
+              <div v-for="m in [
+                { key: 'marge_haut', label: 'Haut' },
+                { key: 'marge_bas', label: 'Bas' },
+                { key: 'marge_gauche', label: 'Gauche' },
+                { key: 'marge_droite', label: 'Droite' }
+              ]" :key="m.key">
+                <label class="block text-[11px] font-semibold text-slate-500 mb-1 text-center">{{ m.label }}</label>
+                <input v-model.number="modeleForm[m.key]" type="number" min="0" max="100"
+                  class="w-full px-2 py-2 text-sm text-center text-slate-900 bg-white border border-slate-300 rounded-lg outline-none" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Toggles -->
+          <div class="flex items-center gap-6">
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <button type="button"
+                class="relative inline-flex items-center rounded-full transition-colors duration-200 focus:outline-none flex-shrink-0"
+                :class="modeleForm.est_actif ? 'bg-indigo-600' : 'bg-slate-300'"
+                style="width:38px;height:21px"
+                @click="modeleForm.est_actif = !modeleForm.est_actif">
+                <span class="inline-block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200"
+                  :style="modeleForm.est_actif ? 'transform:translateX(18px)' : 'transform:translateX(2px)'" />
+              </button>
+              <span class="text-sm font-medium text-gray-700">Modèle actif</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <button type="button"
+                class="relative inline-flex items-center rounded-full transition-colors duration-200 focus:outline-none flex-shrink-0"
+                :class="modeleForm.est_defaut ? 'bg-indigo-600' : 'bg-slate-300'"
+                style="width:38px;height:21px"
+                @click="modeleForm.est_defaut = !modeleForm.est_defaut">
+                <span class="inline-block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200"
+                  :style="modeleForm.est_defaut ? 'transform:translateX(18px)' : 'transform:translateX(2px)'" />
+              </button>
+              <span class="text-sm font-medium text-gray-700">Modèle par défaut</span>
+            </label>
+          </div>
+
+          <!-- Erreur générale -->
+          <div v-if="modeleFormError" class="p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p class="text-sm text-red-800">{{ modeleFormError }}</p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl sticky bottom-0">
+          <button type="button"
+            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+            @click="closeModeleModal">
+            Annuler
+          </button>
+          <button type="button"
+            :disabled="modeleSubmitting"
+            class="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            @click="submitModele">
+            <svg v-if="!modeleSubmitting" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+            </svg>
+            {{ modeleSubmitting ? 'Création…' : 'Créer le modèle' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
          EN-TÊTE PAGE
     ════════════════════════════════════════════════════════════ -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -145,8 +357,7 @@
         <p class="text-sm text-slate-500">Gestion des types de documents</p>
       </div>
       <UBadge color="green" variant="soft" size="lg" class="ml-auto">
-        <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
-        <UButton @click="openCreate" variant="text" size="sm" class="p-0 m-0 text-green-600">
+        <UButton @click="openCreate" variant="text" icon="i-heroicons-plus" size="sm" class="p-0 m-0 text-green-600">
           Nouveau
         </UButton>
       </UBadge>
@@ -212,7 +423,6 @@
               <option value="">— Toutes —</option>
               <option value="public">Public</option>
               <option value="prive">Privé</option>
-              <!-- <option value="interne">Interne</option> -->
             </select>
           </div>
 
@@ -274,13 +484,28 @@
         <span v-else class="text-slate-300 italic text-[11px]">—</span>
       </template>
 
-      <!-- Actions : edit + delete uniquement -->
+      <!-- Actions : add model + edit + delete -->
       <template #actions="{ item }">
         <div class="flex gap-1.5 justify-end">
+
+          <!-- Bouton "Ajouter un modèle" — visible uniquement si peut_etre_traite -->
+          <button
+            v-if="item.peut_etre_traite"
+            @click="openAddModele(item)"
+            title="Ajouter un modèle de document"
+            class="inline-flex items-center justify-center w-8 h-8 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-md hover:bg-indigo-100 hover:text-indigo-800 transition-all group relative"
+          >
+            <!-- Icône : document + plus -->
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </button>
+
           <button @click="openEdit(item)" title="Modifier"
             class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-100 hover:text-amber-900 transition-all group">
             <Icon name="i-heroicons-pencil-square" class="w-4 h-4" />
           </button>
+
           <button @click="handleDelete(item)" title="Supprimer"
             class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-600 border border-red-100 rounded-md hover:bg-red-100 hover:text-red-800 transition-all group">
             <Icon name="i-heroicons-trash" class="w-4 h-4" />
@@ -303,7 +528,7 @@ const typeDocuments = ref([])
 const loading = ref(false)
 const error = ref(null)
 
-// ── État formulaire ────────────────────────────────────────────────────────────
+// ── État formulaire TYPE ───────────────────────────────────────────────────────
 const formOpen = ref(false)
 const formLoading = ref(false)
 const formErrors = ref([])
@@ -323,6 +548,34 @@ const showParentDropdown = ref(false)
 const selectedParent = ref(null)
 const filteredParents = ref([])
 
+// ── État modal MODÈLE ──────────────────────────────────────────────────────────
+const showModeleModal = ref(false)
+const modeleTargetType = ref(null)
+const modeleSubmitting = ref(false)
+const modeleErrors = ref({})
+const modeleFormError = ref(null)
+
+const defaultModeleForm = () => ({
+  type_document_id: null,
+  code: '',
+  libelle: '',
+  template_html: '',
+  entete_html: '',
+  pied_page_html: '',
+  orientation: 'portrait',
+  format_page: 'A4',
+  marge_haut: 20,
+  marge_bas: 10,
+  marge_gauche: 25,
+  marge_droite: 25,
+  signataire: '',
+  fonction_signataire: '',
+  est_actif: true,
+  est_defaut: false,
+})
+
+const modeleForm = ref(defaultModeleForm())
+
 // ── Colonnes DataTable ─────────────────────────────────────────────────────────
 const columns = [
   { key: 'code', label: 'Code', visible: true },
@@ -340,12 +593,9 @@ const typeDocumentsList = computed(() =>
     code: t.code,
     libelle: t.libelle,
     visibilite: t.visibilite,
-    // Valeur booléenne pour l'affichage avec le slot
     peut_etre_traite: t.peut_etre_traite,
-    // Valeur string "true"/"false" pour que le filtre texte du DataTable fonctionne
     peut_etre_traite_filter: String(!!t.peut_etre_traite),
     parent: t.parent_id ? getParentLabel(t.parent_id) : null,
-    // Objet complet conservé pour l'édition
     _complete: t,
   }))
 )
@@ -358,7 +608,7 @@ const getParentLabel = (parentId) => {
   return found ? `${found.code} — ${found.libelle}` : null
 }
 
-// ── Computed formulaire ────────────────────────────────────────────────────────
+// ── Computed formulaire TYPE ───────────────────────────────────────────────────
 const isFormValid = computed(() =>
   form.value.code.trim() !== '' && form.value.libelle.trim() !== '' && form.value.visibilite !== ''
 )
@@ -413,7 +663,7 @@ const refresh = async () => {
   }
 }
 
-// ── Ouvrir modal création ──────────────────────────────────────────────────────
+// ── Ouvrir modal création TYPE ────────────────────────────────────────────────
 const openCreate = () => {
   editingItem.value = null
   form.value = { code: '', libelle: '', visibilite: 'public', peut_etre_traite: false, parent_id: null }
@@ -423,9 +673,8 @@ const openCreate = () => {
   formOpen.value = true
 }
 
-// ── Ouvrir modal édition ───────────────────────────────────────────────────────
+// ── Ouvrir modal édition TYPE ─────────────────────────────────────────────────
 const openEdit = (item) => {
-  // Récupérer l'objet complet depuis _complete ou typeDocuments
   const original = item._complete || typeDocuments.value.find(t => t.id === item.id) || item
   editingItem.value = original
 
@@ -459,7 +708,7 @@ const closeForm = () => {
   clearParent()
 }
 
-// ── Soumission (create / update) ───────────────────────────────────────────────
+// ── Soumission TYPE (create / update) ─────────────────────────────────────────
 const handleSubmit = async () => {
   formErrors.value = []
   if (!form.value.code.trim()) formErrors.value.push('Le code est obligatoire')
@@ -507,7 +756,7 @@ const handleSubmit = async () => {
   }
 }
 
-// ── Suppression ────────────────────────────────────────────────────────────────
+// ── Suppression TYPE ───────────────────────────────────────────────────────────
 const handleDelete = async (item) => {
   const original = item._complete || item
   const result = await Swal.fire({
@@ -548,6 +797,64 @@ const handleDelete = async (item) => {
       icon: 'error',
       confirmButtonColor: '#7c3aed',
     })
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// GESTION MODAL AJOUT MODÈLE
+// ════════════════════════════════════════════════════════════════
+
+const openAddModele = (item) => {
+  const original = item._complete || typeDocuments.value.find(t => t.id === item.id) || item
+  modeleTargetType.value = original
+  modeleForm.value = {
+    ...defaultModeleForm(),
+    type_document_id: original.id,
+  }
+  modeleErrors.value = {}
+  modeleFormError.value = null
+  showModeleModal.value = true
+}
+
+const closeModeleModal = () => {
+  showModeleModal.value = false
+  modeleTargetType.value = null
+  modeleErrors.value = {}
+  modeleFormError.value = null
+}
+
+const insertModeleVariable = () => {
+  const v = prompt('Nom de la variable :')
+  if (v) modeleForm.value.template_html += `{{${v}}}`
+}
+
+const submitModele = async () => {
+  modeleSubmitting.value = true
+  modeleErrors.value = {}
+  modeleFormError.value = null
+
+  try {
+    await $fetch(`${config.public.apiBase}/modeles-document`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(modeleForm.value),
+    })
+    useToast().add({ title: 'Succès', description: 'Modèle créé avec succès !', color: 'green' })
+    closeModeleModal()
+  } catch (e) {
+    console.error('Erreur création modèle:', e)
+    if (e?.status === 422 || e?.statusCode === 422) {
+      modeleErrors.value = e.data?.errors ?? {}
+      modeleFormError.value = e.data?.message || 'Erreurs de validation.'
+    } else {
+      modeleFormError.value = e?.data?.message || e?.message || 'Erreur serveur'
+      useToast().add({ title: 'Erreur', description: modeleFormError.value, color: 'red' })
+    }
+  } finally {
+    modeleSubmitting.value = false
   }
 }
 

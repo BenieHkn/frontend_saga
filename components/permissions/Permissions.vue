@@ -213,8 +213,7 @@
       </div>
       <!-- Bouton contextuel selon l'onglet actif -->
       <UBadge :color="activeTab === 'roles' ? 'indigo' : 'green'" variant="soft" size="lg" class="ml-auto">
-        <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
-        <UButton @click="activeTab === 'roles' ? openCreateRole() : openCreatePerm()" variant="text" size="sm"
+        <UButton icon="i-heroicons-plus" @click="activeTab === 'roles' ? openCreateRole() : openCreatePerm()" variant="text" size="sm"
           class="p-0 m-0" :class="activeTab === 'roles' ? 'text-blue-600' : 'text-green-600'">
           {{ activeTab === 'roles' ? 'Nouveau rôle' : 'Nouvelle permission' }}
         </UButton>

@@ -23,8 +23,7 @@
 
         <!-- Bouton Nouveau -->
         <UBadge color="green" variant="soft" size="lg">
-          <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
-          <UButton to="/utilisateurs/create" variant="text" size="sm" class="p-0 m-0 text-green-600">
+          <UButton to="/utilisateurs/create" icon="i-heroicons-plus" variant="text" size="sm" class="p-0 m-0 text-green-600">
             Nouveau
           </UButton>
         </UBadge>
@@ -63,6 +62,7 @@
       :columns="columns"
       :selectable="true"
       :left-aligned-columns="['matricule', 'nom', 'prenom', 'email', 'telephone']"
+      :hide-labels-when-input="true"
       @edit="onEdit"
       @delete="onDelete"
       @view="onView"
@@ -177,17 +177,32 @@
         </div>
       </template>
 
-      <template #cell-actions="{ item }">
+      <template #actions="{ item }">
         <div class="flex items-center gap-2">
           <button
             v-if="item.is_responsable"
             @click="openInterimModal(item)"
-            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100 transition-colors"
             title="Ajouter un intérim"
+            class="inline-flex items-center justify-center w-8 h-8 bg-indigo-50 text-indigo-700 border-indigo-100 rounded-md hover:bg-indigo-100 transition-all"
           >
-            <Icon name="i-heroicons-plus-circle" class="w-4 h-4" />
+            <Icon name="i-heroicons-plus" class="w-4 h-4" />
           </button>
-          <span v-else class="text-xs text-slate-400 italic">-</span>
+
+          <button
+            @click="onEdit(item)"
+            title="Voir / Modifier"
+            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border-amber-100 rounded-md hover:bg-amber-200 transition-all"
+          >
+            <Icon name="i-heroicons-pencil" class="w-4 h-4" />
+          </button>
+
+          <button
+            @click="onDelete(item)"
+            title="Supprimer"
+            class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border-red-100 rounded-md hover:bg-red-100 transition-all"
+          >
+            <Icon name="i-heroicons-trash" class="w-4 h-4" />
+          </button>
         </div>
       </template>
     </DataTable>
@@ -831,7 +846,7 @@ const columns = [
   { key: 'prise_service',    label: 'Prise Service',        visible: true },
   { key: 'is_superadmin',    label: 'Admin',                visible: true },
   { key: 'statut',           label: 'Statut',               visible: true },
-  { key: 'actions',          label: "Ajout d'intérim",      visible: true },
+  // actions column removed: action buttons (ajout intérim, edit, delete) rendered via the `actions` slot
 ]
 
 // ============================================================================
