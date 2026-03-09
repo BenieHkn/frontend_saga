@@ -95,6 +95,7 @@ export default defineEventHandler(async (event) => {
       success:                  true,
       message:                  'Connexion réussie',
       token:                    response.token,
+      token_expires_at:         response.token_expires_at,
       user:                     formattedUser,
       main_entite:              main_entite,
       entites:                  entites,

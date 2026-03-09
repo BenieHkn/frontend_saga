@@ -1,43 +1,42 @@
 <script setup>
-import { useDossier } from "@/composables/dossier/useDossier";
 import { useAction } from "@/composables/actions/useAction";
 import { useActivite } from "@/composables/activite/useActivite";
+import { useTache } from "~/composables/taches/useTaches";
 
 definePageMeta({ title: "Détail action" });
 
 const router     = useRouter();
 const toast      = useToast();
-const route      = useRoute();
 const actionApi  = useAction();
 const activiteApi = useActivite();
+const tacheApi = useTache();
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const action          = ref(null);
 const currentDossier  = ref(null);
 const currentCodir    = ref(null);
-const loading         = ref(true);
+const loading         = ref(false);
 
 onMounted(async () => {
   currentDossier.value = JSON.parse(localStorage.getItem("currentDossier"));
   currentCodir.value   = JSON.parse(localStorage.getItem("currentCodir"));
 
-  const cached = JSON.parse(localStorage.getItem("currentAction"));
-  if (cached) action.value = cached;
+  action.value = JSON.parse(localStorage.getItem("currentAction"));
 
-  try {
-    const fresh = await actionApi.getAction(
-      cached?.id ?? Number(route.params.actionId)
-    );
-    if (fresh) {
-      action.value = fresh;
-      localStorage.setItem("currentAction", JSON.stringify(fresh));
-    }
-  } catch (e) {
-    console.error("Erreur chargement action", e);
-    // On garde le cache si dispo
-  } finally {
-    loading.value = false;
-  }
+  // try {
+  //   const fresh = await actionApi.getAction(
+  //     cached?.id ?? Number(route.params.actionId)
+  //   );
+  //   if (fresh) {
+  //     action.value = fresh;
+  //     localStorage.setItem("currentAction", JSON.stringify(fresh));
+  //   }
+  // } catch (e) {
+  //   console.error("Erreur chargement action", e);
+  //   // On garde le cache si dispo
+  // } finally {
+  //   loading.value = false;
+  // }
 });
 
 // ── Données ───────────────────────────────────────────────────────────────────
@@ -50,8 +49,10 @@ const taches = computed(() => {
 
 // ── Refresh ───────────────────────────────────────────────────────────────────
 const refreshAction = async () => {
+  loading.value = true;
   action.value = await actionApi.getAction(action.value.id);
   localStorage.setItem("currentAction", JSON.stringify(action.value));
+  loading.value = false;
 };
 
 // ── Création d'activité ───────────────────────────────────────────────────────
@@ -80,6 +81,38 @@ const createActivite = async () => {
     resetActiviteForm();
   } catch {
     toast.add({ title: "Erreur", description: "Impossible de créer l'activité", color: "red", icon: "i-heroicons-exclamation-circle" });
+  }finally{
+    
+  }
+};
+
+// ── Création de tâche ───────────────────────────────────────────────────────
+const tacheModal = ref(false);
+const tacheForm  = reactive({ libelle: "", activite_id: null, action_id: null });
+const resetTacheForm = () => Object.assign(tacheForm, { libelle: "", activite_id: null, action_id: null });
+
+const createTache = async () => {
+  tacheForm.action_id  = action.value.id;
+
+  if (!tacheForm.libelle.trim()) {
+    toast.add({ title: "Champs requis manquants", color: "orange", icon: "i-heroicons-exclamation-triangle" });
+    return;
+  }
+
+  try {
+    await tacheApi.createTache({ ...tacheForm });
+    toast.add({
+      title: "Tâche créée",
+      description: `"${tacheForm.libelle}" a été créée avec succès`,
+      color: "green",
+      icon: "i-heroicons-check-circle",
+    });
+
+    tacheModal.value = false;
+    await refreshAction();
+    resetTacheForm();
+  } catch {
+    toast.add({ title: "Erreur", description: "Impossible de créer la tâche", color: "red", icon: "i-heroicons-exclamation-circle" });
   }
 };
 </script>
@@ -187,6 +220,9 @@ const createActivite = async () => {
               <p class="text-xs text-gray-500 dark:text-gray-400">{{ taches.length }} tâche(s) rattachée(s)</p>
             </div>
           </div>
+          <UButton icon="i-heroicons-plus" color="cyan" variant="soft" size="sm" @click="tacheModal = true">
+            Ajouter une tâche
+          </UButton>
         </div>
 
         <div class="p-6">
@@ -222,6 +258,26 @@ const createActivite = async () => {
         <div class="flex justify-end gap-2">
           <UButton color="gray" variant="ghost" @click="activiteModal = false">Annuler</UButton>
           <UButton color="violet" :loading="activiteApi.loading.value" @click="createActivite">Créer</UButton>
+        </div>
+      </template>
+    </UCard>
+  </UModal>
+
+  <!-- ── Modale création tâche ───────────────────────────────────────────── -->
+  <UModal v-model="tacheModal">
+    <UCard class="rounded-2xl">
+      <template #header>
+        <h3 class="font-semibold">Nouvelle tâche</h3>
+      </template>
+      <div class="p-2 flex flex-col gap-4">
+        <UFormGroup label="Libellé" required>
+          <UInput v-model="tacheForm.libelle" placeholder="Ex: Préparer les documents" size="md" />
+        </UFormGroup>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton color="gray" variant="ghost" @click="tacheModal = false">Annuler</UButton>
+          <UButton color="cyan" :loading="tacheApi.loading.value" @click="createTache">Créer</UButton>
         </div>
       </template>
     </UCard>

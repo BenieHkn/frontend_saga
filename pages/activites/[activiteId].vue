@@ -19,7 +19,7 @@ const currentDossier     = ref(null)
 const currentOrdreDuJour = ref(null)
 const currentCodir       = ref(null)
 const membres            = ref([])
-const loading            = ref(true)
+const loading            = ref(false)
 
 onMounted(async () => {
   currentDossier.value     = JSON.parse(localStorage.getItem('currentDossier'))
@@ -28,28 +28,28 @@ onMounted(async () => {
 
   // Toujours appeler l'API pour avoir les tâches à jour
   // Le localStorage sert uniquement à pré-remplir le libellé pendant le chargement
-  const cached = JSON.parse(localStorage.getItem('currentActivite'))
-  if (cached) activite.value = cached // affichage immédiat du libellé
+  activite.value = JSON.parse(localStorage.getItem('currentActivite'))
+  // affichage immédiat du libellé
 
-  const [fresh, mems] = await Promise.all([
-    activiteApi.getActivite(Number(route.params.activiteId)),
-    membreApi.getMembres(),
-  ])
-
-  activite.value = fresh
-  membres.value  = mems
-  loading.value  = false
+  // const [fresh, mems] = await Promise.all([
+  //   activiteApi.getActivite(Number(route.params.activiteId)),
+  //   membreApi.getMembres(),
+  // ])
 })
 
 const taches = computed(() => activite.value?.taches ?? [])
 
 // ── Refresh ───────────────────────────────────────────────────────────────────
 const refreshActivite = async () => {
+  loading.value = true
   const fresh = await activiteApi.getActivite(activite.value.id)
   activite.value = null
   await nextTick()
   activite.value = fresh
-  localStorage.setItem('currentActivite', JSON.stringify(fresh))
+  if(process.client) {
+    localStorage.setItem('currentActivite', JSON.stringify(activite.value))
+  }
+  loading.value = false
 }
 
 // ── Options membres ───────────────────────────────────────────────────────────

@@ -92,8 +92,10 @@ const actionOptions = computed(() =>
 
 // ── Refresh ───────────────────────────────────────────────────────────────────
 const refreshDossier = async () => {
+  loading.value = true;
   dossier.value = await dossierApi.getDossier(dossier.value.id);
   localStorage.setItem("currentDossier", JSON.stringify(dossier.value));
+  loading.value = false;
 };
 
 // ── Création d'action ─────────────────────────────────────────────────────────
@@ -115,14 +117,14 @@ const createAction = async () => {
       libelle: actionForm.libelle.trim(),
       dossier_id: dossier.value.id,
     });
-    await refreshDossier();
+    actionModal.value = false;
     toast.add({
       title: "Action créée",
       description: `"${actionForm.libelle}" a été créée avec succès`,
       color: "green",
       icon: "i-heroicons-check-circle",
     });
-    actionModal.value = false;
+    await refreshDossier();
     resetActionForm();
   } catch {
     toast.add({
