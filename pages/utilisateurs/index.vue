@@ -930,7 +930,7 @@ const getToken = () => localStorage.getItem('auth_token') || ''
 const fonctionsOptions = computed(() =>
   fonctions.value.map(f => ({
     id:            f.id,
-    libelle:       f.libelle || f.code,
+    libelle:       f.fonction || 'N/A',
     code:          f.code,
     entite_libelle: f.entite?.libelle || f.entite_libelle || '',
   }))
@@ -976,9 +976,14 @@ const loadUtilisateurs = async () => {
     else throw new Error('Format de réponse API invalide')
 
     utilisateurs.value = dataArray.map((user) => {
-      const entitePrincipale = user.entite_users?.find(eu =>
-        eu.actif === true && eu.is_interim === false && eu.is_responsable === true
-      )
+      const entitePrincipale = (user.entite_users || []).find(eu =>
+        eu.actif               === true  &&
+        eu.is_interim          === false &&
+        eu.is_responsable     === true  &&
+        eu.date_fin            === null  &&
+        eu.entite?.is_critique === false
+      ) ?? null
+
       const isResponsable = !!entitePrincipale
 
       let fonctionsMap = []
@@ -1006,11 +1011,11 @@ const loadUtilisateurs = async () => {
           entite_id: eu.entite_id,
         }))
 
-      const pointsCritiques = (user.points_critiques || []).map(pc => ({
-        id:      pc.id,
-        libelle: pc.libelle || pc.code || 'N/A',
-        code:    pc.code,
-      }))
+      // const pointsCritiques = (user.points_critiques || []).map(pc => ({
+      //   id:      pc.id,
+      //   libelle: pc.libelle || pc.code || 'N/A',
+      //   code:    pc.code,
+      // }))
 
       return {
         id:               user.id,
@@ -1050,10 +1055,15 @@ const loadFonctions = async () => {
   try {
     const token = getToken()
     const response = await $fetch(
-      `${config.public.apiBase}/entites/entites-meme-niveau/${selectedUser.value?.entite_users?.[0]?.entite?.parent_entite_id || selectedUser.value?.parent_entite_id || '0'}`,
+      `${config.public.apiBase}/entites/entites-meme-niveau/${selectedUser.value?.parent_entite_id || '0'}`,
       { method: 'GET', headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } }
     )
-    fonctions.value = response?.data ?? (Array.isArray(response) ? response : [])
+    const all = response?.data ?? (Array.isArray(response) ? response : [])
+
+    // ── Exclure l'entité principale de l'utilisateur ──
+    fonctions.value = all.filter(e =>
+      e.id !== selectedUser.value.entite_principale.id
+    )
   } catch (err) {
     useToast().add({ title: 'Erreur', description: 'Impossible de charger les fonctions', color: 'red' })
   } finally {
