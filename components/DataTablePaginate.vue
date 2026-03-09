@@ -237,18 +237,33 @@
       </span>
 
       <div class="flex items-center gap-1">
+
+        <!-- Précédent -->
         <UButton size="xs" color="gray" variant="ghost" icon="i-heroicons-chevron-left"
-          :disabled="currentPage <= 1 || loading" @click="onPageClick(currentPage - 1)" />
+          :disabled="currentPage <= 1 || loading"
+          @click="onPageClick(currentPage - 1)" />
 
-        <UButton v-for="p in visiblePages" :key="p" size="xs"
-          :color="p === currentPage ? 'indigo' : 'gray'"
-          :variant="p === currentPage ? 'solid' : 'ghost'"
-          :label="String(p)"
-          :disabled="loading"
-          @click="onPageClick(p)" />
+        <!-- Pages avec ellipses -->
+        <template v-for="(p, i) in visiblePages" :key="i">
+          <!-- Ellipse -->
+          <span v-if="p === '...'"
+            class="w-7 h-7 flex items-center justify-center text-xs text-slate-400 select-none">
+            …
+          </span>
+          <!-- Numéro de page -->
+          <UButton v-else size="xs"
+            :color="p === currentPage ? 'indigo' : 'gray'"
+            :variant="p === currentPage ? 'solid' : 'ghost'"
+            :label="String(p)"
+            :disabled="loading"
+            @click="onPageClick(p)" />
+        </template>
 
+        <!-- Suivant -->
         <UButton size="xs" color="gray" variant="ghost" icon="i-heroicons-chevron-right"
-          :disabled="currentPage >= totalPages || loading" @click="onPageClick(currentPage + 1)" />
+          :disabled="currentPage >= totalPages || loading"
+          @click="onPageClick(currentPage + 1)" />
+
       </div>
     </div>
   </div>
@@ -318,7 +333,7 @@ const props = defineProps({
   loading:                   { type: Boolean, default: false },
   selectable:                { type: Boolean, default: true },
   itemsPerPageOptions:       { type: Array,   default: () => [10, 25, 50, 100] },
-  defaultItemsPerPage:       { type: Number,  default: 10 },
+  defaultItemsPerPage:       { type: Number,  default: 100 },
   showToolbar:               { type: Boolean, default: true },
   showGlobalSearch:          { type: Boolean, default: true },
   showAdvancedFiltersToggle: { type: Boolean, default: true },
@@ -454,10 +469,34 @@ const paginatedData = computed(() =>
 const visiblePages = computed(() => {
   const total = totalPages.value
   const cur   = currentPage.value
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
-  return [...new Set([1, cur - 1, cur, cur + 1, total])]
-    .filter(p => p >= 1 && p <= total)
-    .sort((a, b) => a - b)
+
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1)
+  }
+
+  const pages = []
+
+  // Toujours afficher la première page
+  pages.push(1)
+
+  // Ellipse gauche
+  if (cur > 3) pages.push('...')
+
+  // Pages autour de la page courante
+  const start = Math.max(2, cur - 1)
+  const end   = Math.min(total - 1, cur + 1)
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+
+  // Ellipse droite
+  if (cur < total - 2) pages.push('...')
+
+  // Toujours afficher la dernière page
+  pages.push(total)
+
+  return pages
 })
 
 const onPageClick = (page) => {

@@ -44,7 +44,7 @@
         :default-sort-column="null"
         :show-row-numbers="true"
         :items-per-page-options="[10, 20, 50, 100]"
-        :default-items-per-page="10"
+        :default-items-per-page="100"
         :left-aligned-columns="['reference', 'objet', 'numero_enreg']"
         :hide-labels-when-input="true"
         :external-pagination="true"
@@ -182,7 +182,7 @@ const error          = ref(null)
 const currentPage    = ref(1)
 const totalPages     = ref(1)
 const total          = ref(0)
-const perPage        = ref(10)
+const perPage        = ref(100)
 
 // ── Colonnes ──────────────────────────────────────────────────
 const columns = [
