@@ -3,16 +3,23 @@
 
     <!-- ── BARRE DE PROGRESSION ──────────────────────────────────────────── -->
     <div class="h-0.5 bg-slate-100 overflow-hidden">
-      <div v-if="loading" class="h-full bg-indigo-500 animate-progress"></div>
+      <div v-if="showLoading || props.tabLoading" class="h-full bg-indigo-500 animate-progress"></div>
     </div>
 
     <!-- ── TOOLBAR ──────────────────────────────────────────────────────── -->
     <div v-if="showToolbar"
       class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-white border-b border-slate-200">
       <div class="flex items-center gap-2">
-        <UInput v-if="showGlobalSearch" v-model="globalSearch" icon="i-heroicons-magnifying-glass"
+        <UInput v-if="showGlobalSearch && !externalPagination" v-model="globalSearch"
+          icon="i-heroicons-magnifying-glass"
           placeholder="Recherche globale..." size="sm" class="w-56" @input="onGlobalSearchInput" />
-        <UButton v-if="showAdvancedFiltersToggle" size="sm" color="gray" variant="soft" icon="i-heroicons-funnel"
+        <UInput v-if="showGlobalSearch && externalPagination" v-model="globalSearch"
+          icon="i-heroicons-magnifying-glass"
+          placeholder="Recherche globale..." size="sm" class="w-56" @input="onExternalSearchInput" />
+        <UButton v-if="showAdvancedFiltersToggle" size="sm"
+          :color="showAdvancedFilters ? 'indigo' : 'gray'"
+          variant="soft"
+          :icon="showAdvancedFilters ? 'i-heroicons-funnel-solid' : 'i-heroicons-funnel'"
           @click="showAdvancedFilters = !showAdvancedFilters">
           Filtres
           <UBadge v-if="activeFiltersCount > 0" :label="String(activeFiltersCount)" color="red" size="xs"
@@ -50,15 +57,14 @@
     <!-- ── TABLE ─────────────────────────────────────────────────────────── -->
     <div class="relative overflow-x-auto">
 
-      <!-- Overlay discret pendant le chargement -->
+      <!-- Overlay -->
       <Transition enter-active-class="transition duration-150" enter-from-class="opacity-0"
         enter-to-class="opacity-100" leave-active-class="transition duration-150"
         leave-from-class="opacity-100" leave-to-class="opacity-0">
-        <div v-if="loading"
+        <div v-if="showLoading"
           class="absolute inset-0 bg-white/70 backdrop-blur-[1px] z-10 flex items-center justify-center">
           <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-slate-200">
-            <div class="w-3.5 h-3.5 border-2 border-slate-200 border-t-indigo-500 rounded-full animate-spin">
-            </div>
+            <div class="w-3.5 h-3.5 border-2 border-slate-200 border-t-indigo-500 rounded-full animate-spin"></div>
             <span class="text-xs font-medium text-slate-600">Chargement...</span>
           </div>
         </div>
@@ -69,13 +75,11 @@
         <thead v-if="showHeader">
           <tr class="bg-indigo-50 text-indigo-600">
 
-            <!-- N° ligne -->
             <th v-if="showRowNumbers"
               class="sticky top-0 z-10 w-12 px-3 py-2 text-center text-xs font-bold uppercase tracking-wider border border-slate-200 bg-indigo-50">
               N°
             </th>
 
-            <!-- Colonnes -->
             <th v-for="col in visibleColumns" :key="col.key"
               class="sticky top-0 z-10 px-3 py-2 text-xs font-bold uppercase tracking-wider border border-slate-200 bg-indigo-50"
               :class="col.headerClass">
@@ -99,8 +103,7 @@
                       <svg v-if="sortColumn !== col.key" class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M5 4l3-3 3 3H5zm6 8l-3 3-3-3h6z" />
                       </svg>
-                      <svg v-else-if="sortDirection === 'asc'" class="w-3 h-3" viewBox="0 0 16 16"
-                        fill="currentColor">
+                      <svg v-else-if="sortDirection === 'asc'" class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M8 2l4 6H4l4-6z" />
                       </svg>
                       <svg v-else class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
@@ -124,20 +127,18 @@
                     <input v-model="filters[col.key]" :type="col.inputType ?? 'text'"
                       :placeholder="col.inputPlaceholder ?? col.label"
                       class="px-2 py-1 text-xs font-normal normal-case tracking-normal text-slate-700 bg-white border border-slate-300 rounded focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 placeholder:text-slate-400"
-                      :style="getInputStyle(col)" @input="onGlobalSearchInput" />
+                      :style="getInputStyle(col)" @input="onColumnFilterInput(col.key)" />
                   </div>
                 </div>
               </template>
             </th>
 
-            <!-- Checkbox -->
             <th v-if="selectable"
               class="sticky top-0 z-10 w-10 px-3 py-2 text-center border border-slate-200 bg-indigo-50">
               <UCheckbox :model-value="isAllSelected" :indeterminate="isIndeterminate"
                 @change="toggleSelectAll" />
             </th>
 
-            <!-- Actions sticky -->
             <th v-if="showActions"
               class="sticky top-0 right-0 z-20 px-3 py-2 text-right text-xs font-bold uppercase tracking-wider border border-slate-200 bg-indigo-50 min-w-24"
               style="box-shadow: -3px 0 8px rgba(0,0,0,0.06)">
@@ -151,13 +152,11 @@
             class="group transition-colors duration-100"
             :class="rowBg(item.id, index)">
 
-            <!-- N° ligne -->
             <td v-if="showRowNumbers"
               class="px-3 py-2 text-center text-xs font-semibold text-indigo-500 border border-slate-100">
               {{ startIndex + index + 1 }}
             </td>
 
-            <!-- Cellules -->
             <td v-for="col in visibleColumns" :key="col.key"
               class="px-3 py-2 border border-slate-100"
               :class="[col.cellClass, getCellAlignment(col.key)]">
@@ -180,13 +179,11 @@
               </slot>
             </td>
 
-            <!-- Checkbox -->
             <td v-if="selectable" class="px-3 py-2 text-center border border-slate-100">
               <UCheckbox :model-value="selectedRows.includes(item.id)"
                 @change="toggleRowSelect(item.id)" />
             </td>
 
-            <!-- Actions sticky -->
             <td v-if="showActions" class="sticky right-0 px-3 py-2 text-right border border-slate-100"
               :class="stickyBg(item.id, index)" style="box-shadow: -3px 0 8px rgba(0,0,0,0.05)">
               <slot name="actions" :item="item">
@@ -210,7 +207,7 @@
     </div>
 
     <!-- ── ÉTAT VIDE ─────────────────────────────────────────────────────── -->
-    <div v-if="!loading && paginatedData.length === 0"
+    <div v-if="!showLoading && paginatedData.length === 0"
       class="flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
       <slot name="empty-state">
         <UIcon name="i-heroicons-inbox" class="w-12 h-12 text-slate-300" />
@@ -237,33 +234,24 @@
       </span>
 
       <div class="flex items-center gap-1">
-
-        <!-- Précédent -->
         <UButton size="xs" color="gray" variant="ghost" icon="i-heroicons-chevron-left"
-          :disabled="currentPage <= 1 || loading"
+          :disabled="currentPage <= 1 || showLoading"
           @click="onPageClick(currentPage - 1)" />
 
-        <!-- Pages avec ellipses -->
         <template v-for="(p, i) in visiblePages" :key="i">
-          <!-- Ellipse -->
           <span v-if="p === '...'"
-            class="w-7 h-7 flex items-center justify-center text-xs text-slate-400 select-none">
-            …
-          </span>
-          <!-- Numéro de page -->
+            class="w-7 h-7 flex items-center justify-center text-xs text-slate-400 select-none">…</span>
           <UButton v-else size="xs"
             :color="p === currentPage ? 'indigo' : 'gray'"
             :variant="p === currentPage ? 'solid' : 'ghost'"
             :label="String(p)"
-            :disabled="loading"
+            :disabled="showLoading"
             @click="onPageClick(p)" />
         </template>
 
-        <!-- Suivant -->
         <UButton size="xs" color="gray" variant="ghost" icon="i-heroicons-chevron-right"
-          :disabled="currentPage >= totalPages || loading"
+          :disabled="currentPage >= totalPages || showLoading"
           @click="onPageClick(currentPage + 1)" />
-
       </div>
     </div>
   </div>
@@ -326,14 +314,13 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 
-// ── Props ─────────────────────────────────────────────────────────────────
 const props = defineProps({
   data:                      { type: Array,   default: () => [] },
   columns:                   { type: Array,   required: true },
   loading:                   { type: Boolean, default: false },
   selectable:                { type: Boolean, default: true },
   itemsPerPageOptions:       { type: Array,   default: () => [10, 25, 50, 100] },
-  defaultItemsPerPage:       { type: Number,  default: 100 },
+  defaultItemsPerPage:       { type: Number,  default: 10 },
   showToolbar:               { type: Boolean, default: true },
   showGlobalSearch:          { type: Boolean, default: true },
   showAdvancedFiltersToggle: { type: Boolean, default: true },
@@ -350,6 +337,7 @@ const props = defineProps({
   columnInputSize:           { type: String,  default: null },
   leftAlignedColumns:        { type: Array,   default: () => [] },
   hideLabelsWhenInput:       { type: Boolean, default: false },
+  hideLoadingOnColumnFilter: { type: Boolean, default: false },
   defaultActions: {
     type: Array,
     default: () => ['edit', 'delete'],
@@ -360,20 +348,20 @@ const props = defineProps({
   emptyStateText:       { type: String, default: "Essayez d'ajuster vos filtres ou votre recherche." },
   defaultSortColumn:    { type: String, default: null },
   defaultSortDirection: { type: String, default: 'asc', validator: v => ['asc', 'desc'].includes(v) },
-
-  // ── Pagination externe (serveur) ──────────────────────────────────────
-  externalPagination: { type: Boolean, default: false },
-  externalTotal:      { type: Number,  default: 0 },
-  externalPage:       { type: Number,  default: 1 },
-  externalLastPage:   { type: Number,  default: 1 },
-  externalPerPage:    { type: Number,  default: 20 },
+  externalPagination:   { type: Boolean, default: false },
+  externalTotal:        { type: Number,  default: 0 },
+  externalPage:         { type: Number,  default: 1 },
+  externalLastPage:     { type: Number,  default: 1 },
+  externalPerPage:      { type: Number,  default: 20 },
+  tabLoading: { type: Boolean, default: false },
 })
 
 const emit = defineEmits([
   'edit', 'delete', 'view', 'download', 'archive', 'assign',
   'open-document', 'selection-change',
-  'page-change',
-  'per-page-change',
+  'page-change', 'per-page-change',
+  'search-change',        // recherche globale toolbar → serveur
+  'column-filter-change', // filtres colonnes → serveur
 ])
 
 // ── Colonnes ──────────────────────────────────────────────────────────────
@@ -382,10 +370,25 @@ const visibleColumns = computed(() => props.columns.filter(c => c.visible !== fa
 // ── Source ────────────────────────────────────────────────────────────────
 const sourceData = computed(() => props.data)
 
-// ── Recherche & filtres ───────────────────────────────────────────────────
+// ── Recherche globale ─────────────────────────────────────────────────────
 const globalSearch        = ref('')
 const showAdvancedFilters = ref(false)
 
+// Mode interne — filtrage local
+const onGlobalSearchInput = () => {
+  currentPage.value = 1
+}
+
+// Mode externe — émettre vers parent avec debounce
+let searchDebounce = null
+const onExternalSearchInput = () => {
+  clearTimeout(searchDebounce)
+  searchDebounce = setTimeout(() => {
+    emit('search-change', globalSearch.value)
+  }, 400)
+}
+
+// ── Filtres colonnes ───────────────────────────────────────────────────────
 const filters = ref(
   props.columns.reduce((acc, col) => ({ ...acc, [col.key]: '' }), {})
 )
@@ -398,9 +401,19 @@ const activeFiltersCount = computed(() =>
   Object.values(multiSelectFilters.value).filter(v => v.length > 0).length
 )
 
-const onGlobalSearchInput = () => {
-  currentPage.value = 1
-  if (props.externalPagination) emit('page-change', 1)
+// Filtre colonne → local (mode interne) ou serveur (mode externe)
+let columnDebounce = null
+const onColumnFilterInput = (key) => {
+  if (props.externalPagination) {
+    // Émettre vers serveur avec debounce
+    clearTimeout(columnDebounce)
+    columnDebounce = setTimeout(() => {
+      emit('column-filter-change', { ...filters.value })
+    }, 400)
+  } else {
+    // Filtrage local
+    currentPage.value = 1
+  }
 }
 
 // ── Tri ───────────────────────────────────────────────────────────────────
@@ -417,8 +430,7 @@ const sortBy = (col) => {
 }
 
 // ── Sélection ─────────────────────────────────────────────────────────────
-const selectedRows = ref([])
-
+const selectedRows    = ref([])
 const isAllSelected   = computed(() => paginatedData.value.length > 0 && selectedRows.value.length === paginatedData.value.length)
 const isIndeterminate = computed(() => selectedRows.value.length > 0 && selectedRows.value.length < paginatedData.value.length)
 
@@ -469,33 +481,14 @@ const paginatedData = computed(() =>
 const visiblePages = computed(() => {
   const total = totalPages.value
   const cur   = currentPage.value
-
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1)
-  }
-
-  const pages = []
-
-  // Toujours afficher la première page
-  pages.push(1)
-
-  // Ellipse gauche
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages = [1]
   if (cur > 3) pages.push('...')
-
-  // Pages autour de la page courante
   const start = Math.max(2, cur - 1)
   const end   = Math.min(total - 1, cur + 1)
-
-  for (let i = start; i <= end; i++) {
-    pages.push(i)
-  }
-
-  // Ellipse droite
+  for (let i = start; i <= end; i++) pages.push(i)
   if (cur < total - 2) pages.push('...')
-
-  // Toujours afficher la dernière page
   pages.push(total)
-
   return pages
 })
 
@@ -510,10 +503,17 @@ const onLocalPerPageChange = () => {
   if (props.externalPagination) emit('per-page-change', localItemsPerPage.value)
 }
 
+// ── Loading — masqué si hideLoadingOnColumnFilter ─────────────────────────
+const showLoading = computed(() =>
+  props.hideLoadingOnColumnFilter ? false : props.loading
+)
+
 // ── Données calculées ─────────────────────────────────────────────────────
 const filteredData = computed(() => {
+  // Mode externe → pas de filtrage local (tout côté serveur)
   if (props.externalPagination) return sourceData.value
 
+  // Mode interne → filtrage local complet
   let data = sourceData.value
 
   if (globalSearch.value) {
@@ -529,7 +529,7 @@ const filteredData = computed(() => {
 
   Object.entries(filters.value).forEach(([key, val]) => {
     if (val) data = data.filter(item =>
-      String(item[key]).toLowerCase().includes(val.toLowerCase())
+      String(item[key] ?? '').toLowerCase().includes(val.toLowerCase())
     )
   })
 
@@ -553,7 +553,7 @@ watch(filteredData, () => {
   }
 })
 
-// ── Menu filtre ───────────────────────────────────────────────────────────
+// ── Menu filtre multi-sélection ───────────────────────────────────────────
 const filterMenu       = ref({ show: false, column: null, x: 0, y: 0 })
 const filterMenuSearch = ref('')
 
@@ -562,10 +562,8 @@ const openFilterMenu = (event, column) => {
   const rect = event.target.getBoundingClientRect()
   filterMenu.value = { show: true, column, x: rect.left, y: rect.bottom + 6 }
 }
-const closeFilterMenu = () => {
-  filterMenu.value = { show: false, column: null, x: 0, y: 0 }
-}
-const getColumnLabel = (key) => props.columns.find(c => c.key === key)?.label ?? key
+const closeFilterMenu = () => { filterMenu.value = { show: false, column: null, x: 0, y: 0 } }
+const getColumnLabel  = (key) => props.columns.find(c => c.key === key)?.label ?? key
 
 const getOptions = (col) =>
   [...new Set(sourceData.value.map(i => i[col]))]
@@ -595,18 +593,15 @@ const rowBg = (id, index) => {
   if (selectedRows.value.includes(id)) return 'bg-indigo-50 hover:bg-indigo-100'
   return index % 2 === 0 ? 'bg-white hover:bg-indigo-50' : 'bg-slate-50 hover:bg-indigo-50'
 }
-
 const stickyBg = (id, index) => {
   if (selectedRows.value.includes(id)) return 'bg-indigo-50 group-hover:bg-indigo-100'
   return index % 2 === 0 ? 'bg-white group-hover:bg-indigo-50' : 'bg-slate-50 group-hover:bg-indigo-50'
 }
-
 const getInputContainerWidth = (col) => {
   if (col.inputWidth) return `width: ${col.inputWidth}`
   if (props.columnInputSize) return `width: ${props.columnInputSize}`
   return 'width: 100%'
 }
-
 const getInputStyle = (col) => {
   if (col.inputWidth) return `width: ${col.inputWidth}`
   if (props.columnInputSize) return `width: 100%`
@@ -614,21 +609,16 @@ const getInputStyle = (col) => {
   const width = Math.max(60, text.length * 7 + 24)
   return `width: ${width}px`
 }
-
 const shouldShowLabel = (col) => {
-  if (props.hideLabelsWhenInput) {
-    return col.inputHidden === true || col.filterable === false
-  }
+  if (props.hideLabelsWhenInput) return col.inputHidden === true || col.filterable === false
   return props.showColumnLabels && col.showLabel !== false
 }
-
 const getCellAlignment = (columnKey) => {
   if (props.leftAlignedColumns.includes(columnKey)) return 'text-left'
   return 'text-center'
 }
 
-// ── Expose ────────────────────────────────────────────────────────────────
-defineExpose({ selectedRows, filters, multiSelectFilters, currentPage })
+defineExpose({ selectedRows, filters, multiSelectFilters, currentPage, showAdvancedFilters })
 </script>
 
 <style>
@@ -637,11 +627,9 @@ defineExpose({ selectedRows, filters, multiSelectFilters, currentPage })
 .scrollbar-thin::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 2px; }
 
 @keyframes progress {
-  0%   { width: 0%;   margin-left: 0; }
-  50%  { width: 60%;  margin-left: 20%; }
-  100% { width: 0%;   margin-left: 100%; }
+  0%   { width: 0%;  margin-left: 0; }
+  50%  { width: 60%; margin-left: 20%; }
+  100% { width: 0%;  margin-left: 100%; }
 }
-.animate-progress {
-  animation: progress 1s ease-in-out infinite;
-}
+.animate-progress { animation: progress 1s ease-in-out infinite; }
 </style>
