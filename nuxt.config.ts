@@ -1,6 +1,4 @@
 export default defineNuxtConfig({
-  plugins: ['~/plugins/onesignal.client.js'],
-
   devtools: { enabled: true },
 
   colorMode: {
@@ -12,7 +10,6 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@nuxt/image',
     '@pinia/nuxt',
-    'pinia-plugin-persistedstate/nuxt',
   ],
 
   css: ['~/assets/css/main.css'],

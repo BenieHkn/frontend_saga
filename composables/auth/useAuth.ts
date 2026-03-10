@@ -40,6 +40,7 @@ export interface AuthResponse {
   success: boolean
   message: string
   token: string
+  token_expires_at: string
   user: User
   main_entite: EntiteInfo | null
   entites: EntiteUser[]
@@ -61,9 +62,9 @@ export const useAuth = () => {
   // =====================
   // STATE
   // =====================
-  const authError      = ref<string>('')
+  const authError = ref<string>('')
   const successMessage = ref<string>('')
-  const loading        = ref<boolean>(false)
+  const loading = ref<boolean>(false)
 
   const form = reactive({
     email: '',
@@ -79,11 +80,15 @@ export const useAuth = () => {
   const persistSession = (response: AuthResponse) => {
     if (!process.client) return
 
-    localStorage.setItem('auth_token',  response.token)
-    localStorage.setItem('user',        JSON.stringify(response.user))
+    localStorage.setItem('auth_token', response.token)
+    const expirationMinutes = 120 // doit correspondre à config('sanctum.expiration')
+    const expiresAt = Date.now() + expirationMinutes * 60 * 1000
+    localStorage.setItem('auth_token_expires_at', String(expiresAt))
+
+    localStorage.setItem('user', JSON.stringify(response.user))
 
     if (response.main_entite) {
-      localStorage.setItem('main_entite',    JSON.stringify(response.main_entite))
+      localStorage.setItem('main_entite', JSON.stringify(response.main_entite))
       localStorage.setItem('selected_entite', JSON.stringify(response.main_entite))
     }
 
@@ -116,18 +121,18 @@ export const useAuth = () => {
 
   const clearSession = () => {
     if (!process.client) return
-    ;[
-      'auth_token',
-      'user',
-      'main_entite',
-      'entite_user',
-      'selected_entite',
-      'entites',
-      'role',
-      'roles',   // ✅ nouveau
-      'permissions',
-      'directeur_entite_user_id',
-    ].forEach(key => localStorage.removeItem(key))
+      ;[
+        'auth_token',
+        'user',
+        'main_entite',
+        'entite_user',
+        'selected_entite',
+        'entites',
+        'role',
+        'roles',   // ✅ nouveau
+        'permissions',
+        'directeur_entite_user_id',
+      ].forEach(key => localStorage.removeItem(key))
   }
 
   const getStoredToken = (): string | null => {
@@ -167,17 +172,17 @@ export const useAuth = () => {
     if (!process.client) return
 
     const selectedEntite: EntiteInfo = {
-      id:               entiteUser.id,
-      code:             entiteUser.code,
-      libelle:          entiteUser.libelle,
-      fonction:         entiteUser.fonction,
-      is_critique:      entiteUser.is_critique,
+      id: entiteUser.id,
+      code: entiteUser.code,
+      libelle: entiteUser.libelle,
+      fonction: entiteUser.fonction,
+      is_critique: entiteUser.is_critique,
       parent_entite_id: entiteUser.parent_entite_id,
-      parent_libelle:   entiteUser.parent_libelle,
+      parent_libelle: entiteUser.parent_libelle,
     }
 
     localStorage.setItem('selected_entite', JSON.stringify(selectedEntite))
-    localStorage.setItem('entite_user',     JSON.stringify(entiteUser))
+    localStorage.setItem('entite_user', JSON.stringify(entiteUser))
   }
 
   const isAuthenticated = (): boolean => !!getStoredToken()
@@ -241,17 +246,17 @@ export const useAuth = () => {
   // =====================
   // RÔLES (helpers booléens)
   // =====================
-  const isAdmin            = () => hasRole('administrateur')
-  const isDG               = () => hasRole('directeur_general')
-  const isSP               = () => hasRole('secretariat_particulier')
-  const isSA               = () => hasRole('secretariat_administratif')
-  const isSAP              = () => hasRole('sap')
-  const isDT               = () => hasRole('directeur_technique')
-  const isDCCIQ            = () => hasRole('directeur_cciq')
-  const isSecDir           = () => hasRole('secretariat_direction')
-  const isChefService      = () => hasRole('chef_service')
-  const isAgent            = () => hasRole('agent')
-  const isSecretaireCodir  = () => hasRole('secretaire_codir')  // ✅ remplace isSPCODIR
+  const isAdmin = () => hasRole('administrateur')
+  const isDG = () => hasRole('directeur_general')
+  const isSP = () => hasRole('secretariat_particulier')
+  const isSA = () => hasRole('secretariat_administratif')
+  const isSAP = () => hasRole('sap')
+  const isDT = () => hasRole('directeur_technique')
+  const isDCCIQ = () => hasRole('directeur_cciq')
+  const isSecDir = () => hasRole('secretariat_direction')
+  const isChefService = () => hasRole('chef_service')
+  const isAgent = () => hasRole('agent')
+  const isSecretaireCodir = () => hasRole('secretaire_codir')  // ✅ remplace isSPCODIR
 
   // ✅ Cas composite — chef service ET secrétaire codir simultanément
   const isChefServiceEtSecretaireCodir = () =>
@@ -260,19 +265,19 @@ export const useAuth = () => {
   // =====================
   // PERMISSIONS (helpers booléens)
   // =====================
-  const peutVoirConfig    = () => hasPermission('voir_configuration')
-  const peutModifier      = () => hasPermission('modifier_courriers')
-  const peutSupprimer     = () => hasPermission('supprimer_courriers')
-  const peutRattacher     = () => hasPermission('faire_rattachement')
-  const peutVoirCodir     = () => hasPermission('voir_codir')
-  const peutGererCodir    = () => hasPermission('gerer_codir')
+  const peutVoirConfig = () => hasPermission('voir_configuration')
+  const peutModifier = () => hasPermission('modifier_courriers')
+  const peutSupprimer = () => hasPermission('supprimer_courriers')
+  const peutRattacher = () => hasPermission('faire_rattachement')
+  const peutVoirCodir = () => hasPermission('voir_codir')
+  const peutGererCodir = () => hasPermission('gerer_codir')
   const voitTousCourriers = () => hasPermission('voir_tous_courriers')
-  const voitCourriersSA   = () => hasPermission('voir_courriers_sa')
-  const voitStats         = () => hasPermission('voir_stats')
-  const voitAgents        = () => hasPermission('voir_agents')
-  const peutTransferer    = () => hasPermission('faire_transfert')
-  const typeDashboard     = () => getPermissions().dashboard        ?? 'agent'
-  const champsVisibles    = () => getPermissions().champs_visibles  ?? null
+  const voitCourriersSA = () => hasPermission('voir_courriers_sa')
+  const voitStats = () => hasPermission('voir_stats')
+  const voitAgents = () => hasPermission('voir_agents')
+  const peutTransferer = () => hasPermission('faire_transfert')
+  const typeDashboard = () => getPermissions().dashboard ?? 'agent'
+  const champsVisibles = () => getPermissions().champs_visibles ?? null
 
   // =====================
   // REMEMBER ME
@@ -282,7 +287,7 @@ export const useAuth = () => {
     if (!process.client) return
     const savedEmail = localStorage.getItem('rememberedEmail')
     if (savedEmail) {
-      form.email   = savedEmail
+      form.email = savedEmail
       rememberMe.value = true
     }
   }
@@ -342,9 +347,9 @@ export const useAuth = () => {
 
         if (playerId) {
           await $fetch('/api/user/onesignal', {
-            method:  'POST',
+            method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
-            body:    { player_id: playerId }
+            body: { player_id: playerId }
           })
           console.log('✅ OneSignal player_id enregistré:', playerId)
         }
@@ -359,7 +364,7 @@ export const useAuth = () => {
   // =====================
 
   const login = async () => {
-    authError.value    = ''
+    authError.value = ''
     successMessage.value = ''
 
     if (!validateForm()) return
@@ -372,10 +377,11 @@ export const useAuth = () => {
       const response = await $fetch<AuthResponse>('api/auth/login', {
         method: 'POST',
         body: {
-          email:    form.email.trim(),
+          email: form.email.trim(),
           password: form.password
         }
       })
+      console.log("la réponse à la connexion", response)
 
       if (!response.success) {
         authError.value = response.message || 'Erreur lors de la connexion'
