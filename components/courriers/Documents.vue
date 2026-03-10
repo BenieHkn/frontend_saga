@@ -4,128 +4,260 @@
     <UModal v-model="detailsOpen" :ui="{ width: 'sm:max-w-5xl' }">
       <div v-if="selectedCourrier" class="flex flex-col max-h-[90vh] bg-white rounded-xl overflow-hidden">
 
-        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 shrink-0">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-              <Icon name="i-heroicons-envelope-open" class="w-4 h-4 text-indigo-600" />
+        <!-- ── En-tête modal ── -->
+        <div class="relative flex items-center justify-between px-6 py-4 shrink-0 overflow-hidden"
+          style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%);">
+          <div class="absolute inset-0 opacity-10"
+            style="background-image: radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px); background-size: 32px 32px;"></div>
+          <div class="relative flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-inner border border-white/30">
+              <Icon name="i-heroicons-document-text" class="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 class="text-base font-bold text-slate-900">Détails du courrier arrivé</h2>
-              <p class="text-xs text-slate-500">N° {{ selectedCourrier.numero_enreg }}</p>
+              <h2 class="text-base font-bold text-white leading-tight">Détails du document</h2>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-xs text-indigo-200 font-medium">N° {{ selectedCourrier.numero_enreg || '—' }}</span>
+                <span class="w-1 h-1 rounded-full bg-indigo-300"></span>
+                <span class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-md uppercase border"
+                  :class="{
+                    'bg-blue-400/30 text-blue-100 border-blue-300/50': selectedCourrier.type === 'arrive',
+                    'bg-orange-400/30 text-orange-100 border-orange-300/50': selectedCourrier.type === 'depart',
+                  }">
+                  {{ selectedCourrier.type || '—' }}
+                </span>
+              </div>
             </div>
           </div>
           <button @click="closeDetails"
-            class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-700">
+            class="relative w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 transition-all text-white border border-white/20">
             <Icon name="i-heroicons-x-mark" class="w-4 h-4" />
           </button>
         </div>
 
-        <div class="overflow-y-auto flex-1 p-5 space-y-5">
-          <section class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div class="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-100">
+        <!-- ── Corps ── -->
+        <div class="overflow-y-auto flex-1 p-5 space-y-4 bg-slate-50/50">
+
+          <!-- Section principale -->
+          <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
+            <!-- Bandeau section -->
+            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100"
+              :class="selectedCourrier.type === 'depart' ? 'bg-gradient-to-r from-orange-50 to-amber-50' : 'bg-gradient-to-r from-indigo-50 to-blue-50'">
               <div class="flex items-center gap-2">
-                <div class="w-5 h-5 rounded bg-indigo-100 flex items-center justify-center">
-                  <Icon name="i-heroicons-inbox-arrow-down" class="w-3 h-3 text-indigo-600" />
+                <div class="w-6 h-6 rounded-lg flex items-center justify-center"
+                  :class="selectedCourrier.type === 'depart' ? 'bg-orange-100' : 'bg-indigo-100'">
+                  <Icon :name="selectedCourrier.type === 'depart' ? 'i-heroicons-paper-airplane' : 'i-heroicons-inbox-arrow-down'"
+                    class="w-3.5 h-3.5"
+                    :class="selectedCourrier.type === 'depart' ? 'text-orange-600' : 'text-indigo-600'" />
                 </div>
-                <span class="text-[11px] font-bold text-slate-600 uppercase tracking-widest">Courrier arrivé</span>
+                <span class="text-[11px] font-bold uppercase tracking-widest"
+                  :class="selectedCourrier.type === 'depart' ? 'text-orange-700' : 'text-indigo-700'">
+                  Courrier {{ selectedCourrier.type === 'depart' ? 'départ' : 'arrivé' }}
+                </span>
               </div>
+              <!-- Badges priorité + statut -->
               <div class="flex items-center gap-1.5">
-                <span class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase" :class="{
-                  'bg-red-50 text-red-700 border-red-200': selectedCourrier.details?.priority?.toLowerCase() === 'urgent',
-                  'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.details?.priority?.toLowerCase() === 'important',
-                  'bg-sky-50 text-sky-700 border-sky-200': !selectedCourrier.details?.priority || selectedCourrier.details?.priority?.toLowerCase() === 'standard',
-                }">{{ selectedCourrier.details?.priority || 'STANDARD' }}</span>
+                <span v-if="selectedCourrier.details?.priority"
+                  class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase"
+                  :class="{
+                    'bg-red-50 text-red-700 border-red-200': selectedCourrier.details.priority.toLowerCase() === 'urgent',
+                    'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.details.priority.toLowerCase() === 'important',
+                    'bg-sky-50 text-sky-700 border-sky-200': selectedCourrier.details.priority.toLowerCase() === 'standard',
+                  }">{{ selectedCourrier.details.priority }}</span>
+                <span v-if="selectedCourrier.type === 'arrive' && selectedCourrier.reponses?.length"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Répondu
+                </span>
+                <span v-else-if="selectedCourrier.type === 'arrive'"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                  <Icon name="i-heroicons-clock" class="w-3 h-3" /> En attente
+                </span>
               </div>
             </div>
 
             <div class="p-4 space-y-3">
+              <!-- Référence + Objet -->
               <div class="grid grid-cols-1 gap-2">
-                <div class="flex items-start gap-3 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
-                  <div class="w-1 h-full min-h-[2rem] rounded-full bg-indigo-400 shrink-0 self-stretch"></div>
-                  <div>
+                <div class="group flex items-stretch gap-0 rounded-xl overflow-hidden border border-indigo-100 hover:border-indigo-200 transition-colors">
+                  <div class="w-1 shrink-0 bg-gradient-to-b from-indigo-400 to-indigo-600"></div>
+                  <div class="flex-1 p-3 bg-gradient-to-r from-indigo-50 to-transparent">
                     <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-0.5">Référence</p>
                     <p class="text-sm font-bold text-indigo-900">{{ selectedCourrier.reference || 'Sans référence' }}</p>
                   </div>
                 </div>
-                <div class="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
-                  <div class="w-1 h-full min-h-[2rem] rounded-full bg-amber-400 shrink-0 self-stretch"></div>
-                  <div>
+                <div class="group flex items-stretch gap-0 rounded-xl overflow-hidden border border-amber-100 hover:border-amber-200 transition-colors">
+                  <div class="w-1 shrink-0 bg-gradient-to-b from-amber-400 to-orange-500"></div>
+                  <div class="flex-1 p-3 bg-gradient-to-r from-amber-50 to-transparent">
                     <p class="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-0.5">Objet</p>
                     <p class="text-sm text-gray-800 leading-relaxed">{{ selectedCourrier.objet || 'Non spécifié' }}</p>
                   </div>
                 </div>
               </div>
 
+              <!-- Grille d'infos -->
               <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Source</p>
-                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.details?.service_enreg || 'N/A' }}</p>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Source
+                  </p>
+                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.details?.service_enreg || selectedCourrier.details?.service_emis || 'N/A' }}</p>
                 </div>
-                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Structure / Usager</p>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Structure / Usager
+                  </p>
                   <p class="text-xs text-slate-800">{{ selectedCourrier.details?.structure || selectedCourrier.details?.autre_structure || 'Non spécifié' }}</p>
                 </div>
-                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Type d'arrivée</p>
-                  <p class="text-xs text-slate-800">{{ selectedCourrier.details?.type_arrivee || 'Non spécifié' }}</p>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>
+                    {{ selectedCourrier.type === 'depart' ? "Type de départ" : "Type d'arrivée" }}
+                  </p>
+                  <p class="text-xs text-slate-800">{{ selectedCourrier.details?.type_arrivee || selectedCourrier.details?.type_depart || 'Non spécifié' }}</p>
                 </div>
-                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">N° enregistrement</p>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-300 inline-block"></span>N° enregistrement
+                  </p>
                   <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.numero_enreg || '—' }}</p>
                 </div>
-                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date d'enregistrement</p>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Date d'enregistrement
+                  </p>
                   <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.date_enreg) || '—' }}</p>
                 </div>
-                <div v-if="selectedCourrier.date_courrier" class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Date du courrier</p>
+                <div v-if="selectedCourrier.date_courrier" class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Date du courrier
+                  </p>
                   <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.date_courrier) }}</p>
                 </div>
-                <div v-if="selectedCourrier.type_document" class="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Type de document</p>
+                <div v-if="selectedCourrier.type_document" class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Type de document
+                  </p>
                   <p class="text-xs text-slate-800">{{ selectedCourrier.type_document.libelle }}</p>
                 </div>
               </div>
 
+              <!-- Bouton document -->
               <div class="pt-1">
                 <div v-if="arriveeUrl">
                   <button v-if="!showArriveeDoc" @click="showArriveeDoc = true"
-                    class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all">
+                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl transition-all hover:shadow-sm">
                     <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />
-                    Charger le document arrivé
+                    Charger le document
                   </button>
-                  <div v-else class="mt-2 rounded-lg overflow-hidden border border-slate-200">
+                  <div v-else class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
                     <DocumentRpreview :file-preview-url="arriveeUrl" height="400px" />
                   </div>
                 </div>
-                <div v-else
-                  class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-lg cursor-not-allowed">
+                <div v-else class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed">
                   <Icon name="i-heroicons-document-text" class="w-4 h-4" />
                   Aucun document disponible
                 </div>
               </div>
             </div>
           </section>
+
+          <!-- Section réponse (arrive uniquement) -->
+          <section v-if="selectedCourrier.type === 'arrive' && selectedCourrier.reponses?.length"
+            class="bg-white rounded-2xl border border-emerald-200/80 overflow-hidden shadow-sm">
+            <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <Icon name="i-heroicons-arrow-uturn-right" class="w-3.5 h-3.5 text-emerald-600" />
+                </div>
+                <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier de réponse</span>
+              </div>
+              <span v-if="reponseData && !loadingReponse"
+                class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Chargé
+              </span>
+            </div>
+
+            <div v-if="loadingReponse" class="flex items-center justify-center gap-3 py-8 text-slate-400">
+              <div class="w-5 h-5 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+              <span class="text-xs font-medium">Chargement du courrier de réponse...</span>
+            </div>
+
+            <div v-else-if="reponseData" class="p-4 space-y-3">
+              <div class="grid grid-cols-1 gap-2">
+                <div class="group flex items-stretch gap-0 rounded-xl overflow-hidden border border-emerald-100 hover:border-emerald-200 transition-colors">
+                  <div class="w-1 shrink-0 bg-gradient-to-b from-emerald-400 to-teal-500"></div>
+                  <div class="flex-1 p-3 bg-gradient-to-r from-emerald-50 to-transparent">
+                    <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-0.5">Référence</p>
+                    <p class="text-sm font-bold text-emerald-900">{{ reponseData.reference || 'Sans référence' }}</p>
+                  </div>
+                </div>
+                <div class="group flex items-stretch gap-0 rounded-xl overflow-hidden border border-slate-100 hover:border-slate-200 transition-colors">
+                  <div class="w-1 shrink-0 bg-gradient-to-b from-slate-300 to-slate-400"></div>
+                  <div class="flex-1 p-3 bg-gradient-to-r from-slate-50 to-transparent">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Objet</p>
+                    <p class="text-sm text-slate-800 leading-relaxed">{{ reponseData.objet || 'Non spécifié' }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 inline-block"></span>Destinataire
+                  </p>
+                  <p class="text-xs font-semibold text-slate-800">{{ reponseData.destinataire || '—' }}</p>
+                </div>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Date de départ
+                  </p>
+                  <p class="text-xs text-slate-800">{{ formatDate(reponseData.date_depart) || '—' }}</p>
+                </div>
+                <div v-if="reponseData.service_emis" class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Service émetteur
+                  </p>
+                  <p class="text-xs text-slate-800">{{ reponseData.service_emis }}</p>
+                </div>
+                <div v-if="reponseData.type_depart" class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Type de départ
+                  </p>
+                  <p class="text-xs text-slate-800">{{ reponseData.type_depart }}</p>
+                </div>
+              </div>
+
+              <div class="pt-1">
+                <div v-if="reponseData.url">
+                  <button v-if="!showReponseDoc" @click="showReponseDoc = true"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all hover:shadow-sm">
+                    <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />
+                    Charger le document de réponse
+                  </button>
+                  <div v-else class="mt-2 rounded-xl overflow-hidden border border-emerald-200 shadow-sm">
+                    <DocumentRpreview :file-preview-url="reponseData.url" height="400px" />
+                  </div>
+                </div>
+                <div v-else class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed">
+                  <Icon name="i-heroicons-document-text" class="w-4 h-4" />
+                  Aucun document disponible pour la réponse
+                </div>
+              </div>
+            </div>
+
+            <div v-else class="flex items-center gap-2 m-4 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
+              <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
+              Impossible de charger les détails du courrier de réponse.
+            </div>
+          </section>
         </div>
 
-        <div class="px-6 py-4 border-t border-slate-100 shrink-0 flex justify-end">
-          <UButton color="gray" variant="outline" @click="closeDetails">Fermer</UButton>
+        <!-- ── Pied modal ── -->
+        <div class="px-6 py-3.5 border-t border-slate-100 shrink-0 flex items-center justify-between bg-white">
+          <span class="text-[10px] text-slate-400">{{ selectedCourrier.reference || '' }}</span>
+          <UButton color="gray" variant="outline" size="sm" @click="closeDetails">Fermer</UButton>
         </div>
       </div>
     </UModal>
-
-    <!-- <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Tous les documents</h1>
-        <p class="text-sm text-slate-500">Gestion et suivi des documents</p>
-      </div>
-      <UBadge color="blue" variant="soft" size="lg" class="ml-auto" v-if="!isAdmin()">
-        <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
-        <UButton to="/courriers/form_courier_arrive" variant="text" size="sm" class="p-0 m-0 text-blue-600">
-          Nouveau
-        </UButton>
-      </UBadge>
-    </div> -->
 
     <PageHeader v-if="!isAdmin()" title="Tous les documents" subtitle="Gestion et suivi des documents" btnText="Nouveau" to="/courriers/form_courier_arrive"/>
     <PageHeader title="Tous les documents" subtitle="Gestion et suivi des documents" v-else/>
@@ -173,26 +305,45 @@
 
       <template #actions="{ item }">
         <div class="flex gap-1.5 justify-end">
+          <!-- Voir (toujours visible) -->
           <button @click="handleView(item)" title="Voir les détails"
-            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
+            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
-          <!-- <button v-if="!isAdmin()" @click="handleQuickAssign(item.id)" title="Affecter ce courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
-            <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
-          </button> -->
-          <!-- <button v-if="!isAdmin()" @click="handleReply(item)" title="Répondre au courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group">
-            <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
-          </button> -->
-          <!-- <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
+
+          <!-- Boutons spécifiques aux courriers arrivés -->
+          <template v-if="item.type === 'arrive'">
+            <!-- Affecter -->
+            <button v-if="!isAdmin()" @click="handleQuickAssign(item._complete?.details?.id)" title="Affecter ce courrier"
+              class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
+              <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
+            </button>
+            <!-- Répondre : visible si pas encore de réponse -->
+            <button
+              v-if="!item._complete?.reponses?.length && !isAdmin()"
+              @click="handleReply(item)"
+              title="Répondre au courrier"
+              class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group">
+              <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
+            </button>
+            <!-- Déjà répondu : icône check si réponse existante -->
+            <div
+              v-else-if="item._complete?.reponses?.length && !isAdmin()"
+              title="Ce courrier a déjà une réponse"
+              class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-500 border border-green-100 rounded-md cursor-default">
+              <Icon name="i-heroicons-check-circle" class="w-4 h-4" />
+            </div>
+          </template>
+
+          <!-- Admin : Modifier + Supprimer -->
+          <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier"
+            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
             <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
-          </button> -->
-          <!-- <button v-if="isAdmin()" @click="onDelete(item)" title="Supprimer ce courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border-red-100 rounded-md hover:bg-red-200 hover:text-red-900 transition-all group">
+          </button>
+          <button v-if="isAdmin()" @click="onDelete(item)" title="Supprimer ce courrier"
+            class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 hover:text-red-900 transition-all group">
             <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
-          </button> -->
+          </button>
         </div>
       </template>
 
@@ -280,6 +431,9 @@ const error = ref(null)
 const detailsOpen = ref(false)
 const selectedCourrier = ref(null)
 const showArriveeDoc = ref(false)
+const showReponseDoc = ref(false)
+const loadingReponse = ref(false)
+const reponseData = ref(null)
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 const arriveeUrl = computed(() => {
@@ -313,58 +467,44 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
-// La nouvelle API /documents/type retourne une structure PLATE :
-// - Les champs principaux (reference, objet, date_enreg, url, type) sont directement sur l'objet
-// - Les détails spécifiques (service_enreg, structure, priority, type_arrivee...) sont dans `details`
 const transformCourriers = (response) => {
   if (!response?.data) throw new Error('Format de réponse API invalide')
-
-  return response.data
-    .map((doc) => ({
-      id: doc.id,
-      source: doc.details?.service_enreg || doc.details?.service_emis ||'',
-      type: doc.type,
-      numeroEnregistrement: doc.numero_enreg || '',
-      reference: doc.reference || '',
-      structure: doc.details?.structure || doc.details?.autre_structure || '',
-      date_enregistrement: formatDate(doc.date_enreg),
-      objet: doc.objet || '',
-      date_courrier: formatDate(doc.date_courrier),
-      url: doc.url && doc.url !== 'Inconnu'
-        ? (doc.url.startsWith('http') ? doc.url : `${config.public.baseUrl}${doc.url}`)
-        : '',
-      type_arrivee: doc.details?.type_arrivee || '',
-      priority: doc.details?.priority || '',
-      _complete: doc, // On garde l'objet complet pour la modal
-    }))
+  return response.data.map((doc) => ({
+    id: doc.id,
+    source: doc.details?.service_enreg || doc.details?.service_emis || '',
+    type: doc.type,
+    numeroEnregistrement: doc.numero_enreg || '',
+    reference: doc.reference || '',
+    structure: doc.details?.structure || doc.details?.autre_structure || '',
+    date_enregistrement: formatDate(doc.date_enreg),
+    objet: doc.objet || '',
+    date_courrier: formatDate(doc.date_courrier),
+    url: doc.url && doc.url !== 'Inconnu'
+      ? (doc.url.startsWith('http') ? doc.url : `${config.public.baseUrl}${doc.url}`)
+      : '',
+    type_arrivee: doc.details?.type_arrivee || '',
+    priority: doc.details?.priority || '',
+    _complete: doc,
+  }))
 }
 
 // ── Chargement ────────────────────────────────────────────────────────────────
 const refresh = async () => {
   loading.value = true
   error.value = null
-
   try {
     const authToken = localStorage.getItem('auth_token') || ''
-
     let endpoint = `${config.public.apiBase}/documents/type`
     if (props.entiteId) {
       const selectedEntite = JSON.parse(localStorage.getItem('selected_entite') || 'null')
-      if (selectedEntite?.code) {
-        endpoint += `?service_enreg=${selectedEntite.code}`
-      }
+      if (selectedEntite?.code) endpoint += `?service_enreg=${selectedEntite.code}`
     }
-
-    console.log(`[CourriersArrivesListe] GET ${endpoint}`)
-
     const response = await $fetch(endpoint, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
-
     courriers.value = transformCourriers(response)
-
   } catch (err) {
-    console.error('❌ Erreur chargement courriers arrivés:', err)
+    console.error('❌ Erreur chargement documents:', err)
     error.value = err.message || 'Erreur lors du chargement'
   } finally {
     loading.value = false
@@ -372,16 +512,67 @@ const refresh = async () => {
 }
 
 // ── Modal détails ─────────────────────────────────────────────────────────────
-const handleView = (item) => {
-  selectedCourrier.value = item._complete || item
+const handleView = async (item) => {
+  const doc = item._complete || item
+  selectedCourrier.value = doc
   showArriveeDoc.value = false
+  showReponseDoc.value = false
+  reponseData.value = null
   detailsOpen.value = true
+
+  // Charger la réponse si c'est un courrier arrivé avec réponse
+  if (doc.type === 'arrive') {
+    const reponses = doc.reponses || []
+    if (reponses.length) {
+      const courierDepartId = reponses[0]?.reponse_id
+      if (courierDepartId) await loadReponseData(courierDepartId)
+    }
+  }
 }
 
 const closeDetails = () => {
   detailsOpen.value = false
   selectedCourrier.value = null
+  reponseData.value = null
   showArriveeDoc.value = false
+  showReponseDoc.value = false
+}
+
+const loadReponseData = async (documentId) => {
+  if (!documentId) return
+  loadingReponse.value = true
+  try {
+    const authToken = localStorage.getItem('auth_token') || ''
+    const allDeparts = await $fetch(`${config.public.apiBase}/courriers-departs`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+    const list = Array.isArray(allDeparts?.data) ? allDeparts.data : []
+    const doc = list.find(cd => cd.document_id === documentId) || null
+    if (!doc) { reponseData.value = null; return }
+
+    const buildUrl = (raw) => {
+      if (!raw || raw === 'Inconnu') return null
+      if (raw.startsWith('http')) return raw
+      const base = config.public.baseUrl?.replace(/\/$/, '')
+      const path = raw.startsWith('/') ? raw : `/${raw}`
+      return `${base}${path}`
+    }
+
+    reponseData.value = {
+      reference: doc?.document?.reference || 'Sans référence',
+      objet: doc?.document?.objet || 'Non spécifié',
+      destinataire: doc?.destinataire || '—',
+      date_depart: doc?.date_depart || null,
+      type_depart: doc?.type_depart || null,
+      service_emis: doc?.service_emis || null,
+      url: buildUrl((doc?.document?.url || '').trim()),
+    }
+  } catch (e) {
+    console.error('❌ Erreur chargement réponse:', e)
+    reponseData.value = null
+  } finally {
+    loadingReponse.value = false
+  }
 }
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
@@ -392,13 +583,34 @@ const onOpenDocument = (url) => {
 const onSelectionChange = (ids) => console.log('Sélection:', ids)
 
 const handleQuickAssign = (courrierId) => {
+  // courrierId = item._complete?.details?.id (ID du courrier arrivé, pas du document)
+  if (!courrierId) return
   store.selectCourrierFromQuickAction(courrierId)
   navigateTo('/affectations/create')
 }
 
 const handleReply = (item) => {
-  const courrier = item._complete || item
-  courriersStore.setCourrierToReply(courrier)
+  const doc = item._complete || item
+  // Dans la structure plate de /documents/type, le courrier arrivé est dans doc.details
+  const courrierArrive = doc.details || doc
+  if (doc.reponses?.length) {
+    Swal.fire({ title: 'Déjà répondu', text: 'Ce courrier a déjà reçu une réponse.', icon: 'info', confirmButtonColor: '#2563eb' })
+    return
+  }
+  // On reconstitue l'objet attendu par setCourrierToReply avec le document imbriqué
+  courriersStore.setCourrierToReply({
+    ...courrierArrive,
+    document: {
+      id: doc.id,
+      reference: doc.reference,
+      objet: doc.objet,
+      numero_enreg: doc.numero_enreg,
+      date_enreg: doc.date_enreg,
+      date_courrier: doc.date_courrier,
+      url: doc.url,
+      reponses: doc.reponses || [],
+    },
+  })
   navigateTo('/courriers/form_courrier_depart')
 }
 
@@ -438,7 +650,6 @@ const onDelete = async (item) => {
   } catch (err) {
     const message = err.data?.message || err.message || 'Impossible de supprimer le courrier'
     const affectationsCount = err.data?.data?.affectations_count
-
     await Swal.fire({
       title: 'Suppression impossible',
       html: affectationsCount
@@ -451,7 +662,7 @@ const onDelete = async (item) => {
            </div>`
         : `<p>${message}</p>`,
       icon: 'error',
-      confirmButtonColor: '#7c3aed',
+      confirmButtonColor: '#2563eb',
       confirmButtonText: 'Compris',
     })
   }

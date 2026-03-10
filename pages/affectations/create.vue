@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/40">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
 
     <PageHeader title="Nouvelle Affectation"
       description="Affecter un ou plusieurs courrier(s) à un ou plusieurs destinataire(s)" />
@@ -27,14 +27,14 @@
     <div v-if="submitting" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4">
         <div class="flex flex-col items-center gap-4">
-          <Icon name="svg-spinners:ring-resize" class="w-12 h-12 text-purple-600" />
+          <Icon name="svg-spinners:ring-resize" class="w-12 h-12 text-blue-600" />
           <h3 class="text-lg font-bold text-slate-900">Création en cours...</h3>
           <p class="text-sm text-slate-600 text-center">
             Création de {{ store.selectedDestinataires.length }} affectation(s) pour {{ store.selectedCourriers.length
             }} courrier(s)
           </p>
           <div class="w-full bg-slate-200 rounded-full h-2 mt-2 overflow-hidden">
-            <div class="bg-purple-600 h-full animate-pulse" style="width: 100%"></div>
+            <div class="bg-blue-600 h-full animate-pulse" style="width: 100%"></div>
           </div>
         </div>
       </div>
@@ -406,17 +406,35 @@ date_affect: new Date().toISOString().split('T')[0],
     console.error('❌ Erreurs de validation:', error.data?.errors)
 
     let errorMessage = 'Impossible de créer les affectations'
+    let errorDetails = []
+    
     if (error.data?.message) {
       errorMessage = error.data.message
     } else if (error.message) {
       errorMessage = error.message
     }
 
+    // Ajouter les erreurs de validation détaillées
+    if (error.data?.errors) {
+      errorDetails = Object.entries(error.data.errors).map(([field, messages]) => {
+        const fieldName = field.charAt(0).toUpperCase() + field.slice(1)
+        const errorMessages = Array.isArray(messages) ? messages.join(', ') : messages
+        return `${fieldName}: ${errorMessages}`
+      })
+    }
+
+    // Afficher les erreurs dans la console pour débogage
+    if (errorDetails.length > 0) {
+      console.log('📋 Détails des erreurs formatés:', errorDetails)
+    }
+
     toast.add({
-      title: 'Erreur',
-      description: errorMessage,
+      title: 'Erreur de validation',
+      description: errorDetails.length > 0 
+        ? `${errorMessage}\n\n${errorDetails.join('\n')}`
+        : errorMessage,
       color: 'red',
-      timeout: 1500,
+      timeout: 5000,
     })
 
     submitting.value = false

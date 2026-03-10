@@ -20,10 +20,10 @@
           @click.stop
         >
           <!-- Header -->
-          <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-5 flex items-center justify-between border-b border-purple-700/20">
+          <div class="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 flex items-center justify-between border-b border-blue-700/20">
             <div>
               <h2 class="text-xl font-bold text-white">Affecter les courriers</h2>
-              <p class="text-xs text-purple-100 mt-0.5">
+              <p class="text-xs text-blue-100 mt-0.5">
                 Sélectionnez les destinataires pour {{ selectedCourriers.length }} courrier(s)
               </p>
             </div>
@@ -68,7 +68,7 @@
                   v-model="searchQuery"
                   type="text"
                   placeholder="Rechercher par nom, fonction, entité..."
-                  class="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                  class="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                 />
                 <button
                   v-if="searchQuery"
@@ -86,7 +86,7 @@
                   :checked="selectedFonctions.length === filteredFonctions.length && filteredFonctions.length > 0"
                   :indeterminate="selectedFonctions.length > 0 && selectedFonctions.length < filteredFonctions.length"
                   @change="toggleSelectAll"
-                  class="w-4 h-4 text-purple-600 border-slate-300 rounded cursor-pointer"
+                  class="w-4 h-4 text-blue-600 border-slate-300 rounded cursor-pointer"
                 />
                 <label class="text-xs font-semibold text-slate-700 cursor-pointer">
                   Sélectionner tout ({{ filteredFonctions.length }})
@@ -101,7 +101,7 @@
                 v-if="loading && fonctionUtilisateurs.length === 0"
                 class="flex flex-col items-center justify-center py-12 gap-3"
               >
-                <div class="w-10 h-10 border-4 border-slate-200 border-t-purple-600 rounded-full animate-spin" />
+                <div class="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" />
                 <p class="text-sm text-slate-500">Chargement des utilisateurs...</p>
               </div>
 
@@ -123,13 +123,13 @@
                   class="group"
                 >
                   <label
-                    class="flex items-start gap-3 p-3 rounded-lg cursor-pointer hover:bg-purple-50 transition-colors border border-transparent hover:border-purple-200"
+                    class="flex items-start gap-3 p-3 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors border border-transparent hover:border-blue-200"
                   >
                     <input
                       type="checkbox"
                       :checked="isFonctionSelected(fonction.id)"
                       @change="toggleFonction(fonction.id)"
-                      class="w-4 h-4 text-purple-600 border-slate-300 rounded cursor-pointer mt-1 flex-shrink-0"
+                      class="w-4 h-4 text-blue-600 border-slate-300 rounded cursor-pointer mt-1 flex-shrink-0"
                     />
                     <div class="flex-1 min-w-0">
                       <!-- Nom utilisateur -->
@@ -186,7 +186,7 @@
                     >
                       <Icon
                         name="i-heroicons-check-circle"
-                        class="w-5 h-5 text-purple-600"
+                        class="w-5 h-5 text-blue-600"
                       />
                     </div>
                   </label>
@@ -215,7 +215,7 @@
               <button
                 @click="assignCourriers"
                 :disabled="selectedFonctions.length === 0 || loading"
-                class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Icon
                   v-if="loading"

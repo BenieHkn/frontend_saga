@@ -206,7 +206,7 @@ const getStatutBadgeClass = (statut) => {
   const classes = {
     'en_cours': 'bg-blue-100 text-blue-700 ring-1 ring-blue-200',
     'traite': 'bg-green-100 text-green-700 ring-1 ring-green-200',
-    'cloture': 'bg-purple-100 text-purple-700 ring-1 ring-purple-200',
+    'cloture': 'bg-blue-100 text-blue-700 ring-1 ring-blue-200',
   }
   return classes[statut] || 'bg-slate-100 text-slate-700 ring-1 ring-slate-200'
 }

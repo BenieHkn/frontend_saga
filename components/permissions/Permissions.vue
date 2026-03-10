@@ -839,7 +839,7 @@ const deleteRole = async (role) => {
     await Swal.fire({ title: 'Supprimé !', icon: 'success', timer: 2000, showConfirmButton: false })
     await refresh()
   } catch (e) {
-    await Swal.fire({ title: 'Erreur', text: e?.data?.message || 'Impossible de supprimer', icon: 'error', confirmButtonColor: '#7c3aed' })
+    await Swal.fire({ title: 'Erreur', text: e?.data?.message || 'Impossible de supprimer', icon: 'error', confirmButtonColor: '#2563eb' })
   }
 }
 
@@ -925,7 +925,7 @@ const deletePerm = async (perm) => {
     await Swal.fire({ title: 'Supprimée !', icon: 'success', timer: 2000, showConfirmButton: false })
     await refresh()
   } catch (e) {
-    await Swal.fire({ title: 'Erreur', text: e?.data?.message || 'Impossible de supprimer', icon: 'error', confirmButtonColor: '#7c3aed' })
+    await Swal.fire({ title: 'Erreur', text: e?.data?.message || 'Impossible de supprimer', icon: 'error', confirmButtonColor: '#2563eb' })
   }
 }
 

@@ -1,9 +1,9 @@
 <template>
-  <div class="p-6 max-w-[1400px] mx-auto">
+  <!-- <div class="p-6 max-w-[1400px] mx-auto"> -->
     <!-- En-tête -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="flex items-center gap-3 text-2xl font-bold text-slate-800">
-        <Icon name="i-heroicons-clipboard-document-list" class="w-7 h-7 text-purple-600" />
+        <Icon name="i-heroicons-clipboard-document-list" class="w-7 h-7 text-blue-600" />
         Liste des Affectations
       </h1>
       <div class="flex items-center gap-3">
@@ -16,7 +16,7 @@
         </button>
         <button 
           @click="handleCreate"
-          class="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-purple-600/30"
+          class="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/30"
         >
           <Icon name="i-heroicons-plus" class="w-4 h-4" />
           Nouvelle Affectation
@@ -41,7 +41,7 @@
 
     <!-- Loader -->
     <div v-if="loading" class="flex flex-col items-center justify-center py-16 gap-4">
-      <div class="w-12 h-12 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
+      <div class="w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
       <p class="text-sm text-slate-500">Chargement des affectations...</p>
     </div>
 
@@ -165,14 +165,14 @@
         </button>
         <button 
           @click="handleBulkExport(selected)"
-          class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-md hover:bg-purple-100 hover:border-purple-300 transition-all"
+          class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-all"
         >
           <Icon name="i-heroicons-arrow-down-tray" class="w-4 h-4" />
           Exporter ({{ selected.length }})
         </button>
       </template>
     </DataTable>
-  </div>
+  <!-- </div> -->
 </template>
 
 <script setup>
@@ -291,7 +291,7 @@ const showCourriersModal = async (item) => {
       </div>
     `,
     icon: 'info',
-    confirmButtonColor: '#7c3aed',
+    confirmButtonColor: '#2563eb',
     confirmButtonText: 'Fermer',
     width: '700px'
   })
@@ -352,7 +352,7 @@ const showDestinatairesModal = async (item) => {
       </div>
     `,
     icon: 'info',
-    confirmButtonColor: '#7c3aed',
+    confirmButtonColor: '#2563eb',
     confirmButtonText: 'Fermer',
     width: '700px'
   })
@@ -361,9 +361,9 @@ const showDestinatairesModal = async (item) => {
 const handleView = async (item) => {
   const details = `
     <div class="text-left space-y-3">
-      <div class="bg-purple-50 rounded-lg p-3 border border-purple-200">
+      <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
         <p class="text-xs text-gray-600 uppercase font-semibold mb-1">Affectation</p>
-        <p class="font-bold text-purple-900 text-lg">#${item.id}</p>
+        <p class="font-bold text-blue-900 text-lg">#${item.id}</p>
       </div>
       
       <div class="grid grid-cols-2 gap-2">
@@ -439,7 +439,7 @@ const handleView = async (item) => {
     title: '📋 Détails de l\'affectation',
     html: details,
     icon: 'info',
-    confirmButtonColor: '#7c3aed',
+    confirmButtonColor: '#2563eb',
     confirmButtonText: 'Fermer',
     width: '650px',
     didOpen: () => {
@@ -473,7 +473,7 @@ const handleDelete = async (item) => {
       <div class="text-left">
         <p class="mb-3 text-gray-700">Êtes-vous sûr de vouloir supprimer cette affectation ?</p>
         <div class="bg-gray-50 rounded-lg p-4 space-y-2 border border-gray-200">
-          <p class="font-bold text-purple-900">Affectation #${item.id}</p>
+          <p class="font-bold text-blue-900">Affectation #${item.id}</p>
           <p class="text-sm text-gray-700">
             <strong>${item.nb_courriers}</strong> courrier(s) • 
             <strong>${item.nb_destinataires}</strong> destinataire(s)
@@ -518,7 +518,7 @@ const handleDelete = async (item) => {
       title: '❌ Erreur',
       text: 'Impossible de supprimer l\'affectation',
       icon: 'error',
-      confirmButtonColor: '#7c3aed'
+      confirmButtonColor: '#2563eb'
     })
   }
 }

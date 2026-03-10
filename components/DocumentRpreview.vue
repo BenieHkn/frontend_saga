@@ -193,7 +193,7 @@ const startLoading = () => {
   loadingTimeout = setTimeout(() => {
     console.log('✅ Timeout atteint - affichage du document')
     loading.value = false
-  }, 2000) // 2 secondes
+  }, 0) //  secondes
 }
 
 // ============================================================================

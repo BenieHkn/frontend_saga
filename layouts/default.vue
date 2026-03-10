@@ -1,19 +1,21 @@
 <template>
   <div class="min-h-screen bg-slate-50">
     <Header class="z-[50]" />
-    
+
     <Sidebar @sidebar-toggle="handleSidebarToggle" />
-    
-    <div class=""> <main 
-        :class="[
-          'transition-all duration-300 ease-in-out',
-          isSidebarExpanded ? 'lg:ml-64' : 'lg:ml-20',
-          'ml-20' 
-        ]"
-      >
+
+    <div class="">
+      <main :class="[
+        'transition-all duration-300 ease-in-out',
+        isSidebarExpanded ? 'lg:ml-64' : 'lg:ml-20',
+        'ml-20'
+      ]">
         <div class="p-2 lg:p-2">
-          <slot />
-          <UNotifications />
+          <!-- <main class="flex-1 p-4 lg:p-8 transition-all duration-500 overflow-y-auto"
+            :class="{ 'lg:ml-64': desktopSidebarOpen }"> -->
+            <slot />
+            <UNotifications />
+          <!-- </main> -->
         </div>
       </main>
     </div>

@@ -82,8 +82,8 @@ const quickActions = ref([
     title: 'Generate Report',
     description: 'Create analytics report',
     icon: 'heroicons:chart-bar',
-    bgColor: 'bg-purple-100',
-    iconColor: 'text-purple-600',
+    bgColor: 'bg-blue-100',
+    iconColor: 'text-blue-600',
     action: 'generateReport'
   },
   {

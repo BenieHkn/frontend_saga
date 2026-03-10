@@ -795,7 +795,7 @@ const handleDelete = async (item) => {
       title: 'Erreur',
       text: e?.data?.message || 'Impossible de supprimer ce type de document',
       icon: 'error',
-      confirmButtonColor: '#7c3aed',
+      confirmButtonColor: '#2563eb',
     })
   }
 }

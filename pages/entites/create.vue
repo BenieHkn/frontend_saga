@@ -229,9 +229,9 @@
               </div>
 
               <!-- Informations sur les champs -->
-              <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <h4 class="font-medium text-purple-800 mb-2">Guide des champs</h4>
-                <ul class="space-y-2 text-sm text-purple-700">
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 class="font-medium text-blue-800 mb-2">Guide des champs</h4>
+                <ul class="space-y-2 text-sm text-blue-700">
                   <li><strong>Code :</strong> Identifiant unique court (ex: DIR, DRH)</li>
                   <li><strong>Libellé :</strong> Nom complet de l'entité</li>
                   <li><strong>Fonction :</strong> Rôle ou mission de l'entité (optionnel)</li>

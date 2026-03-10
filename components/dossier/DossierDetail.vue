@@ -21,8 +21,8 @@ const closeDetail = () => {
     <div class="p-6 border-b border-gray-100 dark:border-gray-800">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center">
-            <UIcon name="i-heroicons-folder" class="w-6 h-6 text-violet-600 dark:text-violet-400" />
+          <div class="w-12 h-12 rounded-xl bg-sky-100 dark:bg-sky-950/40 flex items-center justify-center">
+            <UIcon name="i-heroicons-folder" class="w-6 h-6 text-sky-600 dark:text-sky-400" />
           </div>
           <div>
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ dossier.libelle }}</h2>

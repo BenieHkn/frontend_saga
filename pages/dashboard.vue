@@ -1,9 +1,9 @@
 <template>
-  <div class="flex h-screen overflow-hidden bg-white">
-    <main
+  <!-- <div class="flex h-screen overflow-hidden bg-white"> -->
+    <!-- <main
       class="flex-1 p-4 lg:p-8 transition-all duration-500 overflow-y-auto"
       :class="{ 'lg:ml-64': desktopSidebarOpen }"
-    >
+    > -->
       <!-- Header -->
       <div class="mb-8 relative">
         <div class="absolute -left-4 top-0 w-1 h-12 bg-emerald-500 shadow-[0_0_15px_#10b981] rounded-full"></div>
@@ -135,8 +135,8 @@
           <AffectationsListe v-else />
         </div>
       </div>
-    </main>
-  </div>
+    <!-- </main> -->
+  <!-- </div> -->
 </template>
 
 <script setup>

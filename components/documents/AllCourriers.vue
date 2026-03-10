@@ -1,5 +1,10 @@
 <template>
-  <UContainer>
+  <!-- <div class="flex h-screen overflow-hidden bg-white"> -->
+    <!-- <main
+      class="flex-1 p-4 lg:p-8 transition-all duration-500"
+      > -->
+      <!-- :class="{ 'lg:ml-64': desktopSidebarOpen }" -->
+      <!-- <UContainer> -->
     <PageHeader title="Documents" subtitle="Gestion et suivi des documents" />
 
     <!-- Types de documents -->
@@ -32,7 +37,9 @@
         </KeepAlive>
       </template>
     </div>
-  </UContainer>
+  <!-- </UContainer> -->
+  <!-- </main> -->
+  <!-- </div> -->
 </template>
 
 <script setup>
