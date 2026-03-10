@@ -10,13 +10,13 @@
             Gestion des affectations et suivi des traitements
           </p>
         </div>
-        <!-- <UBadge color="purple" variant="soft" size="lg">
+        <!-- <UBadge color="blue" variant="soft" size="lg">
           <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
           <UButton
             to="/affectations/create"
             variant="text"
             size="sm"
-            class="p-0 m-0 text-purple-600"
+            class="p-0 m-0 text-blue-600"
           >
             Nouvelle Affectation
           </UButton>
@@ -349,7 +349,7 @@
               <UButton
                 to="/affectations/create"
                 icon="i-heroicons-plus"
-                class="bg-gradient-to-br from-purple-800 to-indigo-800 text-white"
+                class="bg-gradient-to-br from-blue-800 to-indigo-800 text-white"
               >
                 Créer une affectation
               </UButton>
@@ -945,11 +945,11 @@ const paginatedData = computed(() =>
 const getRowClasses = (id, index) => {
   const isSelectedRow = selectedRows.value.includes(id);
   return {
-    'bg-purple-50': isSelectedRow,
+    'bg-blue-50': isSelectedRow,
     'bg-gray-50': index % 2 === 0 && !isSelectedRow,
     'bg-white': index % 2 === 1 && !isSelectedRow,
-    'hover:bg-purple-100': !isSelectedRow,
-    'hover:bg-purple-200': isSelectedRow,
+    'hover:bg-blue-100': !isSelectedRow,
+    'hover:bg-blue-200': isSelectedRow,
   };
 };
 

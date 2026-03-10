@@ -538,7 +538,7 @@ const handleQuickAssign = (courrierId) => {
 const handleReply = (item) => {
   const courrier = item._complete || item
   if (courrier.document?.reponses?.length) {
-    Swal.fire({ title: 'Déjà répondu', text: 'Ce courrier a déjà reçu une réponse.', icon: 'info', confirmButtonColor: '#7c3aed' })
+    Swal.fire({ title: 'Déjà répondu', text: 'Ce courrier a déjà reçu une réponse.', icon: 'info', confirmButtonColor: '#2563eb' })
     return
   }
   courriersStore.setCourrierToReply(courrier)
@@ -594,7 +594,7 @@ const onDelete = async (item) => {
            </div>`
         : `<p>${message}</p>`,
       icon: 'error',
-      confirmButtonColor: '#7c3aed',
+      confirmButtonColor: '#2563eb',
       confirmButtonText: 'Compris',
     })
   }

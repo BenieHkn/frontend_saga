@@ -1,6 +1,194 @@
 <template>
   <div class="min-h-screen bg-slate-100 p-6 font-sans">
 
+    <!-- ── Modal détails ── -->
+    <UModal v-model="detailsOpen" :ui="{ width: 'sm:max-w-5xl' }">
+      <div v-if="selectedCourrier" class="flex flex-col max-h-[90vh] bg-white rounded-xl overflow-hidden">
+
+        <!-- En-tête -->
+        <div class="relative flex items-center justify-between px-6 py-4 shrink-0 overflow-hidden"
+          style="background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);">
+          <div class="absolute inset-0 opacity-10"
+            style="background-image: radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px); background-size: 32px 32px;"></div>
+          <div class="relative flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-inner border border-white/30">
+              <Icon name="i-heroicons-paper-airplane" class="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-white leading-tight">Détails du courrier départ</h2>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-xs text-emerald-100 font-medium">N° {{ selectedCourrier.document?.numero_enreg || '—' }}</span>
+                <span v-if="selectedCourrier.confidentiel"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-white/20 text-white border border-white/30">
+                  <Icon name="i-heroicons-lock-closed" class="w-3 h-3" /> Confidentiel
+                </span>
+                <span v-if="selectedCourrier.document?.large_diffusion"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-white/20 text-white border border-white/30">
+                  <Icon name="i-heroicons-megaphone" class="w-3 h-3" /> Large diffusion
+                </span>
+              </div>
+            </div>
+          </div>
+          <button @click="closeDetails"
+            class="relative w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 transition-all text-white border border-white/20">
+            <Icon name="i-heroicons-x-mark" class="w-4 h-4" />
+          </button>
+        </div>
+
+        <!-- Corps -->
+        <div class="overflow-y-auto flex-1 p-5 space-y-4 bg-slate-50/50">
+
+          <!-- Section principale -->
+          <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
+            <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <Icon name="i-heroicons-paper-airplane" class="w-3.5 h-3.5 text-emerald-600" />
+                </div>
+                <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier départ</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span v-if="selectedCourrier.type_depart"
+                  class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase bg-emerald-50 text-emerald-700 border-emerald-200">
+                  {{ selectedCourrier.type_depart }}
+                </span>
+              </div>
+            </div>
+
+            <div class="p-4 space-y-3">
+              <!-- Référence + Objet -->
+              <div class="grid grid-cols-1 gap-2">
+                <div class="group flex items-stretch gap-0 rounded-xl overflow-hidden border border-indigo-100 hover:border-indigo-200 transition-colors">
+                  <div class="w-1 shrink-0 bg-gradient-to-b from-indigo-400 to-indigo-600"></div>
+                  <div class="flex-1 p-3 bg-gradient-to-r from-indigo-50 to-transparent">
+                    <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-0.5">Référence</p>
+                    <p class="text-sm font-bold text-indigo-900">{{ selectedCourrier.document?.reference || 'Sans référence' }}</p>
+                  </div>
+                </div>
+                <div class="group flex items-stretch gap-0 rounded-xl overflow-hidden border border-amber-100 hover:border-amber-200 transition-colors">
+                  <div class="w-1 shrink-0 bg-gradient-to-b from-amber-400 to-amber-500"></div>
+                  <div class="flex-1 p-3 bg-gradient-to-r from-amber-50 to-transparent">
+                    <p class="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-0.5">Objet</p>
+                    <p class="text-sm text-gray-800 leading-relaxed">{{ selectedCourrier.document?.objet || 'Non spécifié' }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Grille d'infos -->
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 inline-block"></span>Source
+                  </p>
+                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.service_emis || 'N/A' }}</p>
+                </div>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Destinataire
+                  </p>
+                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.destinataire || '—' }}</p>
+                </div>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Type de départ
+                  </p>
+                  <p class="text-xs text-slate-800">{{ selectedCourrier.type_depart || 'Non spécifié' }}</p>
+                </div>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-300 inline-block"></span>N° enregistrement
+                  </p>
+                  <p class="text-xs font-semibold text-slate-800">{{ selectedCourrier.document?.numero_enreg || '—' }}</p>
+                </div>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Date d'enregistrement
+                  </p>
+                  <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.document?.date_enreg) || '—' }}</p>
+                </div>
+                <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Date de départ
+                  </p>
+                  <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.date_depart) || '—' }}</p>
+                </div>
+                <div v-if="selectedCourrier.document?.type_document?.libelle"
+                  class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 inline-block"></span>Type de document
+                  </p>
+                  <p class="text-xs text-slate-800">{{ selectedCourrier.document.type_document.libelle }}</p>
+                </div>
+                <div v-if="selectedCourrier.document?.date_courrier"
+                  class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Date du courrier
+                  </p>
+                  <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.document.date_courrier) }}</p>
+                </div>
+              </div>
+
+              <!-- Initiateurs -->
+              <div v-if="selectedCourrier.initiateurs?.length"
+                class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-sky-100 hover:border-sky-200 transition-colors">
+                <div class="w-1 shrink-0 bg-gradient-to-b from-sky-400 to-blue-500"></div>
+                <div class="flex-1 p-3 bg-gradient-to-r from-sky-50 to-transparent">
+                  <p class="text-[10px] font-bold text-sky-500 uppercase tracking-wider mb-2">Initiateurs</p>
+                  <div class="flex flex-wrap gap-1.5">
+                    <span v-for="(initiateur, i) in selectedCourrier.initiateurs" :key="i"
+                      class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-sky-700 bg-white border border-sky-200 rounded-full shadow-sm">
+                      <Icon name="i-heroicons-user-circle" class="w-3.5 h-3.5 text-sky-400" />
+                      {{ initiateur.user?.nom || '' }} {{ initiateur.user?.prenom || '' }}
+                      <span v-if="initiateur.entite?.code || initiateur.entite?.libelle"
+                        class="text-sky-400">({{ initiateur.entite?.code || initiateur.entite?.libelle }})</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bouton document -->
+              <div class="pt-1">
+                <div v-if="departUrl">
+                  <button v-if="!showDepartDoc" @click="showDepartDoc = true"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all hover:shadow-sm">
+                    <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />
+                    Charger le document
+                  </button>
+                  <div v-else class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                    <DocumentRpreview :file-preview-url="departUrl" height="400px" />
+                  </div>
+                </div>
+                <div v-else class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed">
+                  <Icon name="i-heroicons-document-text" class="w-4 h-4" />
+                  Aucun document disponible
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section courrier arrivé d'origine (si réponse à un courrier) -->
+          <section v-if="selectedCourrier.courrier_arrive_id || selectedCourrier.reponse_a"
+            class="bg-white rounded-2xl border border-emerald-200/80 overflow-hidden shadow-sm">
+            <div class="flex items-center px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+              <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center mr-2">
+                <Icon name="i-heroicons-inbox-arrow-down" class="w-3.5 h-3.5 text-emerald-600" />
+              </div>
+              <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">En réponse à un courrier arrivé</span>
+            </div>
+            <div class="p-4">
+              <p class="text-xs text-slate-500 italic">Ce courrier a été émis en réponse à un courrier arrivé.</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- Pied modal -->
+        <div class="px-6 py-3.5 border-t border-slate-100 shrink-0 flex items-center justify-between bg-white">
+          <span class="text-[10px] text-slate-400">{{ selectedCourrier.document?.reference || '' }}</span>
+          <UButton color="gray" variant="outline" size="sm" @click="closeDetails">Fermer</UButton>
+        </div>
+      </div>
+    </UModal>
+
     <PageHeader v-if="!isAdmin()" title="Courriers Départs" subtitle="Gestion et suivi des courriers sortants" btnText="Nouveau" to="/courriers/form_courrier_depart"/>
     <PageHeader v-else title="Courriers Départs" subtitle="Gestion et suivi des courriers sortants"/>
 
@@ -67,7 +255,7 @@
       <template #actions="{ item }">
         <div class="flex gap-1.5 justify-end">
           <button @click="handleView(item)" title="Voir les détails"
-            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border-amber-100 rounded-md hover:bg-amber-200 hover:border-amber-900 transition-all group">
+            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
         </div>
@@ -80,7 +268,7 @@
       </template>
 
       <template #cell-type_document="{ value }">
-        <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-green-50 text-green-700 border border-green-100">
+        <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
           {{ value || 'N/A' }}
         </span>
       </template>
@@ -95,14 +283,12 @@
         <span v-else class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-gray-50 text-gray-700 border border-gray-100">Non</span>
       </template>
 
-      <!-- ✅ Objet : retour à la ligne avec largeur minimale -->
       <template #cell-objet="{ value }">
         <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
           {{ value }}
         </span>
       </template>
 
-      <!-- ✅ Référence : retour à la ligne, sans points de suspension -->
       <template #cell-reference="{ value, item }">
         <div class="w-full">
           <button v-if="item.url" @click="onOpenDocument(item.url)"
@@ -121,26 +307,24 @@
         </div>
       </template>
 
-      <!-- ✅ Initiateurs : largeur limitée pour ne pas écraser les autres colonnes -->
       <template #cell-initiateurs="{ value }">
         <div v-if="value && value.length > 0" class="flex flex-col gap-1 max-w-[150px]">
           <span v-for="(initiateur, index) in value" :key="index"
-            class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-purple-700 bg-purple-50 border border-purple-100 rounded-full whitespace-normal break-words min-w-0">
+            class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-sky-700 bg-sky-50 border border-sky-100 rounded-full whitespace-normal break-words min-w-0">
             <Icon name="i-heroicons-user" class="w-3 h-3 shrink-0" />
             {{ initiateur }}
           </span>
         </div>
         <span v-else class="text-xs text-slate-400 italic">—</span>
       </template>
-
     </DataTable>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DataTable from '~/components/DataTable.vue'
-import Swal from 'sweetalert2'
+import DocumentRpreview from '~/components/DocumentRpreview.vue'
 import { useAuth } from '~/composables/auth/useAuth'
 
 const props = defineProps({
@@ -154,6 +338,20 @@ const { isAdmin } = useAuth()
 const courriers = ref([])
 const loading = ref(false)
 const error = ref(null)
+const detailsOpen = ref(false)
+const selectedCourrier = ref(null)
+const showDepartDoc = ref(false)
+
+// ── Computed ──────────────────────────────────────────────────────────────────
+const departUrl = computed(() => {
+  const raw = selectedCourrier.value?.document?.url
+  const url = raw?.trim?.()
+  if (!url || url === 'Inconnu' || url === '') return null
+  if (url.startsWith('http')) return url
+  const base = config.public.baseUrl?.replace(/\/$/, '')
+  const path = url.startsWith('/') ? url : `/${url}`
+  return `${base}${path}`
+})
 
 // ── Colonnes ──────────────────────────────────────────────────────────────────
 const columns = [
@@ -216,32 +414,36 @@ const transformCourriers = (response) => {
 const refresh = async () => {
   loading.value = true
   error.value = null
-
   try {
     const authToken = localStorage.getItem('auth_token') || ''
-
     let endpoint = `${config.public.apiBase}/courriers-departs`
     if (props.entiteId) {
       const selectedEntite = JSON.parse(localStorage.getItem('selected_entite') || 'null')
-      if (selectedEntite?.code) {
-        endpoint += `?service_emis=${selectedEntite.code}`
-      }
+      if (selectedEntite?.code) endpoint += `?service_emis=${selectedEntite.code}`
     }
-
-    console.log(`[CourriersDepartsListe] GET ${endpoint}`)
-
     const response = await $fetch(endpoint, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
-
     courriers.value = transformCourriers(response)
-
   } catch (err) {
     console.error('❌ Erreur chargement courriers départs:', err)
     error.value = err.message || 'Erreur lors du chargement'
   } finally {
     loading.value = false
   }
+}
+
+// ── Modal détails ─────────────────────────────────────────────────────────────
+const handleView = (item) => {
+  selectedCourrier.value = item._complete || item
+  showDepartDoc.value = false
+  detailsOpen.value = true
+}
+
+const closeDetails = () => {
+  detailsOpen.value = false
+  selectedCourrier.value = null
+  showDepartDoc.value = false
 }
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
@@ -251,80 +453,6 @@ const onOpenDocument = (url) => {
 
 const onSelectionChange = (ids) => console.log('Sélection :', ids)
 
-const handleView = async (item) => {
-  const courrier = item._complete || item
-
-  const initiateurHtml = courrier.initiateurs?.length > 0
-    ? courrier.initiateurs.map(i =>
-      `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#f3e8ff;color:#7e22ce;border:1px solid #e9d5ff;border-radius:9999px;font-size:12px;margin:2px;">
-          👤 ${i.user?.nom || ''} ${i.user?.prenom || ''} ${i.entite?.code ? `(${i.entite.code})` : i.entite?.libelle ? `(${i.entite.libelle})` : ''}
-        </span>`
-    ).join('')
-    : '<span style="color:#9ca3af;font-style:italic;font-size:13px;">Aucun initiateur</span>'
-
-  await Swal.fire({
-    title: 'Détails du courrier',
-    html: `
-      <div class="text-left space-y-4">
-        <div class="bg-blue-50 rounded-lg p-4">
-          <p class="text-xs text-gray-600 uppercase font-semibold mb-1">Référence</p>
-          <p class="text-lg font-bold text-blue-900">${courrier.document?.reference || 'N/A'}</p>
-        </div>
-        <div class="bg-yellow-50 rounded-lg p-4">
-          <p class="text-xs text-gray-600 uppercase font-semibold mb-1">Objet</p>
-          <p class="text-sm text-gray-800">${courrier.document?.objet || 'Non spécifié'}</p>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-gray-50 rounded-lg p-3">
-            <p class="text-xs text-gray-600 font-semibold mb-1">Source</p>
-            <p class="text-sm font-medium text-gray-900">${courrier.service_emis || 'N/A'}</p>
-          </div>
-          <div class="bg-gray-50 rounded-lg p-3">
-            <p class="text-xs text-gray-600 font-semibold mb-1">Type de départ</p>
-            <p class="text-sm font-medium text-gray-900">${courrier.type_depart || 'Non spécifié'}</p>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-gray-50 rounded-lg p-3">
-            <p class="text-xs text-gray-600 font-semibold mb-1">Date d'enregistrement</p>
-            <p class="text-sm text-gray-900">${formatDate(courrier.document?.date_enreg)}</p>
-          </div>
-          <div class="bg-gray-50 rounded-lg p-3">
-            <p class="text-xs text-gray-600 font-semibold mb-1">Date de départ</p>
-            <p class="text-sm text-gray-900">${formatDate(courrier.date_depart)}</p>
-          </div>
-        </div>
-        <div class="bg-indigo-50 rounded-lg p-4">
-          <p class="text-xs text-gray-600 uppercase font-semibold mb-1">Destinataire</p>
-          <p class="text-sm text-gray-900">${courrier.destinataire || 'Non spécifié'}</p>
-        </div>
-        <div class="bg-purple-50 rounded-lg p-4">
-          <p class="text-xs text-gray-600 uppercase font-semibold mb-2">Initiateurs</p>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;">${initiateurHtml}</div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-green-50 rounded-lg p-3">
-            <p class="text-xs text-gray-600 font-semibold mb-1">Type de document</p>
-            <p class="text-sm font-medium text-gray-900">${courrier.document?.type_document?.libelle || 'N/A'}</p>
-          </div>
-          <div class="bg-gray-50 rounded-lg p-3">
-            <p class="text-xs text-gray-600 font-semibold mb-1">Large diffusion</p>
-            <p class="text-sm font-medium text-gray-900">${courrier.document?.large_diffusion ? 'Oui' : 'Non'}</p>
-          </div>
-        </div>
-        <div class="bg-red-50 rounded-lg p-3">
-          <p class="text-xs text-gray-600 font-semibold mb-1">Confidentiel</p>
-          <p class="text-sm font-medium text-gray-900">${courrier.confidentiel ? '🔒 Oui' : 'Non'}</p>
-        </div>
-      </div>
-    `,
-    icon: 'info',
-    confirmButtonColor: '#7c3aed',
-    confirmButtonText: 'Fermer',
-    width: '600px',
-  })
-}
-
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(() => {
   refresh()
@@ -332,14 +460,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-:deep(.swal2-html-container) {
-  margin: 1rem 0;
-}
-
-:deep(.swal2-actions) {
-  gap: 0.75rem;
-}
-
+:deep(.swal2-html-container) { margin: 1rem 0; }
+:deep(.swal2-actions) { gap: 0.75rem; }
 :deep(.swal2-confirm) {
   padding: 0.625rem 1.5rem;
   border-radius: 0.5rem;
@@ -347,13 +469,10 @@ onMounted(() => {
   font-size: 0.875rem;
   transition: all 0.2s;
 }
-
 :deep(.swal2-confirm):hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
-
-/* ✅ Force les cellules du tableau à ne pas tronquer le contenu */
 :deep(td) {
   overflow: visible !important;
   white-space: normal !important;

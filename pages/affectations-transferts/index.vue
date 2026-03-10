@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col p-5">
+  <main
+      class="flex-1 p-4 lg:p-8 transition-all duration-500 overflow-y-auto"
+    >
+  <!-- <div class="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col p-5"> -->
       
     <!-- SP, SA, DG : affectations uniquement, sans entête -->
     <div v-if="isSP() || isSA() || isDG()">
@@ -32,7 +35,8 @@
       </AppTabs>
     </template>
 
-  </div>
+  <!-- </div> -->
+  </main>
 </template>
 
 <script setup>

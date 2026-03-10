@@ -106,7 +106,7 @@ const getActivityColor = (type) => {
     update: 'bg-blue-500',
     delete: 'bg-red-500',
     upload: 'bg-yellow-500',
-    report: 'bg-purple-500'
+    report: 'bg-blue-500'
   }
   return colors[type] || 'bg-gray-500'
 }
