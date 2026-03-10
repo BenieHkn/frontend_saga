@@ -19,15 +19,13 @@ const {
 
 onMounted(async () => {
   loadRememberedEmail()
-    if (process.client) {
+  if (process.client) {
     const token = localStorage.getItem('auth_token')
-    
+
     // 2. On effectue la redirection
     if (token) {
       await navigateTo('/dashboard')
-    } else {
-      await navigateTo('/connexion')
-    }
+    } 
   }
 })
 </script>
@@ -44,17 +42,15 @@ onMounted(async () => {
 
     <div class="max-w-6xl w-full flex flex-col md:flex-row items-center justify-between gap-12 z-10">
 
-      <div class="text-white md:text-left text-center flex-1 select-none">
-        <h1 class="text-9xl lg:ms-7 font-bold tracking-tight mb-0 drop-shadow-2xl">
+      <div class="text-white text-center flex-1 select-none">
+        <h1 class="text-8xl font-bold tracking-tight mb-0 drop-shadow-2xl">
           SAGA
         </h1>
-
         <h2
-          class="text-3xl lg:ms-9 font-bold tracking-[0.5em] animate-gold-sweep bg-clip-text text-transparent bg-[length:200%_auto] mb-8">
+          class="text-2xl font-bold tracking-[0.5em] animate-gold-sweep bg-clip-text text-transparent bg-[length:200%_auto] mb-2">
           REVOLUTION
         </h2>
-
-        <p class="text-2xl tracking-[0.2em] font-light text-white/70 lg:ms-9">
+        <p class="text-xl tracking-[0.2em] font-light text-white/70">
           Bienvenue sur notre plateforme...
         </p>
       </div>
@@ -153,22 +149,21 @@ body {
 .animate-gold-sweep {
   background-image: linear-gradient(90deg,
       #10b981 0%,
-      #f59e0b 25%,
-      #fef3c7 50%,
-      #f59e0b 75%,
+      #10b981 15%,      /* ← vert tenu plus longtemps */
+      #f59e0b 35%,
+      #fef3c7 50%,      /* ← blanc doré au centre */
+      #f59e0b 65%,
+      #10b981 85%,      /* ← retour vert tenu */
       #10b981 100%);
-  animation: sweep 4s linear infinite;
+  background-size: 300% auto;   /* ← plus large = transition plus douce */
+  animation: sweep 10s ease-in-out infinite;  /* ← ease-in-out au lieu de linear */
   filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.5));
 }
 
 @keyframes sweep {
-  0% {
-    background-position: -200% center;
-  }
-
-  100% {
-    background-position: 200% center;
-  }
+  0%   { background-position: 0% center; }
+  50%  { background-position: 150% center; }
+  100% { background-position: 0% center; }
 }
 
 .backdrop-blur-2xl {
