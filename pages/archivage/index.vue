@@ -319,7 +319,7 @@
                     'bg-amber-50 text-amber-700 border-amber-200': selectedItem?.statut === 'pending',
                   }">
                   <Icon :name="selectedItem?.statut === 'archived' ? 'i-heroicons-archive-box' : 'i-heroicons-archive-box-arrow-down'" class="w-3.5 h-3.5 shrink-0" />
-                  {{ selectedItem?.statut === 'archived' ? 'Archivé' : 'Préarchivage' }}
+                  {{ selectedItem?.statut === 'archived' ? 'Archivé' : 'Préarchivé' }}
                 </span>
                 <span
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-full border whitespace-nowrap"
@@ -657,7 +657,7 @@ const loadFile = () => {
 const formatDate = (date) => {
   if (!date) return '—'
   return new Date(date).toLocaleDateString('fr-FR', {
-    day: '2-digit', month: 'long', year: 'numeric'
+    day: '2-digit', month: '2-digit', year: 'numeric'
   })
 }
 
