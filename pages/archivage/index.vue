@@ -55,6 +55,8 @@
         :external-page="currentPage"
         :external-last-page="totalPages"
         :external-per-page="perPage"
+        :column-filter-options="columnFilterOptions"
+        @multi-filter-change="onMultiFilterChange"
         @search-change="onSearchChange"
         @page-change="onPageChange"
         @per-page-change="onPerPageChange"
@@ -535,6 +537,29 @@ const filterOptions = [
   { label: 'Toutes les Archives', value: 'archived' },
 ]
 
+// Après columnFilters ref — options pour le menu multi-select des colonnes
+// Alimenté depuis filterOptionsData déjà chargé
+const columnFilterOptions = computed(() => ({
+  type: [
+    { value: 'arrive', label: 'Arrivé' },
+    { value: 'depart', label: 'Départ' },
+  ],
+  numero_enreg: [...new Set(documents.value.map(d => d.numero_enreg).filter(Boolean))]
+    .map(v => ({ value: v, label: v })),
+  reference: [...new Set(documents.value.map(d => d.reference).filter(Boolean))]
+    .map(v => ({ value: v, label: v })),
+  objet: [...new Set(documents.value.map(d => d.objet).filter(Boolean))]
+    .map(v => ({ value: v, label: v })),
+}))
+
+// Handler multi-filter-change → serveur
+const multiFilters = ref({})
+const onMultiFilterChange = ({ column, values, all }) => {
+  multiFilters.value = { ...all }
+  currentPage.value  = 1
+  refresh(1, perPage.value, false)
+}
+
 // ── État table ────────────────────────────────────────────────────────────
 const documents      = ref([])
 const loading        = ref(false)
@@ -759,6 +784,12 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false, sile
     if (!f.objet         && c.objet)         params.append('objet',        c.objet)
     if (!f.date_enreg && c.date_enreg && c.date_enreg.length === 10) params.append('date_enreg', c.date_enreg)
     if (!f.type          && c.type)          params.append('type',         c.type)
+
+    // Après les filtres colonnes input
+    const m = multiFilters.value
+    if (m.type?.length)         params.append('type',         m.type.join(','))
+    if (m.numero_enreg?.length) params.append('numero_enreg', m.numero_enreg.join(','))
+    if (m.reference?.length)    params.append('reference',    m.reference.join(','))
 
     const response = await $fetch(`${base}/archives?${params.toString()}`, {
       headers: { Authorization: `Bearer ${authToken}` },
