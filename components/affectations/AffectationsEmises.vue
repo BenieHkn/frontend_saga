@@ -475,9 +475,9 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
-const getStatutLabel = (statut) => ({ 'en cours': 'En cours', 'en_attente': 'En attente', 'traite': 'Traité', 'cloture': 'Clôturé', 'annule': 'Annulé' }[statut] || statut)
-const getStatutClasses = (statut) => ({ 'en_attente': 'bg-gray-100 text-gray-800', 'en cours': 'bg-blue-100 text-blue-800', 'traite': 'bg-green-100 text-green-800', 'cloture': 'bg-blue-100 text-blue-800', 'annule': 'bg-red-100 text-red-800' }[statut] || 'bg-gray-100 text-gray-800')
-const getStatutDotClass = (statut) => ({ 'en attente': 'bg-gray-500', 'en cours': 'bg-blue-500', 'traite': 'bg-green-500', 'cloture': 'bg-blue-500', 'annule': 'bg-red-500' }[statut] || 'bg-gray-500')
+const getStatutLabel = (statut) => ({ 'en cours': 'En cours', 'en attente': 'En attente', 'traite': 'Traité', 'cloture': 'Clôturé', 'annule': 'Annulé' }[statut] || statut)
+const getStatutClasses = (statut) => ({ 'en_attente': 'bg-gray-100 text-gray-800', 'en cours': 'bg-blue-100 text-blue-800', 'traite': 'bg-green-100 text-green-800', 'cloture': 'bg-emerald-100 text-emerald-800', 'annule': 'bg-red-100 text-red-800' }[statut] || 'bg-gray-100 text-gray-800')
+const getStatutDotClass = (statut) => ({ 'en attente': 'bg-gray-500', 'en cours': 'bg-blue-500', 'traite': 'bg-green-500', 'cloture': 'bg-emerald-500', 'annule': 'bg-red-500' }[statut] || 'bg-gray-500')
 const getPriorityLabel = (priority) => ({ 'URGENT': 'URGENT', 'IMPORTANT': 'IMPORTANT', 'STANDARD': 'STANDARD' }[priority] || priority)
 const getPriorityClasses = (priority) => ({ 'URGENT': 'bg-red-100 text-red-800', 'IMPORTANT': 'bg-orange-100 text-orange-800', 'STANDARD': 'bg-blue-100 text-blue-800' }[priority] || 'bg-gray-100 text-gray-800')
 const getPriorityDotClass = (priority) => ({ 'URGENT': 'bg-red-500', 'IMPORTANT': 'bg-orange-500', 'STANDARD': 'bg-blue-500' }[priority] || 'bg-gray-500')

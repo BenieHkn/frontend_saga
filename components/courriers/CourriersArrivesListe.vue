@@ -387,7 +387,7 @@ const arriveeUrl = computed(() => {
 const columns = [
   { key: 'source', label: 'Source', visible: true, type: 'badge', inputHidden: true },
   { key: 'reference', label: 'Référence', visible: true, inputWidth: '80px', inputPlaceholder: 'Réf...' },
-  { key: 'numeroEnregistrement', label: "N° d'enreg.", visible: false, inputHidden: true },
+  { key: 'numeroEnregistrement', label: "N° d'enreg.", visible: true, showLabel: false, inputPlaceholder: 'Enreg...' },
   { key: 'objet', label: 'Objet', visible: true },
   { key: 'date_enregistrement', label: "Date d'enregistrement", visible: false },
   { key: 'date_courrier', label: 'Date du Courrier', visible: false },

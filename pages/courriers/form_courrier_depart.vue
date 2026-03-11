@@ -12,24 +12,16 @@
           <p class="text-sm font-semibold text-gray-900 truncate">{{ replyDocumentSummary?.reference }}</p>
           <p class="text-xs text-gray-600 mt-0.5 line-clamp-2">{{ replyDocumentSummary?.objet }}</p>
           <div class="flex flex-wrap gap-3 mt-2">
-            <span class="text-xs text-gray-500">
-              N° {{ replyDocumentSummary?.numero_enreg }}
-            </span>
+            <span class="text-xs text-gray-500">N° {{ replyDocumentSummary?.numero_enreg }}</span>
             <span class="text-xs text-gray-400">•</span>
-            <span class="text-xs text-gray-500">
-              {{ formatDate(replyDocumentSummary?.date_enreg) }}
-            </span>
+            <span class="text-xs text-gray-500">{{ formatDate(replyDocumentSummary?.date_enreg) }}</span>
             <span v-if="replyDocumentSummary?.type_document" class="text-xs text-gray-400">•</span>
             <span v-if="replyDocumentSummary?.type_document" class="text-xs text-indigo-600 font-medium">
               {{ replyDocumentSummary.type_document }}
             </span>
           </div>
         </div>
-        <button
-          @click="cancelReply"
-          class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
-          title="Annuler la réponse"
-        >
+        <button @click="cancelReply" class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors" title="Annuler la réponse">
           <Icon name="i-heroicons-x-mark" class="w-5 h-5" />
         </button>
       </div>
@@ -62,13 +54,10 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Pièce jointe *</label>
                   <div class="relative">
-                    <input ref="fileInput" type="file" @change="handleFileChange"
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden" />
+                    <input ref="fileInput" type="file" @change="handleFileChange" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden" />
                     <div class="flex gap-2">
-                      <UButton @click="$refs.fileInput.click()" type="button" color="yellow" variant="outline"
-                        icon="heroicons:arrow-up-tray" class="flex-shrink-0" />
-                      <div
-                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-600 truncate flex items-center">
+                      <UButton @click="$refs.fileInput.click()" type="button" color="yellow" variant="outline" icon="heroicons:arrow-up-tray" class="flex-shrink-0" />
+                      <div class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-600 truncate flex items-center">
                         {{ selectedFile ? selectedFile.name : "Aucun fichier sélectionné" }}
                       </div>
                     </div>
@@ -96,18 +85,11 @@
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Destinataire{{ isReplyMode ? ' *' : '' }}
                   </label>
-
-                  <!-- Saisie libre dans les deux modes ; pré-rempli avec la structure émettrice en mode réponse -->
-                  <UInput
-                    v-model="form.destinataire"
-                    :placeholder="isReplyMode ? '' : 'Nom du destinataire'"
-                    class="w-full h-12"
-                  />
+                  <UInput v-model="form.destinataire" :placeholder="isReplyMode ? '' : 'Nom du destinataire'" class="w-full h-12" />
                   <p v-if="isReplyMode" class="text-[11px] text-gray-400 mt-1">
                     Pré-rempli avec la structure émettrice du courrier original
                   </p>
                 </div>
-
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Date de départ *</label>
                   <UInput v-model="form.date_depart" type="date" class="w-full h-12" />
@@ -145,7 +127,6 @@
 
                 <div class="flex items-center space-x-4">
                   <UCheckbox v-model="form.large_diffusion" label="Large diffusion" />
-                  <!-- <UCheckbox v-model="form.confidentiel" label="Confidentiel" /> -->
                 </div>
 
                 <!-- Initiateurs : uniquement en mode création (pas en réponse) -->
@@ -171,39 +152,107 @@
                 </div>
               </div>
 
-              <!-- Affectations du courrier original (mode réponse, informatif) -->
+              <!-- ══════════════════════════════════════════════════════════════
+                   BLOC INITIATEURS EN MODE RÉPONSE — sélection hiérarchique
+              ══════════════════════════════════════════════════════════════ -->
               <div v-if="isReplyMode && courrierToReply?.affectations?.length" class="pt-4 border-t border-gray-100">
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-                  Affectations du courrier original
+
+                <!-- En-tête + compteur -->
+                <div class="flex items-center justify-between mb-3">
+                  <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Initiateurs de la réponse
+                  </p>
+                  <span class="text-[11px] text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">
+                    {{ initiateurIds.length }} / {{ affectesOptionsEnrichis.length }} sélectionné(s)
+                  </span>
+                </div>
+
+                <!-- Règle hiérarchique -->
+                <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 leading-snug">
+                  Vous pouvez retirer uniquement l'agent le plus bas de la chaîne.
+                  Aucun saut hiérarchique n'est autorisé.
                 </p>
+
+                <!-- Liste des affectés du haut vers le bas -->
                 <div class="space-y-2">
                   <div
-                    v-for="affectation in affectesOptionsEnrichis"
-                    :key="affectation.affectation.id"
-                    class="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-100"
+                    v-for="affecte in affectesOptionsEnrichis"
+                    :key="affecte.id"
+                    class="flex items-center justify-between p-2.5 rounded-lg border transition-all duration-150"
+                    :class="{
+                      'bg-indigo-50 border-indigo-200': initiateurIds.includes(affecte.id),
+                      'bg-gray-50 border-gray-100 opacity-60': !initiateurIds.includes(affecte.id),
+                    }"
                   >
+                    <!-- Rang + identité -->
                     <div class="flex items-center gap-2">
-                      <div class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <Icon name="i-heroicons-user" class="w-3.5 h-3.5 text-indigo-600" />
+                      <div
+                        class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                        :class="initiateurIds.includes(affecte.id)
+                          ? 'bg-indigo-200 text-indigo-800'
+                          : 'bg-gray-200 text-gray-500'"
+                      >
+                        {{ affecte.rang + 1 }}
                       </div>
                       <div>
-                        <p class="text-xs font-medium text-gray-800">{{ affectation.label }}</p>
-                        <p v-if="affectation.matricule" class="text-[10px] text-gray-400">{{ affectation.matricule }}</p>
+                        <p class="text-xs font-medium text-gray-800">{{ affecte.label }}</p>
+                        <p v-if="affecte.matricule" class="text-[10px] text-gray-400">{{ affecte.matricule }}</p>
                       </div>
                     </div>
+
+                    <!-- Statut + bouton action -->
                     <div class="flex items-center gap-2">
-                      <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                      <span
+                        class="text-xs px-2 py-0.5 rounded-full font-medium"
                         :class="{
-                          'bg-amber-100 text-amber-700': affectation.affectation.statut === 'en cours',
-                          'bg-green-100 text-green-700': affectation.affectation.statut === 'cloturé',
+                          'bg-amber-100 text-amber-700': affecte.affectation.statut === 'en cours',
+                          'bg-green-100 text-green-700': affecte.affectation.statut === 'cloturé',
                         }"
                       >
-                        {{ affectation.affectation.statut }}
+                        {{ affecte.affectation.statut }}
                       </span>
-                      <span class="text-[10px] text-gray-400 capitalize">{{ affectation.affectation.type_affectation }}</span>
+
+                      <!-- Retirer (dernier rang actif uniquement) -->
+                      <button
+                        v-if="initiateurIds.includes(affecte.id)"
+                        type="button"
+                        @click="toggleInitiateur(affecte.id)"
+                        :disabled="!peutEtreRetire(affecte)"
+                        :title="peutEtreRetire(affecte)
+                          ? 'Retirer cet agent des initiateurs'
+                          : 'Retirez d\'abord les agents de rang inférieur'"
+                        class="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+                        :class="peutEtreRetire(affecte)
+                          ? 'bg-red-100 hover:bg-red-200 text-red-600 cursor-pointer'
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'"
+                      >
+                        <Icon name="i-heroicons-minus" class="w-3 h-3" />
+                      </button>
+
+                      <!-- Réintégrer (rang juste après le dernier actif) -->
+                      <button
+                        v-else
+                        type="button"
+                        @click="toggleInitiateur(affecte.id)"
+                        :disabled="affecte.rang !== dernierRangActif + 1"
+                        :title="affecte.rang === dernierRangActif + 1
+                          ? 'Réintégrer cet agent comme initiateur'
+                          : 'Réintégrez d\'abord l\'agent de rang supérieur'"
+                        class="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+                        :class="affecte.rang === dernierRangActif + 1
+                          ? 'bg-green-100 hover:bg-green-200 text-green-600 cursor-pointer'
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'"
+                      >
+                        <Icon name="i-heroicons-plus" class="w-3 h-3" />
+                      </button>
                     </div>
                   </div>
                 </div>
+
+                <!-- Alerte aucun initiateur -->
+                <p v-if="initiateurIds.length === 0" class="text-xs text-red-500 mt-2">
+                  Au moins un initiateur est requis.
+                </p>
               </div>
 
               <!-- Boutons -->
@@ -317,11 +366,9 @@ const isFormValid = computed(() => {
     form.value.date_depart !== ''
 
   if (isReplyMode.value) {
-    // En mode réponse : destinataire = structure émettrice, pré-rempli, toujours valide si présent
-    return base && form.value.destinataire !== ''
+    return base && form.value.destinataire !== '' && initiateurIds.value.length > 0
   }
 
-  // Mode création : initiateurs obligatoires
   return base && form.value.initiateurs.length > 0
 })
 
@@ -361,9 +408,9 @@ const loadDocumentTypes = async () => {
   }
 }
 
-// ── Chargement utilisateurs (uniquement en mode création pour les initiateurs) ──
+// ── Chargement utilisateurs (mode création uniquement) ────────────────────────
 const loadUtilisateurs = async () => {
-  if (isReplyMode.value) return  // En mode réponse, les noms viennent directement de affectation.user
+  if (isReplyMode.value) return
 
   loadingUsers.value = true
   try {
@@ -384,47 +431,91 @@ const loadUtilisateurs = async () => {
   }
 }
 
-// ── Destinataires enrichis : noms lus directement depuis affectation.user (fourni par l'API) ──
+// ════════════════════════════════════════════════════════════════════════════════
+// LOGIQUE INITIATEURS EN MODE RÉPONSE
+// ════════════════════════════════════════════════════════════════════════════════
+
+// Affectés enrichis, triés par index (0 = sommet hiérarchique, dernier = base)
+// Si votre API retourne un ordre différent, triez ici sur affectation.entite.niveau
 const affectesOptionsEnrichis = computed(() => {
   if (!courrierToReply.value?.affectations?.length) return []
 
-  return courrierToReply.value.affectations.map((affectation) => {
-    const u = affectation.user
+  return courrierToReply.value.affectations.map((affectation, index) => {
+    const entiteUser = affectation.destinataire || null
+    const u = entiteUser?.user || affectation.user || null
+
     const nomComplet = u
       ? `${u.nom || ''} ${u.prenom || ''}`.trim()
-      : `Destinataire #${affectation.destinataire_id}`
+      : entiteUser?.matricule
+        ? `Agent ${entiteUser.matricule}`
+        : `Destinataire #${affectation.destinataire_id}`
+
+    const entite = entiteUser?.entite || null
+    const codeEntite = entite?.code || entite?.libelle || ''
+    const label = codeEntite ? `${nomComplet} — ${codeEntite}` : nomComplet
 
     return {
       id: affectation.destinataire_id,
-      label: nomComplet,
-      matricule: u?.matricule || '',
+      label,
+      matricule: u?.matricule || entiteUser?.matricule || '',
       affectation,
+      rang: index,
     }
   })
 })
+
+// IDs des initiateurs sélectionnés pour la réponse (initialisés avec tous les affectés)
+const initiateurIds = ref([])
+
+// Rang le plus élevé parmi les initiateurs actifs (= agent le plus bas dans la hiérarchie)
+const dernierRangActif = computed(() => {
+  if (!initiateurIds.value.length) return -1
+  const rangsActifs = affectesOptionsEnrichis.value
+    .filter(a => initiateurIds.value.includes(a.id))
+    .map(a => a.rang)
+  return Math.max(...rangsActifs)
+})
+
+// Un agent peut être retiré seulement s'il est LE dernier de la chaîne (rang max)
+// et qu'il ne serait pas le seul initiateur restant
+const peutEtreRetire = (affecte) => {
+  return affecte.rang === dernierRangActif.value && initiateurIds.value.length > 1
+}
+
+const toggleInitiateur = (affecteId) => {
+  const affecte = affectesOptionsEnrichis.value.find(a => a.id === affecteId)
+  if (!affecte) return
+
+  if (initiateurIds.value.includes(affecteId)) {
+    // Retrait : uniquement si c'est le dernier de la chaîne active
+    if (!peutEtreRetire(affecte)) return
+    initiateurIds.value = initiateurIds.value.filter(id => id !== affecteId)
+  } else {
+    // Réajout : uniquement si son rang est juste après le dernier actif (pas de saut)
+    if (affecte.rang !== dernierRangActif.value + 1) return
+    initiateurIds.value = [...initiateurIds.value, affecteId]
+  }
+}
 
 // ── Validation ────────────────────────────────────────────────────────────────
 const validateForm = () => {
   const newErrors = []
 
   if (!form.value.numero_enreg) newErrors.push("Le numéro d'enregistrement est obligatoire.")
-  if (!form.value.date_enreg) newErrors.push("La date d'enregistrement est obligatoire.")
-  if (!form.value.reference) newErrors.push('La référence est obligatoire.')
+  if (!form.value.date_enreg)   newErrors.push("La date d'enregistrement est obligatoire.")
+  if (!form.value.reference)    newErrors.push('La référence est obligatoire.')
   if (!form.value.date_courier) newErrors.push('La date du courrier est obligatoire.')
-  if (!form.value.objet) newErrors.push("L'objet est obligatoire.")
+  if (!form.value.objet)        newErrors.push("L'objet est obligatoire.")
   if (!form.value.type_document_id) newErrors.push('Le type de document est obligatoire.')
-  if (!form.value.url) newErrors.push('La pièce jointe est obligatoire.')
-  if (!form.value.type_depart) newErrors.push('Le type de départ est obligatoire.')
-  if (!form.value.date_depart) newErrors.push('La date de départ est obligatoire.')
+  if (!form.value.url)          newErrors.push('La pièce jointe est obligatoire.')
+  if (!form.value.type_depart)  newErrors.push('Le type de départ est obligatoire.')
+  if (!form.value.date_depart)  newErrors.push('La date de départ est obligatoire.')
 
   if (isReplyMode.value) {
-    if (!form.value.destinataire) {
-      newErrors.push('Le destinataire est obligatoire.')
-    }
+    if (!form.value.destinataire)     newErrors.push('Le destinataire est obligatoire.')
+    if (!initiateurIds.value.length)  newErrors.push('Au moins un initiateur est requis.')
   } else {
-    if (!form.value.initiateurs.length) {
-      newErrors.push('Veuillez sélectionner au moins un initiateur.')
-    }
+    if (!form.value.initiateurs.length) newErrors.push('Veuillez sélectionner au moins un initiateur.')
   }
 
   errors.value = newErrors
@@ -458,6 +549,7 @@ const resetForm = () => {
     initiateurs: [],
   }
   selectedFile.value = null
+  initiateurIds.value = []
   errors.value = []
   errorRequest.value = null
 }
@@ -467,7 +559,7 @@ const cancelReply = () => {
   navigateTo('/documents')
 }
 
-// ── Construction du FormData commun aux deux modes ────────────────────────────
+// ── Construction du FormData ──────────────────────────────────────────────────
 const buildBaseFormData = (selectedFunction) => {
   const fd = new FormData()
   fd.append('numero_enreg',     form.value.numero_enreg)
@@ -483,14 +575,22 @@ const buildBaseFormData = (selectedFunction) => {
   fd.append('service_emis',     selectedFunction?.code || 'Non défini')
   fd.append('destinataire',     form.value.destinataire || '')
   if (form.value.url) fd.append('fichier', form.value.url)
+
+  // Initiateurs selon le mode
+  if (isReplyMode.value) {
+    // En mode réponse : initiateurs = affectés sélectionnés (entite_user_id)
+    const ids = affectesOptionsEnrichis.value
+      .filter(a => initiateurIds.value.includes(a.id))
+      .map(a => a.affectation.destinataire_id) // destinataire_id = entite_user_id
+    ids.forEach((id, index) => fd.append(`initiateurs[${index}]`, id))
+  }
+
   return fd
 }
 
-// ── Soumission mode réponse : POST /courriers-departs/reponse ─────────────────
+// ── Soumission mode réponse ───────────────────────────────────────────────────
 const submitReponse = async (selectedFunction) => {
   const fd = buildBaseFormData(selectedFunction)
-
-  // Identifiant du document du courrier arrivé auquel on répond
   fd.append('courrier_arrive_document_id', String(courrierToReply.value.document.id))
 
   const response = await $fetch(`${config.public.apiBase}/courriers-departs/reponse`, {
@@ -499,21 +599,16 @@ const submitReponse = async (selectedFunction) => {
     body: fd,
   })
 
-  if (!response.success) {
-    throw new Error(response.message || "Erreur lors de la création de la réponse")
-  }
-
+  if (!response.success) throw new Error(response.message || "Erreur lors de la création de la réponse")
   return response
 }
 
-// ── Soumission mode création standard : POST /courriers-departs ───────────────
+// ── Soumission mode création ──────────────────────────────────────────────────
 const submitCreation = async (selectedFunction) => {
   const fd = buildBaseFormData(selectedFunction)
 
-  const initiateurIds = form.value.initiateurs.map(i => typeof i === 'object' ? i.id : i)
-  initiateurIds.forEach((id, index) => {
-    fd.append(`initiateurs[${index}]`, id)
-  })
+  const initiateurIdsCreation = form.value.initiateurs.map(i => typeof i === 'object' ? i.id : i)
+  initiateurIdsCreation.forEach((id, index) => fd.append(`initiateurs[${index}]`, id))
 
   const response = await $fetch(`${config.public.apiBase}/courriers-departs`, {
     method: 'POST',
@@ -521,10 +616,7 @@ const submitCreation = async (selectedFunction) => {
     body: fd,
   })
 
-  if (!response.success) {
-    throw new Error(response.message || "Erreur lors de la création du courrier")
-  }
-
+  if (!response.success) throw new Error(response.message || "Erreur lors de la création du courrier")
   return response
 }
 
@@ -559,7 +651,6 @@ const handleSubmit = async () => {
       return
     }
 
-    // Appel selon le mode
     if (isReplyMode.value) {
       await submitReponse(selectedFunction)
       courriersStore.clearReply()
@@ -597,9 +688,7 @@ const handleSubmit = async () => {
 }
 
 const handleCancel = () => {
-  if (isReplyMode.value) {
-    courriersStore.clearReply()
-  }
+  if (isReplyMode.value) courriersStore.clearReply()
   navigateTo('/documents')
 }
 
@@ -609,10 +698,14 @@ onMounted(async () => {
     authToken.value = localStorage.getItem('auth_token') || ''
   }
 
-  // Pré-remplir le destinataire avec la structure émettrice du courrier original
   if (isReplyMode.value && courrierToReply.value) {
+    // Pré-remplir le destinataire
     const c = courrierToReply.value
     form.value.destinataire = c.autre_structure || c.structure || ''
+
+    // Initialiser TOUS les affectés comme initiateurs par défaut
+    initiateurIds.value = (courrierToReply.value.affectations || [])
+      .map(a => a.destinataire_id)
   }
 
   await Promise.all([

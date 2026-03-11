@@ -17,16 +17,6 @@ export const useCourriersStore = defineStore('courriers', () => {
   // Computed helpers
   const isReplyMode = computed(() => !!courrierToReply.value)
 
-  const affectesOptions = computed(() => {
-    if (!courrierToReply.value?.affectations?.length) return []
-
-    return courrierToReply.value.affectations.map((a) => ({
-      id: a.destinataire_id,
-      label: `Destinataire #${a.destinataire_id}`,
-      affectation: a,
-    }))
-  })
-
   const replyDocumentSummary = computed(() => {
     if (!courrierToReply.value) return null
     const doc = courrierToReply.value.document
@@ -43,7 +33,6 @@ export const useCourriersStore = defineStore('courriers', () => {
   return {
     courrierToReply,
     isReplyMode,
-    affectesOptions,
     replyDocumentSummary,
     setCourrierToReply,
     clearReply,
