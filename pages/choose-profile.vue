@@ -1,5 +1,5 @@
 <template>
-  <div
+  <div v-if="isReady"
     class="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-dark-900 font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300">
 
     <!-- Toggle dark mode -->
@@ -149,6 +149,19 @@ const fullName = computed(() => user ? `${user.prenom} ${user.nom}` : '')
 // ─── State ────────────────────────────────────────────────────────────────
 const selectedId = ref<number | null>(null)
 const confirming = ref(false)
+const isReady = ref(false) // ← AJOUT : masque la page jusqu'à vérification du token
+
+// ─── Guard : vérification token au montage ────────────────────────────────
+onMounted(async () => {
+  if (process.client) {
+    const token = localStorage.getItem('auth_token')
+    if (!token) {
+      await navigateTo('/connexion')
+      return // ne pas afficher la page
+    }
+    isReady.value = true // token valide → on affiche
+  }
+})
 
 // ─── Actions ──────────────────────────────────────────────────────────────
 async function handleSelectPoste(entiteUser: EntiteUser) {
@@ -177,7 +190,6 @@ async function handleSelectPoste(entiteUser: EntiteUser) {
       return
     }
 
-    // ✅ Mettre à jour toute la session depuis la réponse switch-profile
     if (response.role) {
       localStorage.setItem('role', response.role)
     }
@@ -201,7 +213,6 @@ async function handleSelectPoste(entiteUser: EntiteUser) {
       localStorage.removeItem('directeur_entite_user_id')
     }
 
-    // ✅ setSelectedEntiteUser seulement comme fallback si main_entite absent
     if (!response.main_entite) {
       setSelectedEntiteUser(entiteUser)
     }

@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-slate-50 p-10 font-sans">
-    <div class="max-w-7xl mx-auto">
+  <div class="min-h-screen bg-slate-50 p-6 font-sans">
+    <div class="mx-auto">
 
       <PageHeader title="Préarchivage" subtitle="Gestion des archives" />
 
@@ -55,6 +55,8 @@
         :external-page="currentPage"
         :external-last-page="totalPages"
         :external-per-page="perPage"
+        :column-filter-options="columnFilterOptions"
+        @multi-filter-change="onMultiFilterChange"
         @search-change="onSearchChange"
         @page-change="onPageChange"
         @per-page-change="onPerPageChange"
@@ -172,14 +174,6 @@
                 <Icon name="i-heroicons-paper-airplane" class="w-3 h-3" />
                 Courrier départ
               </p>
-              <div class="flex-1 min-w-[140px]">
-                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type de départ</label>
-                <SearchableSelect
-                  v-model="searchFilters.type_depart"
-                  :options="filterOptionsData.types_depart.map(t => ({ value: t, label: t }))"
-                  placeholder="Tous"
-                  @change="onFiltersChange" />
-              </div>
               <div class="flex-1 min-w-[140px]">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Service émetteur</label>
                 <SearchableSelect
@@ -327,7 +321,7 @@
                     'bg-amber-50 text-amber-700 border-amber-200': selectedItem?.statut === 'pending',
                   }">
                   <Icon :name="selectedItem?.statut === 'archived' ? 'i-heroicons-archive-box' : 'i-heroicons-archive-box-arrow-down'" class="w-3.5 h-3.5 shrink-0" />
-                  {{ selectedItem?.statut === 'archived' ? 'Archivé' : 'Préarchivage' }}
+                  {{ selectedItem?.statut === 'archived' ? 'Archivé' : 'Préarchivé' }}
                 </span>
                 <span
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-full border whitespace-nowrap"
@@ -445,10 +439,6 @@
                 </p>
                 <div class="grid grid-cols-2 gap-3">
                   <div class="bg-orange-50 rounded-xl px-4 py-3 border border-orange-100">
-                    <p class="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1">Type de départ</p>
-                    <p class="text-xs font-semibold text-orange-800">{{ selectedItem._raw.details.type_depart || '—' }}</p>
-                  </div>
-                  <div class="bg-orange-50 rounded-xl px-4 py-3 border border-orange-100">
                     <p class="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1">Service émetteur</p>
                     <p class="text-xs font-semibold text-orange-800">{{ selectedItem._raw.details.service_emis || '—' }}</p>
                   </div>
@@ -546,6 +536,29 @@ const filterOptions = [
   { label: 'En préarchivage',     value: 'pending'  },
   { label: 'Toutes les Archives', value: 'archived' },
 ]
+
+// Après columnFilters ref — options pour le menu multi-select des colonnes
+// Alimenté depuis filterOptionsData déjà chargé
+const columnFilterOptions = computed(() => ({
+  type: [
+    { value: 'arrive', label: 'Arrivé' },
+    { value: 'depart', label: 'Départ' },
+  ],
+  numero_enreg: [...new Set(documents.value.map(d => d.numero_enreg).filter(Boolean))]
+    .map(v => ({ value: v, label: v })),
+  reference: [...new Set(documents.value.map(d => d.reference).filter(Boolean))]
+    .map(v => ({ value: v, label: v })),
+  objet: [...new Set(documents.value.map(d => d.objet).filter(Boolean))]
+    .map(v => ({ value: v, label: v })),
+}))
+
+// Handler multi-filter-change → serveur
+const multiFilters = ref({})
+const onMultiFilterChange = ({ column, values, all }) => {
+  multiFilters.value = { ...all }
+  currentPage.value  = 1
+  refresh(1, perPage.value, false)
+}
 
 // ── État table ────────────────────────────────────────────────────────────
 const documents      = ref([])
@@ -669,7 +682,7 @@ const loadFile = () => {
 const formatDate = (date) => {
   if (!date) return '—'
   return new Date(date).toLocaleDateString('fr-FR', {
-    day: '2-digit', month: 'long', year: 'numeric'
+    day: '2-digit', month: '2-digit', year: 'numeric'
   })
 }
 
@@ -751,8 +764,8 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false, sile
     if (f.numero_enreg)      params.append('numero_enreg',     f.numero_enreg)
     if (f.reference)         params.append('reference',        f.reference)
     if (f.objet)             params.append('objet',            f.objet)
-    if (f.date_enreg)        params.append('date_enreg',       f.date_enreg)
-    if (f.date_courrier)     params.append('date_courrier',    f.date_courrier)
+    if (f.date_enreg    && f.date_enreg.length    === 10) params.append('date_enreg',    f.date_enreg)
+    if (f.date_courrier && f.date_courrier.length === 10) params.append('date_courrier', f.date_courrier)
     if (f.type)              params.append('type',             f.type)
     if (f.type_document_id)  params.append('type_document_id', f.type_document_id)
     if (f.confidentiel)      params.append('confidentiel',     f.confidentiel)
@@ -769,8 +782,14 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false, sile
     if (!f.numero_enreg  && c.numero_enreg)  params.append('numero_enreg', c.numero_enreg)
     if (!f.reference     && c.reference)     params.append('reference',    c.reference)
     if (!f.objet         && c.objet)         params.append('objet',        c.objet)
-    if (!f.date_enreg    && c.date_enreg)    params.append('date_enreg',   c.date_enreg)
+    if (!f.date_enreg && c.date_enreg && c.date_enreg.length === 10) params.append('date_enreg', c.date_enreg)
     if (!f.type          && c.type)          params.append('type',         c.type)
+
+    // Après les filtres colonnes input
+    const m = multiFilters.value
+    if (m.type?.length)         params.append('type',         m.type.join(','))
+    if (m.numero_enreg?.length) params.append('numero_enreg', m.numero_enreg.join(','))
+    if (m.reference?.length)    params.append('reference',    m.reference.join(','))
 
     const response = await $fetch(`${base}/archives?${params.toString()}`, {
       headers: { Authorization: `Bearer ${authToken}` },
@@ -793,6 +812,13 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false, sile
 // ── Debounce filtres avancés ──────────────────────────────────────────────
 let searchTimeout = null
 const onFiltersChange = () => {
+  const f = searchFilters.value
+
+  // Ne pas déclencher si une date est en cours de saisie (incomplète)
+  const dateEnregOk    = !f.date_enreg    || f.date_enreg.length    === 10
+  const dateCourierOk  = !f.date_courrier || f.date_courrier.length === 10
+  if (!dateEnregOk || !dateCourierOk) return
+
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     currentPage.value = 1
