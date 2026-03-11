@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-slate-50 p-10 font-sans">
-    <div class="max-w-7xl mx-auto">
+  <div class="min-h-screen bg-slate-50 p-6 font-sans">
+    <div class="mx-auto">
 
       <PageHeader title="Préarchivage" subtitle="Gestion des archives" />
 
@@ -172,14 +172,6 @@
                 <Icon name="i-heroicons-paper-airplane" class="w-3 h-3" />
                 Courrier départ
               </p>
-              <div class="flex-1 min-w-[140px]">
-                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type de départ</label>
-                <SearchableSelect
-                  v-model="searchFilters.type_depart"
-                  :options="filterOptionsData.types_depart.map(t => ({ value: t, label: t }))"
-                  placeholder="Tous"
-                  @change="onFiltersChange" />
-              </div>
               <div class="flex-1 min-w-[140px]">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Service émetteur</label>
                 <SearchableSelect
@@ -444,10 +436,6 @@
                   Détails — Courrier départ
                 </p>
                 <div class="grid grid-cols-2 gap-3">
-                  <div class="bg-orange-50 rounded-xl px-4 py-3 border border-orange-100">
-                    <p class="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1">Type de départ</p>
-                    <p class="text-xs font-semibold text-orange-800">{{ selectedItem._raw.details.type_depart || '—' }}</p>
-                  </div>
                   <div class="bg-orange-50 rounded-xl px-4 py-3 border border-orange-100">
                     <p class="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1">Service émetteur</p>
                     <p class="text-xs font-semibold text-orange-800">{{ selectedItem._raw.details.service_emis || '—' }}</p>
@@ -751,8 +739,8 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false, sile
     if (f.numero_enreg)      params.append('numero_enreg',     f.numero_enreg)
     if (f.reference)         params.append('reference',        f.reference)
     if (f.objet)             params.append('objet',            f.objet)
-    if (f.date_enreg)        params.append('date_enreg',       f.date_enreg)
-    if (f.date_courrier)     params.append('date_courrier',    f.date_courrier)
+    if (f.date_enreg    && f.date_enreg.length    === 10) params.append('date_enreg',    f.date_enreg)
+    if (f.date_courrier && f.date_courrier.length === 10) params.append('date_courrier', f.date_courrier)
     if (f.type)              params.append('type',             f.type)
     if (f.type_document_id)  params.append('type_document_id', f.type_document_id)
     if (f.confidentiel)      params.append('confidentiel',     f.confidentiel)
@@ -769,7 +757,7 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false, sile
     if (!f.numero_enreg  && c.numero_enreg)  params.append('numero_enreg', c.numero_enreg)
     if (!f.reference     && c.reference)     params.append('reference',    c.reference)
     if (!f.objet         && c.objet)         params.append('objet',        c.objet)
-    if (!f.date_enreg    && c.date_enreg)    params.append('date_enreg',   c.date_enreg)
+    if (!f.date_enreg && c.date_enreg && c.date_enreg.length === 10) params.append('date_enreg', c.date_enreg)
     if (!f.type          && c.type)          params.append('type',         c.type)
 
     const response = await $fetch(`${base}/archives?${params.toString()}`, {
@@ -793,6 +781,13 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false, sile
 // ── Debounce filtres avancés ──────────────────────────────────────────────
 let searchTimeout = null
 const onFiltersChange = () => {
+  const f = searchFilters.value
+
+  // Ne pas déclencher si une date est en cours de saisie (incomplète)
+  const dateEnregOk    = !f.date_enreg    || f.date_enreg.length    === 10
+  const dateCourierOk  = !f.date_courrier || f.date_courrier.length === 10
+  if (!dateEnregOk || !dateCourierOk) return
+
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     currentPage.value = 1
