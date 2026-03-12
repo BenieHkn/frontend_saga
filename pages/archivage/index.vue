@@ -128,7 +128,7 @@
               </div>
             </div>
 
-            <!-- Ligne 3 — Filtres arrivée (masqués si type=depart) -->
+            <!-- Ligne 3 — Filtres arrivée -->
             <div v-if="searchFilters.type !== 'depart'" class="flex flex-wrap gap-3">
               <p class="w-full text-[11px] font-bold text-indigo-500 uppercase tracking-wider flex items-center gap-1">
                 <Icon name="i-heroicons-inbox-arrow-down" class="w-3 h-3" />
@@ -168,7 +168,7 @@
               </div>
             </div>
 
-            <!-- Ligne 4 — Filtres départ (masqués si type=arrive) -->
+            <!-- Ligne 4 — Filtres départ -->
             <div v-if="searchFilters.type !== 'arrive'" class="flex flex-wrap gap-3">
               <p class="w-full text-[11px] font-bold text-orange-500 uppercase tracking-wider flex items-center gap-1">
                 <Icon name="i-heroicons-paper-airplane" class="w-3 h-3" />
@@ -217,12 +217,15 @@
           </span>
         </template>
 
-        <!-- ── Référence cliquable ───────────────────────────── -->
+        <!-- ── Référence cliquable → ouvre le fichier ────────── -->
         <template #cell-reference="{ value, item }">
-          <button v-if="item.url" @click="onOpenDocument(item)"
+          <button v-if="item.url" @click="openDocumentFromTable(item)"
             class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
             :title="`Ouvrir ${value}`">
-            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+            <Icon
+              :name="openingDocumentId === item.id ? 'i-heroicons-arrow-path' : 'i-heroicons-document-text'"
+              class="w-3.5 h-3.5 shrink-0"
+              :class="openingDocumentId === item.id ? 'animate-spin' : 'group-hover:scale-110 transition-transform'" />
             <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
             <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
           </button>
@@ -312,10 +315,9 @@
             <!-- Corps modal -->
             <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
 
-              <!-- Badges statut / durée / type -->
+              <!-- Badges -->
               <div class="flex flex-wrap items-center gap-2">
-                <span
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-full border uppercase whitespace-nowrap"
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-full border uppercase whitespace-nowrap"
                   :class="{
                     'bg-red-50 text-red-700 border-red-200':       selectedItem?.statut === 'archived',
                     'bg-amber-50 text-amber-700 border-amber-200': selectedItem?.statut === 'pending',
@@ -323,8 +325,7 @@
                   <Icon :name="selectedItem?.statut === 'archived' ? 'i-heroicons-archive-box' : 'i-heroicons-archive-box-arrow-down'" class="w-3.5 h-3.5 shrink-0" />
                   {{ selectedItem?.statut === 'archived' ? 'Archivé' : 'Préarchivé' }}
                 </span>
-                <span
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-full border whitespace-nowrap"
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-full border whitespace-nowrap"
                   :class="{
                     'bg-red-50 text-red-700 border-red-200':       selectedItem?.duree_annees >= 3,
                     'bg-amber-50 text-amber-700 border-amber-200': selectedItem?.duree_annees >= 1,
@@ -332,8 +333,7 @@
                   <Icon name="i-heroicons-clock" class="w-3.5 h-3.5 shrink-0" />
                   {{ formatDuree(selectedItem?.duree_annees) }}
                 </span>
-                <span
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-full border uppercase whitespace-nowrap"
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-full border uppercase whitespace-nowrap"
                   :class="{
                     'bg-indigo-50 text-indigo-700 border-indigo-100': selectedItem?.type === 'arrive',
                     'bg-orange-50 text-orange-700 border-orange-100': selectedItem?.type === 'depart',
@@ -377,8 +377,7 @@
                   </div>
                   <div class="bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Confidentialité</p>
-                    <span
-                      class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-full"
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-full"
                       :class="selectedItem?._raw?.details?.confidentiel
                         ? 'bg-red-50 text-red-700 border border-red-200'
                         : 'bg-green-50 text-green-700 border border-green-200'">
@@ -455,53 +454,89 @@
                 </div>
               </div>
 
-              <!-- Preview fichier -->
+              <!-- ── Preview fichier ─────────────────────────── -->
               <div class="border border-slate-200 rounded-xl overflow-hidden">
                 <div class="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
                   <div class="flex items-center gap-2">
                     <Icon name="i-heroicons-paper-clip" class="w-4 h-4 text-slate-500" />
                     <span class="text-xs font-bold text-slate-600">Fichier joint</span>
-                    <span v-if="selectedItem?.url" class="text-[11px] text-slate-400 font-mono">{{ selectedItem.url }}</span>
+                    <span v-if="selectedItem?.url" class="text-[11px] text-slate-400 font-mono truncate max-w-[200px]">
+                      {{ selectedItem.url }}
+                    </span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <button v-if="!fileLoaded && selectedItem?.url" @click="loadFile"
+                    <button
+                      v-if="!fileLoaded && !fileLoading && !fileError && selectedItem?.url"
+                      @click="loadFile"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all">
                       <Icon name="i-heroicons-arrow-down-tray" class="w-3.5 h-3.5" />
                       Charger le fichier
                     </button>
-                    <button v-if="fileLoaded && selectedItem?.url" @click="onOpenDocument(selectedItem)"
+                    <button
+                      v-if="fileLoaded && currentBlobUrl"
+                      @click="openBlobInTab"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition-all">
                       <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3.5 h-3.5" />
                       Ouvrir dans un onglet
                     </button>
                   </div>
                 </div>
+
                 <div class="min-h-[200px] flex items-center justify-center bg-slate-50">
-                  <div v-if="!fileLoaded && selectedItem?.url" class="flex flex-col items-center gap-3 text-slate-400 py-10">
+
+                  <!-- Pas encore chargé -->
+                  <div v-if="!fileLoaded && !fileLoading && !fileError && selectedItem?.url"
+                    class="flex flex-col items-center gap-3 text-slate-400 py-10">
                     <Icon name="i-heroicons-document" class="w-12 h-12 text-slate-300" />
                     <p class="text-xs font-medium">Cliquez sur « Charger le fichier » pour prévisualiser</p>
                   </div>
-                  <div v-else-if="!selectedItem?.url" class="flex flex-col items-center gap-3 text-slate-400 py-10">
+
+                  <!-- Aucun fichier -->
+                  <div v-else-if="!selectedItem?.url"
+                    class="flex flex-col items-center gap-3 text-slate-400 py-10">
                     <Icon name="i-heroicons-document-minus" class="w-12 h-12 text-slate-300" />
                     <p class="text-xs font-medium">Aucun fichier disponible</p>
                   </div>
-                  <div v-else-if="fileLoading" class="flex flex-col items-center gap-3 text-slate-400 py-10">
+
+                  <!-- Chargement en cours -->
+                  <div v-else-if="fileLoading"
+                    class="flex flex-col items-center gap-3 text-slate-400 py-10">
                     <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-500 rounded-full animate-spin"></div>
-                    <p class="text-xs font-medium">Chargement...</p>
+                    <p class="text-xs font-medium">Chargement du fichier...</p>
                   </div>
+
+                  <!-- Erreur -->
+                  <div v-else-if="fileError"
+                    class="flex flex-col items-center gap-3 text-slate-400 py-10">
+                    <Icon name="i-heroicons-exclamation-triangle" class="w-12 h-12 text-red-300" />
+                    <p class="text-xs font-medium text-red-500">{{ fileError }}</p>
+                    <button @click="fileError = ''; loadFile()"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all">
+                      <Icon name="i-heroicons-arrow-path" class="w-3.5 h-3.5" />
+                      Réessayer
+                    </button>
+                  </div>
+
+                  <!-- PDF -->
                   <iframe v-else-if="fileLoaded && isPdf"
                     :src="fileUrl" class="w-full h-[450px] border-0" title="Prévisualisation PDF" />
+
+                  <!-- Image -->
                   <img v-else-if="fileLoaded && isImage"
                     :src="fileUrl" class="max-w-full max-h-[450px] object-contain p-4" alt="Prévisualisation" />
-                  <div v-else-if="fileLoaded" class="flex flex-col items-center gap-3 text-slate-400 py-10">
+
+                  <!-- Format non supporté -->
+                  <div v-else-if="fileLoaded"
+                    class="flex flex-col items-center gap-3 text-slate-400 py-10">
                     <Icon name="i-heroicons-document-arrow-down" class="w-12 h-12 text-slate-300" />
                     <p class="text-xs font-medium">Prévisualisation non disponible pour ce format</p>
-                    <button @click="onOpenDocument(selectedItem)"
+                    <button @click="openBlobInTab"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all">
                       <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3.5 h-3.5" />
                       Ouvrir dans un onglet
                     </button>
                   </div>
+
                 </div>
               </div>
 
@@ -537,33 +572,10 @@ const filterOptions = [
   { label: 'Toutes les Archives', value: 'archived' },
 ]
 
-// Après columnFilters ref — options pour le menu multi-select des colonnes
-// Alimenté depuis filterOptionsData déjà chargé
-const columnFilterOptions = computed(() => ({
-  type: [
-    { value: 'arrive', label: 'Arrivé' },
-    { value: 'depart', label: 'Départ' },
-  ],
-  numero_enreg: [...new Set(documents.value.map(d => d.numero_enreg).filter(Boolean))]
-    .map(v => ({ value: v, label: v })),
-  reference: [...new Set(documents.value.map(d => d.reference).filter(Boolean))]
-    .map(v => ({ value: v, label: v })),
-  objet: [...new Set(documents.value.map(d => d.objet).filter(Boolean))]
-    .map(v => ({ value: v, label: v })),
-}))
-
-// Handler multi-filter-change → serveur
-const multiFilters = ref({})
-const onMultiFilterChange = ({ column, values, all }) => {
-  multiFilters.value = { ...all }
-  currentPage.value  = 1
-  refresh(1, perPage.value, false)
-}
-
 // ── État table ────────────────────────────────────────────────────────────
 const documents      = ref([])
 const loading        = ref(false)
-const tabLoading  = ref(false)
+const tabLoading     = ref(false)
 const initialLoading = ref(false)
 const error          = ref(null)
 const currentPage    = ref(1)
@@ -571,7 +583,29 @@ const totalPages     = ref(1)
 const total          = ref(0)
 const perPage        = ref(10)
 
-// ── Options filtres avancés (depuis endpoint dédié) ───────────────────────
+// ── Options menu multi-select colonnes ────────────────────────────────────
+const columnFilterOptions = computed(() => ({
+  type: [
+    { value: 'arrive', label: 'Arrivé' },
+    { value: 'depart', label: 'Départ' },
+  ],
+  numero_enreg: [...new Set(documents.value.map(d => d.numero_enreg).filter(v => v && v !== '—'))]
+    .map(v => ({ value: v, label: v })),
+  reference: [...new Set(documents.value.map(d => d.reference).filter(v => v && v !== '—'))]
+    .map(v => ({ value: v, label: v })),
+  objet: [...new Set(documents.value.map(d => d.objet).filter(v => v && v !== '—'))]
+    .map(v => ({ value: v, label: v })),
+}))
+
+// ── Multi-filtres colonnes → serveur ──────────────────────────────────────
+const multiFilters = ref({})
+const onMultiFilterChange = ({ all }) => {
+  multiFilters.value = { ...all }
+  currentPage.value  = 1
+  refresh(1, perPage.value, false)
+}
+
+// ── Options filtres avancés ───────────────────────────────────────────────
 const filterOptionsData = ref({
   types_document: [],
   types_arrivee:  [],
@@ -583,44 +617,27 @@ const filterOptionsData = ref({
   destinataires:  [],
 })
 
-// ── Filtres avancés (serveur) ─────────────────────────────────────────────
+// ── Filtres avancés ───────────────────────────────────────────────────────
 const defaultFilters = () => ({
-  search:           '',
-  numero_enreg:     '',
-  reference:        '',
-  objet:            '',
-  date_enreg:       '',
-  date_courrier:    '',
-  type:             '',
-  type_document_id: '',
-  confidentiel:     '',
-  // arrivée
-  type_arrivee:    '',
-  service_enreg:   '',
-  structure:       '',
-  priority:        '',
-  // départ
-  type_depart:     '',
-  service_emis:    '',
-  destinataire:    '',
+  search: '', numero_enreg: '', reference: '', objet: '',
+  date_enreg: '', date_courrier: '', type: '', type_document_id: '',
+  confidentiel: '', type_arrivee: '', service_enreg: '', structure: '',
+  priority: '', type_depart: '', service_emis: '', destinataire: '',
 })
 
-const searchFilters = ref(defaultFilters())
-
-const hasActiveFilters = computed(() =>
-  Object.values(searchFilters.value).some(v => v !== '')
-)
+const searchFilters    = ref(defaultFilters())
+const hasActiveFilters = computed(() => Object.values(searchFilters.value).some(v => v !== ''))
 
 const resetFilters = () => {
   searchFilters.value = defaultFilters()
   columnFilters.value = {}
+  multiFilters.value  = {}
   currentPage.value   = 1
   refresh(1, perPage.value, false)
 }
 
-// ── Filtres colonnes (serveur) ────────────────────────────────────────────
+// ── Filtres colonnes input ────────────────────────────────────────────────
 const columnFilters = ref({})
-
 let columnFilterTimeout = null
 const onColumnFilterChange = (val) => {
   columnFilters.value = { ...val }
@@ -642,68 +659,169 @@ const columns = [
   { key: 'url',          label: 'Document',     visible: false, type: 'document' },
 ]
 
-// ── Modal ─────────────────────────────────────────────────────────────────
-const modalOpen    = ref(false)
-const selectedItem = ref(null)
-const fileLoaded   = ref(false)
-const fileLoading  = ref(false)
-const fileUrl      = ref('')
+// ── Modal & fichier ───────────────────────────────────────────────────────
+const modalOpen        = ref(false)
+const selectedItem     = ref(null)
+const fileLoaded       = ref(false)
+const fileLoading      = ref(false)
+const fileError        = ref('')
+const fileUrl          = ref('')
+const currentBlobUrl   = ref('')
+const detectedMimeType = ref('')
+const openingDocumentId = ref(null)
 
-const isPdf   = computed(() => /\.pdf(\?|$)/i.test(fileUrl.value))
-const isImage = computed(() => /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(fileUrl.value))
-
-const onViewItem = (item) => {
-  selectedItem.value = item
-  fileLoaded.value   = false
-  fileLoading.value  = false
-  fileUrl.value      = ''
-  modalOpen.value    = true
-}
-
-const closeModal = () => {
-  modalOpen.value    = false
-  selectedItem.value = null
-  fileLoaded.value   = false
-  fileUrl.value      = ''
-}
-
-const loadFile = () => {
-  const url = buildDocumentUrl(selectedItem.value)
-  if (!url) return
-  fileLoading.value = true
-  fileUrl.value     = url
-  setTimeout(() => {
-    fileLoading.value = false
-    fileLoaded.value  = true
-  }, 800)
-}
+const isPdf   = computed(() =>
+  detectedMimeType.value === 'application/pdf' ||
+  /\.pdf$/i.test(selectedItem.value?.url ?? '')
+)
+const isImage = computed(() =>
+  detectedMimeType.value.startsWith('image/') ||
+  /\.(png|jpe?g|gif|webp|svg)$/i.test(selectedItem.value?.url ?? '')
+)
 
 // ── Utilitaires ───────────────────────────────────────────────────────────
 const formatDate = (date) => {
   if (!date) return '—'
-  return new Date(date).toLocaleDateString('fr-FR', {
-    day: '2-digit', month: '2-digit', year: 'numeric'
-  })
+  return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
-
 const formatDuree = (annees) => {
   if (annees === null || annees === undefined) return '—'
   if (annees === 0) return '< 1 an'
   return `${annees} an${annees > 1 ? 's' : ''}`
 }
+const guessMimeType = (filename) => {
+  if (!filename) return ''
+  const ext = filename.split('.').pop().toLowerCase()
+  return { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' }[ext] || ''
+}
 
+// ── Construction URL fichier ──────────────────────────────────────────────
 const buildDocumentUrl = (item) => {
   if (!item?.url) return null
-  if (item.url.startsWith('http')) return item.url
-  const raw = item.date_enreg_raw
-  if (!raw) return `https://saga.finances.bj/documents/${item.url}`
+  const base = config.public.apiBase.replace(/\/$/, '')
+  const raw  = item.date_enreg_raw
+  if (!raw) return `${base}/file/documents/${item.url}`
   const d     = new Date(raw)
   const year  = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day   = String(d.getDate()).padStart(2, '0')
-  return `https://saga.finances.bj/documents/${year}/${month}/${day}/${item.url}`
+  return `${base}/file/documents/${year}/${month}/${day}/${item.url}`
 }
 
+// ── Fetch blob avec token Sanctum ─────────────────────────────────────────
+const fetchFileAsBlob = async (item) => {
+  const url = buildDocumentUrl(item)
+  if (!url) throw new Error('URL du fichier introuvable')
+  const authToken = localStorage.getItem('auth_token') || ''
+  const response  = await fetch(url, { headers: { Authorization: `Bearer ${authToken}` } })
+  if (!response.ok) throw new Error(`Erreur ${response.status} — fichier non accessible`)
+  const blob = await response.blob()
+  return { blob, mimeType: blob.type || guessMimeType(item.url) }
+}
+
+// ── Charger fichier dans la modal ─────────────────────────────────────────
+const loadFile = async () => {
+  if (!selectedItem.value?.url) return
+  fileLoading.value = true
+  fileLoaded.value  = false
+  fileError.value   = ''
+  fileUrl.value     = ''
+  if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
+
+  try {
+    const { blob, mimeType } = await fetchFileAsBlob(selectedItem.value)
+    const blobUrl = URL.createObjectURL(blob)
+    detectedMimeType.value = mimeType
+    currentBlobUrl.value   = blobUrl
+    fileUrl.value          = blobUrl
+    fileLoaded.value       = true
+  } catch (err) {
+    console.error('❌ Erreur chargement fichier:', err)
+    fileError.value = err.message || 'Erreur lors du chargement'
+  } finally {
+    fileLoading.value = false
+  }
+}
+
+// ── Ouvrir blob dans un onglet ────────────────────────────────────────────
+const openBlobInTab = () => {
+  if (currentBlobUrl.value) window.open(currentBlobUrl.value, '_blank', 'noopener,noreferrer')
+}
+
+// ── Ouvrir document depuis le tableau ────────────────────────────────────
+const openDocumentFromTable = async (item) => {
+  if (openingDocumentId.value) return
+  openingDocumentId.value = item.id
+
+  // Ouvrir l'onglet immédiatement dans le gestionnaire de clic
+  // (avant tout await) → le navigateur ne bloque pas
+  const newTab = window.open('', '_blank')
+  if (newTab) {
+    newTab.document.write(`
+      <html>
+        <head><title>Chargement...</title></head>
+        <body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#64748b;background:#f8fafc;">
+          <div style="text-align:center;gap:12px;display:flex;flex-direction:column;align-items:center;">
+            <div style="width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+            <p style="font-size:13px;font-weight:600;">Chargement du fichier...</p>
+            <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+          </div>
+        </body>
+      </html>
+    `)
+  }
+
+  try {
+    const { blob } = await fetchFileAsBlob(item)
+    const blobUrl = URL.createObjectURL(blob)
+
+    if (newTab && !newTab.closed) {
+      newTab.location.href = blobUrl
+    } else {
+      // Si l'onglet a été fermé entre temps → fallback
+      window.open(blobUrl, '_blank', 'noopener,noreferrer')
+    }
+
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 15000)
+  } catch (err) {
+    console.error('❌ Erreur ouverture fichier:', err)
+    if (newTab && !newTab.closed) {
+      newTab.document.body.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
+          <div style="text-align:center;color:#ef4444;">
+            <p style="font-size:14px;font-weight:600;">Erreur de chargement</p>
+            <p style="font-size:12px;color:#94a3b8;margin-top:8px;">${err.message}</p>
+          </div>
+        </div>`
+    }
+  } finally {
+    openingDocumentId.value = null
+  }
+}
+
+// ── Ouvrir / fermer modal ─────────────────────────────────────────────────
+const onViewItem = (item) => {
+  if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
+  selectedItem.value     = item
+  fileLoaded.value       = false
+  fileLoading.value      = false
+  fileError.value        = ''
+  fileUrl.value          = ''
+  detectedMimeType.value = ''
+  modalOpen.value        = true
+}
+
+const closeModal = () => {
+  if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
+  modalOpen.value        = false
+  selectedItem.value     = null
+  fileLoaded.value       = false
+  fileError.value        = ''
+  fileUrl.value          = ''
+  detectedMimeType.value = ''
+}
+
+// ── Transform documents ───────────────────────────────────────────────────
 const transformDocuments = (response) => {
   if (!response?.data) throw new Error('Format de réponse API invalide')
   return response.data.map((doc) => ({
@@ -729,10 +847,8 @@ const loadFilterOptions = async () => {
   try {
     const authToken = localStorage.getItem('auth_token') || ''
     const base      = config.public.apiBase.replace(/\/$/, '')
-    const response  = await $fetch(
-      `${base}/archives/filters?filter=${currentFilter.value}`,
-      { headers: { Authorization: `Bearer ${authToken}` } }
-    )
+    const response  = await $fetch(`${base}/archives/filters?filter=${currentFilter.value}`,
+      { headers: { Authorization: `Bearer ${authToken}` } })
     if (response.success) filterOptionsData.value = response
   } catch (err) {
     console.error('❌ Erreur chargement filtres:', err)
@@ -741,59 +857,48 @@ const loadFilterOptions = async () => {
 
 // ── Chargement données ────────────────────────────────────────────────────
 const refresh = async (page = 1, per_page = perPage.value, isFirst = false, silent = false) => {
-  if (isFirst) {
-    initialLoading.value = true
-  } else if (!silent) {
-    loading.value = true
-  }
+  if (isFirst)        { initialLoading.value = true }
+  else if (!silent)   { loading.value = true }
   error.value = null
 
   try {
     const authToken = localStorage.getItem('auth_token') || ''
     const base      = config.public.apiBase.replace(/\/$/, '')
 
-    const params = new URLSearchParams({
-      page:     String(page),
-      per_page: String(per_page),
-      filter:   currentFilter.value,
-    })
+    const params = new URLSearchParams({ page: String(page), per_page: String(per_page), filter: currentFilter.value })
 
-    // ── Filtres avancés ──────────────────────────────────────────────────
     const f = searchFilters.value
-    if (f.search)            params.append('search',           f.search)
-    if (f.numero_enreg)      params.append('numero_enreg',     f.numero_enreg)
-    if (f.reference)         params.append('reference',        f.reference)
-    if (f.objet)             params.append('objet',            f.objet)
+    if (f.search)           params.append('search',           f.search)
+    if (f.numero_enreg)     params.append('numero_enreg',     f.numero_enreg)
+    if (f.reference)        params.append('reference',        f.reference)
+    if (f.objet)            params.append('objet',            f.objet)
     if (f.date_enreg    && f.date_enreg.length    === 10) params.append('date_enreg',    f.date_enreg)
     if (f.date_courrier && f.date_courrier.length === 10) params.append('date_courrier', f.date_courrier)
-    if (f.type)              params.append('type',             f.type)
-    if (f.type_document_id)  params.append('type_document_id', f.type_document_id)
-    if (f.confidentiel)      params.append('confidentiel',     f.confidentiel)
-    if (f.type_arrivee)      params.append('type_arrivee',     f.type_arrivee)
-    if (f.service_enreg)     params.append('service_enreg',    f.service_enreg)
-    if (f.structure)         params.append('structure',        f.structure)
-    if (f.priority)          params.append('priority',         f.priority)
-    if (f.type_depart)       params.append('type_depart',      f.type_depart)
-    if (f.service_emis)      params.append('service_emis',     f.service_emis)
-    if (f.destinataire)      params.append('destinataire',     f.destinataire)
+    if (f.type)             params.append('type',             f.type)
+    if (f.type_document_id) params.append('type_document_id', f.type_document_id)
+    if (f.confidentiel)     params.append('confidentiel',     f.confidentiel)
+    if (f.type_arrivee)     params.append('type_arrivee',     f.type_arrivee)
+    if (f.service_enreg)    params.append('service_enreg',    f.service_enreg)
+    if (f.structure)        params.append('structure',        f.structure)
+    if (f.priority)         params.append('priority',         f.priority)
+    if (f.type_depart)      params.append('type_depart',      f.type_depart)
+    if (f.service_emis)     params.append('service_emis',     f.service_emis)
+    if (f.destinataire)     params.append('destinataire',     f.destinataire)
 
-    // ── Filtres colonnes (uniquement si pas déjà couvert par filtres avancés) ──
     const c = columnFilters.value
-    if (!f.numero_enreg  && c.numero_enreg)  params.append('numero_enreg', c.numero_enreg)
-    if (!f.reference     && c.reference)     params.append('reference',    c.reference)
-    if (!f.objet         && c.objet)         params.append('objet',        c.objet)
+    if (!f.numero_enreg && c.numero_enreg) params.append('numero_enreg', c.numero_enreg)
+    if (!f.reference    && c.reference)    params.append('reference',    c.reference)
+    if (!f.objet        && c.objet)        params.append('objet',        c.objet)
     if (!f.date_enreg && c.date_enreg && c.date_enreg.length === 10) params.append('date_enreg', c.date_enreg)
-    if (!f.type          && c.type)          params.append('type',         c.type)
+    if (!f.type         && c.type)         params.append('type',         c.type)
 
-    // Après les filtres colonnes input
     const m = multiFilters.value
-    if (m.type?.length)         params.append('type',         m.type.join(','))
-    if (m.numero_enreg?.length) params.append('numero_enreg', m.numero_enreg.join(','))
-    if (m.reference?.length)    params.append('reference',    m.reference.join(','))
+    if (!f.type         && m.type?.length)         params.append('type',         m.type.join(','))
+    if (!f.numero_enreg && m.numero_enreg?.length) params.append('numero_enreg', m.numero_enreg.join(','))
+    if (!f.reference    && m.reference?.length)    params.append('reference',    m.reference.join(','))
 
-    const response = await $fetch(`${base}/archives?${params.toString()}`, {
-      headers: { Authorization: `Bearer ${authToken}` },
-    })
+    const response = await $fetch(`${base}/archives?${params.toString()}`,
+      { headers: { Authorization: `Bearer ${authToken}` } })
 
     documents.value   = transformDocuments(response)
     currentPage.value = response.meta.current_page
@@ -802,7 +907,7 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false, sile
 
   } catch (err) {
     console.error('❌ Erreur chargement archives:', err)
-    error.value = err.message || 'Erreur lors du chargement'
+    error.value = 'Erreur lors du chargement des données. Veuillez appuyer sur le bouton pour réessayer.'
   } finally {
     initialLoading.value = false
     loading.value        = false
@@ -813,17 +918,10 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false, sile
 let searchTimeout = null
 const onFiltersChange = () => {
   const f = searchFilters.value
-
-  // Ne pas déclencher si une date est en cours de saisie (incomplète)
-  const dateEnregOk    = !f.date_enreg    || f.date_enreg.length    === 10
-  const dateCourierOk  = !f.date_courrier || f.date_courrier.length === 10
-  if (!dateEnregOk || !dateCourierOk) return
-
+  if ((!f.date_enreg    || f.date_enreg.length    === 10) === false) return
+  if ((!f.date_courrier || f.date_courrier.length === 10) === false) return
   clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    currentPage.value = 1
-    refresh(1, perPage.value, false)
-  }, 400)
+  searchTimeout = setTimeout(() => { currentPage.value = 1; refresh(1, perPage.value, false) }, 400)
 }
 
 // ── Watcher toggle ────────────────────────────────────────────────────────
@@ -831,32 +929,19 @@ watch(currentFilter, () => {
   currentPage.value   = 1
   searchFilters.value = defaultFilters()
   columnFilters.value = {}
+  multiFilters.value  = {}
   tabLoading.value    = true
   loadFilterOptions()
-  refresh(1, perPage.value, false, true).finally(() => {  // silent=true
-    tabLoading.value = false
-  })
+  refresh(1, perPage.value, false, true).finally(() => { tabLoading.value = false })
 })
 
-// ── Handlers pagination / recherche globale ───────────────────────────────
+// ── Handlers ─────────────────────────────────────────────────────────────
 const onPageChange    = (page) => refresh(page, perPage.value, false)
 const onPerPageChange = (val)  => { perPage.value = val; refresh(1, val, false) }
-const onSearchChange  = (val)  => {
-  searchFilters.value.search = val
-  currentPage.value = 1
-  refresh(1, perPage.value, false)
-}
-
-const onOpenDocument = (item) => {
-  const url = buildDocumentUrl(item)
-  if (url) window.open(url, '_blank', 'noopener,noreferrer')
-}
+const onSearchChange  = (val)  => { searchFilters.value.search = val; currentPage.value = 1; refresh(1, perPage.value, false) }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────
 onMounted(async () => {
-  await Promise.all([
-    refresh(1, perPage.value, true),
-    loadFilterOptions(),
-  ])
+  await Promise.all([refresh(1, perPage.value, true), loadFilterOptions()])
 })
 </script>
