@@ -182,7 +182,7 @@ const statutTacheLabel = (s) => ({
 
             <div class="gap-3">
               <UButton color="red" icon="i-heroicons-x-mark" @click="showPdfGeneratedModal = false"
-                btnText="Fermer" />
+                label="Fermer" />
               <CustomButton color="emerald" icon="i-heroicons-arrow-down-tray" :loading="pdfDownloading"
                 @click="handleDownloadPdf(codir)" :btnText="pdfDownloading ? 'Téléchargement' : 'Télécharger'" />
             </div>
