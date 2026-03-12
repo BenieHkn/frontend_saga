@@ -2,19 +2,23 @@
   <!-- En-tête -->
   <div class="flex items-center justify-between mb-6">
     <h1 class="flex items-center gap-3 text-2xl font-bold text-slate-800">
+      <Icon name="i-heroicons-arrow-path-rounded-square" class="w-7 h-7 text-teal-600" />
       Liste des Transferts
     </h1>
     <div class="flex items-center gap-3">
-      <button @click="refreshData"
+      <button @click="refresh(currentPage, perPage, false)"
         class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all hover:shadow-md">
         <Icon name="i-heroicons-arrow-path" class="w-4 h-4" />
         Actualiser
       </button>
-      <UBadge v-if="peutTransferer() && !isAdmin()" color="blue" variant="soft" size="lg" class="ml-auto">
-        <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
-        <UButton to="/affectations-transferts/form-transfert" variant="text" size="sm" class="p-0 m-0 text-blue-600">
-          Nouveau
-        </UButton>
+      <NuxtLink v-if="peutTransferer() && !isAdmin()" to="/affectations-transferts/form-transfert"
+        class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-all hover:shadow-md">
+        <Icon name="i-heroicons-plus" class="w-4 h-4" />
+        Nouveau
+      </NuxtLink>
+      <UBadge color="teal" variant="soft" size="lg">
+        <Icon name="i-heroicons-document-text" class="h-4 w-4 mr-1" />
+        <span class="text-sm">{{ total }} transfert{{ total > 1 ? 's' : '' }}</span>
       </UBadge>
     </div>
   </div>
@@ -43,7 +47,7 @@
               <span v-if="selectedTransfert.priority"
                 class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-md uppercase border"
                 :class="{
-                  'bg-red-400/30 text-red-100 border-red-300/50': selectedTransfert.priority === 'URGENT',
+                  'bg-red-400/30 text-red-100 border-red-300/50':    selectedTransfert.priority === 'URGENT',
                   'bg-orange-400/30 text-orange-100 border-orange-300/50': selectedTransfert.priority === 'IMPORTANT',
                   'bg-teal-400/30 text-teal-100 border-teal-300/50': selectedTransfert.priority === 'STANDARD',
                 }">
@@ -69,7 +73,6 @@
             </div>
             <span class="text-[11px] font-bold text-teal-700 uppercase tracking-widest">Courrier associé</span>
           </div>
-
           <div class="p-4 space-y-3">
             <div class="grid grid-cols-1 gap-2">
               <div class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-teal-100 hover:border-teal-200 transition-colors">
@@ -87,8 +90,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- Bouton document -->
             <div class="pt-1">
               <div v-if="selectedTransfert.url">
                 <button v-if="!showDoc" @click="showDoc = true"
@@ -116,7 +117,6 @@
             </div>
             <span class="text-[11px] font-bold text-teal-700 uppercase tracking-widest">Informations du transfert</span>
           </div>
-
           <div class="p-4 space-y-3">
             <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
               <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
@@ -133,28 +133,35 @@
               </div>
             </div>
 
-            <!-- Émetteur -->
             <div class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-slate-100 hover:border-slate-200 transition-colors">
               <div class="w-1 shrink-0 bg-gradient-to-b from-slate-300 to-slate-400"></div>
               <div class="flex-1 p-3 bg-gradient-to-r from-slate-50 to-transparent">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Émetteur</p>
-                <p class="text-sm font-bold text-slate-800">{{ selectedTransfert._raw?.emetteur?.user ? `${selectedTransfert._raw.emetteur.user.nom} ${selectedTransfert._raw.emetteur.user.prenom || ''}`.trim() : '—' }}</p>
+                <p class="text-sm font-bold text-slate-800">
+                  {{ selectedTransfert._raw?.emetteur?.user
+                    ? `${selectedTransfert._raw.emetteur.user.nom} ${selectedTransfert._raw.emetteur.user.prenom || ''}`.trim()
+                    : '—' }}
+                </p>
                 <p class="text-xs text-slate-500 mt-0.5">{{ selectedTransfert.emetteur }}</p>
               </div>
             </div>
 
-            <!-- Destinataire -->
             <div class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-teal-100 hover:border-teal-200 transition-colors">
               <div class="w-1 shrink-0 bg-gradient-to-b from-teal-400 to-cyan-500"></div>
               <div class="flex-1 p-3 bg-gradient-to-r from-teal-50 to-transparent">
                 <p class="text-[10px] font-bold text-teal-500 uppercase tracking-wider mb-1">Destinataire</p>
-                <p class="text-sm font-bold text-slate-800">{{ selectedTransfert._raw?.destinataire?.user ? `${selectedTransfert._raw.destinataire.user.nom} ${selectedTransfert._raw.destinataire.user.prenom || ''}`.trim() : '—' }}</p>
+                <p class="text-sm font-bold text-slate-800">
+                  {{ selectedTransfert._raw?.destinataire?.user
+                    ? `${selectedTransfert._raw.destinataire.user.nom} ${selectedTransfert._raw.destinataire.user.prenom || ''}`.trim()
+                    : '—' }}
+                </p>
                 <p class="text-xs text-slate-500 mt-0.5">{{ selectedTransfert.destinataire }}</p>
-                <p v-if="selectedTransfert._raw?.destinataire?.entite?.libelle" class="text-xs text-slate-400">{{ selectedTransfert._raw.destinataire.entite.libelle }}</p>
+                <p v-if="selectedTransfert._raw?.destinataire?.entite?.libelle" class="text-xs text-slate-400">
+                  {{ selectedTransfert._raw.destinataire.entite.libelle }}
+                </p>
               </div>
             </div>
 
-            <!-- Instructions -->
             <div v-if="selectedTransfert._raw?.instructions"
               class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-amber-100 hover:border-amber-200 transition-colors">
               <div class="w-1 shrink-0 bg-gradient-to-b from-amber-400 to-yellow-500"></div>
@@ -182,40 +189,130 @@
     </div>
   </UModal>
 
-  <!-- Messages d'erreur -->
+  <!-- Erreur -->
   <div v-if="error"
-    class="flex items-center gap-3 p-4 mb-5 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-    <Icon name="i-heroicons-exclamation-triangle" class="w-5 h-5 flex-shrink-0" />
-    <span class="flex-1">{{ error }}</span>
-    <button @click="error = null" class="text-lg opacity-60 hover:opacity-100 transition-opacity">✕</button>
+    class="flex items-center gap-4 p-5 mb-5 bg-red-50 border border-red-200 rounded-xl max-w-2xl">
+    <Icon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-red-600 shrink-0" />
+    <div class="flex-1">
+      <p class="text-sm font-bold text-red-900">Erreur de chargement</p>
+      <p class="text-xs text-red-700">{{ error }}</p>
+    </div>
+    <button
+      class="px-4 py-2 text-xs font-bold text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors shrink-0"
+      @click="refresh(currentPage, perPage, false)">
+      Réessayer
+    </button>
   </div>
 
-  <!-- Loader -->
-  <div v-if="loading" class="flex flex-col items-center justify-center py-16 gap-4">
-    <div class="w-12 h-12 border-4 border-gray-200 border-t-teal-600 rounded-full animate-spin"></div>
-    <p class="text-sm text-slate-500">Chargement des transferts...</p>
-  </div>
+  <!-- DataTablePaginate -->
+  <DataTablePaginate
+    :loading="loading"
+    :data="tableData"
+    :columns="columns"
+    :selectable="false"
+    :default-sort-column="null"
+    :show-row-numbers="true"
+    :show-actions="true"
+    :default-actions="[]"
+    :items-per-page-options="[10, 25, 50, 100]"
+    :default-items-per-page="25"
+    :left-aligned-columns="['objet', 'reference', 'emetteur', 'destinataire']"
+    :external-pagination="true"
+    :external-total="total"
+    :external-page="currentPage"
+    :external-last-page="totalPages"
+    :external-per-page="perPage"
+    @search-change="onSearchChange"
+    @page-change="onPageChange"
+    @per-page-change="onPerPageChange"
+    @column-filter-change="onColumnFilterChange">
 
-  <!-- DataTable -->
-  <DataTable v-else :data="tableData" :default-sort-column="null" :show-row-numbers="true" :columns="columns"
-    :selectable="false" :default-items-per-page="10" :items-per-page-options="[10, 25, 50, 100]"
-    :left-aligned-columns="['objet', 'courrier', 'emetteur', 'destinataire']" @edit="handleEdit"
-    @delete="handleDelete" @selection-change="handleSelectionChange">
+    <!-- ── Filtres avancés ── -->
+    <template #advanced-filters>
+      <div class="space-y-4">
 
+        <!-- Ligne 1 — Texte -->
+        <div class="flex flex-wrap gap-3">
+          <div class="flex-1 min-w-[140px]">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Référence</label>
+            <input v-model="searchFilters.reference" placeholder="Filtrer..."
+              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all" />
+          </div>
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Objet</label>
+            <input v-model="searchFilters.objet" placeholder="Filtrer..."
+              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all" />
+          </div>
+          <div class="flex-1 min-w-[150px]">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Motif</label>
+            <input v-model="searchFilters.motif" placeholder="Filtrer..."
+              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all" />
+          </div>
+          <div class="flex-1 min-w-[150px]">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de transfert</label>
+            <input v-model="searchFilters.date_transfert" placeholder="jj/mm/aaaa"
+              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all" />
+          </div>
+        </div>
+
+        <!-- Ligne 2 — Selects -->
+        <div class="flex flex-wrap gap-3">
+          <div class="flex-1 min-w-[140px]">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Statut</label>
+            <select v-model="searchFilters.statut"
+              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all">
+              <option value="">Tous</option>
+              <option v-for="s in filterOptions.statuts" :key="s" :value="s">{{ s }}</option>
+            </select>
+          </div>
+          <!-- Destinataire visible uniquement hors admin (admin voit emetteur) -->
+          <div v-if="!isAdmin()" class="flex-1 min-w-[180px]">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Destinataire</label>
+            <select v-model="searchFilters.destinataire_id"
+              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all">
+              <option value="">Tous</option>
+              <option v-for="d in filterOptions.destinataires" :key="d.id" :value="d.id">{{ d.nom }}</option>
+            </select>
+          </div>
+          <!-- Emetteur visible uniquement pour admin -->
+          <div v-if="isAdmin()" class="flex-1 min-w-[180px]">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Émetteur</label>
+            <select v-model="searchFilters.emetteur_id"
+              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all">
+              <option value="">Tous</option>
+              <option v-for="e in filterOptions.emetteurs" :key="e.id" :value="e.id">{{ e.nom }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Bouton reset -->
+        <div v-if="hasActiveFilters" class="flex justify-end">
+          <button @click="resetFilters"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-all">
+            <Icon name="i-heroicons-x-mark" class="w-3.5 h-3.5" />
+            Réinitialiser les filtres
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── Cellule priorité ── -->
     <template #cell-priority="{ value }">
       <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
         :class="getPriorityClasses(value)">
         <span class="w-2 h-2 rounded-full mr-1.5" :class="getPriorityDotClass(value)"></span>
-        {{ getPriorityLabel(value) }}
+        {{ value || '—' }}
       </span>
     </template>
 
+    <!-- ── Cellule objet ── -->
     <template #cell-objet="{ value }">
       <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
         {{ value }}
       </span>
     </template>
 
+    <!-- ── Cellule référence cliquable ── -->
     <template #cell-reference="{ value, item }">
       <div class="w-full">
         <button v-if="item.url" @click="onOpenDocument(item.url)"
@@ -234,6 +331,7 @@
       </div>
     </template>
 
+    <!-- ── Actions ── -->
     <template #actions="{ item }">
       <div class="flex gap-1.5 justify-end">
         <button @click="handleView(item)" title="Voir les détails"
@@ -248,131 +346,263 @@
       </div>
     </template>
 
-    <template #selection-actions="{ selected }">
-      <template v-if="peutTransferer()">
-        <button @click="handleBulkDelete(selected)"
-          class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 transition-all">
-          <Icon name="i-heroicons-trash" class="w-4 h-4" />
-          Supprimer ({{ selected.length }})
-        </button>
-      </template>
-      <button @click="handleBulkExport(selected)"
-        class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-all">
-        <Icon name="i-heroicons-arrow-down-tray" class="w-4 h-4" />
-        Exporter ({{ selected.length }})
-      </button>
-    </template>
-  </DataTable>
+  </DataTablePaginate>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useTransferts } from '~/composables/transferts/useTransferts'
-import { useAuth } from '~/composables/auth/useAuth'
-import DataTable from '~/components/DataTable.vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import DataTablePaginate from '~/components/DataTablePaginate.vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
+import { useAuth } from '~/composables/auth/useAuth'
 
-const { tableData, loading, error, fetchTransferts, config } = useTransferts()
-const { peutTransferer, isAdmin } = useAuth()
+const { peutTransferer, isAdmin, isSecDir, getDirecteurEntiteUserId, peutVoirConfig } = useAuth()
+const config = useRuntimeConfig()
+const toast  = useToast()
+
+// ── Colonnes (dynamiques selon rôle) ─────────────────────────────────────────
+const columns = computed(() => {
+  const base = [
+    { key: 'date_transfert', label: 'Date',         visible: true,  filterable: false },
+    { key: 'reference',      label: 'Référence',     visible: true,  inputPlaceholder: 'Réf...' },
+    { key: 'objet',          label: 'Objet',         visible: true  },
+    { key: 'destinataire',   label: 'Destinataire',  visible: true,  inputPlaceholder: 'Destinataire...' },
+    { key: 'priority',       label: 'Priorité',      visible: true,  type: 'badge', filterable: false },
+    { key: 'statut',         label: 'Statut',        visible: true,  type: 'badge', filterable: false },
+  ]
+  if (isAdmin()) {
+    base.push({ key: 'emetteur', label: 'Émetteur', visible: true, inputPlaceholder: 'Émetteur...' })
+  }
+  return base
+})
+
+// ── État table ────────────────────────────────────────────────────────────────
+const tableData      = ref([])
+const loading        = ref(false)
+const initialLoading = ref(false)
+const error          = ref(null)
+const currentPage    = ref(1)
+const totalPages     = ref(1)
+const total          = ref(0)
+const perPage        = ref(25)
+
+// ── Options filtres dynamiques ────────────────────────────────────────────────
+const filterOptions = ref({ statuts: [], emetteurs: [], destinataires: [] })
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
-const detailsOpen = ref(false)
+const detailsOpen       = ref(false)
 const selectedTransfert = ref(null)
-const showDoc = ref(false)
+const showDoc           = ref(false)
 
-// ── Colonnes ──────────────────────────────────────────────────────────────────
-const columns = ref([
-  { key: 'date_transfert', label: 'Date', visible: true, inputHidden: true },
-  { key: 'reference', label: 'Référence', visible: true, showLabel: false, inputHidden: false },
-  { key: 'objet', label: 'Objet', visible: true, showLabel: false, inputHidden: false },
-  { key: 'destinataire', label: 'Destinataire', visible: true, showLabel: false, inputHidden: false },
-  { key: 'priority', label: 'Priorité', visible: true, type: 'badge', width: 'min-w-[120px]', inputHidden: true },
-  { key: 'statut', label: 'Statut', visible: true, type: 'badge', inputHidden: true },
-])
-if (isAdmin()) {
-  columns.value.push({ key: 'emetteur', label: 'Émetteur', visible: true, width: 'min-w-[180px]' })
+// ── Filtres avancés ───────────────────────────────────────────────────────────
+const defaultFilters = () => ({
+  search:          '',
+  reference:       '',
+  objet:           '',
+  motif:           '',
+  date_transfert:  '',
+  statut:          '',
+  emetteur_id:     '',
+  destinataire_id: '',
+})
+
+const searchFilters = ref(defaultFilters())
+
+const hasActiveFilters = computed(() =>
+  Object.values(searchFilters.value).some(v => v !== '') ||
+  Object.values(columnFilters.value).some(v => v !== '')
+)
+
+const resetFilters = () => {
+  searchFilters.value = defaultFilters()
+  columnFilters.value = {}
+  currentPage.value   = 1
+  refresh(1, perPage.value, false)
 }
 
-// ── Handlers ──────────────────────────────────────────────────────────────────
-const handleView = (item) => {
-  // Récupère l'URL depuis _raw et la construit si besoin
-  const rawUrl = item._raw?.courrier_arrive?.document?.url
-  const docUrl = rawUrl && rawUrl !== 'Inconnu'
-    ? (rawUrl.startsWith('http') ? rawUrl : `${config.public.baseUrl}${rawUrl}`)
-    : null
+// ── Filtres colonnes ──────────────────────────────────────────────────────────
+const columnFilters = ref({})
 
-  selectedTransfert.value = { ...item, url: docUrl }
-  showDoc.value = false
-  detailsOpen.value = true
+let columnFilterTimeout = null
+const onColumnFilterChange = (val) => {
+  columnFilters.value = { ...val }
+  clearTimeout(columnFilterTimeout)
+  columnFilterTimeout = setTimeout(() => {
+    currentPage.value = 1
+    refresh(1, perPage.value, false)
+  }, 400)
+}
+
+// ── Watch filtres avancés ─────────────────────────────────────────────────────
+let searchTimeout = null
+watch(searchFilters, () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    currentPage.value = 1
+    refresh(1, perPage.value, false)
+  }, 400)
+}, { deep: true })
+
+// ── Utilitaires ───────────────────────────────────────────────────────────────
+const formatDate = (date) => {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+}
+
+const buildDocUrl = (rawUrl) => {
+  if (!rawUrl || rawUrl === 'Inconnu') return null
+  if (rawUrl.startsWith('http')) return rawUrl
+  return `${config.public.baseUrl}${rawUrl}`
+}
+
+const transformerDonnees = (reponseAPI) => {
+  if (!reponseAPI?.data) throw new Error('Format de réponse API invalide')
+
+  return reponseAPI.data.map(item => ({
+    id:             item.id,
+    date_transfert: formatDate(item.date_affect || item.created_at),
+    objet:          item.courrier_arrive?.document?.objet      || '—',
+    reference:      item.courrier_arrive?.document?.reference  || '—',
+    statut:         item.statut         || '',
+    type:           item.type_affectation || '',
+    emetteur:       item.emetteur?.entite?.fonction            || '—',
+    destinataire:   item.destinataire?.entite?.fonction        || '—',
+    priority:       item.courrier_arrive?.priority             || '',
+    url:            buildDocUrl(item.courrier_arrive?.document?.url),
+    _raw:           item,
+  }))
+}
+
+// ── Chargement options filtres ────────────────────────────────────────────────
+const loadFilterOptions = async () => {
+  try {
+    const authToken = localStorage.getItem('auth_token') || ''
+    const base      = config.public.apiBase.replace(/\/$/, '')
+    const response  = await $fetch(`${base}/transferts/filters`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+    if (response.success) filterOptions.value = response
+  } catch (err) {
+    console.error('❌ Erreur chargement options filtres transferts:', err)
+  }
+}
+
+// ── Chargement données ────────────────────────────────────────────────────────
+const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
+  if (isFirst) { initialLoading.value = true } else { loading.value = true }
+  error.value = null
+
+  try {
+    const authToken = localStorage.getItem('auth_token') || ''
+    const base      = config.public.apiBase.replace(/\/$/, '')
+
+    const params = new URLSearchParams({
+      page:     String(page),
+      per_page: String(per_page),
+    })
+
+    // ── Filtres avancés ──────────────────────────────────────────────────
+    const f = searchFilters.value
+    if (f.search)          params.append('search',          f.search)
+    if (f.reference)       params.append('reference',       f.reference)
+    if (f.objet)           params.append('objet',           f.objet)
+    if (f.motif)           params.append('motif',           f.motif)
+    if (f.date_transfert)  params.append('date_transfert',  f.date_transfert)
+    if (f.statut)          params.append('statut',          f.statut)
+    if (f.emetteur_id)     params.append('emetteur_id',     f.emetteur_id)
+    if (f.destinataire_id) params.append('destinataire_id', f.destinataire_id)
+
+    // ── Filtres colonnes (si non couverts par filtres avancés) ───────────
+    const c = columnFilters.value
+    if (!f.reference    && c.reference)    params.append('reference',    c.reference)
+    if (!f.objet        && c.objet)        params.append('objet',        c.objet)
+    if (!f.destinataire && c.destinataire) params.append('destinataire', c.destinataire)
+
+    // ── Endpoint selon rôle ──────────────────────────────────────────────
+    let endpoint
+    if (peutVoirConfig()) {
+      // Admin : tous les transferts
+      endpoint = `${base}/transferts?${params.toString()}`
+    } else {
+      const entiteUser = JSON.parse(localStorage.getItem('entite_user') || 'null')
+      if (!entiteUser?.id) { error.value = 'Aucune fonction utilisateur sélectionnée'; return }
+
+      const emetteurId = isSecDir()
+        ? (getDirecteurEntiteUserId() ?? entiteUser.id)
+        : entiteUser.id
+
+      endpoint = `${base}/transferts/user/${emetteurId}/emitted?${params.toString()}`
+    }
+
+    const reponse = await $fetch(endpoint, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    tableData.value   = transformerDonnees(reponse)
+    currentPage.value = reponse.meta?.current_page ?? page
+    totalPages.value  = reponse.meta?.last_page     ?? 1
+    total.value       = reponse.meta?.total         ?? tableData.value.length
+
+  } catch (err) {
+    console.error('❌ Erreur chargement transferts:', err)
+    error.value = err.message || 'Erreur lors du chargement'
+    toast.add({ title: 'Erreur', description: 'Impossible de charger les transferts', color: 'red', timeout: 1500 })
+  } finally {
+    initialLoading.value = false
+    loading.value        = false
+  }
+}
+
+// ── Handlers pagination ───────────────────────────────────────────────────────
+const onPageChange    = (page) => refresh(page, perPage.value, false)
+const onPerPageChange = (val)  => { perPage.value = val; refresh(1, val, false) }
+const onSearchChange  = (val)  => {
+  searchFilters.value.search = val
+  currentPage.value = 1
+  refresh(1, perPage.value, false)
+}
+
+// ── Styles priorité ───────────────────────────────────────────────────────────
+const getPriorityClasses  = (p) => ({ URGENT: 'bg-red-100 text-red-800', IMPORTANT: 'bg-orange-100 text-orange-800', STANDARD: 'bg-blue-100 text-blue-800' }[p] || 'bg-gray-100 text-gray-800')
+const getPriorityDotClass = (p) => ({ URGENT: 'bg-red-500',              IMPORTANT: 'bg-orange-500',                STANDARD: 'bg-blue-500'                }[p] || 'bg-gray-500')
+
+// ── Handlers actions ──────────────────────────────────────────────────────────
+const onOpenDocument = (url) => {
+  if (url) window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+const handleView = (item) => {
+  selectedTransfert.value = item
+  showDoc.value           = false
+  detailsOpen.value       = true
 }
 
 const closeDetails = () => {
-  detailsOpen.value = false
+  detailsOpen.value       = false
   selectedTransfert.value = null
-  showDoc.value = false
-}
-
-const onOpenDocument = (url) => {
-  if (url) window.open(url, '_blank', 'noopener,noreferrer')
+  showDoc.value           = false
 }
 
 const handleEdit = async (item) => {
   if (!peutTransferer()) return
   try {
-    const token = localStorage.getItem('token') || localStorage.getItem('auth_token')
-    const response = await fetch(`${config.public.apiBase}/transferts/${item.id}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({}),
+    const authToken = localStorage.getItem('auth_token') || ''
+    await $fetch(`${config.public.apiBase}/transferts/${item.id}`, {
+      method:  'PUT',
+      headers: { Authorization: `Bearer ${authToken}` },
+      body:    {},
     })
-    if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`)
-    fetchTransferts()
+    refresh(currentPage.value, perPage.value, false)
   } catch (err) {
-    console.error('Erreur lors de la modification:', err)
+    console.error('Erreur modification transfert:', err)
+    toast.add({ title: 'Erreur', description: 'Impossible de modifier le transfert', color: 'red', timeout: 1500 })
   }
 }
 
-const handleDelete = async (item) => {
-  if (!peutTransferer()) return
-  if (confirm(`Voulez-vous vraiment supprimer le transfert "${item.objet}" ?`)) {
-    try {
-      const token = localStorage.getItem('token') || localStorage.getItem('auth_token')
-      const response = await fetch(`${config.public.apiBase}/transferts/${item.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      })
-      if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`)
-      fetchTransferts()
-    } catch (err) {
-      console.error('Erreur lors de la suppression:', err)
-    }
-  }
-}
-
-const handleSelectionChange = (selected) => console.log('Sélection:', selected)
-
-const handleBulkDelete = (selected) => {
-  if (!peutTransferer()) return
-  if (confirm(`Voulez-vous vraiment supprimer ${selected.length} transfert(s) ?`)) {
-    console.log('Suppression multiple:', selected)
-  }
-}
-
-const handleBulkExport = (selected) => console.log('Export multiple:', selected)
-
-const getPriorityLabel = (priority) => ({ 'URGENT': 'URGENT', 'IMPORTANT': 'IMPORTANT', 'STANDARD': 'STANDARD' }[priority] || priority)
-const getPriorityClasses = (priority) => ({ 'URGENT': 'bg-red-100 text-red-800', 'IMPORTANT': 'bg-orange-100 text-orange-800', 'STANDARD': 'bg-blue-100 text-blue-800' }[priority] || 'bg-blue-100 text-blue-800')
-const getPriorityDotClass = (priority) => ({ 'URGENT': 'bg-red-500', 'IMPORTANT': 'bg-orange-500', 'STANDARD': 'bg-blue-500' }[priority] || 'bg-gray-500')
-
-const refreshData = () => fetchTransferts()
-
-onMounted(() => { fetchTransferts() })
+// ── Lifecycle ─────────────────────────────────────────────────────────────────
+onMounted(() => {
+  Promise.all([
+    refresh(1, perPage.value, true),
+    loadFilterOptions(),
+  ])
+})
 </script>
