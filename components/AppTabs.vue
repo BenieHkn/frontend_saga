@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue' 
 const props = defineProps({
   tabs: {
     type: Array,

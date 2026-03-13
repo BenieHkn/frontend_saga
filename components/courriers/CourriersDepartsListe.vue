@@ -1,11 +1,9 @@
 <template>
   <div class="min-h-screen bg-slate-100 p-6 font-sans">
 
-    <!-- ── Modal détails ── -->
     <UModal v-model="detailsOpen" :ui="{ width: 'sm:max-w-5xl' }">
       <div v-if="selectedCourrier" class="flex flex-col max-h-[90vh] bg-white rounded-xl overflow-hidden">
 
-        <!-- En-tête -->
         <div class="relative flex items-center justify-between px-6 py-4 shrink-0 overflow-hidden"
           style="background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);">
           <div class="absolute inset-0 opacity-10"
@@ -35,10 +33,7 @@
           </button>
         </div>
 
-        <!-- Corps -->
         <div class="overflow-y-auto flex-1 p-5 space-y-4 bg-slate-50/50">
-
-          <!-- Section principale -->
           <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
             <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
               <div class="flex items-center gap-2">
@@ -56,7 +51,6 @@
             </div>
 
             <div class="p-4 space-y-3">
-              <!-- Référence + Objet -->
               <div class="grid grid-cols-1 gap-2">
                 <div class="group flex items-stretch gap-0 rounded-xl overflow-hidden border border-indigo-100 hover:border-indigo-200 transition-colors">
                   <div class="w-1 shrink-0 bg-gradient-to-b from-indigo-400 to-indigo-600"></div>
@@ -74,7 +68,6 @@
                 </div>
               </div>
 
-              <!-- Grille d'infos -->
               <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
                 <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
                   <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
@@ -128,7 +121,6 @@
                 </div>
               </div>
 
-              <!-- Initiateurs -->
               <div v-if="selectedCourrier.initiateurs?.length"
                 class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-sky-100 hover:border-sky-200 transition-colors">
                 <div class="w-1 shrink-0 bg-gradient-to-b from-sky-400 to-blue-500"></div>
@@ -139,14 +131,14 @@
                       class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-sky-700 bg-white border border-sky-200 rounded-full shadow-sm">
                       <Icon name="i-heroicons-user-circle" class="w-3.5 h-3.5 text-sky-400" />
                       {{ initiateur.user?.nom || '' }} {{ initiateur.user?.prenom || '' }}
-                      <span v-if="initiateur.entite?.code || initiateur.entite?.libelle"
-                        class="text-sky-400">({{ initiateur.entite?.code || initiateur.entite?.libelle }})</span>
+                      <span v-if="initiateur.entite?.code || initiateur.entite?.libelle" class="text-sky-400">
+                        ({{ initiateur.entite?.code || initiateur.entite?.libelle }})
+                      </span>
                     </span>
                   </div>
                 </div>
               </div>
 
-              <!-- Bouton document -->
               <div class="pt-1">
                 <div v-if="departUrl">
                   <button v-if="!showDepartDoc" @click="showDepartDoc = true"
@@ -165,23 +157,8 @@
               </div>
             </div>
           </section>
-
-          <!-- Section courrier arrivé d'origine (si réponse à un courrier) -->
-          <section v-if="selectedCourrier.courrier_arrive_id || selectedCourrier.reponse_a"
-            class="bg-white rounded-2xl border border-emerald-200/80 overflow-hidden shadow-sm">
-            <div class="flex items-center px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
-              <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center mr-2">
-                <Icon name="i-heroicons-inbox-arrow-down" class="w-3.5 h-3.5 text-emerald-600" />
-              </div>
-              <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">En réponse à un courrier arrivé</span>
-            </div>
-            <div class="p-4">
-              <p class="text-xs text-slate-500 italic">Ce courrier a été émis en réponse à un courrier arrivé.</p>
-            </div>
-          </section>
         </div>
 
-        <!-- Pied modal -->
         <div class="px-6 py-3.5 border-t border-slate-100 shrink-0 flex items-center justify-between bg-white">
           <span class="text-[10px] text-slate-400">{{ selectedCourrier.document?.reference || '' }}</span>
           <UButton color="gray" variant="outline" size="sm" @click="closeDetails">Fermer</UButton>
@@ -189,10 +166,18 @@
       </div>
     </UModal>
 
-    <PageHeader v-if="!isAdmin()" title="Courriers Départs" subtitle="Gestion et suivi des courriers sortants" btnText="Nouveau" to="/courriers/form_courrier_depart"/>
-    <PageHeader v-else title="Courriers Départs" subtitle="Gestion et suivi des courriers sortants"/>
+    <PageHeader
+      v-if="!isAdmin()"
+      title="Courriers Départs"
+      subtitle="Gestion et suivi des courriers sortants — 12 derniers mois"
+      btnText="Nouveau"
+      to="/courriers/form_courrier_depart" />
+    <PageHeader
+      v-else
+      title="Courriers Départs"
+      subtitle="Gestion et suivi des courriers sortants — 12 derniers mois" />
 
-    <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
+    <div v-if="initialLoading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
       <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
       <span class="text-sm font-medium">Chargement des données...</span>
     </div>
@@ -209,61 +194,130 @@
       </div>
       <button
         class="px-4 py-2 text-xs font-bold text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors shrink-0"
-        @click="refresh">
+        @click="refresh(currentPage, perPage, false)">
         Réessayer
       </button>
     </div>
 
-    <DataTable v-else :default-sort-column="null" :show-row-numbers="true" :data="courriers" :columns="columns"
+    <DataTablePaginate
+      v-else
+      :loading="loading"
+      :data="courriers"
+      :columns="columns"
       :selectable="false"
-      :left-aligned-columns="['reference', 'structure', 'numeroEnregistrement', 'objet', 'initiateurs']"
-      @open-document="onOpenDocument" @selection-change="onSelectionChange">
+      :default-sort-column="null"
+      :show-row-numbers="true"
+      :show-actions="true"
+      :default-actions="[]"
+      :items-per-page-options="[10, 20, 50, 100]"
+      :default-items-per-page="20"
+      :left-aligned-columns="['reference', 'structure', 'numero_enreg', 'objet', 'initiateurs']"
+      :hide-labels-when-input="true"
+      :external-pagination="true"
+      :external-total="total"
+      :external-page="currentPage"
+      :external-last-page="totalPages"
+      :external-per-page="perPage"
+      @search-change="onSearchChange"
+      @page-change="onPageChange"
+      @per-page-change="onPerPageChange"
+      @column-filter-change="onColumnFilterChange">
 
-      <template #advanced-filters="{ filters, onFilter }">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Recherche</label>
-            <input v-model="filters.search" placeholder="Référence, N°, Objet..."
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-              @input="onFilter" />
+      <template #advanced-filters>
+        <div class="space-y-4">
+          <div class="flex flex-wrap gap-3">
+            <div class="flex-1 min-w-[120px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">N° d'enreg.</label>
+              <input v-model="searchFilters.numero_enreg" placeholder="Filtrer..."
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                @input="onFiltersChange" />
+            </div>
+            <div class="flex-1 min-w-[120px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Référence</label>
+              <input v-model="searchFilters.reference" placeholder="Filtrer..."
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                @input="onFiltersChange" />
+            </div>
+            <div class="flex-1 min-w-[160px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Objet</label>
+              <input v-model="searchFilters.objet" placeholder="Filtrer..."
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                @input="onFiltersChange" />
+            </div>
+            <div class="flex-1 min-w-[150px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date d'enreg. (jj/mm/aaaa)</label>
+              <input v-model="searchFilters.date_enreg" placeholder="ex: 15/03/2024"
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                @input="onFiltersChange" />
+            </div>
+            <div class="flex-1 min-w-[150px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de départ (jj/mm/aaaa)</label>
+              <input v-model="searchFilters.date_depart" placeholder="ex: 15/03/2024"
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                @input="onFiltersChange" />
+            </div>
           </div>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type de départ</label>
-            <select v-model="filters.type_depart"
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-              @change="onFilter">
-              <option value="">Tous les types</option>
-              <option value="interne">Interne</option>
-              <option value="externe">Externe</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de départ (début)</label>
-            <input v-model="filters.date_depart_from" type="date"
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-              @input="onFilter" />
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de départ (fin)</label>
-            <input v-model="filters.date_depart_to" type="date"
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-              @input="onFilter" />
-          </div>
-        </div>
-      </template>
 
-      <template #actions="{ item }">
-        <div class="flex gap-1.5 justify-end">
-          <button @click="handleView(item)" title="Voir les détails"
-            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
-            <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
-          </button>
+          <div class="flex flex-wrap gap-3">
+            <div class="flex-1 min-w-[180px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type de document</label>
+              <SearchableSelect
+                v-model="searchFilters.type_document_id"
+                :options="filterOptionsData.types_document.map(t => ({ value: t.id, label: `${t.code} — ${t.libelle}` }))"
+                placeholder="Tous"
+                @change="onFiltersChange" />
+            </div>
+            <div class="flex-1 min-w-[140px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Service émetteur</label>
+              <SearchableSelect
+                v-model="searchFilters.service_emis"
+                :options="filterOptionsData.services_emis.map(s => ({ value: s, label: s }))"
+                placeholder="Tous"
+                @change="onFiltersChange" />
+            </div>
+            <div class="flex-1 min-w-[160px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Destinataire</label>
+              <SearchableSelect
+                v-model="searchFilters.destinataire"
+                :options="filterOptionsData.destinataires.map(d => ({ value: d, label: d }))"
+                placeholder="Tous"
+                @change="onFiltersChange" />
+            </div>
+          </div>
+
+          <div v-if="hasActiveFilters" class="flex justify-end">
+            <button @click="resetFilters"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-all">
+              <Icon name="i-heroicons-x-mark" class="w-3.5 h-3.5" />
+              Réinitialiser les filtres
+            </button>
+          </div>
         </div>
       </template>
 
       <template #cell-source="{ value }">
         <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
           {{ value }}
+        </span>
+      </template>
+
+      <template #cell-reference="{ value, item }">
+        <button v-if="item.url" @click="onOpenDocument(item.url)"
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]">
+          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+          <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
+        </button>
+        <span v-else
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]">
+          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
+          <span class="break-words whitespace-normal min-w-0">{{ value || '—' }}</span>
+        </span>
+      </template>
+
+      <template #cell-objet="{ value }">
+        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
+          {{ value || '—' }}
         </span>
       </template>
 
@@ -283,30 +337,6 @@
         <span v-else class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-gray-50 text-gray-700 border border-gray-100">Non</span>
       </template>
 
-      <template #cell-objet="{ value }">
-        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
-          {{ value }}
-        </span>
-      </template>
-
-      <template #cell-reference="{ value, item }">
-        <div class="w-full">
-          <button v-if="item.url" @click="onOpenDocument(item.url)"
-            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
-            :title="`Ouvrir le document ${value}`">
-            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
-            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
-            <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
-          </button>
-          <span v-else
-            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
-            :title="value">
-            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
-            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
-          </span>
-        </div>
-      </template>
-
       <template #cell-initiateurs="{ value }">
         <div v-if="value && value.length > 0" class="flex flex-col gap-1 max-w-[150px]">
           <span v-for="(initiateur, index) in value" :key="index"
@@ -317,13 +347,24 @@
         </div>
         <span v-else class="text-xs text-slate-400 italic">—</span>
       </template>
-    </DataTable>
+
+      <template #actions="{ item }">
+        <div class="flex gap-1.5 justify-end">
+          <button @click="handleView(item)" title="Voir les détails"
+            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 transition-all group">
+            <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
+          </button>
+        </div>
+      </template>
+
+    </DataTablePaginate>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import DataTable from '~/components/DataTable.vue'
+import DataTablePaginate from '~/components/DataTablePaginate.vue'
+import SearchableSelect from '~/components/SearchableSelect.vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
 import { useAuth } from '~/composables/auth/useAuth'
 
@@ -331,18 +372,91 @@ const props = defineProps({
   entiteId: { type: Number, default: null }
 })
 
-const config = useRuntimeConfig()
+const config    = useRuntimeConfig()
 const { isAdmin } = useAuth()
 
-// ── État ──────────────────────────────────────────────────────────────────────
-const courriers = ref([])
-const loading = ref(false)
-const error = ref(null)
-const detailsOpen = ref(false)
-const selectedCourrier = ref(null)
-const showDepartDoc = ref(false)
+// ── État table ────────────────────────────────────────────────────────────────
+const courriers      = ref([])
+const loading        = ref(false)
+const initialLoading = ref(false)
+const error          = ref(null)
+const currentPage    = ref(1)
+const totalPages     = ref(1)
+const total          = ref(0)
+const perPage        = ref(20)
 
-// ── Computed ──────────────────────────────────────────────────────────────────
+// ── Options filtres avancés ───────────────────────────────────────────────────
+const filterOptionsData = ref({
+  types_document: [],
+  types_depart:   [],
+  services_emis:  [],
+  destinataires:  [],
+})
+
+// ── Filtres avancés ───────────────────────────────────────────────────────────
+const defaultFilters = () => ({
+  search:           '',
+  numero_enreg:     '',
+  reference:        '',
+  objet:            '',
+  date_enreg:       '',
+  date_courrier:    '',
+  date_depart:      '',
+  type_document_id: '',
+  service_emis:     '',
+  destinataire:     '',
+})
+
+const searchFilters = ref(defaultFilters())
+
+const hasActiveFilters = computed(() =>
+  Object.values(searchFilters.value).some(v => v !== '') ||
+  Object.values(columnFilters.value).some(v => v !== '')
+)
+
+const resetFilters = () => {
+  searchFilters.value = defaultFilters()
+  columnFilters.value = {}
+  currentPage.value   = 1
+  refresh(1, perPage.value, false)
+}
+
+// ── Filtres colonnes ──────────────────────────────────────────────────────────
+const columnFilters = ref({})
+
+let columnFilterTimeout = null
+const onColumnFilterChange = (val) => {
+  columnFilters.value = { ...val }
+  clearTimeout(columnFilterTimeout)
+  columnFilterTimeout = setTimeout(() => {
+    currentPage.value = 1
+    refresh(1, perPage.value, false)
+  }, 400)
+}
+
+// ── Colonnes ──────────────────────────────────────────────────────────────────
+const columns = [
+  { key: 'source',              label: 'Source',              visible: true,  type: 'badge',    inputHidden: true },
+  { key: 'reference',           label: 'Référence',           visible: true,  inputWidth: '80px', inputPlaceholder: 'Réf...' },
+  { key: 'objet',               label: 'Objet',               visible: true,  inputPlaceholder: 'Objet...' },
+  { key: 'structure',           label: 'Destinataire',        visible: true,  inputPlaceholder: 'Destinataire...' },
+  { key: 'numero_enreg',        label: "N° d'enregistrement", visible: true,  inputPlaceholder: 'Enreg...' },
+  { key: 'type_document',       label: 'Type de document',    visible: true,  filterable: false },
+  { key: 'initiateurs',         label: 'Initiateurs',         visible: true,  inputHidden: true, sortable: false, filterable: false },
+  { key: 'date_enregistrement', label: "Date d'enregistrement", visible: false, filterable: false },
+  { key: 'date_courrier',       label: 'Date du Courrier',    visible: false, filterable: false },
+  { key: 'url',                 label: 'Document',            visible: false, type: 'document', filterable: false },
+  { key: 'type_depart',         label: 'Type de départ',      visible: false, filterable: false },
+  { key: 'date_depart',         label: 'Date de départ',      visible: false, filterable: false },
+  { key: 'large_diffusion',     label: 'Large diffusion',     visible: false, filterable: false },
+  { key: 'confidentiel',        label: 'Confidentiel',        visible: false, filterable: false },
+]
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+const detailsOpen      = ref(false)
+const selectedCourrier = ref(null)
+const showDepartDoc    = ref(false)
+
 const departUrl = computed(() => {
   const raw = selectedCourrier.value?.document?.url
   const url = raw?.trim?.()
@@ -353,109 +467,172 @@ const departUrl = computed(() => {
   return `${base}${path}`
 })
 
-// ── Colonnes ──────────────────────────────────────────────────────────────────
-const columns = [
-  { key: 'source', label: 'Source', visible: true, type: 'badge', inputHidden: true },
-  { key: 'reference', label: 'Référence', visible: true, showLabel: false },
-  { key: 'objet', label: 'Objet', visible: true, showLabel: false, minWidth: '200px' },
-  { key: 'structure', label: 'Destinataire', visible: true, inputHidden: true },
-  { key: 'numeroEnregistrement', label: "N° d'enregistrement", visible: true, showLabel: false },
-  { key: 'type_document', label: 'Type de document', visible: true, showLabel: false },
-  { key: 'initiateurs', label: 'Initiateurs', visible: true, inputHidden: true, sortable: false, filterable: false },
-  { key: 'date_enregistrement', label: "Date d'enregistrement", visible: false },
-  { key: 'date_courrier', label: 'Date du Courrier', visible: false },
-  { key: 'url', label: 'Document', visible: false, type: 'document' },
-  { key: 'type_depart', label: 'Type de départ', visible: false },
-  { key: 'date_depart', label: 'Date de départ', visible: false },
-  { key: 'large_diffusion', label: 'Large diffusion', visible: false },
-  { key: 'confidentiel', label: 'Confidentiel', visible: false },
-]
+const handleView = (item) => {
+  selectedCourrier.value = item._raw || item
+  showDepartDoc.value    = false
+  detailsOpen.value      = true
+}
+
+const closeDetails = () => {
+  detailsOpen.value      = false
+  selectedCourrier.value = null
+  showDepartDoc.value    = false
+}
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
 const formatDate = (date) => {
   if (!date) return ''
-  return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+  return new Date(date).toLocaleDateString('fr-FR', {
+    day: '2-digit', month: 'long', year: 'numeric'
+  })
 }
 
 const transformCourriers = (response) => {
   if (!response?.data) throw new Error('Format de réponse API invalide')
   return response.data.map((courrier) => {
     const initiateursList = (courrier.initiateurs || []).map(i => {
-      const nom = i.user?.nom || ''
+      const nom    = i.user?.nom    || ''
       const prenom = i.user?.prenom || ''
-      const code = i.entite?.code || i.entite?.libelle || ''
+      const code   = i.entite?.code || i.entite?.libelle || ''
       return `${nom} ${prenom}${code ? ` (${code})` : ''}`.trim()
     }).filter(Boolean)
 
     return {
-      id: courrier.id,
-      source: courrier.service_emis || '',
-      numeroEnregistrement: courrier.document?.numero_enreg || '',
-      reference: courrier.document?.reference || '',
-      structure: courrier.destinataire || '',
-      date_enregistrement: formatDate(courrier.document?.date_enreg),
-      objet: courrier.document?.objet || '',
-      date_courrier: formatDate(courrier.document?.date_courrier),
-      url: courrier.document?.url && courrier.document?.url !== 'Inconnu'
-        ? (courrier.document?.url.startsWith('http') ? courrier.document?.url : `${config.public.baseUrl}${courrier.document?.url}`)
-        : '',
-      type_depart: courrier.type_depart || '',
-      date_depart: formatDate(courrier.date_depart),
-      type_document: courrier.document?.type_document?.libelle || '',
-      large_diffusion: courrier.document?.large_diffusion || false,
-      confidentiel: courrier.confidentiel || false,
-      initiateurs: initiateursList,
-      _complete: courrier,
+      id:                   courrier.id,
+      source:               courrier.service_emis || '',
+      numero_enreg:         courrier.document?.numero_enreg || '',
+      reference:            courrier.document?.reference    || '',
+      structure:            courrier.destinataire           || '',
+      date_enregistrement:  formatDate(courrier.document?.date_enreg),
+      objet:                courrier.document?.objet        || '',
+      date_courrier:        formatDate(courrier.document?.date_courrier),
+      url:                  courrier.document?.url && courrier.document?.url !== 'Inconnu'
+                              ? (courrier.document.url.startsWith('http')
+                                  ? courrier.document.url
+                                  : `${config.public.baseUrl}${courrier.document.url}`)
+                              : '',
+      type_depart:          courrier.type_depart                           || '',
+      date_depart:          formatDate(courrier.date_depart),
+      type_document:        courrier.document?.type_document?.libelle      || '',
+      large_diffusion:      courrier.document?.large_diffusion             || false,
+      confidentiel:         courrier.confidentiel                          || false,
+      initiateurs:          initiateursList,
+      _raw:                 courrier,
     }
   })
 }
 
-// ── Chargement ────────────────────────────────────────────────────────────────
-const refresh = async () => {
-  loading.value = true
-  error.value = null
+// ── Chargement options filtres ────────────────────────────────────────────────
+const loadFilterOptions = async () => {
   try {
     const authToken = localStorage.getItem('auth_token') || ''
-    let endpoint = `${config.public.apiBase}/courriers-departs`
-    if (props.entiteId) {
-      const selectedEntite = JSON.parse(localStorage.getItem('selected_entite') || 'null')
-      if (selectedEntite?.code) endpoint += `?service_emis=${selectedEntite.code}`
-    }
-    const response = await $fetch(endpoint, {
+    const base      = config.public.apiBase.replace(/\/$/, '')
+    const response  = await $fetch(`${base}/courriers-departs/filters`, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
-    courriers.value = transformCourriers(response)
+    if (response.success) filterOptionsData.value = response
+  } catch (err) {
+    console.error('❌ Erreur chargement filtres:', err)
+  }
+}
+
+// ── Chargement données ────────────────────────────────────────────────────────
+const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
+  if (isFirst) {
+    initialLoading.value = true
+  } else {
+    loading.value = true
+  }
+  error.value = null
+
+  try {
+    const authToken = localStorage.getItem('auth_token') || ''
+    const base      = config.public.apiBase.replace(/\/$/, '')
+
+    const params = new URLSearchParams({
+      page:     String(page),
+      per_page: String(per_page),
+    })
+
+    if (props.entiteId) {
+      const selectedEntite = JSON.parse(localStorage.getItem('selected_entite') || 'null')
+      if (selectedEntite?.code) params.append('service_emis_entite', selectedEntite.code)
+    }
+
+    // ── Filtres avancés ──────────────────────────────────────────────────
+    const f = searchFilters.value
+    if (f.search)            params.append('search',           f.search)
+    if (f.numero_enreg)      params.append('numero_enreg',     f.numero_enreg)
+    if (f.reference)         params.append('reference',        f.reference)
+    if (f.objet)             params.append('objet',            f.objet)
+    if (f.date_enreg    && f.date_enreg.length    === 10) params.append('date_enreg',    f.date_enreg)
+    if (f.date_courrier && f.date_courrier.length === 10) params.append('date_courrier', f.date_courrier)
+    if (f.date_depart   && f.date_depart.length   === 10) params.append('date_depart',   f.date_depart)
+    if (f.type_document_id)  params.append('type_document_id', f.type_document_id)
+    if (f.service_emis)      params.append('service_emis',     f.service_emis)
+    if (f.destinataire)      params.append('destinataire',     f.destinataire)
+
+    // ── Filtres colonnes ─────────────────────────────────────────────────
+    const c = columnFilters.value
+    if (!f.numero_enreg && c.numero_enreg) params.append('numero_enreg',  c.numero_enreg)
+    if (!f.reference    && c.reference)    params.append('reference',     c.reference)
+    if (!f.objet        && c.objet)        params.append('objet',         c.objet)
+    if (!f.service_emis && c.source)       params.append('service_emis',  c.source)
+    if (!f.destinataire && c.structure)    params.append('destinataire',  c.structure)
+
+    const response = await $fetch(`${base}/courriers-departs?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    courriers.value   = transformCourriers(response)
+    currentPage.value = response.meta.current_page
+    totalPages.value  = response.meta.last_page
+    total.value       = response.meta.total
+
   } catch (err) {
     console.error('❌ Erreur chargement courriers départs:', err)
     error.value = err.message || 'Erreur lors du chargement'
   } finally {
-    loading.value = false
+    initialLoading.value = false
+    loading.value        = false
   }
 }
 
-// ── Modal détails ─────────────────────────────────────────────────────────────
-const handleView = (item) => {
-  selectedCourrier.value = item._complete || item
-  showDepartDoc.value = false
-  detailsOpen.value = true
+// ── Debounce filtres avancés ──────────────────────────────────────────────────
+let searchTimeout = null
+const onFiltersChange = () => {
+  const f = searchFilters.value
+  const dateEnregOk   = !f.date_enreg    || f.date_enreg.length    === 10
+  const dateCourierOk = !f.date_courrier || f.date_courrier.length === 10
+  const dateDepartOk  = !f.date_depart   || f.date_depart.length   === 10
+  if (!dateEnregOk || !dateCourierOk || !dateDepartOk) return
+
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    currentPage.value = 1
+    refresh(1, perPage.value, false)
+  }, 400)
 }
 
-const closeDetails = () => {
-  detailsOpen.value = false
-  selectedCourrier.value = null
-  showDepartDoc.value = false
+// ── Handlers pagination ───────────────────────────────────────────────────────
+const onPageChange    = (page) => refresh(page, perPage.value, false)
+const onPerPageChange = (val)  => { perPage.value = val; refresh(1, val, false) }
+const onSearchChange  = (val)  => {
+  searchFilters.value.search = val
+  currentPage.value = 1
+  refresh(1, perPage.value, false)
 }
 
-// ── Handlers ──────────────────────────────────────────────────────────────────
 const onOpenDocument = (url) => {
   if (url) window.open(url, '_blank', 'noopener,noreferrer')
 }
 
-const onSelectionChange = (ids) => console.log('Sélection :', ids)
-
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
-onMounted(() => {
-  refresh()
+onMounted(async () => {
+  await Promise.all([
+    refresh(1, perPage.value, true),
+    loadFilterOptions(),
+  ])
 })
 </script>
 

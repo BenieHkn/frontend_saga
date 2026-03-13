@@ -205,6 +205,7 @@ export const useAuth = () => {
 
   // ✅ Vérifie si l'utilisateur a un rôle spécifique
   const hasRole = (role: string): boolean => {
+    if (!process.client) return false  // ← une seule ligne
     return getRoles().includes(role)
   }
 
