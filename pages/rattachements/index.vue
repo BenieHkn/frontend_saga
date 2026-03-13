@@ -35,25 +35,22 @@
 
           <!-- Section Courrier Arrivée -->
           <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
-            <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-slate-100">
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-lg bg-indigo-100 flex items-center justify-center">
-                  <Icon name="i-heroicons-inbox-arrow-down" class="w-3.5 h-3.5 text-indigo-600" />
-                </div>
-                <span class="text-[11px] font-bold text-indigo-700 uppercase tracking-widest">Courrier arrivée</span>
+            <div class="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-slate-100">
+              <div class="w-6 h-6 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <Icon name="i-heroicons-inbox-arrow-down" class="w-3.5 h-3.5 text-indigo-600" />
               </div>
+              <span class="text-[11px] font-bold text-indigo-700 uppercase tracking-widest">Courrier arrivée</span>
             </div>
-
             <div class="p-4 space-y-3">
               <div class="grid grid-cols-1 gap-2">
-                <div class="group flex items-stretch gap-0 rounded-xl overflow-hidden border border-indigo-100 hover:border-indigo-200 transition-colors">
+                <div class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-indigo-100 hover:border-indigo-200 transition-colors">
                   <div class="w-1 shrink-0 bg-gradient-to-b from-indigo-400 to-indigo-600"></div>
                   <div class="flex-1 p-3 bg-gradient-to-r from-indigo-50 to-transparent">
                     <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-0.5">Référence</p>
                     <p class="text-sm font-bold text-indigo-900">{{ selectedItem.ref_arrivee || 'Sans référence' }}</p>
                   </div>
                 </div>
-                <div class="group flex items-stretch gap-0 rounded-xl overflow-hidden border border-amber-100 hover:border-amber-200 transition-colors">
+                <div class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-amber-100 hover:border-amber-200 transition-colors">
                   <div class="w-1 shrink-0 bg-gradient-to-b from-amber-400 to-orange-500"></div>
                   <div class="flex-1 p-3 bg-gradient-to-r from-amber-50 to-transparent">
                     <p class="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-0.5">Objet</p>
@@ -62,16 +59,28 @@
                 </div>
               </div>
 
-              <!-- Bouton document arrivée -->
+              <!-- Document arrivée -->
               <div class="pt-1">
-                <div v-if="selectedItem.doc_arrivee">
-                  <button v-if="!showArriveeDoc" @click="showArriveeDoc = true"
+                <div v-if="selectedItem._raw?.document?.url && selectedItem._raw.document.url !== 'Inconnu'">
+                  <button
+                    v-if="!arriveeFileLoaded && !arriveeFileLoading && !arriveeFileError"
+                    @click="loadArriveeFile"
                     class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl transition-all hover:shadow-sm">
                     <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />
                     Charger le document arrivée
                   </button>
-                  <div v-else class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                    <DocumentRpreview :file-preview-url="selectedItem.doc_arrivee" height="400px" />
+                  <div v-else-if="arriveeFileLoading" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400">
+                    <div class="w-4 h-4 border-2 border-slate-200 border-t-indigo-500 rounded-full animate-spin"></div>
+                    Chargement...
+                  </div>
+                  <div v-else-if="arriveeFileError"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-xl">
+                    <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
+                    {{ arriveeFileError }}
+                    <button @click="arriveeFileError = ''; loadArriveeFile()" class="ml-1 underline hover:no-underline">Réessayer</button>
+                  </div>
+                  <div v-else-if="arriveeFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                    <DocumentRpreview :file-preview-url="arriveeBlobUrl" height="400px" />
                   </div>
                 </div>
                 <div v-else class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed">
@@ -82,7 +91,7 @@
             </div>
           </section>
 
-          <!-- Séparateur de liaison -->
+          <!-- Séparateur -->
           <div class="flex justify-center">
             <div class="flex items-center gap-2 px-4 py-2 bg-slate-100 border border-slate-200 rounded-full">
               <Icon name="i-heroicons-arrow-down" class="w-4 h-4 text-slate-400" />
@@ -93,25 +102,22 @@
 
           <!-- Section Courrier Départ -->
           <section class="bg-white rounded-2xl border border-emerald-200/80 overflow-hidden shadow-sm">
-            <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <Icon name="i-heroicons-paper-airplane" class="w-3.5 h-3.5 text-emerald-600" />
-                </div>
-                <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier départ</span>
+            <div class="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+              <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <Icon name="i-heroicons-paper-airplane" class="w-3.5 h-3.5 text-emerald-600" />
               </div>
+              <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier départ</span>
             </div>
-
             <div class="p-4 space-y-3">
               <div class="grid grid-cols-1 gap-2">
-                <div class="group flex items-stretch gap-0 rounded-xl overflow-hidden border border-emerald-100 hover:border-emerald-200 transition-colors">
+                <div class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-emerald-100 hover:border-emerald-200 transition-colors">
                   <div class="w-1 shrink-0 bg-gradient-to-b from-emerald-400 to-teal-500"></div>
                   <div class="flex-1 p-3 bg-gradient-to-r from-emerald-50 to-transparent">
                     <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-0.5">Référence</p>
                     <p class="text-sm font-bold text-emerald-900">{{ selectedItem.ref_depart || 'Sans référence' }}</p>
                   </div>
                 </div>
-                <div class="group flex items-stretch gap-0 rounded-xl overflow-hidden border border-slate-100 hover:border-slate-200 transition-colors">
+                <div class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-slate-100 hover:border-slate-200 transition-colors">
                   <div class="w-1 shrink-0 bg-gradient-to-b from-slate-300 to-slate-400"></div>
                   <div class="flex-1 p-3 bg-gradient-to-r from-slate-50 to-transparent">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Objet</p>
@@ -120,16 +126,28 @@
                 </div>
               </div>
 
-              <!-- Bouton document départ -->
+              <!-- Document départ -->
               <div class="pt-1">
-                <div v-if="selectedItem.doc_depart">
-                  <button v-if="!showDepartDoc" @click="showDepartDoc = true"
+                <div v-if="selectedItem._raw?.reponse?.url && selectedItem._raw.reponse.url !== 'Inconnu'">
+                  <button
+                    v-if="!departFileLoaded && !departFileLoading && !departFileError"
+                    @click="loadDepartFile"
                     class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all hover:shadow-sm">
                     <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />
                     Charger le document départ
                   </button>
-                  <div v-else class="mt-2 rounded-xl overflow-hidden border border-emerald-200 shadow-sm">
-                    <DocumentRpreview :file-preview-url="selectedItem.doc_depart" height="400px" />
+                  <div v-else-if="departFileLoading" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400">
+                    <div class="w-4 h-4 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+                    Chargement...
+                  </div>
+                  <div v-else-if="departFileError"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-xl">
+                    <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
+                    {{ departFileError }}
+                    <button @click="departFileError = ''; loadDepartFile()" class="ml-1 underline hover:no-underline">Réessayer</button>
+                  </div>
+                  <div v-else-if="departFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-emerald-200 shadow-sm">
+                    <DocumentRpreview :file-preview-url="departBlobUrl" height="400px" />
                   </div>
                 </div>
                 <div v-else class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed">
@@ -165,7 +183,6 @@
               </div>
             </div>
           </section>
-
         </div>
 
         <!-- Pied modal -->
@@ -197,7 +214,7 @@
       </div>
     </div>
 
-    <!-- Messages d'erreur -->
+    <!-- Erreur -->
     <div v-if="error"
       class="flex items-center gap-3 p-4 mb-5 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
       <Icon name="i-heroicons-exclamation-triangle" class="w-5 h-5 flex-shrink-0" />
@@ -215,7 +232,7 @@
     <DataTable v-else ref="dataTableRef" :default-sort-column="null" :show-row-numbers="true" :data="rattachementData"
       :columns="columns" :selectable="false" :default-items-per-page="10" :items-per-page-options="[10, 25, 50, 100]"
       :left-aligned-columns="['objet_arrivee', 'objet_depart', 'ref_depart', 'ref_arrivee']" @view="viewDetails"
-      @delete="deleteItem" @open-document="openDocument" @selection-change="handleSelectionChange">
+      @delete="deleteItem" @selection-change="handleSelectionChange">
 
       <template #advanced-filters="{ filters, onFilter }">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -236,12 +253,19 @@
         </button>
       </template>
 
+      <!-- Référence départ cliquable → Blob -->
       <template #cell-ref_depart="{ value, item }">
         <div class="w-full">
-          <button v-if="item.doc_depart" @click="openDocument(item.doc_depart)"
+          <button
+            v-if="item._raw?.reponse?.url && item._raw.reponse.url !== 'Inconnu'"
+            @click="viewDetails(item)"
+            :disabled="openingDocumentId === `${item.id}-depart`"
             class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
             :title="`Ouvrir le document ${value}`">
-            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+            <Icon
+              :name="openingDocumentId === `${item.id}-depart` ? 'i-heroicons-arrow-path' : 'i-heroicons-document-text'"
+              class="w-3.5 h-3.5 shrink-0"
+              :class="openingDocumentId === `${item.id}-depart` ? 'animate-spin' : 'group-hover:scale-110 transition-transform'" />
             <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
             <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
           </button>
@@ -255,17 +279,22 @@
       </template>
 
       <template #cell-objet_depart="{ value }">
-        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
-          {{ value }}
-        </span>
+        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">{{ value }}</span>
       </template>
 
+      <!-- Référence arrivée cliquable → Blob -->
       <template #cell-ref_arrivee="{ value, item }">
         <div class="w-full">
-          <button v-if="item.doc_arrivee" @click="openDocument(item.doc_arrivee)"
+          <button
+            v-if="item._raw?.document?.url && item._raw.document.url !== 'Inconnu'"
+            @click="viewDetails(item)"
+            :disabled="openingDocumentId === `${item.id}-arrivee`"
             class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
             :title="`Ouvrir le document ${value}`">
-            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+            <Icon
+              :name="openingDocumentId === `${item.id}-arrivee` ? 'i-heroicons-arrow-path' : 'i-heroicons-document-text'"
+              class="w-3.5 h-3.5 shrink-0"
+              :class="openingDocumentId === `${item.id}-arrivee` ? 'animate-spin' : 'group-hover:scale-110 transition-transform'" />
             <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
             <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
           </button>
@@ -279,9 +308,7 @@
       </template>
 
       <template #cell-objet_arrivee="{ value }">
-        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
-          {{ value }}
-        </span>
+        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">{{ value }}</span>
       </template>
 
       <template #cell-link>
@@ -307,9 +334,7 @@
         <div class="text-center py-12">
           <Icon name="i-heroicons-link-slash" class="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun rattachement</h3>
-          <p class="text-sm text-gray-500 mb-6">
-            Commencez par créer un rattachement entre un courrier arrivée et un courrier départ.
-          </p>
+          <p class="text-sm text-gray-500 mb-6">Commencez par créer un rattachement entre un courrier arrivée et un courrier départ.</p>
           <UBadge color="blue" variant="soft" size="lg">
             <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
             <UButton to="/rattachements/create" variant="text" size="sm" class="p-0 m-0 text-blue-600">
@@ -333,29 +358,42 @@ const config = useRuntimeConfig()
 
 // ── Colonnes ──────────────────────────────────────────────────────────────────
 const columns = [
-  { key: "ref_arrivee", label: "Réf. Arrivée", visible: true, width: 'min-w-[150px]', showLabel: false },
-  { key: "objet_arrivee", label: "Objet Arrivée", visible: true, width: 'min-w-[250px]', showLabel: false },
-  { key: "doc_arrivee", label: "Doc. Arrivée", visible: false, type: 'document', width: 'w-24', showLabel: false },
-  { key: "link", label: "→", visible: true, width: 'w-16', sortable: false, filterable: false },
-  { key: "ref_depart", label: "Réf. Départ", visible: true, width: 'min-w-[150px]', showLabel: false },
-  { key: "objet_depart", label: "Objet Départ", visible: true, width: 'min-w-[250px]', showLabel: false },
-  { key: "doc_depart", label: "Doc. Départ", visible: false, type: 'document', width: 'w-24' },
-  { key: "created_at", label: "Date de création", visible: true, width: 'min-w-[140px]', showLabel: false },
+  { key: "ref_arrivee",   label: "Réf. Arrivée",    visible: true,  width: 'min-w-[150px]', showLabel: false },
+  { key: "objet_arrivee", label: "Objet Arrivée",   visible: true,  width: 'min-w-[250px]', showLabel: false },
+  { key: "doc_arrivee",   label: "Doc. Arrivée",    visible: false, type: 'document', width: 'w-24', showLabel: false },
+  { key: "link",          label: "→",               visible: true,  width: 'w-16', sortable: false, filterable: false },
+  { key: "ref_depart",    label: "Réf. Départ",     visible: true,  width: 'min-w-[150px]', showLabel: false },
+  { key: "objet_depart",  label: "Objet Départ",    visible: true,  width: 'min-w-[250px]', showLabel: false },
+  { key: "doc_depart",    label: "Doc. Départ",     visible: false, type: 'document', width: 'w-24' },
+  { key: "created_at",    label: "Date de création", visible: true, width: 'min-w-[140px]', showLabel: false },
 ]
 
 // ── État ──────────────────────────────────────────────────────────────────────
-const authToken = ref('')
+const authToken        = ref('')
 const rattachementData = ref([])
-const loading = ref(false)
-const error = ref(null)
-const dataTableRef = ref(null)
-const toast = useToast()
+const loading          = ref(false)
+const error            = ref(null)
+const dataTableRef     = ref(null)
+const toast            = useToast()
 
 // Modal
-const detailsOpen = ref(false)
+const detailsOpen  = ref(false)
 const selectedItem = ref(null)
-const showArriveeDoc = ref(false)
-const showDepartDoc = ref(false)
+
+// États blob — document arrivée dans la modal
+const arriveeFileLoaded  = ref(false)
+const arriveeFileLoading = ref(false)
+const arriveeFileError   = ref('')
+const arriveeBlobUrl     = ref('')
+
+// États blob — document départ dans la modal
+const departFileLoaded  = ref(false)
+const departFileLoading = ref(false)
+const departFileError   = ref('')
+const departBlobUrl     = ref('')
+
+// Ouverture depuis le tableau
+const openingDocumentId = ref(null)
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
 const formatDate = (date) => {
@@ -363,39 +401,110 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
+const guessMimeType = (filename) => {
+  if (!filename) return ''
+  const ext = (filename.split('.').pop() || '').toLowerCase()
+  return { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' }[ext] || ''
+}
+
+// ── Construction URL API fichier ──────────────────────────────────────────────
+const buildDocumentUrl = (rawUrl, dateEnreg) => {
+  if (!rawUrl || rawUrl === 'Inconnu') return null
+  const base     = config.public.apiBase.replace(/\/$/, '')
+  const filename = rawUrl.startsWith('/') ? rawUrl.slice(1) : rawUrl
+  if (!dateEnreg) return `${base}/file/documents/${filename}`
+  const d     = new Date(dateEnreg)
+  const year  = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day   = String(d.getDate()).padStart(2, '0')
+  return `${base}/file/documents/${year}/${month}/${day}/${filename}`
+}
+
+// ── Fetch blob avec token Bearer ──────────────────────────────────────────────
+const fetchFileAsBlob = async (rawUrl, dateEnreg) => {
+  const url = buildDocumentUrl(rawUrl, dateEnreg)
+  if (!url) throw new Error('URL du fichier introuvable')
+  const token    = localStorage.getItem('auth_token') || ''
+  const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+  if (!response.ok) throw new Error(`Erreur ${response.status} — fichier non accessible`)
+  const blob = await response.blob()
+  return { blob, mimeType: blob.type || guessMimeType(rawUrl) }
+}
+
+// ── Charger document arrivée dans la modal ────────────────────────────────────
+const loadArriveeFile = async () => {
+  const rawDoc    = selectedItem.value?._raw?.document
+  const rawUrl    = rawDoc?.url
+  const dateEnreg = rawDoc?.date_enreg
+  if (!rawUrl || rawUrl === 'Inconnu') return
+  arriveeFileLoading.value = true
+  arriveeFileLoaded.value  = false
+  arriveeFileError.value   = ''
+  if (arriveeBlobUrl.value) { URL.revokeObjectURL(arriveeBlobUrl.value); arriveeBlobUrl.value = '' }
+  try {
+    const { blob } = await fetchFileAsBlob(rawUrl, dateEnreg)
+    arriveeBlobUrl.value    = URL.createObjectURL(blob)
+    arriveeFileLoaded.value = true
+  } catch (err) {
+    arriveeFileError.value = err.message || 'Erreur lors du chargement'
+  } finally {
+    arriveeFileLoading.value = false
+  }
+}
+
+// ── Charger document départ dans la modal ─────────────────────────────────────
+const loadDepartFile = async () => {
+  const rawDoc    = selectedItem.value?._raw?.reponse
+  const rawUrl    = rawDoc?.url
+  const dateEnreg = rawDoc?.date_enreg
+  if (!rawUrl || rawUrl === 'Inconnu') return
+  departFileLoading.value = true
+  departFileLoaded.value  = false
+  departFileError.value   = ''
+  if (departBlobUrl.value) { URL.revokeObjectURL(departBlobUrl.value); departBlobUrl.value = '' }
+  try {
+    const { blob } = await fetchFileAsBlob(rawUrl, dateEnreg)
+    departBlobUrl.value    = URL.createObjectURL(blob)
+    departFileLoaded.value = true
+  } catch (err) {
+    departFileError.value = err.message || 'Erreur lors du chargement'
+  } finally {
+    departFileLoading.value = false
+  }
+}
+
+// ── Ouvrir depuis le tableau ──────────────────────────────────────────────────
+// side = 'arrivee' | 'depart'
+// ── Transform ─────────────────────────────────────────────────────────────────
 const transformerDonneesAPI = (reponseAPI) => {
   if (!reponseAPI?.data) throw new Error('Format de réponse API invalide')
-  return reponseAPI.data.map(rattachement => ({
-    id: rattachement.id,
-    ref_arrivee: rattachement?.document?.reference || '',
-    objet_arrivee: rattachement?.document?.objet || '',
-    doc_arrivee: rattachement.document?.url && rattachement.document?.url !== 'Inconnu'
-      ? (rattachement.document?.url.startsWith('http') ? rattachement.document?.url : `${config.public.baseUrl}${rattachement.document?.url}`)
-      : '',
-    link: '→',
-    ref_depart: rattachement?.reponse?.reference || '',
-    objet_depart: rattachement?.reponse?.objet || '',
-    doc_depart: rattachement?.reponse?.url && rattachement?.reponse?.url !== 'Inconnu'
-      ? (rattachement?.reponse?.url.startsWith('http') ? rattachement?.reponse?.url : `${config.public.baseUrl}${rattachement?.reponse?.url}`)
-      : '',
-    created_at: formatDate(rattachement.created_at),
-    created_by: rattachement.user?.name || 'Système',
-    courrier_arrivee: rattachement.document,
-    courrier_depart: rattachement.reponse,
-  }))
+  return reponseAPI.data.map(rattachement => {
+    const rawArriveeUrl = rattachement.document?.url?.trim()
+    const rawDepartUrl  = rattachement.reponse?.url?.trim()
+    return {
+      id:            rattachement.id,
+      ref_arrivee:   rattachement?.document?.reference || '',
+      objet_arrivee: rattachement?.document?.objet     || '',
+      doc_arrivee:   (rawArriveeUrl && rawArriveeUrl !== 'Inconnu') ? rawArriveeUrl : '',  // nom brut
+      link:          '→',
+      ref_depart:    rattachement?.reponse?.reference  || '',
+      objet_depart:  rattachement?.reponse?.objet      || '',
+      doc_depart:    (rawDepartUrl  && rawDepartUrl  !== 'Inconnu') ? rawDepartUrl  : '',  // nom brut
+      created_at:    formatDate(rattachement.created_at),
+      created_by:    rattachement.user?.name || 'Système',
+      _raw:          rattachement,
+    }
+  })
 }
 
 // ── Chargement ────────────────────────────────────────────────────────────────
 const loadData = async () => {
-  if (!authToken.value) {
-    error.value = "Token d'authentification manquant"
-    return
-  }
+  if (!authToken.value) { error.value = "Token d'authentification manquant"; return }
   loading.value = true
-  error.value = null
+  error.value   = null
   try {
     const reponse = await $fetch(`${config.public.apiBase}/reponses`, {
-      method: 'GET',
+      method:  'GET',
       headers: { Authorization: `Bearer ${authToken.value}` },
     })
     rattachementData.value = transformerDonneesAPI(reponse)
@@ -410,25 +519,30 @@ const loadData = async () => {
 
 // ── Modal détails ─────────────────────────────────────────────────────────────
 const viewDetails = (item) => {
-  selectedItem.value = item
-  showArriveeDoc.value = false
-  showDepartDoc.value = false
+  selectedItem.value       = item
+  arriveeFileLoaded.value  = false
+  arriveeFileLoading.value = false
+  arriveeFileError.value   = ''
+  departFileLoaded.value   = false
+  departFileLoading.value  = false
+  departFileError.value    = ''
+  if (arriveeBlobUrl.value) { URL.revokeObjectURL(arriveeBlobUrl.value); arriveeBlobUrl.value = '' }
+  if (departBlobUrl.value)  { URL.revokeObjectURL(departBlobUrl.value);  departBlobUrl.value  = '' }
   detailsOpen.value = true
 }
 
 const closeDetails = () => {
-  detailsOpen.value = false
+  detailsOpen.value  = false
   selectedItem.value = null
-  showArriveeDoc.value = false
-  showDepartDoc.value = false
+  arriveeFileLoaded.value = false
+  arriveeFileError.value  = ''
+  departFileLoaded.value  = false
+  departFileError.value   = ''
+  if (arriveeBlobUrl.value) { URL.revokeObjectURL(arriveeBlobUrl.value); arriveeBlobUrl.value = '' }
+  if (departBlobUrl.value)  { URL.revokeObjectURL(departBlobUrl.value);  departBlobUrl.value  = '' }
 }
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
-const openDocument = (url) => {
-  if (url) window.open(url, '_blank', 'noopener,noreferrer')
-  else toast.add({ title: 'Information', description: 'Aucun document disponible', color: 'amber', timeout: 2000 })
-}
-
 const handleSelectionChange = (selected) => console.log(`${selected.length} ligne(s) sélectionnée(s)`, selected)
 
 const deleteItem = async (item) => {
@@ -454,16 +568,13 @@ const deleteItem = async (item) => {
     reverseButtons: true,
   })
   if (!result.isConfirmed) return
-
   try {
     await $fetch(`${config.public.apiBase}/reponses/${item.id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${authToken.value}` },
+      method: 'DELETE', headers: { Authorization: `Bearer ${authToken.value}` },
     })
     await Swal.fire({ title: 'Supprimé !', text: 'Le rattachement a été supprimé avec succès', icon: 'success', timer: 2000, showConfirmButton: false })
     await loadData()
   } catch (err) {
-    console.error('❌ Erreur lors de la suppression:', err)
     await Swal.fire({ title: 'Erreur', text: 'Impossible de supprimer le rattachement', icon: 'error', confirmButtonColor: '#2563eb' })
   }
 }
@@ -471,12 +582,7 @@ const deleteItem = async (item) => {
 const deleteSelected = async (selectedIds) => {
   const result = await Swal.fire({
     title: 'Suppression multiple',
-    html: `
-      <div class="text-left">
-        <p class="mb-3">Êtes-vous sûr de vouloir supprimer <strong class="text-red-600">${selectedIds.length} rattachement(s)</strong> ?</p>
-        <p class="text-sm text-red-600 font-semibold">Cette action est irréversible.</p>
-      </div>
-    `,
+    html: `<div class="text-left"><p class="mb-3">Êtes-vous sûr de vouloir supprimer <strong class="text-red-600">${selectedIds.length} rattachement(s)</strong> ?</p><p class="text-sm text-red-600 font-semibold">Cette action est irréversible.</p></div>`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#dc2626',
@@ -486,18 +592,15 @@ const deleteSelected = async (selectedIds) => {
     reverseButtons: true,
   })
   if (!result.isConfirmed) return
-
   try {
     await Promise.all(
       selectedIds.map(id => $fetch(`${config.public.apiBase}/reponses/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${authToken.value}` },
+        method: 'DELETE', headers: { Authorization: `Bearer ${authToken.value}` },
       }))
     )
     await Swal.fire({ title: 'Supprimés !', text: `${selectedIds.length} rattachement(s) supprimé(s)`, icon: 'success', timer: 2000, showConfirmButton: false })
     await loadData()
   } catch (err) {
-    console.error('❌ Erreur lors de la suppression multiple:', err)
     await Swal.fire({ title: 'Erreur', text: 'Impossible de supprimer les rattachements', icon: 'error', confirmButtonColor: '#2563eb' })
   }
 }

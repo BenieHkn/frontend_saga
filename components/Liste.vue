@@ -31,7 +31,6 @@
 
           <!-- Section principale -->
           <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
-            <!-- Bandeau section -->
             <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-slate-100">
               <div class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded-lg bg-indigo-100 flex items-center justify-center">
@@ -39,7 +38,6 @@
                 </div>
                 <span class="text-[11px] font-bold text-indigo-700 uppercase tracking-widest">Courrier arrivé</span>
               </div>
-              <!-- Badges priorité + statut -->
               <div class="flex items-center gap-1.5">
                 <span v-if="selectedCourrier.priority"
                   class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase"
@@ -60,7 +58,6 @@
             </div>
 
             <div class="p-4 space-y-3">
-              <!-- Référence + Objet -->
               <div class="grid grid-cols-1 gap-2">
                 <div class="group flex items-stretch gap-0 rounded-xl overflow-hidden border border-indigo-100 hover:border-indigo-200 transition-colors">
                   <div class="w-1 shrink-0 bg-gradient-to-b from-indigo-400 to-indigo-600"></div>
@@ -78,7 +75,6 @@
                 </div>
               </div>
 
-              <!-- Grille d'infos -->
               <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
                 <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
                   <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
@@ -118,16 +114,30 @@
                 </div>
               </div>
 
-              <!-- Bouton document -->
+              <!-- ── Preview document arrivé (blob + token) ── -->
               <div class="pt-1">
-                <div v-if="arriveeUrl">
-                  <button v-if="!showArriveeDoc" @click="showArriveeDoc = true"
+                <div v-if="selectedCourrier.document?.url && selectedCourrier.document.url !== 'Inconnu'">
+                  <button
+                    v-if="!arriveeFileLoaded && !arriveeFileLoading && !arriveeFileError"
+                    @click="loadArriveeFile"
                     class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl transition-all hover:shadow-sm">
                     <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />
                     Charger le document
                   </button>
-                  <div v-else class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                    <DocumentRpreview :file-preview-url="arriveeUrl" height="400px" />
+                  <div v-else-if="arriveeFileLoading"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400">
+                    <div class="w-4 h-4 border-2 border-slate-200 border-t-indigo-500 rounded-full animate-spin"></div>
+                    Chargement...
+                  </div>
+                  <div v-else-if="arriveeFileError"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-xl">
+                    <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
+                    {{ arriveeFileError }}
+                    <button @click="arriveeFileError = ''; loadArriveeFile()"
+                      class="ml-1 underline hover:no-underline">Réessayer</button>
+                  </div>
+                  <div v-else-if="arriveeFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                    <DocumentRpreview :file-preview-url="ariveeBlobUrl" height="400px" />
                   </div>
                 </div>
                 <div v-else class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed">
@@ -204,15 +214,30 @@
                 </div>
               </div>
 
+              <!-- ── Preview document réponse (blob + token) ── -->
               <div class="pt-1">
-                <div v-if="reponseData.url">
-                  <button v-if="!showReponseDoc" @click="showReponseDoc = true"
+                <div v-if="reponseData.rawUrl">
+                  <button
+                    v-if="!reponseFileLoaded && !reponseFileLoading && !reponseFileError"
+                    @click="loadReponseFile"
                     class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all hover:shadow-sm">
                     <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />
                     Charger le document de réponse
                   </button>
-                  <div v-else class="mt-2 rounded-xl overflow-hidden border border-emerald-200 shadow-sm">
-                    <DocumentRpreview :file-preview-url="reponseData.url" height="400px" />
+                  <div v-else-if="reponseFileLoading"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400">
+                    <div class="w-4 h-4 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+                    Chargement...
+                  </div>
+                  <div v-else-if="reponseFileError"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-xl">
+                    <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
+                    {{ reponseFileError }}
+                    <button @click="reponseFileError = ''; loadReponseFile()"
+                      class="ml-1 underline hover:no-underline">Réessayer</button>
+                  </div>
+                  <div v-else-if="reponseFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-emerald-200 shadow-sm">
+                    <DocumentRpreview :file-preview-url="reponseBlobUrl" height="400px" />
                   </div>
                 </div>
                 <div v-else class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed">
@@ -317,17 +342,19 @@
         </span>
       </template>
 
+      <!-- Référence cliquable → ouvre la modal (pas window.open) -->
       <template #cell-reference="{ value, item }">
-        <button v-if="item.url" @click="onOpenDocument(item.url)"
+        <button v-if="item._complete?.document?.url && item._complete.document.url !== 'Inconnu'"
+          @click="handleView(item)"
           class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[160px]"
-          :title="`Ouvrir le document ${value}`">
+          :title="`Voir le document ${value}`">
           <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
           <span class="truncate">{{ value }}</span>
-          <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
+          <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
         </button>
         <span v-else class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[160px]" :title="value">
           <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 shrink-0 opacity-50" />
-          <span class="truncate">{{ value }}</span>
+          <span class="truncate">{{ value || '—' }}</span>
         </span>
       </template>
 
@@ -345,7 +372,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import DataTable from '~/components/DataTable.vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
 import { useAffectationsStore } from '~/stores/affectations'
@@ -357,53 +384,54 @@ const props = defineProps({
   entiteId: { type: Number, default: null }
 })
 
-const store = useAffectationsStore()
+const store          = useAffectationsStore()
 const courriersStore = useCourriersStore()
-const config = useRuntimeConfig()
-const { isAdmin } = useAuth()
+const config         = useRuntimeConfig()
+const { isAdmin }    = useAuth()
 
 const filterFields = [
-  { id: 'source', label: 'Source' },
-  { id: 'structure', label: 'Structure / Usager' },
-  { id: 'objet', label: 'Objet' },
-  { id: 'type_arrivee', label: "Type d'arrivée" },
+  { id: 'source',      label: 'Source' },
+  { id: 'structure',   label: 'Structure / Usager' },
+  { id: 'objet',       label: 'Objet' },
+  { id: 'type_arrivee',label: "Type d'arrivée" },
 ]
 
-// ── État ──────────────────────────────────────────────────────────────────────
+// ── État table ────────────────────────────────────────────────────────────────
 const courriers = ref([])
-const loading = ref(false)
-const error = ref(null)
-const detailsOpen = ref(false)
-const selectedCourrier = ref(null)
-const showArriveeDoc = ref(false)
-const showReponseDoc = ref(false)
-const loadingReponse = ref(false)
-const reponseData = ref(null)
-
-// ── Computed ──────────────────────────────────────────────────────────────────
-const arriveeUrl = computed(() => {
-  const raw = selectedCourrier.value?.document?.url
-  const url = raw?.trim?.()
-  if (!url || url === 'Inconnu' || url === '') return null
-  if (url.startsWith('http')) return url
-  const base = config.public.baseUrl?.replace(/\/$/, '')
-  const path = url.startsWith('/') ? url : `/${url}`
-  return `${base}${path}`
-})
+const loading   = ref(false)
+const error     = ref(null)
 
 // ── Colonnes ──────────────────────────────────────────────────────────────────
 const columns = [
-  { key: 'source', label: 'Source', visible: true, type: 'badge', inputHidden: true },
-  { key: 'reference', label: 'Référence', visible: true, inputWidth: '80px', inputPlaceholder: 'Réf...' },
-  { key: 'numeroEnregistrement', label: "N° d'enreg.", visible: true, showLabel: false, inputPlaceholder: 'Enreg...' },
-  { key: 'objet', label: 'Objet', visible: true },
-  { key: 'date_enregistrement', label: "Date d'enregistrement", visible: false },
-  { key: 'date_courrier', label: 'Date du Courrier', visible: false },
-  { key: 'url', label: 'Document', visible: false, type: 'document' },
-  { key: 'type_arrivee', label: "Type d'arrivée", visible: false },
-  { key: 'priority', label: 'Priorité', visible: true, type: 'badge' },
-  { key: 'structure', label: 'Structure / Usager', visible: true },
+  { key: 'source',              label: 'Source',              visible: true,  type: 'badge', inputHidden: true },
+  { key: 'reference',           label: 'Référence',           visible: true,  inputWidth: '80px', inputPlaceholder: 'Réf...' },
+  { key: 'numeroEnregistrement',label: "N° d'enreg.",         visible: true,  showLabel: false, inputPlaceholder: 'Enreg...' },
+  { key: 'objet',               label: 'Objet',               visible: true },
+  { key: 'date_enregistrement', label: "Date d'enregistrement",visible: false },
+  { key: 'date_courrier',       label: 'Date du Courrier',    visible: false },
+  { key: 'url',                 label: 'Document',            visible: false, type: 'document' },
+  { key: 'type_arrivee',        label: "Type d'arrivée",      visible: false },
+  { key: 'priority',            label: 'Priorité',            visible: true,  type: 'badge' },
+  { key: 'structure',           label: 'Structure / Usager',  visible: true },
 ]
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+const detailsOpen      = ref(false)
+const selectedCourrier = ref(null)
+const loadingReponse   = ref(false)
+const reponseData      = ref(null)
+
+// État fichier document arrivé
+const arriveeFileLoaded  = ref(false)
+const arriveeFileLoading = ref(false)
+const arriveeFileError   = ref('')
+const ariveeBlobUrl      = ref('')
+
+// État fichier document réponse
+const reponseFileLoaded  = ref(false)
+const reponseFileLoading = ref(false)
+const reponseFileError   = ref('')
+const reponseBlobUrl     = ref('')
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
 const formatDate = (date) => {
@@ -411,38 +439,118 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
+const guessMimeType = (filename) => {
+  if (!filename) return ''
+  const ext = (filename.split('.').pop() || '').toLowerCase()
+  return { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' }[ext] || ''
+}
+
+// ── Construction URL API : {apiBase}/file/documents/{year}/{month}/{day}/{filename} ──
+const buildDocumentUrl = (rawUrl, dateEnreg) => {
+  if (!rawUrl || rawUrl === 'Inconnu') return null
+  const base     = config.public.apiBase.replace(/\/$/, '')
+  const filename = rawUrl.startsWith('/') ? rawUrl.slice(1) : rawUrl
+  if (!dateEnreg) return `${base}/file/documents/${filename}`
+  const d     = new Date(dateEnreg)
+  const year  = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day   = String(d.getDate()).padStart(2, '0')
+  return `${base}/file/documents/${year}/${month}/${day}/${filename}`
+}
+
+// ── Fetch blob avec token Bearer ──────────────────────────────────────────────
+const fetchFileAsBlob = async (rawUrl, dateEnreg) => {
+  const url = buildDocumentUrl(rawUrl, dateEnreg)
+  if (!url) throw new Error('URL du fichier introuvable')
+  const authToken = localStorage.getItem('auth_token') || ''
+  const response  = await fetch(url, { headers: { Authorization: `Bearer ${authToken}` } })
+  if (!response.ok) throw new Error(`Erreur ${response.status} — fichier non accessible`)
+  const blob = await response.blob()
+  return { blob, mimeType: blob.type || guessMimeType(rawUrl) }
+}
+
+// ── Libérer tous les blobs de la modal ───────────────────────────────────────
+const revokeModalBlobs = () => {
+  if (ariveeBlobUrl.value)  { URL.revokeObjectURL(ariveeBlobUrl.value);  ariveeBlobUrl.value  = '' }
+  if (reponseBlobUrl.value) { URL.revokeObjectURL(reponseBlobUrl.value); reponseBlobUrl.value = '' }
+}
+
+// ── Charger le fichier arrivé ─────────────────────────────────────────────────
+const loadArriveeFile = async () => {
+  const rawUrl    = selectedCourrier.value?.document?.url
+  const dateEnreg = selectedCourrier.value?.document?.date_enreg
+  if (!rawUrl || rawUrl === 'Inconnu') return
+  arriveeFileLoading.value = true
+  arriveeFileLoaded.value  = false
+  arriveeFileError.value   = ''
+  if (ariveeBlobUrl.value) { URL.revokeObjectURL(ariveeBlobUrl.value); ariveeBlobUrl.value = '' }
+  try {
+    const { blob }          = await fetchFileAsBlob(rawUrl, dateEnreg)
+    ariveeBlobUrl.value     = URL.createObjectURL(blob)
+    arriveeFileLoaded.value = true
+  } catch (err) {
+    console.error('❌ Erreur chargement fichier arrivé:', err)
+    arriveeFileError.value = err.message || 'Erreur lors du chargement'
+  } finally {
+    arriveeFileLoading.value = false
+  }
+}
+
+// ── Charger le fichier de réponse ─────────────────────────────────────────────
+const loadReponseFile = async () => {
+  const rawUrl    = reponseData.value?.rawUrl
+  const dateEnreg = reponseData.value?.rawDateEnreg
+  if (!rawUrl) return
+  reponseFileLoading.value = true
+  reponseFileLoaded.value  = false
+  reponseFileError.value   = ''
+  if (reponseBlobUrl.value) { URL.revokeObjectURL(reponseBlobUrl.value); reponseBlobUrl.value = '' }
+  try {
+    const { blob }          = await fetchFileAsBlob(rawUrl, dateEnreg)
+    reponseBlobUrl.value    = URL.createObjectURL(blob)
+    reponseFileLoaded.value = true
+  } catch (err) {
+    console.error('❌ Erreur chargement fichier réponse:', err)
+    reponseFileError.value = err.message || 'Erreur lors du chargement'
+  } finally {
+    reponseFileLoading.value = false
+  }
+}
+
+// ── Transform — on garde uniquement le nom brut dans url ─────────────────────
 const transformCourriers = (response) => {
   if (!response?.data) throw new Error('Format de réponse API invalide')
   return response.data.map((courrier) => ({
-    id: courrier.id,
-    source: courrier.service_enreg || '',
+    id:                   courrier.id,
+    source:               courrier.service_enreg || '',
     numeroEnregistrement: courrier.document?.numero_enreg || '',
-    reference: courrier.document?.reference || '',
-    structure: courrier.structure || courrier.autre_structure || '',
-    date_enregistrement: formatDate(courrier.document?.date_enreg),
-    objet: courrier.document?.objet || '',
-    date_courrier: formatDate(courrier.document?.date_courrier),
-    url: courrier.document?.url && courrier.document?.url !== 'Inconnu'
-        ? (courrier.document?.url.startsWith('http') ? courrier.document?.url : `${config.public.baseUrl}${courrier.document?.url}`)
-        : '',
-    type_arrivee: courrier.type_arrivee || '',
-    priority: courrier.priority || '',
-    _complete: courrier,
+    reference:            courrier.document?.reference    || '',
+    structure:            courrier.structure || courrier.autre_structure || '',
+    date_enregistrement:  formatDate(courrier.document?.date_enreg),
+    objet:                courrier.document?.objet        || '',
+    date_courrier:        formatDate(courrier.document?.date_courrier),
+    // Nom brut uniquement — l'URL signée est construite à la demande via blob
+    url:                  (courrier.document?.url && courrier.document.url !== 'Inconnu')
+                            ? courrier.document.url
+                            : '',
+    type_arrivee:         courrier.type_arrivee || '',
+    priority:             courrier.priority     || '',
+    _complete:            courrier,
   }))
 }
 
 // ── Chargement ────────────────────────────────────────────────────────────────
 const refresh = async () => {
   loading.value = true
-  error.value = null
+  error.value   = null
   try {
     const authToken = localStorage.getItem('auth_token') || ''
-    let endpoint = `${config.public.apiBase}/courriers-arrives/urgents-sans-reponse`
+    let endpoint    = `${config.public.apiBase}/courriers-arrives/urgents-sans-reponse`
     if (props.entiteId) {
       const selectedEntite = JSON.parse(localStorage.getItem('selected_entite') || 'null')
       if (selectedEntite?.code) endpoint += `?service_enreg=${selectedEntite.code}`
     }
-    const response = await $fetch(endpoint, {
+    const response  = await $fetch(endpoint, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
     courriers.value = transformCourriers(response)
@@ -457,11 +565,16 @@ const refresh = async () => {
 // ── Modal détails ─────────────────────────────────────────────────────────────
 const handleView = async (item) => {
   const courrier = item._complete || item
-  selectedCourrier.value = courrier
-  showArriveeDoc.value = false
-  showReponseDoc.value = false
-  reponseData.value = null
-  detailsOpen.value = true
+  revokeModalBlobs()
+  selectedCourrier.value   = courrier
+  arriveeFileLoaded.value  = false
+  arriveeFileLoading.value = false
+  arriveeFileError.value   = ''
+  reponseFileLoaded.value  = false
+  reponseFileLoading.value = false
+  reponseFileError.value   = ''
+  reponseData.value        = null
+  detailsOpen.value        = true
 
   const reponses = courrier.document?.reponses || []
   if (reponses.length) {
@@ -471,41 +584,41 @@ const handleView = async (item) => {
 }
 
 const closeDetails = () => {
-  detailsOpen.value = false
-  selectedCourrier.value = null
-  reponseData.value = null
-  showArriveeDoc.value = false
-  showReponseDoc.value = false
+  revokeModalBlobs()
+  detailsOpen.value        = false
+  selectedCourrier.value   = null
+  reponseData.value        = null
+  arriveeFileLoaded.value  = false
+  arriveeFileError.value   = ''
+  reponseFileLoaded.value  = false
+  reponseFileError.value   = ''
 }
 
+// ── Charger le courrier de réponse ────────────────────────────────────────────
 const loadReponseData = async (documentId) => {
   if (!documentId) return
   loadingReponse.value = true
   try {
-    const authToken = localStorage.getItem('auth_token') || ''
+    const authToken  = localStorage.getItem('auth_token') || ''
     const allDeparts = await $fetch(`${config.public.apiBase}/courriers-departs`, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
     const list = Array.isArray(allDeparts?.data) ? allDeparts.data : []
-    const doc = list.find(cd => cd.document_id === documentId) || null
+    const doc  = list.find(cd => cd.document_id === documentId) || null
     if (!doc) { reponseData.value = null; return }
 
-    const buildUrl = (raw) => {
-      if (!raw || raw === 'Inconnu') return null
-      if (raw.startsWith('http')) return raw
-      const base = config.public.baseUrl?.replace(/\/$/, '')
-      const path = raw.startsWith('/') ? raw : `/${raw}`
-      return `${base}${path}`
-    }
+    const rawUrl = (doc?.document?.url || '').trim()
 
     reponseData.value = {
       reference:    doc?.document?.reference || 'Sans référence',
-      objet:        doc?.document?.objet || 'Non spécifié',
-      destinataire: doc?.destinataire || '—',
-      date_depart:  doc?.date_depart || null,
-      type_depart:  doc?.type_depart || null,
-      service_emis: doc?.service_emis || null,
-      url:          buildUrl((doc?.document?.url || '').trim()),
+      objet:        doc?.document?.objet     || 'Non spécifié',
+      destinataire: doc?.destinataire        || '—',
+      date_depart:  doc?.date_depart         || null,
+      type_depart:  doc?.type_depart         || null,
+      service_emis: doc?.service_emis        || null,
+      // Noms bruts pour fetchFileAsBlob
+      rawUrl:       (rawUrl && rawUrl !== 'Inconnu') ? rawUrl : null,
+      rawDateEnreg: doc?.document?.date_enreg || null,
     }
   } catch (e) {
     console.error('❌ Erreur chargement réponse:', e)
@@ -516,10 +629,7 @@ const loadReponseData = async (documentId) => {
 }
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
-const onOpenDocument = (url) => {
-  if (url) window.open(url, '_blank', 'noopener,noreferrer')
-}
-
+const onOpenDocument    = (url) => { /* conservé pour compatibilité DataTable */ }
 const onSelectionChange = (ids) => console.log('Sélection:', ids)
 
 const handleQuickAssign = (courrierId) => {
@@ -571,7 +681,7 @@ const onDelete = async (item) => {
     await Swal.fire({ title: 'Supprimé !', text: 'Le courrier a été supprimé avec succès', icon: 'success', timer: 2000, showConfirmButton: false })
     refresh()
   } catch (err) {
-    const message = err.data?.message || err.message || 'Impossible de supprimer le courrier'
+    const message           = err.data?.message || err.message || 'Impossible de supprimer le courrier'
     const affectationsCount = err.data?.data?.affectations_count
     await Swal.fire({
       title: 'Suppression impossible',
@@ -592,9 +702,7 @@ const onDelete = async (item) => {
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
-onMounted(() => {
-  refresh()
-})
+onMounted(() => { refresh() })
 </script>
 
 <style scoped>

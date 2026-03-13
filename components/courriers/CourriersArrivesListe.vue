@@ -377,7 +377,7 @@
       <!-- ── Référence cliquable → ouvre via Blob ────────────────────── -->
       <template #cell-reference="{ value, item }">
         <button v-if="item._raw?.document?.url && item._raw.document.url !== 'Inconnu'"
-          @click="openDocumentFromTable(item._raw)"
+          @click="handleView(item)"
           class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
           :disabled="openingDocumentId === item.id">
           <Icon
@@ -646,56 +646,6 @@ const loadReponseFile = async () => {
 const revokeModalBlobs = () => {
   if (ariveeBlobUrl.value)  { URL.revokeObjectURL(ariveeBlobUrl.value);  ariveeBlobUrl.value  = '' }
   if (reponseBlobUrl.value) { URL.revokeObjectURL(reponseBlobUrl.value); reponseBlobUrl.value = '' }
-}
-
-// ── Ouvrir document depuis le tableau (onglet avec loader) ────────────────────
-const openDocumentFromTable = async (courrier) => {
-  if (openingDocumentId.value) return
-  const rawUrl    = courrier?.document?.url
-  const dateEnreg = courrier?.document?.date_enreg  // date ISO brute
-  if (!rawUrl || rawUrl === 'Inconnu') return
-
-  openingDocumentId.value = courrier.id
-
-  const newTab = window.open('', '_blank')
-  if (newTab) {
-    newTab.document.write(`
-      <html>
-        <head><title>Chargement...</title></head>
-        <body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#64748b;background:#f8fafc;">
-          <div style="text-align:center;gap:12px;display:flex;flex-direction:column;align-items:center;">
-            <div style="width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-            <p style="font-size:13px;font-weight:600;">Chargement du fichier...</p>
-            <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-          </div>
-        </body>
-      </html>
-    `)
-  }
-
-  try {
-    const { blob } = await fetchFileAsBlob(rawUrl, dateEnreg)
-    const blobUrl  = URL.createObjectURL(blob)
-    if (newTab && !newTab.closed) {
-      newTab.location.href = blobUrl
-    } else {
-      window.open(blobUrl, '_blank', 'noopener,noreferrer')
-    }
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 15000)
-  } catch (err) {
-    console.error('❌ Erreur ouverture fichier:', err)
-    if (newTab && !newTab.closed) {
-      newTab.document.body.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
-          <div style="text-align:center;color:#ef4444;">
-            <p style="font-size:14px;font-weight:600;">Erreur de chargement</p>
-            <p style="font-size:12px;color:#94a3b8;margin-top:8px;">${err.message}</p>
-          </div>
-        </div>`
-    }
-  } finally {
-    openingDocumentId.value = null
-  }
 }
 
 // ── Transform (on garde le nom brut, pas d'URL construite) ───────────────────
