@@ -65,8 +65,6 @@
         <!-- ── Filtres avancés ──────────────────────────────── -->
         <template #advanced-filters>
           <div class="space-y-4">
-
-            <!-- Ligne 1 — Texte communs -->
             <div class="flex flex-wrap gap-3">
               <div class="flex-1 min-w-[120px]">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">N° d'enreg.</label>
@@ -99,115 +97,84 @@
                   @input="onFiltersChange" />
               </div>
             </div>
-
-            <!-- Ligne 2 — Selects communs -->
             <div class="flex flex-wrap gap-3">
               <div class="flex-1 min-w-[140px]">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type</label>
-                <SearchableSelect
-                  v-model="searchFilters.type"
+                <SearchableSelect v-model="searchFilters.type"
                   :options="[{ value: 'arrive', label: 'Arrivé' }, { value: 'depart', label: 'Départ' }]"
-                  placeholder="Tous"
-                  @change="onFiltersChange" />
+                  placeholder="Tous" @change="onFiltersChange" />
               </div>
               <div class="flex-1 min-w-[180px]">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type de document</label>
-                <SearchableSelect
-                  v-model="searchFilters.type_document_id"
+                <SearchableSelect v-model="searchFilters.type_document_id"
                   :options="filterOptionsData.types_document.map(t => ({ value: t.id, label: `${t.code} — ${t.libelle}` }))"
-                  placeholder="Tous"
-                  @change="onFiltersChange" />
+                  placeholder="Tous" @change="onFiltersChange" />
               </div>
               <div class="flex-1 min-w-[160px]">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Confidentialité</label>
-                <SearchableSelect
-                  v-model="searchFilters.confidentiel"
+                <SearchableSelect v-model="searchFilters.confidentiel"
                   :options="[{ value: 'false', label: 'Non confidentiel' }, { value: 'true', label: 'Confidentiel' }]"
-                  placeholder="Tous"
-                  @change="onFiltersChange" />
+                  placeholder="Tous" @change="onFiltersChange" />
               </div>
             </div>
-
-            <!-- Ligne 3 — Filtres arrivée -->
             <div v-if="searchFilters.type !== 'depart'" class="flex flex-wrap gap-3">
               <p class="w-full text-[11px] font-bold text-indigo-500 uppercase tracking-wider flex items-center gap-1">
-                <Icon name="i-heroicons-inbox-arrow-down" class="w-3 h-3" />
-                Courrier arrivé
+                <Icon name="i-heroicons-inbox-arrow-down" class="w-3 h-3" /> Courrier arrivé
               </p>
               <div class="flex-1 min-w-[140px]">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type d'arrivée</label>
-                <SearchableSelect
-                  v-model="searchFilters.type_arrivee"
+                <SearchableSelect v-model="searchFilters.type_arrivee"
                   :options="filterOptionsData.types_arrivee.map(t => ({ value: t, label: t }))"
-                  placeholder="Tous"
-                  @change="onFiltersChange" />
+                  placeholder="Tous" @change="onFiltersChange" />
               </div>
               <div class="flex-1 min-w-[140px]">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Service enregistrement</label>
-                <SearchableSelect
-                  v-model="searchFilters.service_enreg"
+                <SearchableSelect v-model="searchFilters.service_enreg"
                   :options="filterOptionsData.services_enreg.map(s => ({ value: s, label: s }))"
-                  placeholder="Tous"
-                  @change="onFiltersChange" />
+                  placeholder="Tous" @change="onFiltersChange" />
               </div>
               <div class="flex-1 min-w-[160px]">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Structure / Expéditeur</label>
-                <SearchableSelect
-                  v-model="searchFilters.structure"
+                <SearchableSelect v-model="searchFilters.structure"
                   :options="filterOptionsData.structures.map(s => ({ value: s, label: s }))"
-                  placeholder="Tous"
-                  @change="onFiltersChange" />
+                  placeholder="Tous" @change="onFiltersChange" />
               </div>
               <div class="flex-1 min-w-[140px]">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Priorité</label>
-                <SearchableSelect
-                  v-model="searchFilters.priority"
+                <SearchableSelect v-model="searchFilters.priority"
                   :options="filterOptionsData.priorities.map(p => ({ value: p, label: p }))"
-                  placeholder="Toutes"
-                  @change="onFiltersChange" />
+                  placeholder="Toutes" @change="onFiltersChange" />
               </div>
             </div>
-
-            <!-- Ligne 4 — Filtres départ -->
             <div v-if="searchFilters.type !== 'arrive'" class="flex flex-wrap gap-3">
               <p class="w-full text-[11px] font-bold text-orange-500 uppercase tracking-wider flex items-center gap-1">
-                <Icon name="i-heroicons-paper-airplane" class="w-3 h-3" />
-                Courrier départ
+                <Icon name="i-heroicons-paper-airplane" class="w-3 h-3" /> Courrier départ
               </p>
               <div class="flex-1 min-w-[140px]">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Service émetteur</label>
-                <SearchableSelect
-                  v-model="searchFilters.service_emis"
+                <SearchableSelect v-model="searchFilters.service_emis"
                   :options="filterOptionsData.services_emis.map(s => ({ value: s, label: s }))"
-                  placeholder="Tous"
-                  @change="onFiltersChange" />
+                  placeholder="Tous" @change="onFiltersChange" />
               </div>
               <div class="flex-1 min-w-[160px]">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Destinataire</label>
-                <SearchableSelect
-                  v-model="searchFilters.destinataire"
+                <SearchableSelect v-model="searchFilters.destinataire"
                   :options="filterOptionsData.destinataires.map(d => ({ value: d, label: d }))"
-                  placeholder="Tous"
-                  @change="onFiltersChange" />
+                  placeholder="Tous" @change="onFiltersChange" />
               </div>
             </div>
-
-            <!-- Bouton reset -->
             <div v-if="hasActiveFilters" class="flex justify-end">
               <button @click="resetFilters"
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-all">
-                <Icon name="i-heroicons-x-mark" class="w-3.5 h-3.5" />
-                Réinitialiser les filtres
+                <Icon name="i-heroicons-x-mark" class="w-3.5 h-3.5" /> Réinitialiser les filtres
               </button>
             </div>
-
           </div>
         </template>
 
         <!-- ── Colonne Type ──────────────────────────────────── -->
         <template #cell-type="{ value }">
-          <span
-            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-full border uppercase whitespace-nowrap"
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-full border uppercase whitespace-nowrap"
             :class="{
               'bg-indigo-50 text-indigo-700 border-indigo-100': value === 'arrive',
               'bg-orange-50 text-orange-700 border-orange-100': value === 'depart',
@@ -217,20 +184,16 @@
           </span>
         </template>
 
-        <!-- ── Référence cliquable → ouvre le fichier ────────── -->
+        <!-- ── Référence → popup PDF léger ──────────────────── -->
         <template #cell-reference="{ value, item }">
-          <button v-if="item.url" @click="openDocumentFromTable(item)"
+          <button v-if="item.url" @click="openPdfPopup(item)"
             class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
             :title="`Ouvrir ${value}`">
-            <Icon
-              :name="openingDocumentId === item.id ? 'i-heroicons-arrow-path' : 'i-heroicons-document-text'"
-              class="w-3.5 h-3.5 shrink-0"
-              :class="openingDocumentId === item.id ? 'animate-spin' : 'group-hover:scale-110 transition-transform'" />
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
             <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
             <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
           </button>
-          <span v-else
-            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]">
+          <span v-else class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]">
             <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
             <span class="break-words whitespace-normal min-w-0">{{ value || '—' }}</span>
           </span>
@@ -245,8 +208,7 @@
 
         <!-- ── Durée ─────────────────────────────────────────── -->
         <template #cell-duree="{ item }">
-          <span
-            class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap"
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap"
             :class="{
               'bg-red-50 text-red-700 border-red-200':       item.duree_annees >= 3,
               'bg-amber-50 text-amber-700 border-amber-200': item.duree_annees >= 1 && item.duree_annees < 3,
@@ -256,7 +218,7 @@
           </span>
         </template>
 
-        <!-- ── Actions ───────────────────────────────────────── -->
+        <!-- ── Actions (icône œil → modal détails) ──────────── -->
         <template #actions="{ item }">
           <div class="flex items-center justify-center gap-1">
             <UButton size="xs" color="blue" variant="ghost"
@@ -269,7 +231,80 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════════ -->
-    <!-- MODAL DÉTAILS                                                      -->
+    <!-- POPUP PDF LÉGER (clic référence)                                   -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <Transition
+      enter-active-class="transition duration-150 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-100 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0">
+      <div v-if="pdfPopupOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+        @click.self="closePdfPopup">
+
+        <Transition
+          enter-active-class="transition duration-150 ease-out"
+          enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100">
+          <div v-if="pdfPopupOpen"
+            class="bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            style="width: min(860px, 95vw); height: min(90vh, 860px);">
+
+            <!-- Header popup -->
+            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50 shrink-0">
+              <div class="flex items-center gap-2 min-w-0">
+                <Icon name="i-heroicons-document-text" class="w-4 h-4 text-slate-500 shrink-0" />
+                <span class="text-xs font-bold text-slate-700 truncate">{{ pdfPopupItem?.reference || '—' }}</span>
+                <span class="text-[11px] text-slate-400 font-mono truncate hidden sm:block">{{ pdfPopupItem?.url }}</span>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button
+                  v-if="pdfPopupBlobUrl"
+                  @click="openPdfInTab"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all">
+                  <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3.5 h-3.5" />
+                  Ouvrir dans un onglet
+                </button>
+                <button @click="closePdfPopup"
+                  class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-200 transition-colors text-slate-400">
+                  <Icon name="i-heroicons-x-mark" class="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Corps popup — PDF ou zone vide pendant chargement -->
+            <div class="flex-1 min-h-0 bg-slate-100">
+              <!-- Zone vide pendant le chargement (pas de spinner) -->
+              <div v-if="!pdfPopupLoaded && !pdfPopupError" class="w-full h-full" />
+
+              <!-- Erreur -->
+              <div v-else-if="pdfPopupError"
+                class="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-400">
+                <Icon name="i-heroicons-exclamation-triangle" class="w-12 h-12 text-red-300" />
+                <p class="text-xs font-medium text-red-500">{{ pdfPopupError }}</p>
+                <button @click="pdfPopupError = ''; loadPdfPopup(pdfPopupItem)"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all">
+                  <Icon name="i-heroicons-arrow-path" class="w-3.5 h-3.5" />
+                  Réessayer
+                </button>
+              </div>
+
+              <!-- PDF -->
+              <iframe v-else-if="pdfPopupLoaded"
+                :src="pdfPopupUrl"
+                class="w-full h-full border-0"
+                title="Prévisualisation PDF" />
+            </div>
+
+          </div>
+        </Transition>
+      </div>
+    </Transition>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL DÉTAILS COMPLÈTE (icône œil)                                 -->
     <!-- ══════════════════════════════════════════════════════════════════ -->
     <Transition
       enter-active-class="transition duration-200 ease-out"
@@ -370,9 +405,7 @@
                   <div class="bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Type de document</p>
                     <p class="text-xs font-semibold text-slate-800">
-                      {{ selectedItem?.type_document?.code
-                        ? `${selectedItem.type_document.code} — ${selectedItem.type_document.libelle}`
-                        : '—' }}
+                      {{ selectedItem?.type_document?.code ? `${selectedItem.type_document.code} — ${selectedItem.type_document.libelle}` : '—' }}
                     </p>
                   </div>
                   <div class="bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
@@ -391,8 +424,7 @@
               <!-- Détails arrivée -->
               <div v-if="selectedItem?.type === 'arrive' && selectedItem?._raw?.details">
                 <p class="text-[11px] font-bold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-1">
-                  <Icon name="i-heroicons-inbox-arrow-down" class="w-3 h-3" />
-                  Détails — Courrier arrivé
+                  <Icon name="i-heroicons-inbox-arrow-down" class="w-3 h-3" /> Détails — Courrier arrivé
                 </p>
                 <div class="grid grid-cols-2 gap-3">
                   <div class="bg-indigo-50 rounded-xl px-4 py-3 border border-indigo-100">
@@ -433,8 +465,7 @@
               <!-- Détails départ -->
               <div v-if="selectedItem?.type === 'depart' && selectedItem?._raw?.details">
                 <p class="text-[11px] font-bold text-orange-400 uppercase tracking-wider mb-3 flex items-center gap-1">
-                  <Icon name="i-heroicons-paper-airplane" class="w-3 h-3" />
-                  Détails — Courrier départ
+                  <Icon name="i-heroicons-paper-airplane" class="w-3 h-3" /> Détails — Courrier départ
                 </p>
                 <div class="grid grid-cols-2 gap-3">
                   <div class="bg-orange-50 rounded-xl px-4 py-3 border border-orange-100">
@@ -454,7 +485,7 @@
                 </div>
               </div>
 
-              <!-- ── Preview fichier ─────────────────────────── -->
+              <!-- ── Section PDF dans la modal détails ──────── -->
               <div class="border border-slate-200 rounded-xl overflow-hidden">
                 <div class="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
                   <div class="flex items-center gap-2">
@@ -466,7 +497,7 @@
                   </div>
                   <div class="flex items-center gap-2">
                     <button
-                      v-if="!fileLoaded && !fileLoading && !fileError && selectedItem?.url"
+                      v-if="!fileLoaded && selectedItem?.url"
                       @click="loadFile"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all">
                       <Icon name="i-heroicons-arrow-down-tray" class="w-3.5 h-3.5" />
@@ -481,62 +512,34 @@
                     </button>
                   </div>
                 </div>
-
-                <div class="min-h-[200px] flex items-center justify-center bg-slate-50">
-
+                <div class="bg-slate-50" :class="fileLoaded ? '' : 'min-h-[120px] flex items-center justify-center'">
                   <!-- Pas encore chargé -->
-                  <div v-if="!fileLoaded && !fileLoading && !fileError && selectedItem?.url"
-                    class="flex flex-col items-center gap-3 text-slate-400 py-10">
-                    <Icon name="i-heroicons-document" class="w-12 h-12 text-slate-300" />
+                  <div v-if="!fileLoaded && !fileError && selectedItem?.url"
+                    class="flex flex-col items-center gap-2 text-slate-400 py-8">
+                    <Icon name="i-heroicons-document-text" class="w-10 h-10 text-slate-300" />
                     <p class="text-xs font-medium">Cliquez sur « Charger le fichier » pour prévisualiser</p>
                   </div>
-
                   <!-- Aucun fichier -->
                   <div v-else-if="!selectedItem?.url"
-                    class="flex flex-col items-center gap-3 text-slate-400 py-10">
-                    <Icon name="i-heroicons-document-minus" class="w-12 h-12 text-slate-300" />
+                    class="flex flex-col items-center gap-2 text-slate-400 py-8">
+                    <Icon name="i-heroicons-document-minus" class="w-10 h-10 text-slate-300" />
                     <p class="text-xs font-medium">Aucun fichier disponible</p>
                   </div>
-
-                  <!-- Chargement en cours -->
-                  <div v-else-if="fileLoading"
-                    class="flex flex-col items-center gap-3 text-slate-400 py-10">
-                    <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-500 rounded-full animate-spin"></div>
-                    <p class="text-xs font-medium">Chargement du fichier...</p>
-                  </div>
-
+                  <!-- Zone vide pendant chargement silencieux -->
+                  <div v-else-if="!fileLoaded && !fileError" class="w-full h-24" />
                   <!-- Erreur -->
                   <div v-else-if="fileError"
-                    class="flex flex-col items-center gap-3 text-slate-400 py-10">
-                    <Icon name="i-heroicons-exclamation-triangle" class="w-12 h-12 text-red-300" />
+                    class="flex flex-col items-center gap-2 text-slate-400 py-8">
+                    <Icon name="i-heroicons-exclamation-triangle" class="w-10 h-10 text-red-300" />
                     <p class="text-xs font-medium text-red-500">{{ fileError }}</p>
                     <button @click="fileError = ''; loadFile()"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all">
-                      <Icon name="i-heroicons-arrow-path" class="w-3.5 h-3.5" />
-                      Réessayer
+                      <Icon name="i-heroicons-arrow-path" class="w-3.5 h-3.5" /> Réessayer
                     </button>
                   </div>
-
                   <!-- PDF -->
-                  <iframe v-else-if="fileLoaded && isPdf"
-                    :src="fileUrl" class="w-full h-[450px] border-0" title="Prévisualisation PDF" />
-
-                  <!-- Image -->
-                  <img v-else-if="fileLoaded && isImage"
-                    :src="fileUrl" class="max-w-full max-h-[450px] object-contain p-4" alt="Prévisualisation" />
-
-                  <!-- Format non supporté -->
-                  <div v-else-if="fileLoaded"
-                    class="flex flex-col items-center gap-3 text-slate-400 py-10">
-                    <Icon name="i-heroicons-document-arrow-down" class="w-12 h-12 text-slate-300" />
-                    <p class="text-xs font-medium">Prévisualisation non disponible pour ce format</p>
-                    <button @click="openBlobInTab"
-                      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all">
-                      <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3.5 h-3.5" />
-                      Ouvrir dans un onglet
-                    </button>
-                  </div>
-
+                  <iframe v-else-if="fileLoaded"
+                    :src="fileUrl" class="w-full h-[500px] border-0" title="Prévisualisation PDF" />
                 </div>
               </div>
 
@@ -589,15 +592,11 @@ const columnFilterOptions = computed(() => ({
     { value: 'arrive', label: 'Arrivé' },
     { value: 'depart', label: 'Départ' },
   ],
-  numero_enreg: [...new Set(documents.value.map(d => d.numero_enreg).filter(v => v && v !== '—'))]
-    .map(v => ({ value: v, label: v })),
-  reference: [...new Set(documents.value.map(d => d.reference).filter(v => v && v !== '—'))]
-    .map(v => ({ value: v, label: v })),
-  objet: [...new Set(documents.value.map(d => d.objet).filter(v => v && v !== '—'))]
-    .map(v => ({ value: v, label: v })),
+  numero_enreg: [...new Set(documents.value.map(d => d.numero_enreg).filter(v => v && v !== '—'))].map(v => ({ value: v, label: v })),
+  reference:    [...new Set(documents.value.map(d => d.reference).filter(v => v && v !== '—'))].map(v => ({ value: v, label: v })),
+  objet:        [...new Set(documents.value.map(d => d.objet).filter(v => v && v !== '—'))].map(v => ({ value: v, label: v })),
 }))
 
-// ── Multi-filtres colonnes → serveur ──────────────────────────────────────
 const multiFilters = ref({})
 const onMultiFilterChange = ({ all }) => {
   multiFilters.value = { ...all }
@@ -607,17 +606,10 @@ const onMultiFilterChange = ({ all }) => {
 
 // ── Options filtres avancés ───────────────────────────────────────────────
 const filterOptionsData = ref({
-  types_document: [],
-  types_arrivee:  [],
-  services_enreg: [],
-  structures:     [],
-  priorities:     [],
-  types_depart:   [],
-  services_emis:  [],
-  destinataires:  [],
+  types_document: [], types_arrivee: [], services_enreg: [],
+  structures: [], priorities: [], types_depart: [], services_emis: [], destinataires: [],
 })
 
-// ── Filtres avancés ───────────────────────────────────────────────────────
 const defaultFilters = () => ({
   search: '', numero_enreg: '', reference: '', objet: '',
   date_enreg: '', date_courrier: '', type: '', type_document_id: '',
@@ -636,19 +628,14 @@ const resetFilters = () => {
   refresh(1, perPage.value, false)
 }
 
-// ── Filtres colonnes input ────────────────────────────────────────────────
 const columnFilters = ref({})
 let columnFilterTimeout = null
 const onColumnFilterChange = (val) => {
   columnFilters.value = { ...val }
   clearTimeout(columnFilterTimeout)
-  columnFilterTimeout = setTimeout(() => {
-    currentPage.value = 1
-    refresh(1, perPage.value, false)
-  }, 400)
+  columnFilterTimeout = setTimeout(() => { currentPage.value = 1; refresh(1, perPage.value, false) }, 400)
 }
 
-// ── Colonnes ──────────────────────────────────────────────────────────────
 const columns = [
   { key: 'numero_enreg', label: "N° d'enreg.", visible: true },
   { key: 'reference',    label: 'Référence',    visible: true },
@@ -656,28 +643,101 @@ const columns = [
   { key: 'date_enreg',   label: "Date d'enreg.", visible: true },
   { key: 'type',         label: 'Type',         visible: true,  filterable: false },
   { key: 'duree',        label: 'Durée',        visible: true,  filterable: false },
-  { key: 'url',          label: 'Document',     visible: false, type: 'document' },
+  { key: 'url',          label: 'Document',     visible: false },
 ]
 
-// ── Modal & fichier ───────────────────────────────────────────────────────
-const modalOpen        = ref(false)
-const selectedItem     = ref(null)
-const fileLoaded       = ref(false)
-const fileLoading      = ref(false)
-const fileError        = ref('')
-const fileUrl          = ref('')
-const currentBlobUrl   = ref('')
-const detectedMimeType = ref('')
-const openingDocumentId = ref(null)
+// ── État popup PDF léger ──────────────────────────────────────────────────
+const pdfPopupOpen    = ref(false)
+const pdfPopupItem    = ref(null)
+const pdfPopupLoaded  = ref(false)
+const pdfPopupError   = ref('')
+const pdfPopupUrl     = ref('')
+const pdfPopupBlobUrl = ref('')
 
-const isPdf   = computed(() =>
-  detectedMimeType.value === 'application/pdf' ||
-  /\.pdf$/i.test(selectedItem.value?.url ?? '')
-)
-const isImage = computed(() =>
-  detectedMimeType.value.startsWith('image/') ||
-  /\.(png|jpe?g|gif|webp|svg)$/i.test(selectedItem.value?.url ?? '')
-)
+const openPdfPopup = (item) => {
+  pdfPopupItem.value    = item
+  pdfPopupLoaded.value  = false
+  pdfPopupError.value   = ''
+  pdfPopupUrl.value     = ''
+  if (pdfPopupBlobUrl.value) { URL.revokeObjectURL(pdfPopupBlobUrl.value); pdfPopupBlobUrl.value = '' }
+  pdfPopupOpen.value    = true
+  loadPdfPopup(item)
+}
+
+const loadPdfPopup = async (item) => {
+  try {
+    const { blob } = await fetchFileAsBlob(item)
+    const blobUrl  = URL.createObjectURL(blob)
+    pdfPopupBlobUrl.value = blobUrl
+    pdfPopupUrl.value     = blobUrl
+    pdfPopupLoaded.value  = true
+  } catch (err) {
+    console.error('❌ Erreur chargement PDF popup:', err)
+    pdfPopupError.value = err.message || 'Erreur lors du chargement'
+  }
+}
+
+const openPdfInTab = () => {
+  if (pdfPopupBlobUrl.value) window.open(pdfPopupBlobUrl.value, '_blank', 'noopener,noreferrer')
+}
+
+const closePdfPopup = () => {
+  pdfPopupOpen.value = false
+  if (pdfPopupBlobUrl.value) { URL.revokeObjectURL(pdfPopupBlobUrl.value); pdfPopupBlobUrl.value = '' }
+  pdfPopupItem.value   = null
+  pdfPopupLoaded.value = false
+  pdfPopupError.value  = ''
+  pdfPopupUrl.value    = ''
+}
+
+// ── État modal détails ────────────────────────────────────────────────────
+const modalOpen      = ref(false)
+const selectedItem   = ref(null)
+const fileLoaded     = ref(false)
+const fileError      = ref('')
+const fileUrl        = ref('')
+const currentBlobUrl = ref('')
+
+const onViewItem = (item) => {
+  if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
+  selectedItem.value = item
+  fileLoaded.value   = false
+  fileError.value    = ''
+  fileUrl.value      = ''
+  modalOpen.value    = true
+}
+
+const closeModal = () => {
+  if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
+  modalOpen.value    = false
+  selectedItem.value = null
+  fileLoaded.value   = false
+  fileError.value    = ''
+  fileUrl.value      = ''
+}
+
+// Chargement PDF dans la modal détails (bouton manuel)
+const loadFile = async () => {
+  if (!selectedItem.value?.url) return
+  fileLoaded.value = false
+  fileError.value  = ''
+  fileUrl.value    = ''
+  if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
+  try {
+    const { blob } = await fetchFileAsBlob(selectedItem.value)
+    const blobUrl  = URL.createObjectURL(blob)
+    currentBlobUrl.value = blobUrl
+    fileUrl.value        = blobUrl
+    fileLoaded.value     = true
+  } catch (err) {
+    console.error('❌ Erreur chargement fichier:', err)
+    fileError.value = err.message || 'Erreur lors du chargement'
+  }
+}
+
+const openBlobInTab = () => {
+  if (currentBlobUrl.value) window.open(currentBlobUrl.value, '_blank', 'noopener,noreferrer')
+}
 
 // ── Utilitaires ───────────────────────────────────────────────────────────
 const formatDate = (date) => {
@@ -689,13 +749,7 @@ const formatDuree = (annees) => {
   if (annees === 0) return '< 1 an'
   return `${annees} an${annees > 1 ? 's' : ''}`
 }
-const guessMimeType = (filename) => {
-  if (!filename) return ''
-  const ext = filename.split('.').pop().toLowerCase()
-  return { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' }[ext] || ''
-}
 
-// ── Construction URL fichier ──────────────────────────────────────────────
 const buildDocumentUrl = (item) => {
   if (!item?.url) return null
   const base = config.public.apiBase.replace(/\/$/, '')
@@ -708,7 +762,6 @@ const buildDocumentUrl = (item) => {
   return `${base}/file/documents/${year}/${month}/${day}/${item.url}`
 }
 
-// ── Fetch blob avec token Sanctum ─────────────────────────────────────────
 const fetchFileAsBlob = async (item) => {
   const url = buildDocumentUrl(item)
   if (!url) throw new Error('URL du fichier introuvable')
@@ -716,109 +769,7 @@ const fetchFileAsBlob = async (item) => {
   const response  = await fetch(url, { headers: { Authorization: `Bearer ${authToken}` } })
   if (!response.ok) throw new Error(`Erreur ${response.status} — fichier non accessible`)
   const blob = await response.blob()
-  return { blob, mimeType: blob.type || guessMimeType(item.url) }
-}
-
-// ── Charger fichier dans la modal ─────────────────────────────────────────
-const loadFile = async () => {
-  if (!selectedItem.value?.url) return
-  fileLoading.value = true
-  fileLoaded.value  = false
-  fileError.value   = ''
-  fileUrl.value     = ''
-  if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
-
-  try {
-    const { blob, mimeType } = await fetchFileAsBlob(selectedItem.value)
-    const blobUrl = URL.createObjectURL(blob)
-    detectedMimeType.value = mimeType
-    currentBlobUrl.value   = blobUrl
-    fileUrl.value          = blobUrl
-    fileLoaded.value       = true
-  } catch (err) {
-    console.error('❌ Erreur chargement fichier:', err)
-    fileError.value = err.message || 'Erreur lors du chargement'
-  } finally {
-    fileLoading.value = false
-  }
-}
-
-// ── Ouvrir blob dans un onglet ────────────────────────────────────────────
-const openBlobInTab = () => {
-  if (currentBlobUrl.value) window.open(currentBlobUrl.value, '_blank', 'noopener,noreferrer')
-}
-
-// ── Ouvrir document depuis le tableau ────────────────────────────────────
-const openDocumentFromTable = async (item) => {
-  if (openingDocumentId.value) return
-  openingDocumentId.value = item.id
-
-  // Ouvrir l'onglet immédiatement dans le gestionnaire de clic
-  // (avant tout await) → le navigateur ne bloque pas
-  const newTab = window.open('', '_blank')
-  if (newTab) {
-    newTab.document.write(`
-      <html>
-        <head><title>Chargement...</title></head>
-        <body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#64748b;background:#f8fafc;">
-          <div style="text-align:center;gap:12px;display:flex;flex-direction:column;align-items:center;">
-            <div style="width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-            <p style="font-size:13px;font-weight:600;">Chargement du fichier...</p>
-            <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-          </div>
-        </body>
-      </html>
-    `)
-  }
-
-  try {
-    const { blob } = await fetchFileAsBlob(item)
-    const blobUrl = URL.createObjectURL(blob)
-
-    if (newTab && !newTab.closed) {
-      newTab.location.href = blobUrl
-    } else {
-      // Si l'onglet a été fermé entre temps → fallback
-      window.open(blobUrl, '_blank', 'noopener,noreferrer')
-    }
-
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 15000)
-  } catch (err) {
-    console.error('❌ Erreur ouverture fichier:', err)
-    if (newTab && !newTab.closed) {
-      newTab.document.body.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
-          <div style="text-align:center;color:#ef4444;">
-            <p style="font-size:14px;font-weight:600;">Erreur de chargement</p>
-            <p style="font-size:12px;color:#94a3b8;margin-top:8px;">${err.message}</p>
-          </div>
-        </div>`
-    }
-  } finally {
-    openingDocumentId.value = null
-  }
-}
-
-// ── Ouvrir / fermer modal ─────────────────────────────────────────────────
-const onViewItem = (item) => {
-  if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
-  selectedItem.value     = item
-  fileLoaded.value       = false
-  fileLoading.value      = false
-  fileError.value        = ''
-  fileUrl.value          = ''
-  detectedMimeType.value = ''
-  modalOpen.value        = true
-}
-
-const closeModal = () => {
-  if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
-  modalOpen.value        = false
-  selectedItem.value     = null
-  fileLoaded.value       = false
-  fileError.value        = ''
-  fileUrl.value          = ''
-  detectedMimeType.value = ''
+  return { blob }
 }
 
 // ── Transform documents ───────────────────────────────────────────────────
@@ -857,15 +808,14 @@ const loadFilterOptions = async () => {
 
 // ── Chargement données ────────────────────────────────────────────────────
 const refresh = async (page = 1, per_page = perPage.value, isFirst = false, silent = false) => {
-  if (isFirst)        { initialLoading.value = true }
-  else if (!silent)   { loading.value = true }
+  if (isFirst)      { initialLoading.value = true }
+  else if (!silent) { loading.value = true }
   error.value = null
 
   try {
     const authToken = localStorage.getItem('auth_token') || ''
     const base      = config.public.apiBase.replace(/\/$/, '')
-
-    const params = new URLSearchParams({ page: String(page), per_page: String(per_page), filter: currentFilter.value })
+    const params    = new URLSearchParams({ page: String(page), per_page: String(per_page), filter: currentFilter.value })
 
     const f = searchFilters.value
     if (f.search)           params.append('search',           f.search)
@@ -907,24 +857,22 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false, sile
 
   } catch (err) {
     console.error('❌ Erreur chargement archives:', err)
-    error.value = 'Erreur lors du chargement des données. Veuillez appuyer sur le bouton pour réessayer.'
+    error.value = err.message || 'Erreur lors du chargement'
   } finally {
     initialLoading.value = false
     loading.value        = false
   }
 }
 
-// ── Debounce filtres avancés ──────────────────────────────────────────────
 let searchTimeout = null
 const onFiltersChange = () => {
   const f = searchFilters.value
-  if ((!f.date_enreg    || f.date_enreg.length    === 10) === false) return
-  if ((!f.date_courrier || f.date_courrier.length === 10) === false) return
+  if (f.date_enreg    && f.date_enreg.length    !== 10) return
+  if (f.date_courrier && f.date_courrier.length !== 10) return
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => { currentPage.value = 1; refresh(1, perPage.value, false) }, 400)
 }
 
-// ── Watcher toggle ────────────────────────────────────────────────────────
 watch(currentFilter, () => {
   currentPage.value   = 1
   searchFilters.value = defaultFilters()
@@ -935,12 +883,10 @@ watch(currentFilter, () => {
   refresh(1, perPage.value, false, true).finally(() => { tabLoading.value = false })
 })
 
-// ── Handlers ─────────────────────────────────────────────────────────────
 const onPageChange    = (page) => refresh(page, perPage.value, false)
 const onPerPageChange = (val)  => { perPage.value = val; refresh(1, val, false) }
 const onSearchChange  = (val)  => { searchFilters.value.search = val; currentPage.value = 1; refresh(1, perPage.value, false) }
 
-// ── Lifecycle ─────────────────────────────────────────────────────────────
 onMounted(async () => {
   await Promise.all([refresh(1, perPage.value, true), loadFilterOptions()])
 })
