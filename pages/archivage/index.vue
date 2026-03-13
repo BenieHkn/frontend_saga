@@ -497,12 +497,13 @@
                   </div>
                   <div class="flex items-center gap-2">
                     <button
-                      v-if="!fileLoaded && selectedItem?.url"
+                      v-if="!fileLoaded && !fileLoadingModal && selectedItem?.url"
                       @click="loadFile"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all">
                       <Icon name="i-heroicons-arrow-down-tray" class="w-3.5 h-3.5" />
                       Charger le fichier
                     </button>
+                    <!-- Rien affiché pendant le chargement (fileLoadingModal) -->
                     <button
                       v-if="fileLoaded && currentBlobUrl"
                       @click="openBlobInTab"
@@ -705,6 +706,7 @@ const onViewItem = (item) => {
   fileError.value    = ''
   fileUrl.value      = ''
   modalOpen.value    = true
+  fileLoadingModal.value = false
 }
 
 const closeModal = () => {
@@ -714,14 +716,18 @@ const closeModal = () => {
   fileLoaded.value   = false
   fileError.value    = ''
   fileUrl.value      = ''
+  fileLoadingModal.value = false
 }
 
 // Chargement PDF dans la modal détails (bouton manuel)
+const fileLoadingModal = ref(false)
+
 const loadFile = async () => {
   if (!selectedItem.value?.url) return
-  fileLoaded.value = false
-  fileError.value  = ''
-  fileUrl.value    = ''
+  fileLoadingModal.value = true   // bouton disparaît
+  fileLoaded.value  = false
+  fileError.value   = ''
+  fileUrl.value     = ''
   if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
   try {
     const { blob } = await fetchFileAsBlob(selectedItem.value)
@@ -729,9 +735,13 @@ const loadFile = async () => {
     currentBlobUrl.value = blobUrl
     fileUrl.value        = blobUrl
     fileLoaded.value     = true
+    // Ouvrir automatiquement dans un onglet dès que prêt
+    window.open(blobUrl, '_blank', 'noopener,noreferrer')
   } catch (err) {
     console.error('❌ Erreur chargement fichier:', err)
     fileError.value = err.message || 'Erreur lors du chargement'
+  } finally {
+    fileLoadingModal.value = false
   }
 }
 
