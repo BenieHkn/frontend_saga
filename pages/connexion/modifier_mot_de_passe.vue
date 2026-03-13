@@ -141,14 +141,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
-definePageMeta({
-  layout: false
-})
+definePageMeta({ layout: false })
 
 const route = useRoute()
+const { resetPassword } = useAuth()
+
 const newPassword = ref('')
 const confirmPassword = ref('')
 const showNewPassword = ref(false)
@@ -156,17 +155,6 @@ const showConfirmPassword = ref(false)
 const loading = ref(false)
 const message = ref('')
 const error = ref('')
-
-// Récupérer token et email depuis l'URL au montage
-onMounted(() => {
-  const token = route.query.token
-  const email = route.query.email
-
-  console.log('Token:', token)
-  console.log('Email:', email)
-  console.log('Full URL:', window.location.href)
-  console.log('Query params:', route.query)
-})
 
 const submit = async () => {
   message.value = ''
@@ -182,40 +170,28 @@ const submit = async () => {
     return
   }
 
+  const token = route.query.token
+  const email = route.query.email
+
+  if (!token || !email) {
+    error.value = "Token ou email manquant. Vérifiez l'URL du lien reçu par email."
+    return
+  }
+
   loading.value = true
-  try {
-    const token = route.query.token
-    const email = route.query.email
+  const res = await resetPassword({
+    token,
+    email,
+    password: newPassword.value,
+    password_confirmation: confirmPassword.value,
+  })
+  loading.value = false
 
-    if (!token || !email) {
-      error.value = 'Token ou email manquant. Vérifiez l\'URL du lien reçu par email.'
-      loading.value = false
-      return
-    }
-
-    const res = await $fetch('api/auth/change-password', {
-      method: 'POST',
-      body: {
-        password: newPassword.value,
-        password_confirmation: confirmPassword.value,
-        token: token,
-        email: email
-      }
-    })
-
-    if (res.success) {
-      message.value = 'Mot de passe modifié avec succès.'
-      setTimeout(() => {
-        navigateTo('/')
-      }, 2000)
-    } else {
-      error.value = res.message || 'Erreur lors de la modification.'
-    }
-  } catch (e) {
-    console.error('Erreur:', e)
-    error.value = e.data?.message || e.message || 'Erreur réseau.'
-  } finally {
-    loading.value = false
+  if (res.success) {
+    message.value = 'Mot de passe modifié avec succès.'
+    setTimeout(() => navigateTo('/'), 2000)
+  } else {
+    error.value = res.message || 'Erreur lors de la modification.'
   }
 }
 </script>

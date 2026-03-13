@@ -64,9 +64,9 @@
 <script setup>
 import { ref } from 'vue'
 
-definePageMeta({
-  layout: false
-})
+definePageMeta({ layout: false })
+
+const { forgotPassword } = useAuth()
 
 const email = ref('')
 const loading = ref(false)
@@ -76,26 +76,20 @@ const error = ref('')
 const submit = async () => {
   message.value = ''
   error.value = ''
+
   if (!email.value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
     error.value = 'Veuillez entrer une adresse email valide.'
     return
   }
+
   loading.value = true
-  try {
-    // Remplace l'URL par celle de ton API
-    const res = await $fetch('api/auth/forgot', {
-      method: 'POST',
-      body: { email: email.value }
-    })
-    if (res.success) {
-      message.value = 'Un email de réinitialisation a été envoyé.'
-    } else {
-      error.value = res.message || 'Erreur lors de la demande.'
-    }
-  } catch (e) {
-    error.value = e.data?.message || 'Erreur réseau.'
-  } finally {
-    loading.value = false
+  const res = await forgotPassword(email.value)
+  loading.value = false
+
+  if (res.success) {
+    message.value = 'Un email de réinitialisation a été envoyé.'
+  } else {
+    error.value = res.message || 'Erreur lors de la demande.'
   }
 }
 </script>
