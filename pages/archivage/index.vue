@@ -186,7 +186,7 @@
 
         <!-- ── Référence → popup PDF léger ──────────────────── -->
         <template #cell-reference="{ value, item }">
-          <button v-if="item.url" @click="openPdfPopup(item)"
+          <button v-if="item.url" @click="onViewItem(item)"
             class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
             :title="`Ouvrir ${value}`">
             <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
@@ -655,16 +655,6 @@ const pdfPopupError   = ref('')
 const pdfPopupUrl     = ref('')
 const pdfPopupBlobUrl = ref('')
 
-const openPdfPopup = (item) => {
-  pdfPopupItem.value    = item
-  pdfPopupLoaded.value  = false
-  pdfPopupError.value   = ''
-  pdfPopupUrl.value     = ''
-  if (pdfPopupBlobUrl.value) { URL.revokeObjectURL(pdfPopupBlobUrl.value); pdfPopupBlobUrl.value = '' }
-  pdfPopupOpen.value    = true
-  loadPdfPopup(item)
-}
-
 const loadPdfPopup = async (item) => {
   try {
     const { blob } = await fetchFileAsBlob(item)
@@ -735,8 +725,6 @@ const loadFile = async () => {
     currentBlobUrl.value = blobUrl
     fileUrl.value        = blobUrl
     fileLoaded.value     = true
-    // Ouvrir automatiquement dans un onglet dès que prêt
-    window.open(blobUrl, '_blank', 'noopener,noreferrer')
   } catch (err) {
     console.error('❌ Erreur chargement fichier:', err)
     fileError.value = err.message || 'Erreur lors du chargement'
