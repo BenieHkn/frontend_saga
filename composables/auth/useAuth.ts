@@ -375,7 +375,7 @@ export const useAuth = () => {
     try {
       loading.value = true
 
-      const response = await $fetch<AuthResponse>('api/auth/login', {
+      const response = await $fetch<AuthResponse>('https://api.saga.dgml.bj/api/login', {
         method: 'POST',
         body: {
           email: form.email.trim(),
