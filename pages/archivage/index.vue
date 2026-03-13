@@ -518,7 +518,6 @@
                   <div v-if="!fileLoaded && !fileError && selectedItem?.url"
                     class="flex flex-col items-center gap-2 text-slate-400 py-8">
                     <Icon name="i-heroicons-document-text" class="w-10 h-10 text-slate-300" />
-                    <p class="text-xs font-medium">Cliquez sur « Charger le fichier » pour prévisualiser</p>
                   </div>
                   <!-- Aucun fichier -->
                   <div v-else-if="!selectedItem?.url"
