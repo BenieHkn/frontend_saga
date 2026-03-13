@@ -164,12 +164,13 @@ const savePresencesToDb = async () => {
   try {
     // Transformer les données locales pour l'API
     const presences = membres.value.map(membre => {
+      console.log("L'id du membre ", membre.id)
       const presence = presenceState.value[membre.key] || { status: 'present', reason: '' }
       return {
         membre_id: membre.id, // Note: il faudra s'assurer que l'ID membre est disponible
         is_present: presence.status === 'present',
         motivation_absence: presence.status === 'absent' ? presence.reason : null,
-        has_validate: false, // Par défaut, à implémenter selon les besoins
+// Par défaut, à implémenter selon les besoins
       }
     })
 
