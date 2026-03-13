@@ -7,6 +7,7 @@ import {
 } from '@/composables/codirs/useCodir'
 import { useCodirsStore } from '@/stores/codirs'
 import { useCodir } from '@/composables/codirs/useCodir'
+import { getInitials } from '@/utils/formatters'
 
 definePageMeta({ title: 'Informations générales – CODIR' })
 
@@ -18,12 +19,17 @@ const { savePresences, getPresences, loading: presenceLoading } = useCodir()
 // ── Chargement du CODIR depuis localStorage ───────────────────────────────────
 const codir = ref(null)
 const codirId = ref(null)
+const membres = ref([])
 
 onMounted(() => {
+  if(!process.client){
+    return
+  }
   const raw = localStorage.getItem('currentCodir')
   if (raw) {
     codir.value = JSON.parse(raw)
     codirId.value = codir.value?.id
+    membres.value = JSON.parse(localStorage.getItem('membres'))
   }
 })
 
@@ -40,14 +46,14 @@ const STEP_KEY = computed(()=>"codir_step_" + codirId.value)
 const goPrev = () => {
     if(process.client)
     {
-        localStorage.setItem(STEP_KEY.value, String(currentStep.value - 1))
+        localStorage.setItem(STEP_KEY.value, String(currentStep - 1))
     }
      router.push(`/codir/${codirId.value}`)
 }
 const goNext = () => {
     if(process.client)
     {
-        localStorage.setItem(STEP_KEY.value, String(currentStep.value + 1))
+        localStorage.setItem(STEP_KEY.value, String(currentStep + 1))
     }
     router.push(`/codir/preview`)
 }
@@ -85,40 +91,40 @@ const saveHeureFin = async () => {
  */
 const ROLE_ORDER = ['Président', 'Secrétaire', 'Rapporteur', 'Suppléant', 'Membre']
 
-const collectMembres = (obj, seen = new Set(), result = []) => {
-  if (!obj || typeof obj !== 'object') return result
-  for (const m of (obj.membres ?? [])) {
-    const u = m.entite_user?.user
-    if (!u) continue
-    const key = `${u.nom}|${u.prenom}|${m.role}`
-    if (!seen.has(key)) {
-      seen.add(key)
-      result.push({
-        key,
-        id: m.id, // Ajout de l'ID du membre pour la validation Laravel
-        nom: u.nom,
-        prenom: u.prenom,
-        role: m.role,
-        name: `${u.prenom} ${u.nom}`,
-        initials: `${(u.prenom?.[0] ?? '').toUpperCase()}${(u.nom?.[0] ?? '').toUpperCase()}`,
-      })
-    }
-  }
-  for (const val of Object.values(obj)) {
-    if (Array.isArray(val)) for (const item of val) collectMembres(item, seen, result)
-  }
-  return result
-}
+// const collectMembres = (obj, seen = new Set(), result = []) => {
+//   if (!obj || typeof obj !== 'object') return result
+//   for (const m of (obj.membres ?? [])) {
+//     const u = m.entite_user?.user
+//     if (!u) continue
+//     const key = `${u.nom}|${u.prenom}|${m.role}`
+//     if (!seen.has(key)) {
+//       seen.add(key)
+//       result.push({
+//         key,
+//         id: m.id, // Ajout de l'ID du membre pour la validation Laravel
+//         nom: u.nom,
+//         prenom: u.prenom,
+//         role: m.role,
+//         name: `${u.prenom} ${u.nom}`,
+//         initials: `${(u.prenom?.[0] ?? '').toUpperCase()}${(u.nom?.[0] ?? '').toUpperCase()}`,
+//       })
+//     }
+//   }
+//   for (const val of Object.values(obj)) {
+//     if (Array.isArray(val)) for (const item of val) collectMembres(item, seen, result)
+//   }
+//   return result
+// }
 
-const membres = computed(() => {
-  if (!codir.value) return []
-  const list = collectMembres(codir.value)
-  return [...list].sort((a, b) => {
-    const ia = ROLE_ORDER.indexOf(a.role)
-    const ib = ROLE_ORDER.indexOf(b.role)
-    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
-  })
-})
+// const membres = computed(() => {
+//   if (!codir.value) return []
+//   const list = collectMembres(codir.value)
+//   return [...list].sort((a, b) => {
+//     const ia = ROLE_ORDER.indexOf(a.role)
+//     const ib = ROLE_ORDER.indexOf(b.role)
+//     return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
+//   })
+// })
 
 // ── État de présence (local, non persisté en DB pour l'instant) ───────────────
 // Stocké dans localStorage pour survivre à une navigation
@@ -311,10 +317,10 @@ const savePresencesToDb = async () => {
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <CodirListePresence
             v-for="membre in membres"
-            :key="membre.key"
+            :key="membre.id"
             :name="membre.name"
             :role="membre.role"
-            :initials="membre.initials"
+            :initials="getInitials(membre.entite_user.user.nom + ' ' + membre.entite_user.user.prenom)"
             :initial-status="presenceState[membre.key]?.status ?? 'present'"
             :initial-reason="presenceState[membre.key]?.reason ?? ''"
             @change="onPresenceChange({ key: membre.key, ...$event })"

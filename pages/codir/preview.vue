@@ -4,7 +4,6 @@ import { formatDateFR, formatDateShort, extractTime, getStatutConfig, useCodir }
 definePageMeta({ title: 'Aperçu CODIR' })
 
 const router = useRouter()
-// ✅ Option 3 — fallback garanti
 const toast = useNuxtApp().$toast ?? useToast()
 
 // ── Données depuis localStorage ───────────────────────────────────────────────
@@ -49,11 +48,9 @@ const handleGeneratePdf = async () => {
   pdfGenerating.value = true
   try {
     const result = await generatePdf(codir.value.id)
-    // On met à jour le codir avec le chemin relatif retourné
     codir.value = { ...codir.value, url: result.url }
     localStorage.setItem('currentCodir', JSON.stringify(codir.value))
 
-    // Calcul du nom du fichier tel qu'il sera téléchargé
     const dateStr = codir.value.date
       ? new Date(codir.value.date)
         .toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
@@ -61,7 +58,6 @@ const handleGeneratePdf = async () => {
       : String(codir.value.id)
     generatedPdfName.value = `CODIR_${dateStr}.pdf`
 
-    // Ouvrir la modale de confirmation
     showPdfGeneratedModal.value = true
   } catch (e) {
     toast.add({ title: 'Erreur', description: 'Impossible de générer le PDF.', color: 'red', icon: 'i-heroicons-x-circle' })
@@ -74,13 +70,15 @@ const handleGeneratePdf = async () => {
 const pdfDownloading = ref(false)
 
 const handleDownloadPdf = async (item) => {
+  const id = item?.id ?? codir.value?.id
+  if (!id) return console.error('ID du CODIR introuvable')
   try {
     pdfDownloading.value = true
-    const blob = await downloadPdf(item.id)
+    const blob = await downloadPdf(id)
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.setAttribute('download', `codir_${item.id}.pdf`)
+    link.setAttribute('download', `codir_${id}.pdf`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -126,7 +124,7 @@ const statutTacheLabel = (s) => ({
 
         <!-- Télécharger PDF (visible uniquement si url présente) -->
         <UButton v-if="codir?.url !== null" icon="i-heroicons-arrow-down-tray" color="emerald" variant="soft" size="sm"
-          :loading="pdfDownloading" :disabled="pdfDownloading" @click="handleDownloadPdf">
+          :loading="pdfDownloading" :disabled="pdfDownloading" @click="handleDownloadPdf(codir)">
           {{ pdfDownloading ? 'Téléchargement…' : 'Télécharger PDF' }}
         </UButton>
 
@@ -182,7 +180,7 @@ const statutTacheLabel = (s) => ({
 
             <div class="gap-3">
               <UButton color="red" icon="i-heroicons-x-mark" @click="showPdfGeneratedModal = false"
-                btnText="Fermer" />
+                label="Fermer" />
               <CustomButton color="emerald" icon="i-heroicons-arrow-down-tray" :loading="pdfDownloading"
                 @click="handleDownloadPdf(codir)" :btnText="pdfDownloading ? 'Téléchargement' : 'Télécharger'" />
             </div>
@@ -241,15 +239,13 @@ const statutTacheLabel = (s) => ({
           </span>
           <span class="flex items-center gap-1.5">
             <span class="opacity-60">Horaire :</span>
-            <strong class="text-white">{{ extractTime(codir.heure_debut) }} – {{ extractTime(codir.heure_fin)
-              }}</strong>
+            <strong class="text-white">{{ extractTime(codir.heure_debut) }} – {{ extractTime(codir.heure_fin) }}</strong>
           </span>
           <span
             class="text-xs font-semibold px-3 py-1 rounded-full capitalize bg-white/10 text-white border border-white/20">
             {{ getStatutConfig(codir.statut).label }}
           </span>
         </div>
-        <!-- Lien PDF si déjà généré -->
         <div v-if="codir.url" class="mt-4">
           <a :href="codir.url" target="_blank"
             class="inline-flex items-center gap-1.5 text-xs text-blue-200 hover:text-white underline underline-offset-2 transition-colors">
@@ -261,7 +257,7 @@ const statutTacheLabel = (s) => ({
 
       <div class="px-10 py-8 space-y-10">
 
-        <!-- ── Suivi des tâches (ODJ 1 implicite) ──────────────────────── -->
+        <!-- ── Suivi des tâches ──────────────────────────────────────────── -->
         <section v-if="codir.taches?.length">
           <h2 class="text-base font-bold text-slate-800 border-b-2 border-blue-600 pb-2 mb-4 flex items-center gap-2">
             <span class="w-1.5 h-5 bg-blue-600 rounded-full inline-block"></span>
@@ -288,25 +284,17 @@ const statutTacheLabel = (s) => ({
                     'text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-xs font-semibold': tache.priorite === 'Basse',
                   }">{{ tache.priorite }}</span>
                 </td>
-                <td class="px-3 py-2 border border-slate-200 text-center text-xs">{{
-                  statutTacheLabel(tache.pivot?.statut)
-                  }}</td>
+                <td class="px-3 py-2 border border-slate-200 text-center text-xs">{{ statutTacheLabel(tache.pivot?.statut) }}</td>
                 <td class="px-3 py-2 border border-slate-200 text-center">
                   <div class="flex flex-col items-center gap-1">
-                    <span class="text-xs font-mono font-semibold text-blue-700">{{ tache.pivot?.progression ?? 0
-                      }}%</span>
+                    <span class="text-xs font-mono font-semibold text-blue-700">{{ tache.pivot?.progression ?? 0 }}%</span>
                     <div class="w-full bg-gray-200 rounded-full h-1.5">
-                      <div class="bg-blue-500 h-1.5 rounded-full" :style="`width:${tache.pivot?.progression ?? 0}%`">
-                      </div>
+                      <div class="bg-blue-500 h-1.5 rounded-full" :style="`width:${tache.pivot?.progression ?? 0}%`"></div>
                     </div>
                   </div>
                 </td>
-                <td class="px-3 py-2 border border-slate-200 text-xs text-slate-600">{{ getMembresLabel(tache.membres)
-                  }}
-                </td>
-                <td class="px-3 py-2 border border-slate-200 text-xs text-slate-500 italic">{{ tache.pivot?.commentaire
-                  ??
-                  '—' }}</td>
+                <td class="px-3 py-2 border border-slate-200 text-xs text-slate-600">{{ getMembresLabel(tache.membres) }}</td>
+                <td class="px-3 py-2 border border-slate-200 text-xs text-slate-500 italic">{{ tache.pivot?.commentaire ?? '—' }}</td>
               </tr>
             </tbody>
           </table>
@@ -330,8 +318,7 @@ const statutTacheLabel = (s) => ({
                 <span class="text-blue-500 text-xs font-bold uppercase tracking-wide shrink-0">Action</span>
                 <span class="font-medium text-slate-700 text-sm">{{ action.libelle }}</span>
               </div>
-              <div v-for="activite in action.activites" :key="activite.id"
-                class="mb-3 pl-4 border-l-2 border-violet-100">
+              <div v-for="activite in action.activites" :key="activite.id" class="mb-3 pl-4 border-l-2 border-violet-100">
                 <div class="text-xs font-semibold text-violet-600 mb-1.5">▸ {{ activite.libelle }}</div>
                 <table v-if="activite.taches?.length" class="w-full text-xs border-collapse">
                   <thead>
@@ -347,17 +334,11 @@ const statutTacheLabel = (s) => ({
                     <tr v-for="tache in activite.taches" :key="tache.id" class="even:bg-slate-50/40">
                       <td class="px-2 py-1.5 border border-slate-200 text-slate-700">{{ tache.intitule }}</td>
                       <td class="px-2 py-1.5 border border-slate-200 text-center">
-                        <span
-                          :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">{{
-                          tache.priorite }}</span>
+                        <span :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">{{ tache.priorite }}</span>
                       </td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
-                        formatDateShort(tache.date_debut) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
-                        formatDateShort(tache.date_fin) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres)
-                        }}
-                      </td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_debut) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_fin) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres) }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -384,17 +365,11 @@ const statutTacheLabel = (s) => ({
                     <tr v-for="tache in activite.taches" :key="tache.id" class="even:bg-slate-50/40">
                       <td class="px-2 py-1.5 border border-slate-200 text-slate-700">{{ tache.intitule }}</td>
                       <td class="px-2 py-1.5 border border-slate-200 text-center">
-                        <span
-                          :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">{{
-                          tache.priorite }}</span>
+                        <span :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">{{ tache.priorite }}</span>
                       </td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
-                        formatDateShort(tache.date_debut) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
-                        formatDateShort(tache.date_fin) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres)
-                        }}
-                      </td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_debut) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_fin) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres) }}</td>
                     </tr>
                   </tbody>
                 </table>
