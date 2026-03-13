@@ -655,17 +655,12 @@ const pdfPopupError   = ref('')
 const pdfPopupUrl     = ref('')
 const pdfPopupBlobUrl = ref('')
 
-const loadPdfPopup = async (item) => {
-  try {
-    const { blob } = await fetchFileAsBlob(item)
-    const blobUrl  = URL.createObjectURL(blob)
-    pdfPopupBlobUrl.value = blobUrl
-    pdfPopupUrl.value     = blobUrl
-    pdfPopupLoaded.value  = true
-  } catch (err) {
-    console.error('❌ Erreur chargement PDF popup:', err)
-    pdfPopupError.value = err.message || 'Erreur lors du chargement'
-  }
+const loadPdfPopup = (item) => {
+  const url = buildDocumentUrl(item)
+  if (!url) { pdfPopupError.value = 'URL du fichier introuvable'; return }
+  pdfPopupUrl.value    = url
+  pdfPopupBlobUrl.value = url   // réutilisé pour "Ouvrir dans un onglet"
+  pdfPopupLoaded.value = true
 }
 
 const openPdfInTab = () => {
@@ -673,12 +668,12 @@ const openPdfInTab = () => {
 }
 
 const closePdfPopup = () => {
-  pdfPopupOpen.value = false
-  if (pdfPopupBlobUrl.value) { URL.revokeObjectURL(pdfPopupBlobUrl.value); pdfPopupBlobUrl.value = '' }
+  pdfPopupOpen.value   = false
   pdfPopupItem.value   = null
   pdfPopupLoaded.value = false
   pdfPopupError.value  = ''
   pdfPopupUrl.value    = ''
+  pdfPopupBlobUrl.value = ''
 }
 
 // ── État modal détails ────────────────────────────────────────────────────
@@ -690,47 +685,35 @@ const fileUrl        = ref('')
 const currentBlobUrl = ref('')
 
 const onViewItem = (item) => {
-  if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
-  selectedItem.value = item
-  fileLoaded.value   = false
-  fileError.value    = ''
-  fileUrl.value      = ''
-  modalOpen.value    = true
+  currentBlobUrl.value = ''
+  selectedItem.value   = item
+  fileLoaded.value     = false
+  fileError.value      = ''
+  fileUrl.value        = ''
+  modalOpen.value      = true
   fileLoadingModal.value = false
 }
 
 const closeModal = () => {
-  if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
   modalOpen.value    = false
   selectedItem.value = null
   fileLoaded.value   = false
   fileError.value    = ''
   fileUrl.value      = ''
+  currentBlobUrl.value = ''
   fileLoadingModal.value = false
 }
 
 // Chargement PDF dans la modal détails (bouton manuel)
 const fileLoadingModal = ref(false)
 
-const loadFile = async () => {
+const loadFile = () => {
   if (!selectedItem.value?.url) return
-  fileLoadingModal.value = true   // bouton disparaît
-  fileLoaded.value  = false
-  fileError.value   = ''
-  fileUrl.value     = ''
-  if (currentBlobUrl.value) { URL.revokeObjectURL(currentBlobUrl.value); currentBlobUrl.value = '' }
-  try {
-    const { blob } = await fetchFileAsBlob(selectedItem.value)
-    const blobUrl  = URL.createObjectURL(blob)
-    currentBlobUrl.value = blobUrl
-    fileUrl.value        = blobUrl
-    fileLoaded.value     = true
-  } catch (err) {
-    console.error('❌ Erreur chargement fichier:', err)
-    fileError.value = err.message || 'Erreur lors du chargement'
-  } finally {
-    fileLoadingModal.value = false
-  }
+  const url = buildDocumentUrl(selectedItem.value)
+  if (!url) { fileError.value = 'URL du fichier introuvable'; return }
+  fileUrl.value        = url
+  currentBlobUrl.value = url   // réutilisé pour "Ouvrir dans un onglet"
+  fileLoaded.value     = true
 }
 
 const openBlobInTab = () => {
@@ -750,24 +733,14 @@ const formatDuree = (annees) => {
 
 const buildDocumentUrl = (item) => {
   if (!item?.url) return null
-  const base = config.public.apiBase.replace(/\/$/, '')
+  const base = config.public.baseUrl.replace(/\/$/, '')
   const raw  = item.date_enreg_raw
-  if (!raw) return `${base}/file/documents/${item.url}`
+  if (!raw) return `${base}/public/storage/documents/${item.url}`
   const d     = new Date(raw)
   const year  = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day   = String(d.getDate()).padStart(2, '0')
-  return `${base}/file/documents/${year}/${month}/${day}/${item.url}`
-}
-
-const fetchFileAsBlob = async (item) => {
-  const url = buildDocumentUrl(item)
-  if (!url) throw new Error('URL du fichier introuvable')
-  const authToken = localStorage.getItem('auth_token') || ''
-  const response  = await fetch(url, { headers: { Authorization: `Bearer ${authToken}` } })
-  if (!response.ok) throw new Error(`Erreur ${response.status} — fichier non accessible`)
-  const blob = await response.blob()
-  return { blob }
+  return `${base}/public/storage/documents/${year}/${month}/${day}/${item.url}`
 }
 
 // ── Transform documents ───────────────────────────────────────────────────
