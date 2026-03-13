@@ -735,12 +735,12 @@ const buildDocumentUrl = (item) => {
   if (!item?.url) return null
   const base = config.public.baseUrl.replace(/\/$/, '')
   const raw  = item.date_enreg_raw
-  if (!raw) return `${base}/public/storage/documents/${item.url}`
+  if (!raw) return `${base}/storage/documents/${item.url}`
   const d     = new Date(raw)
   const year  = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day   = String(d.getDate()).padStart(2, '0')
-  return `${base}/public/storage/documents/${year}/${month}/${day}/${item.url}`
+  return `${base}/storage/documents/${year}/${month}/${day}/${item.url}`
 }
 
 // ── Transform documents ───────────────────────────────────────────────────
