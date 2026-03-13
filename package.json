@@ -30,6 +30,7 @@
     "axios": "^1.13.2",
     "chart.js": "^4.4.0",
     "docx": "^9.6.0",
+    "pdfjs-dist": "^5.5.207",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "sortablejs": "^1.15.7",
