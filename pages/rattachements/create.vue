@@ -4,57 +4,27 @@
       <!-- Header avec indicateur d'étapes -->
       <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-900">Rattachement de Courriers</h1>
-        <p class="text-gray-600 mt-1">
-          Associez un courrier départ (réponse) à un courrier arrivée
-        </p>
+        <p class="text-gray-600 mt-1">Associez un courrier départ (réponse) à un courrier arrivée</p>
 
         <!-- Indicateur d'étapes -->
         <div class="mt-6 flex items-center justify-center">
           <div class="flex items-center w-full max-w-md">
-            <!-- Étape 1 -->
             <div class="flex items-center flex-1">
-              <div :class="[
-                'flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all',
-                currentStep >= 1
-                  ? 'bg-blue-600 border-blue-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-400'
-              ]">
+              <div :class="['flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all', currentStep >= 1 ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-300 text-gray-400']">
                 <Icon v-if="currentStep > 1" name="i-heroicons-check" class="h-5 w-5" />
                 <span v-else class="font-semibold">1</span>
               </div>
               <div class="ml-3 text-left">
-                <p :class="[
-                  'text-sm font-medium',
-                  currentStep >= 1 ? 'text-gray-900' : 'text-gray-500'
-                ]">
-                  Sélection
-                </p>
+                <p :class="['text-sm font-medium', currentStep >= 1 ? 'text-gray-900' : 'text-gray-500']">Sélection</p>
               </div>
             </div>
-
-            <!-- Ligne de connexion -->
-            <div :class="[
-              'flex-1 h-0.5 mx-4 transition-all',
-              currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-300'
-            ]"></div>
-
-            <!-- Étape 2 -->
+            <div :class="['flex-1 h-0.5 mx-4 transition-all', currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-300']"></div>
             <div class="flex items-center flex-1">
-              <div :class="[
-                'flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all',
-                currentStep >= 2
-                  ? 'bg-blue-600 border-blue-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-400'
-              ]">
+              <div :class="['flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all', currentStep >= 2 ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-300 text-gray-400']">
                 <span class="font-semibold">2</span>
               </div>
               <div class="ml-3 text-left">
-                <p :class="[
-                  'text-sm font-medium',
-                  currentStep >= 2 ? 'text-gray-900' : 'text-gray-500'
-                ]">
-                  Prévisualisation
-                </p>
+                <p :class="['text-sm font-medium', currentStep >= 2 ? 'text-gray-900' : 'text-gray-500']">Prévisualisation</p>
               </div>
             </div>
           </div>
@@ -71,30 +41,17 @@
               <Icon name="i-heroicons-inbox-arrow-down" class="h-6 w-6 text-blue-600" />
               Courrier Arrivée
             </label>
-
-            <!-- Recherche -->
             <div class="mb-4">
               <UInput v-model="searchArrivee" placeholder="Rechercher par référence ou objet..."
                 icon="i-heroicons-magnifying-glass" size="lg" class="w-full" />
             </div>
-
-            <!-- Liste déroulante des références -->
             <div class="border border-gray-200 rounded-lg max-h-96 overflow-y-auto bg-gray-50">
               <div v-for="courrier in filteredCourriersArrivee" :key="courrier.id"
-                @click="selectCourrierArrivee(courrier)" :class="[
-                  'p-4 cursor-pointer transition-all border-b border-gray-200 last:border-b-0',
-                  selectedArrivee?.id === courrier.id
-                    ? 'bg-blue-100 border-l-4 border-l-blue-600'
-                    : 'hover:bg-white hover:shadow-sm'
-                ]">
+                @click="selectCourrierArrivee(courrier)" :class="['p-4 cursor-pointer transition-all border-b border-gray-200 last:border-b-0', selectedArrivee?.id === courrier.id ? 'bg-blue-100 border-l-4 border-l-blue-600' : 'hover:bg-white hover:shadow-sm']">
                 <div class="flex items-start justify-between">
                   <div class="flex-1">
-                    <p class="font-bold text-blue-900 text-base">
-                      {{ courrier.reference }}
-                    </p>
-                    <p class="text-sm text-gray-700 mt-1 line-clamp-2">
-                      {{ courrier.objet }}
-                    </p>
+                    <p class="font-bold text-blue-900 text-base">{{ courrier.reference }}</p>
+                    <p class="text-sm text-gray-700 mt-1 line-clamp-2">{{ courrier.objet }}</p>
                     <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
                       <span class="flex items-center gap-1">
                         <Icon name="i-heroicons-building-office-2" class="h-3 w-3" />
@@ -111,15 +68,11 @@
                   </div>
                 </div>
               </div>
-
-              <!-- État vide -->
               <div v-if="filteredCourriersArrivee.length === 0" class="p-8 text-center text-gray-500">
                 <Icon name="i-heroicons-inbox" class="h-12 w-12 mx-auto mb-2 text-gray-400" />
                 <p class="text-sm">Aucun courrier arrivée trouvé</p>
               </div>
             </div>
-
-            <!-- Sélection active -->
             <div v-if="selectedArrivee" class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -139,30 +92,17 @@
               <Icon name="i-heroicons-paper-airplane" class="h-6 w-6 text-green-600" />
               Courrier Départ (Réponse)
             </label>
-
-            <!-- Recherche -->
             <div class="mb-4">
               <UInput v-model="searchDepart" placeholder="Rechercher par référence ou objet..."
                 icon="i-heroicons-magnifying-glass" size="lg" class="w-full" />
             </div>
-
-            <!-- Liste déroulante des références -->
             <div class="border border-gray-200 rounded-lg max-h-96 overflow-y-auto bg-gray-50">
               <div v-for="courrier in filteredCourriersDepart" :key="courrier.id"
-                @click="selectCourrierDepart(courrier)" :class="[
-                  'p-4 cursor-pointer transition-all border-b border-gray-200 last:border-b-0',
-                  selectedDepart?.id === courrier.id
-                    ? 'bg-green-100 border-l-4 border-l-green-600'
-                    : 'hover:bg-white hover:shadow-sm'
-                ]">
+                @click="selectCourrierDepart(courrier)" :class="['p-4 cursor-pointer transition-all border-b border-gray-200 last:border-b-0', selectedDepart?.id === courrier.id ? 'bg-green-100 border-l-4 border-l-green-600' : 'hover:bg-white hover:shadow-sm']">
                 <div class="flex items-start justify-between">
                   <div class="flex-1">
-                    <p class="font-bold text-green-900 text-base">
-                      {{ courrier.reference }}
-                    </p>
-                    <p class="text-sm text-gray-700 mt-1 line-clamp-2">
-                      {{ courrier.objet }}
-                    </p>
+                    <p class="font-bold text-green-900 text-base">{{ courrier.reference }}</p>
+                    <p class="text-sm text-gray-700 mt-1 line-clamp-2">{{ courrier.objet }}</p>
                     <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
                       <span class="flex items-center gap-1">
                         <Icon name="i-heroicons-user" class="h-3 w-3" />
@@ -179,15 +119,11 @@
                   </div>
                 </div>
               </div>
-
-              <!-- État vide -->
               <div v-if="filteredCourriersDepart.length === 0" class="p-8 text-center text-gray-500">
                 <Icon name="i-heroicons-inbox" class="h-12 w-12 mx-auto mb-2 text-gray-400" />
                 <p class="text-sm">Aucun courrier départ trouvé</p>
               </div>
             </div>
-
-            <!-- Sélection active -->
             <div v-if="selectedDepart" class="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -210,8 +146,6 @@
             <Icon name="i-heroicons-inbox-arrow-down" class="h-6 w-6 text-blue-600" />
             Courrier Arrivée
           </h3>
-
-          <!-- Informations du courrier -->
           <div class="bg-blue-50 rounded-lg p-4 mb-4 space-y-2 text-sm">
             <div class="flex justify-between">
               <span class="text-gray-700 font-medium">Référence:</span>
@@ -231,8 +165,22 @@
             </div>
           </div>
 
-          <!-- Prévisualisation du document -->
-          <DocumentRpreview :file-preview-url="selectedArrivee.url" />
+          <!-- Preview arrivée via blob -->
+          <div v-if="previewLoading" class="flex items-center justify-center py-8 gap-3 text-slate-400 text-xs">
+            <div class="w-5 h-5 border-2 border-slate-200 border-t-blue-500 rounded-full animate-spin"></div>
+            Chargement du document...
+          </div>
+          <div v-else-if="arriveeBlobUrl">
+            <DocumentRpreview :file-preview-url="arriveeBlobUrl" />
+          </div>
+          <div v-else-if="arriveePreviewError" class="flex items-center gap-2 px-4 py-3 text-xs text-red-500 bg-red-50 border border-red-200 rounded-xl">
+            <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
+            {{ arriveePreviewError }}
+          </div>
+          <div v-else class="flex items-center gap-2 px-4 py-3 text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-xl">
+            <Icon name="i-heroicons-document-text" class="w-4 h-4" />
+            Aucun document disponible
+          </div>
         </div>
 
         <!-- Prévisualisation Courrier Départ -->
@@ -241,8 +189,6 @@
             <Icon name="i-heroicons-paper-airplane" class="h-6 w-6 text-green-600" />
             Courrier Départ
           </h3>
-
-          <!-- Informations du courrier -->
           <div class="bg-green-50 rounded-lg p-4 mb-4 space-y-2 text-sm">
             <div class="flex justify-between">
               <span class="text-gray-700 font-medium">Référence:</span>
@@ -262,30 +208,37 @@
             </div>
           </div>
 
-          <!-- Prévisualisation du document -->
-          <DocumentRpreview :file-preview-url="selectedDepart.url" />
+          <!-- Preview départ via blob -->
+          <div v-if="previewLoading" class="flex items-center justify-center py-8 gap-3 text-slate-400 text-xs">
+            <div class="w-5 h-5 border-2 border-slate-200 border-t-green-500 rounded-full animate-spin"></div>
+            Chargement du document...
+          </div>
+          <div v-else-if="departBlobUrl">
+            <DocumentRpreview :file-preview-url="departBlobUrl" />
+          </div>
+          <div v-else-if="departPreviewError" class="flex items-center gap-2 px-4 py-3 text-xs text-red-500 bg-red-50 border border-red-200 rounded-xl">
+            <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
+            {{ departPreviewError }}
+          </div>
+          <div v-else class="flex items-center gap-2 px-4 py-3 text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-xl">
+            <Icon name="i-heroicons-document-text" class="w-4 h-4" />
+            Aucun document disponible
+          </div>
         </div>
       </div>
 
       <!-- Boutons de navigation -->
       <div class="mt-8 flex justify-between">
-        <!-- Bouton Retour / Annuler -->
-        <UButton v-if="currentStep === 1" @click="handleCancel" color="gray" variant="outline" size="lg"
-          icon="i-heroicons-x-mark">
+        <UButton v-if="currentStep === 1" @click="handleCancel" color="gray" variant="outline" size="lg" icon="i-heroicons-x-mark">
           Annuler
         </UButton>
-
-        <UButton v-if="currentStep === 2" @click="currentStep = 1" color="gray" variant="outline" size="lg"
-          icon="i-heroicons-arrow-left">
+        <UButton v-if="currentStep === 2" @click="goBack" color="gray" variant="outline" size="lg" icon="i-heroicons-arrow-left">
           Retour
         </UButton>
-
-        <!-- Bouton Suivant / Valider -->
         <UButton v-if="currentStep === 1" @click="goToPreview" :disabled="!selectedArrivee || !selectedDepart" size="lg"
           icon="i-heroicons-arrow-right" trailing class="bg-gradient-to-br from-emerald-700 to-blue-800 text-white dark:text-white ml-auto">
           Suivant
         </UButton>
-
         <UButton v-if="currentStep === 2" @click="showConfirmModal = true" size="lg" icon="i-heroicons-link"
           class="ml-auto bg-gradient-to-br from-emerald-800 to-blue-800 text-white dark:text-white">
           Rattacher
@@ -296,7 +249,6 @@
     <!-- ========== MODAL DE CONFIRMATION ========== -->
     <UModal v-model="showConfirmModal" :ui="{ width: 'sm:max-w-4xl' }">
       <div class="p-6">
-        <!-- En-tête du modal -->
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Icon name="i-heroicons-link" class="h-6 w-6 text-purple-600" />
@@ -305,12 +257,8 @@
           <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark" @click="showConfirmModal = false" square />
         </div>
 
-        <!-- Récapitulatif visuel -->
         <div class="mb-6">
-          <p class="text-sm text-gray-600 mb-4">
-            Vous êtes sur le point de rattacher ces deux courriers :
-          </p>
-
+          <p class="text-sm text-gray-600 mb-4">Vous êtes sur le point de rattacher ces deux courriers :</p>
           <div class="flex flex-col lg:flex-row items-stretch gap-4">
             <!-- Courrier Arrivée -->
             <div class="flex-1 bg-blue-50 rounded-lg p-4 border-2 border-blue-200 min-w-0">
@@ -321,13 +269,11 @@
                   <p class="font-bold text-blue-900 text-sm break-words">{{ selectedArrivee?.reference }}</p>
                 </div>
               </div>
-
               <div class="space-y-2">
                 <div class="bg-white bg-opacity-50 rounded p-2">
                   <p class="text-xs text-gray-600 font-medium mb-1">Objet:</p>
                   <p class="text-xs text-gray-800 break-words">{{ selectedArrivee?.objet }}</p>
                 </div>
-
                 <div class="grid grid-cols-1 gap-2">
                   <div class="bg-white bg-opacity-50 rounded p-2">
                     <p class="text-xs text-gray-600 font-medium">Structure:</p>
@@ -340,12 +286,9 @@
                 </div>
               </div>
             </div>
-
-            <!-- Icône de lien -->
             <div class="flex-shrink-0 flex items-center justify-center lg:py-0 py-2">
               <Icon name="i-heroicons-arrow-right-circle" class="h-10 w-10 text-purple-600 lg:rotate-0 rotate-90" />
             </div>
-
             <!-- Courrier Départ -->
             <div class="flex-1 bg-green-50 rounded-lg p-4 border-2 border-green-200 min-w-0">
               <div class="flex items-start gap-3 mb-3">
@@ -355,13 +298,11 @@
                   <p class="font-bold text-green-900 text-sm break-words">{{ selectedDepart?.reference }}</p>
                 </div>
               </div>
-
               <div class="space-y-2">
                 <div class="bg-white bg-opacity-50 rounded p-2">
                   <p class="text-xs text-gray-600 font-medium mb-1">Objet:</p>
                   <p class="text-xs text-gray-800 break-words">{{ selectedDepart?.objet }}</p>
                 </div>
-
                 <div class="grid grid-cols-1 gap-2">
                   <div class="bg-white bg-opacity-50 rounded p-2">
                     <p class="text-xs text-gray-600 font-medium">Destinataire:</p>
@@ -377,27 +318,21 @@
           </div>
         </div>
 
-        <!-- Message d'avertissement -->
         <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
           <div class="flex gap-3">
             <Icon name="i-heroicons-exclamation-triangle" class="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div class="text-sm text-amber-800">
               <p class="font-medium mb-1">Attention</p>
-              <p>Cette action créera un lien permanent entre ces deux courriers. Assurez-vous que le courrier départ est
-                bien la réponse au courrier arrivée sélectionné.</p>
+              <p>Cette action créera un lien permanent entre ces deux courriers. Assurez-vous que le courrier départ est bien la réponse au courrier arrivée sélectionné.</p>
             </div>
           </div>
         </div>
 
-        <!-- Boutons d'action -->
         <div class="flex justify-end gap-3">
-          <UButton @click="showConfirmModal = false" color="gray" variant="outline" size="lg">
-            Annuler
-          </UButton>
-
-          <UButton @click="handleSave" :loading="loading" size="lg" icon="i-heroicons-check"
+          <UButton @click="showConfirmModal = false" color="gray" variant="outline" size="lg">Annuler</UButton>
+          <UButton @click="handleSave" :loading="savingLoading" size="lg" icon="i-heroicons-check"
             class="bg-gradient-to-br from-emerald-800 to-blue-800 text-white dark:text-white">
-            {{ loading ? 'Rattachement en cours...' : 'Confirmer le rattachement' }}
+            {{ savingLoading ? 'Rattachement en cours...' : 'Confirmer le rattachement' }}
           </UButton>
         </div>
       </div>
@@ -406,288 +341,251 @@
 </template>
 
 <script setup>
-useHead({
-  title: "Rattachement de Courriers - Sagar Revolution",
-});
+import { ref, computed, onUnmounted } from 'vue'
+import DocumentRpreview from '~/components/DocumentRpreview.vue'
 
-// ============================================================================
-// ÉTAT DU COMPOSANT
-// ============================================================================
+useHead({ title: "Rattachement de Courriers - Sagar Revolution" })
 
-const authToken = ref("");
-const toast = useToast();
-const loading = ref(false);
-const config = useRuntimeConfig();
+const authToken = ref('')
+const toast     = useToast()
+const config    = useRuntimeConfig()
 
 // Navigation
-const currentStep = ref(1);
-const showConfirmModal = ref(false);
+const currentStep     = ref(1)
+const showConfirmModal = ref(false)
+const savingLoading   = ref(false)
 
 // Recherche
-const searchArrivee = ref("");
-const searchDepart = ref("");
+const searchArrivee = ref('')
+const searchDepart  = ref('')
 
 // Sélections
-const selectedArrivee = ref(null);
-const selectedDepart = ref(null);
+const selectedArrivee = ref(null)
+const selectedDepart  = ref(null)
 
 // Données
-const courriersArrivee = ref([]);
-const courriersDepart = ref([]);
+const courriersArrivee = ref([])
+const courriersDepart  = ref([])
 
-// ============================================================================
-// COMPUTED PROPERTIES - FILTRES
-// ============================================================================
+// ── États blob pour l'étape 2 ─────────────────────────────────────────────────
+const previewLoading     = ref(false)
+const arriveeBlobUrl     = ref('')
+const arriveePreviewError = ref('')
+const departBlobUrl      = ref('')
+const departPreviewError  = ref('')
 
+// ── Utilitaires ───────────────────────────────────────────────────────────────
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  return new Date(dateString).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+const guessMimeType = (filename) => {
+  if (!filename) return ''
+  const ext = (filename.split('.').pop() || '').toLowerCase()
+  return { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' }[ext] || ''
+}
+
+const buildDocumentUrl = (rawUrl, dateEnreg) => {
+  if (!rawUrl || rawUrl === 'Inconnu') return null
+  const base     = config.public.apiBase.replace(/\/$/, '')
+  const filename = rawUrl.startsWith('/') ? rawUrl.slice(1) : rawUrl
+  if (!dateEnreg) return `${base}/file/documents/${filename}`
+  const d     = new Date(dateEnreg)
+  const year  = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day   = String(d.getDate()).padStart(2, '0')
+  return `${base}/file/documents/${year}/${month}/${day}/${filename}`
+}
+
+const fetchFileAsBlob = async (rawUrl, dateEnreg) => {
+  const url = buildDocumentUrl(rawUrl, dateEnreg)
+  if (!url) throw new Error('URL du fichier introuvable')
+  const token    = localStorage.getItem('auth_token') || ''
+  const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+  if (!response.ok) throw new Error(`Erreur ${response.status} — fichier non accessible`)
+  const blob = await response.blob()
+  return { blob, mimeType: blob.type || guessMimeType(rawUrl) }
+}
+
+// ── Révoquer les blobs en cours ───────────────────────────────────────────────
+const revokePreviews = () => {
+  if (arriveeBlobUrl.value) { URL.revokeObjectURL(arriveeBlobUrl.value); arriveeBlobUrl.value = '' }
+  if (departBlobUrl.value)  { URL.revokeObjectURL(departBlobUrl.value);  departBlobUrl.value  = '' }
+}
+
+// ── Filtres ───────────────────────────────────────────────────────────────────
 const filteredCourriersArrivee = computed(() => {
-  if (!searchArrivee.value) return courriersArrivee.value;
-
-  const query = searchArrivee.value.toLowerCase();
-  return courriersArrivee.value.filter(courrier =>
-    courrier.reference.toLowerCase().includes(query) ||
-    courrier.objet.toLowerCase().includes(query) ||
-    courrier.structure.toLowerCase().includes(query)
-  );
-});
+  if (!searchArrivee.value) return courriersArrivee.value
+  const q = searchArrivee.value.toLowerCase()
+  return courriersArrivee.value.filter(c =>
+    c.reference.toLowerCase().includes(q) ||
+    c.objet.toLowerCase().includes(q) ||
+    c.structure.toLowerCase().includes(q)
+  )
+})
 
 const filteredCourriersDepart = computed(() => {
-  if (!searchDepart.value) return courriersDepart.value;
+  if (!searchDepart.value) return courriersDepart.value
+  const q = searchDepart.value.toLowerCase()
+  return courriersDepart.value.filter(c =>
+    c.reference.toLowerCase().includes(q) ||
+    c.objet.toLowerCase().includes(q) ||
+    c.destinataire.toLowerCase().includes(q)
+  )
+})
 
-  const query = searchDepart.value.toLowerCase();
-  return courriersDepart.value.filter(courrier =>
-    courrier.reference.toLowerCase().includes(query) ||
-    courrier.objet.toLowerCase().includes(query) ||
-    courrier.destinataire.toLowerCase().includes(query)
-  );
-});
+// ── Sélection ─────────────────────────────────────────────────────────────────
+const selectCourrierArrivee = (courrier) => { selectedArrivee.value = courrier }
+const selectCourrierDepart  = (courrier) => { selectedDepart.value  = courrier }
 
-// ============================================================================
-// MÉTHODES - SÉLECTION
-// ============================================================================
-
-const selectCourrierArrivee = (courrier) => {
-  selectedArrivee.value = courrier;
-  console.log("📥 Courrier arrivée sélectionné:", courrier.reference);
-};
-
-const selectCourrierDepart = (courrier) => {
-  selectedDepart.value = courrier;
-  console.log("📤 Courrier départ sélectionné:", courrier.reference);
-};
-
-// ============================================================================
-// MÉTHODES - NAVIGATION
-// ============================================================================
-
-const goToPreview = () => {
+// ── Navigation ────────────────────────────────────────────────────────────────
+const goToPreview = async () => {
   if (!selectedArrivee.value || !selectedDepart.value) {
-    toast.add({
-      title: "Sélection incomplète",
-      description: "Veuillez sélectionner un courrier arrivée et un courrier départ",
-      color: "amber",
-      timeout: 1500,
-    });
-    return;
+    toast.add({ title: "Sélection incomplète", description: "Veuillez sélectionner un courrier arrivée et un courrier départ", color: "amber", timeout: 1500 })
+    return
   }
 
-  currentStep.value = 2;
-};
+  revokePreviews()
+  arriveePreviewError.value = ''
+  departPreviewError.value  = ''
+  previewLoading.value = true
+  currentStep.value    = 2
 
-// ============================================================================
-// MÉTHODES - UTILITAIRES
-// ============================================================================
+  // Charger les deux blobs en parallèle
+  await Promise.allSettled([
+    (async () => {
+      const rawUrl    = selectedArrivee.value._rawUrl
+      const dateEnreg = selectedArrivee.value._dateEnreg
+      if (!rawUrl) return
+      try {
+        const { blob }    = await fetchFileAsBlob(rawUrl, dateEnreg)
+        arriveeBlobUrl.value = URL.createObjectURL(blob)
+      } catch (err) {
+        arriveePreviewError.value = err.message || 'Impossible de charger le document arrivée'
+      }
+    })(),
+    (async () => {
+      const rawUrl    = selectedDepart.value._rawUrl
+      const dateEnreg = selectedDepart.value._dateEnreg
+      if (!rawUrl) return
+      try {
+        const { blob }   = await fetchFileAsBlob(rawUrl, dateEnreg)
+        departBlobUrl.value = URL.createObjectURL(blob)
+      } catch (err) {
+        departPreviewError.value = err.message || 'Impossible de charger le document départ'
+      }
+    })(),
+  ])
 
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
+  previewLoading.value = false
+}
 
-  const date = new Date(dateString);
-  return date.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-};
+const goBack = () => {
+  revokePreviews()
+  currentStep.value = 1
+}
 
-// ============================================================================
-// MÉTHODES - ACTIONS
-// ============================================================================
-
+// ── Sauvegarde ────────────────────────────────────────────────────────────────
 const handleSave = async () => {
   if (!selectedArrivee.value || !selectedDepart.value) {
-    toast.add({
-      title: "Erreur",
-      description: "Veuillez sélectionner un courrier arrivée et un courrier départ",
-      color: "red",
-      timeout: 1500,
-    });
-    return;
+    toast.add({ title: "Erreur", description: "Veuillez sélectionner un courrier arrivée et un courrier départ", color: "red", timeout: 1500 })
+    return
   }
-
-  loading.value = true;
-
+  savingLoading.value = true
   try {
     const response = await $fetch(`${config.public.apiBase}/reponses`, {
       method: "POST",
-      body: {
-        document_id: selectedArrivee.value.id,
-        reponse_id: selectedDepart.value.id,
-      },
-      headers: {
-        Authorization: `Bearer ${authToken.value}`,
-        "Content-Type": "application/json",
-      },
-    });
-
+      body:   { document_id: selectedArrivee.value.id, reponse_id: selectedDepart.value.id },
+      headers: { Authorization: `Bearer ${authToken.value}`, "Content-Type": "application/json" },
+    })
     if (response.success) {
-      showConfirmModal.value = false;
-
-      toast.add({
-        title: "Succès",
-        description: `Rattachement effectué entre ${selectedArrivee.value.reference} et ${selectedDepart.value.reference}`,
-        color: "green",
-        timeout: 2000,
-      });
-
-      // Réinitialiser après un court délai
+      showConfirmModal.value = false
+      toast.add({ title: "Succès", description: `Rattachement effectué entre ${selectedArrivee.value.reference} et ${selectedDepart.value.reference}`, color: "green", timeout: 2000 })
       setTimeout(() => {
-        selectedArrivee.value = null;
-        selectedDepart.value = null;
-        searchArrivee.value = "";
-        searchDepart.value = "";
-        currentStep.value = 1;
-
-        // Optionnel : rediriger vers la liste
-        navigateTo("/rattachements");
-      }, 1500);
+        revokePreviews()
+        selectedArrivee.value = null
+        selectedDepart.value  = null
+        searchArrivee.value   = ''
+        searchDepart.value    = ''
+        currentStep.value     = 1
+        navigateTo("/rattachements")
+      }, 1500)
     } else {
-      console.log(response.data);
-      toast.add({
-        title: "Erreur",
-        description: response.message || "Une erreur est survenue lors du rattachement",
-        color: "red",
-        timeout: 1500,
-      });
+      toast.add({ title: "Erreur", description: response.message || "Une erreur est survenue lors du rattachement", color: "red", timeout: 1500 })
     }
   } catch (error) {
-    console.error("Erreur lors du rattachement:", error.data?.errors);
-    toast.add({
-      title: "Erreur",
-      description: error.data?.message || "Impossible de créer le rattachement",
-      color: "red",
-      timeout: 1500,
-    });
+    toast.add({ title: "Erreur", description: error.data?.message || "Impossible de créer le rattachement", color: "red", timeout: 1500 })
   } finally {
-    loading.value = false;
+    savingLoading.value = false
   }
-};
+}
 
 const handleCancel = () => {
-  selectedArrivee.value = null;
-  selectedDepart.value = null;
-  searchArrivee.value = "";
-  searchDepart.value = "";
-  currentStep.value = 1;
+  revokePreviews()
+  selectedArrivee.value = null
+  selectedDepart.value  = null
+  searchArrivee.value   = ''
+  searchDepart.value    = ''
+  currentStep.value     = 1
+  navigateTo("/documents")
+}
 
-  // Optionnel : rediriger
-  navigateTo("/documents");
-};
-
-// ============================================================================
-// CHARGEMENT DES DONNÉES
-// ============================================================================
-
+// ── Chargement des données ────────────────────────────────────────────────────
 const loadCourriersArrivee = async () => {
   try {
     const response = await $fetch(`${config.public.apiBase}/courriers-arrives/sans-reponses`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${authToken.value}`,
-      },
-    });
-
+      method: "GET", headers: { Authorization: `Bearer ${authToken.value}` },
+    })
     courriersArrivee.value = response.data.map(courrier => ({
-      id: courrier.document.id,
-      reference: courrier.document?.reference || '',
-      objet: courrier.document?.objet || '',
-      structure: courrier.structure_emettrice || '',
-      date_courrier: courrier.document?.date_courrier || '',
-      url: courrier.document?.url
-        ? `${config.public.baseUrl}${courrier.document.url}`
-        : '',
-    }));
-
-    console.log(`✅ ${courriersArrivee.value.length} courriers arrivée chargés`);
+      id:            courrier.document.id,
+      reference:     courrier.document?.reference     || '',
+      objet:         courrier.document?.objet         || '',
+      structure:     courrier.structure_emettrice      || '',
+      date_courrier: courrier.document?.date_courrier  || '',
+      // Noms bruts pour la construction blob
+      _rawUrl:       courrier.document?.url?.trim()   || '',
+      _dateEnreg:    courrier.document?.date_enreg    || '',
+    }))
   } catch (error) {
-    console.error("Erreur lors du chargement des courriers arrivée:", error);
-    toast.add({
-      title: "Erreur",
-      description: "Impossible de charger les courriers arrivée",
-      color: "red",
-      timeout: 1500,
-    });
+    console.error("Erreur lors du chargement des courriers arrivée:", error)
+    toast.add({ title: "Erreur", description: "Impossible de charger les courriers arrivée", color: "red", timeout: 1500 })
   }
-};
+}
 
 const loadCourriersDepart = async () => {
   try {
     const response = await $fetch(`${config.public.apiBase}/courriers-departs/non-reponses`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${authToken.value}`,
-      },
-    });
-
+      method: "GET", headers: { Authorization: `Bearer ${authToken.value}` },
+    })
     courriersDepart.value = response.data.map(courrier => ({
-      id: courrier.document.id,
-      reference: courrier.document?.reference || '',
-      objet: courrier.document?.objet || '',
-      destinataire: courrier.destinataire || '',
-      date_depart: courrier.date_depart || '',
-      url: courrier.document?.url
-        ? `${config.public.baseUrl}${courrier.document.url}`
-        : '',
-    }));
-
-    console.log(`✅ ${courriersDepart.value.length} courriers départ chargés`);
+      id:           courrier.document.id,
+      reference:    courrier.document?.reference   || '',
+      objet:        courrier.document?.objet       || '',
+      destinataire: courrier.destinataire          || '',
+      date_depart:  courrier.date_depart           || '',
+      // Noms bruts pour la construction blob
+      _rawUrl:      courrier.document?.url?.trim() || '',
+      _dateEnreg:   courrier.document?.date_enreg || '',
+    }))
   } catch (error) {
-    console.error("Erreur lors du chargement des courriers départ:", error);
-    toast.add({
-      title: "Erreur",
-      description: "Impossible de charger les courriers départ",
-      color: "red",
-      timeout: 1500,
-    });
+    console.error("Erreur lors du chargement des courriers départ:", error)
+    toast.add({ title: "Erreur", description: "Impossible de charger les courriers départ", color: "red", timeout: 1500 })
   }
-};
+}
 
-// ============================================================================
-// LIFECYCLE
-// ============================================================================
-
+// ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
-  if (process.client) {
-    authToken.value = localStorage.getItem("auth_token") || "";
-  }
+  if (process.client) authToken.value = localStorage.getItem("auth_token") || ''
+  await Promise.all([ loadCourriersArrivee(), loadCourriersDepart() ])
+})
 
-  await Promise.all([
-    loadCourriersArrivee(),
-    loadCourriersDepart()
-  ]);
-});
+onUnmounted(() => {
+  revokePreviews()
+})
 </script>
 
 <style scoped>
-.line-clamp-1 {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 </style>

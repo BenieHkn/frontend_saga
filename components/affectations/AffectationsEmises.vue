@@ -81,15 +81,36 @@
                 </div>
               </div>
             </div>
+
+            <!-- ── Preview document courrier ──────────────────────────── -->
             <div class="pt-1">
-              <div v-if="selectedAffectation.doc_courrier">
-                <button v-if="!showDoc" @click="showDoc = true"
+              <div v-if="selectedAffectation._raw?.courrier_arrive?.document?.url &&
+                         selectedAffectation._raw.courrier_arrive.document.url !== 'Inconnu'">
+                <!-- Pas encore chargé -->
+                <button
+                  v-if="!docFileLoaded && !docFileLoading && !docFileError"
+                  @click="loadDocFile"
                   class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-all">
                   <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />
                   Charger le document
                 </button>
-                <div v-else class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                  <DocumentRpreview :file-preview-url="selectedAffectation.doc_courrier" height="400px" />
+                <!-- Chargement -->
+                <div v-else-if="docFileLoading"
+                  class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400">
+                  <div class="w-4 h-4 border-2 border-slate-200 border-t-blue-500 rounded-full animate-spin"></div>
+                  Chargement...
+                </div>
+                <!-- Erreur -->
+                <div v-else-if="docFileError"
+                  class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-xl">
+                  <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
+                  {{ docFileError }}
+                  <button @click="docFileError = ''; loadDocFile()"
+                    class="ml-1 underline hover:no-underline">Réessayer</button>
+                </div>
+                <!-- Préview -->
+                <div v-else-if="docFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                  <DocumentRpreview :file-preview-url="docBlobUrl" height="400px" />
                 </div>
               </div>
               <div v-else class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed">
@@ -310,10 +331,17 @@
       </span>
     </template>
 
+    <!-- ── Référence cliquable → ouvre via Blob ──────────────────────── -->
     <template #cell-reference_courrier="{ value, item }">
-      <button v-if="item.doc_courrier" @click="handleOpenDocument(item.doc_courrier)"
-        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]">
-        <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+      <button
+        v-if="item._raw?.courrier_arrive?.document?.url && item._raw.courrier_arrive.document.url !== 'Inconnu'"
+        @click="handleView(item)"
+        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
+        :disabled="openingDocumentId === item.id">
+        <Icon
+          :name="openingDocumentId === item.id ? 'i-heroicons-arrow-path' : 'i-heroicons-document-text'"
+          class="w-3.5 h-3.5 shrink-0"
+          :class="openingDocumentId === item.id ? 'animate-spin' : 'group-hover:scale-110 transition-transform'" />
         <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
         <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
       </button>
@@ -520,13 +548,21 @@ const columns = computed(() => {
 // ── Modal ─────────────────────────────────────────────────────────────────────
 const detailsOpen             = ref(false)
 const selectedAffectation     = ref(null)
-const showDoc                 = ref(false)
 const showEditModal           = ref(false)
 const selectedNewDestinataire = ref(null)
 const searchDestinataire      = ref('')
 const destinataires           = ref([])
 const loadingDestinataires    = ref(false)
 const submitting              = ref(false)
+
+// État fichier document dans la modal
+const docFileLoaded  = ref(false)
+const docFileLoading = ref(false)
+const docFileError   = ref('')
+const docBlobUrl     = ref('')
+
+// Ouverture depuis le tableau
+const openingDocumentId = ref(null)
 
 const filteredDestinataires = computed(() => {
   if (!searchDestinataire.value) return destinataires.value
@@ -545,12 +581,65 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
+const guessMimeType = (filename) => {
+  if (!filename) return ''
+  const ext = (filename.split('.').pop() || '').toLowerCase()
+  return { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' }[ext] || ''
+}
+
 const getStatutLabel    = (s) => ({ 'en cours': 'En cours', 'en attente': 'En attente', 'traite': 'Traité', 'cloture': 'Clôturé', 'annule': 'Annulé' }[s] || s)
 const getStatutClasses  = (s) => ({ 'en_attente': 'bg-gray-100 text-gray-800', 'en cours': 'bg-blue-100 text-blue-800', 'traite': 'bg-green-100 text-green-800', 'cloture': 'bg-emerald-100 text-emerald-800', 'annule': 'bg-red-100 text-red-800' }[s] || 'bg-gray-100 text-gray-800')
 const getStatutDotClass = (s) => ({ 'en attente': 'bg-gray-500', 'en cours': 'bg-blue-500', 'traite': 'bg-green-500', 'cloture': 'bg-emerald-500', 'annule': 'bg-red-500' }[s] || 'bg-gray-500')
-const getPriorityLabel  = (p) => p || ''
-const getPriorityClasses= (p) => ({ 'URGENT': 'bg-red-100 text-red-800', 'IMPORTANT': 'bg-orange-100 text-orange-800', 'STANDARD': 'bg-blue-100 text-blue-800' }[p] || 'bg-gray-100 text-gray-800')
-const getPriorityDotClass=(p) => ({ 'URGENT': 'bg-red-500', 'IMPORTANT': 'bg-orange-500', 'STANDARD': 'bg-blue-500' }[p] || 'bg-gray-500')
+const getPriorityLabel   = (p) => p || ''
+const getPriorityClasses = (p) => ({ 'URGENT': 'bg-red-100 text-red-800', 'IMPORTANT': 'bg-orange-100 text-orange-800', 'STANDARD': 'bg-blue-100 text-blue-800' }[p] || 'bg-gray-100 text-gray-800')
+const getPriorityDotClass= (p) => ({ 'URGENT': 'bg-red-500', 'IMPORTANT': 'bg-orange-500', 'STANDARD': 'bg-blue-500' }[p] || 'bg-gray-500')
+
+// ── Construction URL API fichier ──────────────────────────────────────────────
+const buildDocumentUrl = (rawUrl, dateEnreg) => {
+  if (!rawUrl || rawUrl === 'Inconnu') return null
+  const base     = config.public.apiBase.replace(/\/$/, '')
+  const filename = rawUrl.startsWith('/') ? rawUrl.slice(1) : rawUrl
+  if (!dateEnreg) return `${base}/file/documents/${filename}`
+  const d     = new Date(dateEnreg)
+  const year  = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day   = String(d.getDate()).padStart(2, '0')
+  return `${base}/file/documents/${year}/${month}/${day}/${filename}`
+}
+
+// ── Fetch blob avec token Bearer ──────────────────────────────────────────────
+const fetchFileAsBlob = async (rawUrl, dateEnreg) => {
+  const url = buildDocumentUrl(rawUrl, dateEnreg)
+  if (!url) throw new Error('URL du fichier introuvable')
+  const authToken = localStorage.getItem('auth_token') || ''
+  const response  = await fetch(url, { headers: { Authorization: `Bearer ${authToken}` } })
+  if (!response.ok) throw new Error(`Erreur ${response.status} — fichier non accessible`)
+  const blob = await response.blob()
+  return { blob, mimeType: blob.type || guessMimeType(rawUrl) }
+}
+
+// ── Charger le fichier dans la modal ─────────────────────────────────────────
+const loadDocFile = async () => {
+  const rawDoc    = selectedAffectation.value?._raw?.courrier_arrive?.document
+  const rawUrl    = rawDoc?.url
+  const dateEnreg = rawDoc?.date_enreg
+  if (!rawUrl || rawUrl === 'Inconnu') return
+  docFileLoading.value = true
+  docFileLoaded.value  = false
+  docFileError.value   = ''
+  if (docBlobUrl.value) { URL.revokeObjectURL(docBlobUrl.value); docBlobUrl.value = '' }
+
+  try {
+    const { blob } = await fetchFileAsBlob(rawUrl, dateEnreg)
+    docBlobUrl.value    = URL.createObjectURL(blob)
+    docFileLoaded.value = true
+  } catch (err) {
+    console.error('❌ Erreur chargement document affectation:', err)
+    docFileError.value = err.message || 'Erreur lors du chargement'
+  } finally {
+    docFileLoading.value = false
+  }
+}
 
 // ── Transform ─────────────────────────────────────────────────────────────────
 const transformAffectation = (affectation) => {
@@ -566,17 +655,15 @@ const transformAffectation = (affectation) => {
   const destinataireCode     = affectation.destinataire?.entite?.code || ''
   const destinataireFonction = affectation.destinataire?.is_responsable ? affectation.destinataire.entite?.fonction || '' : 'Agent'
 
-  const rawUrl = affectation.courrier_arrive?.document?.url
-  const docUrl = rawUrl && rawUrl !== 'Inconnu'
-    ? (rawUrl.startsWith('http') ? rawUrl : `${config.public.baseUrl}${rawUrl}`)
-    : ''
+  // On ne stocke plus l'URL construite — le nom brut reste dans _raw
+  const rawUrl = affectation.courrier_arrive?.document?.url?.trim()
 
   return {
     id:                  affectation.id,
     courrier_id:         affectation.courrier_arrive_id || null,
     reference_courrier:  affectation.courrier_arrive?.document?.reference || '',
     objet_courrier:      affectation.courrier_arrive?.document?.objet      || '',
-    doc_courrier:        docUrl,
+    doc_courrier:        (rawUrl && rawUrl !== 'Inconnu') ? rawUrl : '',  // nom brut uniquement
     date_affect:         formatDate(affectation.date_affect),
     dossier:             affectation.dossier      || '—',
     instructions:        affectation.instructions || '',
@@ -630,7 +717,6 @@ const fetchAffectations = async (page = 1, per_page = perPage.value, isFirst = f
       per_page: String(per_page),
     })
 
-    // ── Filtres avancés ──────────────────────────────────────────────────
     const f = searchFilters.value
     if (globalSearch.value)  params.append('search',          globalSearch.value)
     if (f.statut)            params.append('statut',          f.statut)
@@ -641,12 +727,11 @@ const fetchAffectations = async (page = 1, per_page = perPage.value, isFirst = f
     if (f.instructions)      params.append('instructions',    f.instructions)
     if (f.date_affect && f.date_affect.length === 10) params.append('date_affect', f.date_affect)
 
-    // ── Filtres colonnes ─────────────────────────────────────────────────
     const c = columnFilters.value
-    if (!f.dossier       && c.dossier)            params.append('dossier',            c.dossier)
-    if (!f.instructions  && c.instructions)       params.append('instructions',       c.instructions)
-    if (c.reference_courrier)                     params.append('reference_courrier',  c.reference_courrier)
-    if (c.objet_courrier)                         params.append('objet_courrier',      c.objet_courrier)
+    if (!f.dossier      && c.dossier)           params.append('dossier',           c.dossier)
+    if (!f.instructions && c.instructions)      params.append('instructions',      c.instructions)
+    if (c.reference_courrier)                   params.append('reference_courrier', c.reference_courrier)
+    if (c.objet_courrier)                       params.append('objet_courrier',     c.objet_courrier)
 
     let response
 
@@ -709,14 +794,20 @@ const onSearchChange  = (val)  => {
 // ── Handlers CRUD ─────────────────────────────────────────────────────────────
 const handleView = (item) => {
   selectedAffectation.value = item
-  showDoc.value             = false
-  detailsOpen.value         = true
+  // Reset état blob modal
+  docFileLoaded.value  = false
+  docFileLoading.value = false
+  docFileError.value   = ''
+  if (docBlobUrl.value) { URL.revokeObjectURL(docBlobUrl.value); docBlobUrl.value = '' }
+  detailsOpen.value = true
 }
 
 const closeDetails = () => {
   detailsOpen.value         = false
   selectedAffectation.value = null
-  showDoc.value             = false
+  docFileLoaded.value       = false
+  docFileError.value        = ''
+  if (docBlobUrl.value) { URL.revokeObjectURL(docBlobUrl.value); docBlobUrl.value = '' }
 }
 
 const handleEdit = async (item) => {
@@ -748,11 +839,6 @@ const confirmChangeDestinataire = async () => {
   } finally {
     submitting.value = false
   }
-}
-
-const handleOpenDocument = (url) => {
-  if (url) window.open(url, '_blank', 'noopener,noreferrer')
-  else toast.add({ title: 'Information', description: 'Aucun document disponible', color: 'amber', timeout: 2000 })
 }
 
 const handleDelete = async (item) => {
