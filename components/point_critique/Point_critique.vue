@@ -43,7 +43,6 @@
       :left-aligned-columns="['sigle', 'libelle', 'responsable']"
       @edit="onEdit"
       @delete="onDelete"
-      @view="onView"
       @selection-change="onSelectionChange">
      
       <!-- Advanced Filters -->
@@ -132,7 +131,8 @@
 <script setup>
 import DataTable from '~/components/DataTable.vue'
 import { useApi } from '~/composables/useApi'
-import { ref, computed, watch } from 'vue'
+import { computed, watch } from 'vue'
+import Swal from 'sweetalert2'
 
 const config = useRuntimeConfig()
 
@@ -239,120 +239,26 @@ watch(pointsCritiques, (newData) => {
     newData?.map(p => ({ libelle: p.libelle, statut: p.statut })))
 })
 
-// --- Handlers ---
-const onView = (item) => {
-  console.log('👁️ Voir point critique :', item)
-  navigateTo(`/point-critique/${item.id}`)
-}
-
 const onEdit = (item) => {
   console.log('✏️ Éditer point critique :', item)
   navigateTo(`/point-critique/update/${item.id}`)
 }
 
-// const onDelete = async (item) => {
-//   if (confirm(`Voulez-vous vraiment supprimer le point critique "${item.libelle}" ?`)) {
-//     try {
-//       const config = useRuntimeConfig()
-//       const token = useCookie('auth_token')
-     
-//       await $fetch(`/api/points-critiques/${item.id}`, {
-//         baseURL: config.public.apiBase || 'http://localhost:8000',
-//         method: 'DELETE',
-//         headers: {
-//           'Authorization': `Bearer ${token.value}`,
-//           'Accept': 'application/json'
-//         }
-//       })
-     
-//       console.log('🗑️ Point critique supprimé :', item)
-     
-//       useToast().add({
-//         title: "Succès",
-//         description: "Point critique supprimé avec succès",
-//         color: "green",
-//       })
-     
-//       refresh()
-     
-//     } catch (err) {
-//       console.error('❌ Erreur lors de la suppression:', err)
-     
-//       let errorMessage = "Erreur lors de la suppression du point critique"
-     
-//       if (err.status === 422 || err.statusCode === 422) {
-//         errorMessage = err.data?.message || "Ce point critique ne peut pas être supprimé car il est utilisé"
-//       } else if (err.data?.message) {
-//         errorMessage = err.data.message
-//       }
-     
-//       useToast().add({
-//         title: "Erreur",
-//         description: errorMessage,
-//         color: "red",
-//       })
-//     }
-//   }
-// }
-
-// const onBulkDelete = async (selectedIds) => {
-//   if (confirm(`Voulez-vous vraiment supprimer ${selectedIds.length} point(s) critique(s) ?`)) {
-//     try {
-//       const config = useRuntimeConfig()
-//       const token = useCookie('auth_token')
-     
-//       let successCount = 0
-//       let errorCount = 0
-     
-//       for (const id of selectedIds) {
-//         try {
-//           await $fetch(`/api/points-critiques/${id}`, {
-//             baseURL: config.public.apiBase || 'http://localhost:8000',
-//             method: 'DELETE',
-//             headers: {
-//               'Authorization': `Bearer ${token.value}`,
-//               'Accept': 'application/json'
-//             }
-//           })
-//           successCount++
-//         } catch (err) {
-//           console.error(`❌ Erreur suppression point critique ID ${id}:`, err)
-//           errorCount++
-//         }
-//       }
-     
-//       console.log(`🗑️ Suppression multiple : ${successCount} succès, ${errorCount} échecs`)
-     
-//       let message = `${successCount} point(s) critique(s) supprimé(s)`
-//       let color = "green"
-     
-//       if (errorCount > 0) {
-//         message += `, ${errorCount} erreur(s)`
-//         color = "orange"
-//       }
-     
-//       useToast().add({
-//         title: "Suppression terminée",
-//         description: message,
-//         color: color,
-//       })
-     
-//       refresh()
-     
-//     } catch (err) {
-//       console.error('❌ Erreur suppression multiple:', err)
-     
-//       useToast().add({
-//         title: "Erreur",
-//         description: "Erreur lors de la suppression multiple",
-//         color: "red",
-//       })
-//     }
-//   }
-// }
 
 const onDelete = async (item) => {
-  if (confirm(`Voulez-vous vraiment supprimer le point critique "${item.libelle}" ?`)) {
+  // use SweetAlert2 for better confirmation dialog
+  const result = await Swal.fire({
+    title: `Supprimer "${item.libelle}" ?`,
+    text: "Cette action est irréversible.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Oui, supprimer',
+    cancelButtonText: 'Annuler'
+  })
+  if (result.isConfirmed) {
+    // Proceed with deletion
     try {
       const token = localStorage.getItem('auth_token') // ✅ Utiliser localStorage
      

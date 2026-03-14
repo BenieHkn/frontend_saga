@@ -6,10 +6,7 @@
         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Utilisateurs</h1>
         <p class="text-sm text-slate-500">Gestion des utilisateurs et administrateurs</p>
       </div>
-
-      <!-- Actions Header -->
       <div class="flex items-center gap-3 ml-auto flex-wrap">
-        <!-- Bouton Import -->
         <button
           @click="openImportModal"
           class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg hover:from-indigo-700 hover:to-blue-700 shadow-sm transition-all"
@@ -20,8 +17,6 @@
           </svg>
           Importer Excel/CSV
         </button>
-
-        <!-- Bouton Nouveau -->
         <UBadge color="green" variant="soft" size="lg">
           <UButton to="/utilisateurs/create" icon="i-heroicons-plus" variant="text" size="sm" class="p-0 m-0 text-green-600">
             Nouveau
@@ -187,7 +182,6 @@
           >
             <Icon name="i-heroicons-plus" class="w-4 h-4" />
           </button>
-
           <button
             @click="onEdit(item)"
             title="Voir / Modifier"
@@ -195,7 +189,6 @@
           >
             <Icon name="i-heroicons-pencil" class="w-4 h-4" />
           </button>
-
           <button
             @click="onDelete(item)"
             title="Supprimer"
@@ -209,7 +202,7 @@
 
     <!-- ═══════════════════════════════════════════════════════════════════════
          MODAL IMPORT EXCEL/CSV
-         ═══════════════════════════════════════════════════════════════════════ -->
+    ═══════════════════════════════════════════════════════════════════════ -->
     <Teleport to="body">
       <div v-if="showImportModal"
         class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
@@ -241,19 +234,15 @@
           <!-- Corps scrollable -->
           <div class="flex-1 overflow-y-auto">
 
-            <!-- ── ÉTAPE 1 : Sélection du fichier ────────────────────────── -->
+            <!-- ÉTAPE 1 : Sélection du fichier -->
             <div v-if="importStep === 'select'" class="p-6 space-y-5">
-
-              <!-- Download template -->
               <div class="flex items-center justify-between p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
                 <div>
                   <p class="text-sm font-semibold text-indigo-900">Besoin d'un modèle ?</p>
                   <p class="text-xs text-indigo-700 mt-0.5">Téléchargez le template Excel avec les colonnes requises + la liste des codes postes disponibles</p>
                 </div>
-                <button
-                  @click="downloadTemplate"
-                  class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-indigo-700 bg-white border border-indigo-300 rounded-lg hover:bg-indigo-50 transition-colors shrink-0"
-                >
+                <button @click="downloadTemplate"
+                  class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-indigo-700 bg-white border border-indigo-300 rounded-lg hover:bg-indigo-50 transition-colors shrink-0">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
@@ -261,7 +250,6 @@
                 </button>
               </div>
 
-              <!-- Colonnes attendues -->
               <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
                 <p class="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Colonnes attendues (dans l'ordre)</p>
                 <div class="grid grid-cols-3 gap-1.5">
@@ -279,7 +267,6 @@
                 </div>
               </div>
 
-              <!-- Zone de drop -->
               <div
                 class="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all"
                 :class="importFile
@@ -292,15 +279,7 @@
                 @dragleave="isDragging = false"
                 @drop.prevent="onImportFileDrop"
               >
-                <input
-                  ref="importFileInput"
-                  type="file"
-                  @change="handleImportFileChange"
-                  accept=".xlsx,.xls,.csv"
-                  class="hidden"
-                />
-
-                <!-- Fichier sélectionné -->
+                <input ref="importFileInput" type="file" @change="handleImportFileChange" accept=".xlsx,.xls,.csv" class="hidden" />
                 <div v-if="importFile" class="flex items-center justify-center gap-4">
                   <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -319,8 +298,6 @@
                     </svg>
                   </button>
                 </div>
-
-                <!-- Aucun fichier -->
                 <div v-else class="flex flex-col items-center gap-3">
                   <div class="w-14 h-14 bg-slate-200 rounded-2xl flex items-center justify-center">
                     <svg class="w-7 h-7 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -332,12 +309,11 @@
                     <p class="text-sm font-semibold text-slate-700">
                       <span class="text-indigo-600">Cliquez</span> ou glissez votre fichier ici
                     </p>
-                    <p class="text-xs text-slate-400 mt-1">Excel (.xlsx, .xls) ou CSV — max 5 Mo</p>
+                    <p class="text-xs text-slate-400 mt-1">Excel (.xlsx, .xls) ou CSV — max 10 Mo</p>
                   </div>
                 </div>
               </div>
 
-              <!-- Note sur les matricules -->
               <div class="flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl">
                 <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -345,17 +321,15 @@
                 </svg>
                 <p class="text-xs text-amber-800">
                   <strong>Matricules dupliqués :</strong> Si un matricule est déjà existant ou vide,
-                  un nouveau matricule à 6 chiffres sera généré automatiquement (ex: 000001, 000002…).
-                  La colonne <strong>code_poste</strong> doit contenir le code de l'entité (ex: DIR-RH) —
+                  un nouveau matricule à 6 chiffres sera généré automatiquement.
+                  La colonne <strong>code_poste</strong> doit contenir le code de l'entité (ex: DPIB, DI) —
                   le template inclut la liste complète des codes disponibles.
                 </p>
               </div>
             </div>
 
-            <!-- ── ÉTAPE 2 : Prévisualisation ────────────────────────────── -->
+            <!-- ÉTAPE 2 : Prévisualisation -->
             <div v-else-if="importStep === 'preview'" class="p-6 space-y-4">
-
-              <!-- Résumé compteurs -->
               <div class="grid grid-cols-4 gap-3">
                 <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
                   <p class="text-2xl font-bold text-slate-900">{{ previewData.length }}</p>
@@ -375,13 +349,10 @@
                 </div>
               </div>
 
-              <!-- Table de prévisualisation -->
               <div class="border border-slate-200 rounded-xl overflow-hidden">
                 <div class="bg-slate-800 px-4 py-2.5 flex items-center justify-between">
                   <p class="text-xs font-bold text-white uppercase tracking-wider">Aperçu des données</p>
-                  <span class="text-xs text-slate-400">
-                    {{ previewData.length > 50 ? 'Affichage limité à 50 lignes' : `${previewData.length} ligne(s)` }}
-                  </span>
+                  <span class="text-xs text-slate-400">{{ previewData.length }} ligne(s)</span>
                 </div>
                 <div class="overflow-x-auto max-h-80">
                   <table class="w-full text-xs">
@@ -392,9 +363,10 @@
                         <th class="px-3 py-2 text-left font-semibold text-slate-600 whitespace-nowrap">Nom</th>
                         <th class="px-3 py-2 text-left font-semibold text-slate-600 whitespace-nowrap">Prénom</th>
                         <th class="px-3 py-2 text-left font-semibold text-slate-600 whitespace-nowrap">Email</th>
-                        <th class="px-3 py-2 text-left font-semibold text-slate-600 whitespace-nowrap">Téléphone</th>
+                        <th class="px-3 py-2 text-left font-semibold text-slate-600 whitespace-nowrap">Prise service</th>
                         <th class="px-3 py-2 text-left font-semibold text-slate-600 whitespace-nowrap">Statut</th>
                         <th class="px-3 py-2 text-left font-semibold text-slate-600 whitespace-nowrap">Code poste → Entité</th>
+                        <th class="px-3 py-2 text-left font-semibold text-slate-600 whitespace-nowrap">Responsable</th>
                         <th class="px-3 py-2 text-left font-semibold text-slate-600 whitespace-nowrap">État</th>
                       </tr>
                     </thead>
@@ -403,26 +375,21 @@
                         :class="row.matricule_exists ? 'bg-amber-50' : 'bg-white hover:bg-slate-50'"
                       >
                         <td class="px-3 py-2 text-slate-400">{{ row.row }}</td>
-                        <td class="px-3 py-2">
-                          <span class="font-mono font-bold text-slate-700">{{ row.matricule || '—' }}</span>
-                        </td>
+                        <td class="px-3 py-2"><span class="font-mono font-bold text-slate-700">{{ row.matricule || '—' }}</span></td>
                         <td class="px-3 py-2 font-medium text-slate-900">{{ row.nom }}</td>
                         <td class="px-3 py-2 text-slate-700">{{ row.prenom }}</td>
                         <td class="px-3 py-2 text-slate-600">{{ row.email }}</td>
-                        <td class="px-3 py-2 text-slate-600">{{ row.telephone || '—' }}</td>
+                        <td class="px-3 py-2 text-slate-600">{{ row.prise_service || '—' }}</td>
                         <td class="px-3 py-2">
                           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
                             :class="row.statut ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
                             {{ row.statut ? 'Actif' : 'Inactif' }}
                           </span>
                         </td>
-                        <!-- Code poste → entité résolue -->
                         <td class="px-3 py-2">
                           <div v-if="row.code_poste" class="flex flex-col gap-0.5">
                             <div class="flex items-center gap-1.5">
-                              <span class="font-mono text-[11px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">
-                                {{ row.code_poste }}
-                              </span>
+                              <span class="font-mono text-[11px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{{ row.code_poste }}</span>
                               <svg v-if="row.entite_found" class="w-3 h-3 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                               </svg>
@@ -430,27 +397,27 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                               </svg>
                             </div>
-                            <span v-if="row.entite_found" class="text-[10px] text-green-700 font-medium">
-                              {{ row.entite_libelle }}
-                            </span>
+                            <span v-if="row.entite_found" class="text-[10px] text-green-700 font-medium">{{ row.entite_libelle }}</span>
                             <span v-else class="text-[10px] text-red-600 italic">Code introuvable</span>
                           </div>
                           <span v-else class="text-slate-400 text-xs italic">—</span>
                         </td>
+                        <!-- Responsable -->
+                        <td class="px-3 py-2">
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            :class="row.est_responsable
+                              ? 'bg-indigo-100 text-indigo-700'
+                              : 'bg-slate-100 text-slate-500'">
+                            {{ row.est_responsable ? 'Oui' : 'Non' }}
+                          </span>
+                        </td>
                         <td class="px-3 py-2">
                           <span v-if="row.matricule_exists"
                             class="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[10px] font-bold">
-                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
                             Nouveau matricule
                           </span>
                           <span v-else
                             class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">
-                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
                             Nouveau
                           </span>
                         </td>
@@ -461,10 +428,8 @@
               </div>
             </div>
 
-            <!-- ── ÉTAPE 3 : Rapport d'import ─────────────────────────────── -->
+            <!-- ÉTAPE 3 : Rapport d'import -->
             <div v-else-if="importStep === 'report'" class="p-6 space-y-4">
-
-              <!-- Bilan -->
               <div class="grid grid-cols-3 gap-3">
                 <div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
                   <p class="text-3xl font-bold text-green-700">{{ importReport.imported }}</p>
@@ -480,34 +445,24 @@
                 </div>
               </div>
 
-              <!-- Message global -->
               <div class="flex items-center gap-3 p-4 rounded-xl"
                 :class="importReport.errors_count === 0 && importReport.skipped === 0
                   ? 'bg-green-50 border border-green-200'
-                  : importReport.imported > 0
-                    ? 'bg-amber-50 border border-amber-200'
-                    : 'bg-red-50 border border-red-200'"
-              >
+                  : importReport.imported > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-red-50 border border-red-200'">
                 <svg class="w-6 h-6 flex-shrink-0"
                   :class="importReport.errors_count === 0 && importReport.skipped === 0
-                    ? 'text-green-600'
-                    : importReport.imported > 0 ? 'text-amber-600' : 'text-red-600'"
+                    ? 'text-green-600' : importReport.imported > 0 ? 'text-amber-600' : 'text-red-600'"
                   fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p class="text-sm font-semibold"
                   :class="importReport.errors_count === 0 && importReport.skipped === 0
-                    ? 'text-green-800'
-                    : importReport.imported > 0 ? 'text-amber-800' : 'text-red-800'"
-                >
+                    ? 'text-green-800' : importReport.imported > 0 ? 'text-amber-800' : 'text-red-800'">
                   {{ importReport.message }}
                 </p>
               </div>
 
-              <!-- Liste des utilisateurs importés -->
-              <div v-if="importReport.imported_users?.length > 0"
-                class="border border-green-200 rounded-xl overflow-hidden">
+              <div v-if="importReport.imported_users?.length > 0" class="border border-green-200 rounded-xl overflow-hidden">
                 <div class="bg-green-600 px-4 py-2.5">
                   <p class="text-xs font-bold text-white uppercase tracking-wider">
                     ✓ Utilisateurs créés ({{ importReport.imported_users.length }})
@@ -526,9 +481,7 @@
                       <p class="text-[11px] text-slate-500 truncate">{{ u.email }}</p>
                     </div>
                     <div class="flex flex-col items-end gap-0.5 flex-shrink-0">
-                      <span class="font-mono text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
-                        {{ u.matricule }}
-                      </span>
+                      <span class="font-mono text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{{ u.matricule }}</span>
                       <span v-if="u.code_poste && u.code_poste !== '—'"
                         class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium">
                         {{ u.code_poste }} · {{ u.entite_libelle }}
@@ -539,19 +492,16 @@
                 </div>
               </div>
 
-              <!-- Erreurs & avertissements -->
-              <div v-if="importReport.errors?.length > 0"
-                class="border border-red-200 rounded-xl overflow-hidden">
+              <div v-if="importReport.errors?.length > 0" class="border border-red-200 rounded-xl overflow-hidden">
                 <div class="bg-red-600 px-4 py-2.5">
                   <p class="text-xs font-bold text-white uppercase tracking-wider">
-                    ✕ Lignes non importées ({{ importReport.errors.length }})
+                    ✕ Lignes non importées / avertissements ({{ importReport.errors.length }})
                   </p>
                 </div>
                 <div class="max-h-48 overflow-y-auto divide-y divide-red-100">
                   <div v-for="(err, idx) in importReport.errors" :key="idx"
                     class="flex items-start gap-3 px-4 py-2.5"
-                    :class="err.type === 'warning' ? 'bg-amber-50' : 'bg-red-50'"
-                  >
+                    :class="err.type === 'warning' ? 'bg-amber-50' : 'bg-red-50'">
                     <span class="text-[11px] font-bold mt-0.5 flex-shrink-0"
                       :class="err.type === 'warning' ? 'text-amber-600' : 'text-red-600'">
                       Ligne {{ err.row }}
@@ -565,18 +515,13 @@
 
           <!-- Footer modal -->
           <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
-
-            <!-- Indicateur d'étapes -->
             <div class="flex items-center gap-2">
               <div v-for="(step, idx) in importSteps" :key="step.key" class="flex items-center gap-1.5">
                 <div class="flex items-center gap-1">
                   <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
                     :class="importStep === step.key
                       ? 'bg-indigo-600 text-white scale-110'
-                      : importStepIndex > idx
-                        ? 'bg-green-500 text-white'
-                        : 'bg-slate-200 text-slate-500'"
-                  >
+                      : importStepIndex > idx ? 'bg-green-500 text-white' : 'bg-slate-200 text-slate-500'">
                     <svg v-if="importStepIndex > idx" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                     </svg>
@@ -590,21 +535,13 @@
                 <div v-if="idx < importSteps.length - 1" class="w-6 h-0.5 bg-slate-200"></div>
               </div>
             </div>
-
-            <!-- Boutons d'action -->
             <div class="flex items-center gap-2">
               <button @click="closeImportModal"
                 class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
                 Annuler
               </button>
-
-              <!-- Étape 1: Prévisualiser -->
-              <button
-                v-if="importStep === 'select'"
-                :disabled="!importFile || loadingPreview"
-                @click="previewImport"
-                class="inline-flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
+              <button v-if="importStep === 'select'" :disabled="!importFile || loadingPreview" @click="previewImport"
+                class="inline-flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                 <div v-if="loadingPreview" class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
                 <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -613,18 +550,13 @@
                 </svg>
                 Prévisualiser
               </button>
-
-              <!-- Étape 2: Retour + Lancer l'import -->
               <template v-else-if="importStep === 'preview'">
                 <button @click="importStep = 'select'"
                   class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
                   ← Retour
                 </button>
-                <button
-                  :disabled="loadingImport || previewData.length === 0"
-                  @click="launchImport"
-                  class="inline-flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                >
+                <button :disabled="loadingImport || previewData.length === 0" @click="launchImport"
+                  class="inline-flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
                   <div v-if="loadingImport" class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
                   <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -633,10 +565,7 @@
                   Lancer l'import ({{ previewData.length }} lignes)
                 </button>
               </template>
-
-              <!-- Étape 3: Terminer -->
-              <button v-else-if="importStep === 'report'"
-                @click="finishImport"
+              <button v-else-if="importStep === 'report'" @click="finishImport"
                 class="inline-flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -649,7 +578,9 @@
       </div>
     </Teleport>
 
-    <!-- ── Modal Ajout Fonction (Intérim) ─────────────────────────────────────────── -->
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         MODAL INTÉRIM
+    ═══════════════════════════════════════════════════════════════════════ -->
     <div v-if="showInterimModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl shadow-xl w-full max-w-lg">
@@ -666,12 +597,10 @@
             </svg>
           </button>
         </div>
-
         <div class="px-6 py-5 space-y-4">
           <div v-if="loadingFonctions" class="flex justify-center py-8">
             <div class="w-6 h-6 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
           </div>
-
           <template v-else>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -695,7 +624,6 @@
                 </template>
               </USelectMenu>
             </div>
-
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Date début <span class="text-red-600">*</span></label>
@@ -706,12 +634,10 @@
                 <UInput v-model="interimForm.date_fin" type="date" :min="interimForm.date_debut" class="w-full h-10" />
               </div>
             </div>
-
             <label class="flex items-center gap-2 cursor-not-allowed opacity-75">
               <input type="checkbox" :checked="true" disabled class="w-4 h-4 text-indigo-600 border-gray-300 rounded" />
               <span class="text-sm font-medium text-gray-700">Fonction en intérim</span>
             </label>
-
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Pièce jointe <span class="text-red-600">*</span></label>
               <div
@@ -753,13 +679,11 @@
                 </div>
               </div>
             </div>
-
             <div v-if="interimError" class="p-3 bg-red-50 border border-red-200 rounded-lg">
               <p class="text-sm text-red-800">{{ interimError }}</p>
             </div>
           </template>
         </div>
-
         <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
           <UButton type="button" color="gray" variant="outline" @click="closeInterimModal">Annuler</UButton>
           <UButton
@@ -777,7 +701,9 @@
       </div>
     </div>
 
-    <!-- Modal de confirmation de suppression -->
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         MODAL SUPPRESSION
+    ═══════════════════════════════════════════════════════════════════════ -->
     <UModal v-model="showDeleteModal">
       <div class="p-6">
         <div class="flex items-center gap-4 mb-4">
@@ -791,7 +717,6 @@
             <p class="text-sm text-slate-600 mt-1">Cette action est irréversible</p>
           </div>
         </div>
-
         <div v-if="itemToDelete" class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
           <div class="space-y-2 text-sm">
             <div class="flex items-center justify-between">
@@ -808,14 +733,12 @@
             </div>
           </div>
         </div>
-
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
           <p class="text-xs text-yellow-800">
             <strong>⚠️ Attention :</strong> Vous êtes sur le point de supprimer cet utilisateur.
             Cette action supprimera définitivement toutes les données associées.
           </p>
         </div>
-
         <div class="flex justify-end gap-3">
           <UButton color="gray" variant="outline" @click="showDeleteModal = false" :disabled="deleting">Annuler</UButton>
           <UButton color="red" @click="confirmDelete" :loading="deleting">Supprimer définitivement</UButton>
@@ -834,49 +757,42 @@ const config = useRuntimeConfig()
 // COLONNES
 // ============================================================================
 const columns = [
-  { key: 'id',               label: 'N°',                  visible: true },
-  { key: 'matricule',        label: 'Matricule',            visible: true },
-  { key: 'nom',              label: 'Nom',                  visible: true },
-  { key: 'prenom',           label: 'Prénom',               visible: true },
-  { key: 'email',            label: 'Email',                visible: true },
-  { key: 'telephone',        label: 'Téléphone',            visible: true },
-  { key: 'points_critiques', label: 'Entité',               visible: true },
-  { key: 'fonctions',        label: 'Fonctions',            visible: true },
-  { key: 'fonctions_interim',label: 'Fonctions Intérimaires', visible: true },
-  { key: 'prise_service',    label: 'Prise Service',        visible: true },
-  { key: 'is_superadmin',    label: 'Admin',                visible: true },
-  { key: 'statut',           label: 'Statut',               visible: true },
-  // actions column removed: action buttons (ajout intérim, edit, delete) rendered via the `actions` slot
+  { key: 'id',                label: 'N°',                    visible: true },
+  { key: 'matricule',         label: 'Matricule',              visible: true },
+  { key: 'nom',               label: 'Nom',                    visible: true },
+  { key: 'prenom',            label: 'Prénom',                 visible: true },
+  { key: 'email',             label: 'Email',                  visible: true },
+  { key: 'telephone',         label: 'Téléphone',              visible: true },
+  { key: 'points_critiques',  label: 'Entité',                 visible: true },
+  { key: 'fonctions',         label: 'Fonctions',              visible: true },
+  { key: 'fonctions_interim', label: 'Fonctions Intérimaires', visible: true },
+  { key: 'prise_service',     label: 'Prise Service',          visible: true },
+  { key: 'is_superadmin',     label: 'Admin',                  visible: true },
+  { key: 'statut',            label: 'Statut',                 visible: true },
 ]
 
 // ============================================================================
-// ÉTATS — liste utilisateurs
+// ÉTATS
 // ============================================================================
-const utilisateurs   = ref([])
-const loading        = ref(false)
-const error          = ref(null)
+const utilisateurs    = ref([])
+const loading         = ref(false)
+const error           = ref(null)
 const showDeleteModal = ref(false)
-const itemToDelete   = ref(null)
-const deleting       = ref(false)
+const itemToDelete    = ref(null)
+const deleting        = ref(false)
 
-// ============================================================================
-// ÉTATS — intérim
-// ============================================================================
-const showInterimModal   = ref(false)
-const selectedUser       = ref(null)
-const loadingFonctions   = ref(false)
-const fonctions          = ref([])
-const submittingInterim  = ref(false)
-const interimError       = ref(null)
+const showInterimModal    = ref(false)
+const selectedUser        = ref(null)
+const loadingFonctions    = ref(false)
+const fonctions           = ref([])
+const submittingInterim   = ref(false)
+const interimError        = ref(null)
 const interimFileInputRef = ref(null)
-const interimFile        = ref(null)
-const interimForm        = ref({ fonction_id: null, date_debut: '', date_fin: '' })
+const interimFile         = ref(null)
+const interimForm         = ref({ fonction_id: null, date_debut: '', date_fin: '' })
 
-// ============================================================================
-// ÉTATS — import
-// ============================================================================
 const showImportModal = ref(false)
-const importStep      = ref('select')   // 'select' | 'preview' | 'report'
+const importStep      = ref('select')
 const importFile      = ref(null)
 const importFileInput = ref(null)
 const isDragging      = ref(false)
@@ -886,9 +802,9 @@ const previewData     = ref([])
 const importReport    = ref({})
 
 const importSteps = [
-  { key: 'select',  label: 'Fichier'  },
-  { key: 'preview', label: 'Aperçu'   },
-  { key: 'report',  label: 'Rapport'  },
+  { key: 'select',  label: 'Fichier' },
+  { key: 'preview', label: 'Aperçu'  },
+  { key: 'report',  label: 'Rapport' },
 ]
 
 const importStepIndex = computed(() =>
@@ -917,28 +833,22 @@ const formatDate = (date) => {
 
 const formatFileSize = (bytes) => {
   if (!bytes) return ''
-  if (bytes < 1024)             return bytes + ' o'
-  if (bytes < 1024 * 1024)     return (bytes / 1024).toFixed(1) + ' Ko'
+  if (bytes < 1024)        return bytes + ' o'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko'
   return (bytes / (1024 * 1024)).toFixed(1) + ' Mo'
 }
 
 const getToken = () => localStorage.getItem('auth_token') || ''
 
-// ============================================================================
-// COMPUTED — intérim
-// ============================================================================
 const fonctionsOptions = computed(() =>
   fonctions.value.map(f => ({
-    id:            f.id,
-    libelle:       f.fonction || 'N/A',
-    code:          f.code,
+    id:             f.id,
+    libelle:        f.fonction || 'N/A',
+    code:           f.code,
     entite_libelle: f.entite?.libelle || f.entite_libelle || '',
   }))
 )
 
-// ============================================================================
-// VALIDATION FICHIER INTÉRIM
-// ============================================================================
 const ALLOWED_MIME_TYPES = [
   'application/pdf',
   'application/msword',
@@ -965,73 +875,80 @@ const loadUtilisateurs = async () => {
     if (!token) throw new Error("Token d'authentification manquant")
 
     const response = await $fetch(`${config.public.apiBase}/users`, {
-      method: 'GET',
+      method:  'GET',
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
     })
 
     let dataArray = []
     if (response?.data?.data && Array.isArray(response.data.data))   dataArray = response.data.data
-    else if (response?.data && Array.isArray(response.data))         dataArray = response.data
+    else if (response?.data  && Array.isArray(response.data))        dataArray = response.data
     else if (Array.isArray(response))                                 dataArray = response
     else throw new Error('Format de réponse API invalide')
 
     utilisateurs.value = dataArray.map((user) => {
-      const entitePrincipale = (user.entite_users || []).find(eu =>
+      // Laravel peut retourner snake_case ou camelCase selon le contexte
+      const entiteUsers = user.entite_users ?? user.entiteUsers ?? []
+
+      // ── Entité principale ────────────────────────────────────────────────
+      // On NE filtre PAS sur is_responsable : agents et responsables ont
+      // tous les deux une entité principale. On lit is_responsable sur le
+      // résultat pour déterminer le libellé de fonction affiché.
+      const entitePrincipale = entiteUsers.find(eu =>
         eu.actif               === true  &&
         eu.is_interim          === false &&
-        eu.is_responsable     === true  &&
         eu.date_fin            === null  &&
         eu.entite?.is_critique === false
       ) ?? null
 
-      const isResponsable = !!entitePrincipale
+      const isResponsable = entitePrincipale?.is_responsable === true
 
+      // ── Colonne "Fonctions" ──────────────────────────────────────────────
+      // Responsable → on affiche entite.fonction (libellé du poste de direction)
+      // Agent       → on affiche "Agent"
       let fonctionsMap = []
-      let entite       = []
-
       if (entitePrincipale) {
-        fonctionsMap = [{ libelle: entitePrincipale.entite?.fonction || 'Responsable', entite: entitePrincipale.entite?.libelle || '' }]
-        entite       = [{ libelle: entitePrincipale.entite?.libelle || '' }]
-      } else {
-        const agentEntite = user.entite_users?.find(eu =>
-          eu.actif === true && eu.is_interim === false && eu.is_responsable === false
-        )
-        if (agentEntite) {
-          fonctionsMap = [{ libelle: 'Agent', entite: agentEntite.entite?.libelle || '' }]
-          entite       = [{ libelle: agentEntite.entite?.libelle || '' }]
-        }
+        fonctionsMap = [{
+          libelle: isResponsable
+            ? (entitePrincipale.entite?.fonction || 'Responsable')
+            : 'Agent',
+          entite: entitePrincipale.entite?.libelle || '',
+        }]
       }
 
-      const fonctionsInterim = (user.entite_users || [])
-        .filter(eu => eu.actif === true && eu.is_interim === true && eu.is_responsable === true)
+      // ── Colonne "Entité" (points_critiques) ─────────────────────────────
+      const entiteAffichee = entitePrincipale
+        ? [{ libelle: entitePrincipale.entite?.libelle || '' }]
+        : []
+
+      // ── Fonctions intérimaires ────────────────────────────────────────────
+      const fonctionsInterim = entiteUsers
+        .filter(eu =>
+          eu.actif          === true &&
+          eu.is_interim     === true &&
+          eu.is_responsable === true
+        )
         .map(eu => ({
           libelle:   eu.entite?.fonction || 'Intérim',
-          entite:    eu.entite?.libelle || '',
+          entite:    eu.entite?.libelle  || '',
           date_fin:  eu.date_fin,
           entite_id: eu.entite_id,
         }))
 
-      // const pointsCritiques = (user.points_critiques || []).map(pc => ({
-      //   id:      pc.id,
-      //   libelle: pc.libelle || pc.code || 'N/A',
-      //   code:    pc.code,
-      // }))
-
       return {
-        id:               user.id,
-        matricule:        user.matricule || 'N/A',
-        nom:              user.nom || '',
-        prenom:           user.prenom || '',
-        email:            user.email || '',
-        telephone:        user.telephone || 'N/A',
-        fonctions:        fonctionsMap,
+        id:                user.id,
+        matricule:         user.matricule     || 'N/A',
+        nom:               user.nom           || '',
+        prenom:            user.prenom        || '',
+        email:             user.email         || '',
+        telephone:         user.telephone     || 'N/A',
+        fonctions:         fonctionsMap,
         fonctions_interim: fonctionsInterim,
-        points_critiques: entite,
-        prise_service:    user.prise_service || null,
-        is_superadmin:    user.is_superadmin ?? false,
-        statut:           user.statut ?? false,
-        is_responsable:   isResponsable,
-        entite_principale: entitePrincipale?.entite || null,
+        points_critiques:  entiteAffichee,
+        prise_service:     user.prise_service || null,
+        is_superadmin:     user.is_superadmin ?? false,
+        statut:            user.statut        ?? false,
+        is_responsable:    isResponsable,
+        entite_principale: entitePrincipale?.entite              || null,
         parent_entite_id:  entitePrincipale?.entite?.parent_entite_id || null,
         raw_data:          user,
       }
@@ -1053,17 +970,13 @@ const loadUtilisateurs = async () => {
 const loadFonctions = async () => {
   loadingFonctions.value = true
   try {
-    const token = getToken()
+    const token    = getToken()
     const response = await $fetch(
       `${config.public.apiBase}/entites/entites-meme-niveau/${selectedUser.value?.parent_entite_id || '0'}`,
       { method: 'GET', headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } }
     )
     const all = response?.data ?? (Array.isArray(response) ? response : [])
-
-    // ── Exclure l'entité principale de l'utilisateur ──
-    fonctions.value = all.filter(e =>
-      e.id !== selectedUser.value.entite_principale.id
-    )
+    fonctions.value = all.filter(e => e.id !== selectedUser.value?.entite_principale?.id)
   } catch (err) {
     useToast().add({ title: 'Erreur', description: 'Impossible de charger les fonctions', color: 'red' })
   } finally {
@@ -1075,16 +988,15 @@ const loadFonctions = async () => {
 // GESTION INTÉRIM
 // ============================================================================
 const openInterimModal = async (user) => {
-  selectedUser.value  = null
-  fonctions.value     = []
-  interimForm.value   = { fonction_id: null, date_debut: '', date_fin: '' }
-  interimFile.value   = null
-  interimError.value  = null
+  selectedUser.value     = null
+  fonctions.value        = []
+  interimForm.value      = { fonction_id: null, date_debut: '', date_fin: '' }
+  interimFile.value      = null
+  interimError.value     = null
   if (interimFileInputRef.value) interimFileInputRef.value.value = ''
-
   selectedUser.value     = user
   showInterimModal.value = true
-  await loadFonctions(user)
+  await loadFonctions()
 }
 
 const closeInterimModal = () => {
@@ -1127,10 +1039,8 @@ const submitInterim = async () => {
   if (interimForm.value.date_fin && interimForm.value.date_fin < interimForm.value.date_debut) {
     interimError.value = 'La date de fin doit être après la date de début'; return
   }
-
   submittingInterim.value = true
   interimError.value      = null
-
   try {
     const token    = getToken()
     const formData = new FormData()
@@ -1139,25 +1049,21 @@ const submitInterim = async () => {
     formData.append('date_debut', interimForm.value.date_debut)
     formData.append('is_interim', '1')
     formData.append('actif',      '1')
-    if (interimForm.value.date_fin) formData.append('date_fin', interimForm.value.date_fin)
+    if (interimForm.value.date_fin)        formData.append('date_fin',     interimForm.value.date_fin)
     if (interimFile.value instanceof File) formData.append('piece_jointe', interimFile.value)
-
     await $fetch(`${config.public.apiBase}/entite-users`, {
       method:  'POST',
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
       body:    formData,
     })
-
     useToast().add({ title: 'Succès', description: "L'intérim a été créé avec succès", color: 'green' })
     closeInterimModal()
     await loadUtilisateurs()
   } catch (err) {
     let msg = "Erreur lors de la création de l'intérim"
-    if (err.status === 422 || err.statusCode === 422) {
+    if (err.status === 422 || err.statusCode === 422)
       msg = err.data?.errors ? Object.values(err.data.errors).flat().join(', ') : err.data?.message || msg
-    } else if (err.data?.message) {
-      msg = err.data.message
-    }
+    else if (err.data?.message) msg = err.data.message
     interimError.value = msg
     useToast().add({ title: 'Erreur', description: msg, color: 'red' })
   } finally {
@@ -1169,10 +1075,10 @@ const submitInterim = async () => {
 // GESTION IMPORT
 // ============================================================================
 const openImportModal = () => {
-  importStep.value    = 'select'
-  importFile.value    = null
-  previewData.value   = []
-  importReport.value  = {}
+  importStep.value      = 'select'
+  importFile.value      = null
+  previewData.value     = []
+  importReport.value    = {}
   showImportModal.value = true
 }
 
@@ -1199,8 +1105,8 @@ const validateAndSetImportFile = (file) => {
   if (!['xlsx', 'xls', 'csv'].includes(ext)) {
     useToast().add({ title: 'Format invalide', description: 'Seuls .xlsx, .xls et .csv sont acceptés', color: 'red' }); return
   }
-  if (file.size > 5 * 1024 * 1024) {
-    useToast().add({ title: 'Fichier trop lourd', description: 'La taille maximale est 5 Mo', color: 'red' }); return
+  if (file.size > 10 * 1024 * 1024) {
+    useToast().add({ title: 'Fichier trop lourd', description: 'La taille maximale est 10 Mo', color: 'red' }); return
   }
   importFile.value = file
 }
@@ -1212,8 +1118,6 @@ const clearImportFile = () => {
 
 const downloadTemplate = async () => {
   try {
-    // ── useRequestHeaders ne fonctionne pas côté client pour les downloads ──
-    // On utilise $fetch avec responseType 'blob' pour récupérer le binaire
     const blob = await $fetch(`${config.public.apiBase}/users/import/template`, {
       method:       'GET',
       responseType: 'blob',
@@ -1221,41 +1125,24 @@ const downloadTemplate = async () => {
         Authorization: `Bearer ${getToken()}`,
         Accept:        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       },
-      // onResponseError permet de capturer les erreurs 4xx/5xx sur un blob
-      onResponseError({ response }) {
-        throw new Error(`Erreur serveur : ${response.status}`)
-      },
+      onResponseError({ response }) { throw new Error(`Erreur serveur : ${response.status}`) },
     })
-
-    // Vérifier que la réponse est bien un fichier Excel (pas une erreur JSON)
-    if (blob.type && blob.type.includes('application/json')) {
-      const text = await blob.text()
-      const json = JSON.parse(text)
+    if (blob.type?.includes('application/json')) {
+      const json = JSON.parse(await blob.text())
       throw new Error(json.message || 'Réponse inattendue du serveur')
     }
-
-    // Déclencher le téléchargement navigateur
     const url = URL.createObjectURL(blob)
     const a   = document.createElement('a')
-    a.href     = url
+    a.href = url
     a.download = 'template_import_utilisateurs.xlsx'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-
-    useToast().add({
-      title:       'Template téléchargé',
-      description: 'Le fichier contient les colonnes requises et la liste des codes postes',
-      color:       'green',
-    })
+    useToast().add({ title: 'Template téléchargé', description: 'Le fichier contient les colonnes requises et la liste des codes postes', color: 'green' })
   } catch (err) {
     console.error('❌ Erreur téléchargement template:', err)
-    useToast().add({
-      title:       'Erreur de téléchargement',
-      description: err.message || 'Impossible de télécharger le template',
-      color:       'red',
-    })
+    useToast().add({ title: 'Erreur de téléchargement', description: err.message || 'Impossible de télécharger le template', color: 'red' })
   }
 }
 
@@ -1292,9 +1179,8 @@ const launchImport = async () => {
     })
     importReport.value = response
     importStep.value   = 'report'
-    if (response.imported > 0) {
+    if (response.imported > 0)
       useToast().add({ title: 'Import terminé', description: `${response.imported} utilisateur(s) importé(s)`, color: 'green' })
-    }
   } catch (err) {
     useToast().add({ title: 'Erreur', description: err.data?.message || "Erreur lors de l'import", color: 'red' })
   } finally {
@@ -1305,12 +1191,12 @@ const launchImport = async () => {
 // ============================================================================
 // SUPPRESSION
 // ============================================================================
-const refresh  = () => loadUtilisateurs()
-const onView   = (item) => navigateTo(`/utilisateurs/${item.id}`)
-const onEdit   = (item) => navigateTo(`/utilisateurs/${item.id}`)
+const refresh = () => loadUtilisateurs()
+const onView  = (item) => navigateTo(`/utilisateurs/${item.id}`)
+const onEdit  = (item) => navigateTo(`/utilisateurs/${item.id}`)
 
 const onDelete = (item) => {
-  itemToDelete.value   = item
+  itemToDelete.value    = item
   showDeleteModal.value = true
 }
 
@@ -1328,7 +1214,7 @@ const confirmDelete = async () => {
     await loadUtilisateurs()
   } catch (err) {
     let msg = 'Une erreur est survenue lors de la suppression'
-    if (err.status === 401 || err.statusCode === 401) { msg = 'Session expirée'; setTimeout(() => navigateTo('/login'), 2000) }
+    if (err.status === 401 || err.statusCode === 401)     { msg = 'Session expirée'; setTimeout(() => navigateTo('/login'), 2000) }
     else if (err.status === 404 || err.statusCode === 404) { msg = "L'utilisateur n'existe plus"; await loadUtilisateurs() }
     else msg = err.data?.message || err.message || msg
     useToast().add({ title: 'Erreur de suppression', description: msg, color: 'red' })
@@ -1347,7 +1233,6 @@ const onBulkDelete = async (selectedIds) => {
   useToast().add({ title: 'Suppression en cours', description: `Suppression de ${selectedIds.length} utilisateur(s)...`, color: 'blue' })
 
   let successCount = 0, errorCount = 0
-  const errors = []
 
   for (const id of selectedIds) {
     try {
@@ -1356,25 +1241,17 @@ const onBulkDelete = async (selectedIds) => {
         headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json' },
       })
       successCount++
-    } catch (err) {
-      errorCount++
-      const user = utilisateurs.value.find(u => u.id === id)
-      errors.push({ id, nom: user ? `${user.nom} ${user.prenom}` : `ID ${id}`, message: err.data?.message || err.message || 'Erreur inconnue' })
-    }
+    } catch { errorCount++ }
   }
 
-  if (errorCount === 0) {
-    useToast().add({ title: 'Suppression réussie', description: `${successCount} utilisateur(s) supprimé(s)`, color: 'green' })
-  } else if (successCount === 0) {
-    useToast().add({ title: 'Échec', description: errors[0]?.message || 'Aucun utilisateur supprimé', color: 'red' })
-  } else {
-    useToast().add({ title: 'Suppression partielle', description: `${successCount} succès, ${errorCount} échec(s)`, color: 'orange' })
-  }
+  if      (errorCount === 0)   useToast().add({ title: 'Suppression réussie',   description: `${successCount} utilisateur(s) supprimé(s)`,    color: 'green'  })
+  else if (successCount === 0) useToast().add({ title: 'Échec',                 description: 'Aucun utilisateur supprimé',                     color: 'red'    })
+  else                         useToast().add({ title: 'Suppression partielle', description: `${successCount} succès, ${errorCount} échec(s)`, color: 'orange' })
 
   await loadUtilisateurs()
 }
 
-const onSelectionChange = (ids) => { /* pour usage futur */ }
+const onSelectionChange = (_ids) => { /* usage futur */ }
 
 // ============================================================================
 // LIFECYCLE
