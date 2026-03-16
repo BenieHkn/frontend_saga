@@ -35,6 +35,8 @@
 
         <div class="overflow-y-auto flex-1 p-5 space-y-4 bg-slate-50/50">
           <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
+
+            <!-- Header section avec bouton document principal -->
             <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100"
               :class="selectedCourrier.type === 'depart' ? 'bg-gradient-to-r from-orange-50 to-amber-50' : 'bg-gradient-to-r from-indigo-50 to-blue-50'">
               <div class="flex items-center gap-2">
@@ -48,23 +50,57 @@
                   :class="selectedCourrier.type === 'depart' ? 'text-orange-700' : 'text-indigo-700'">
                   Courrier {{ selectedCourrier.type === 'depart' ? 'départ' : 'arrivé' }}
                 </span>
-              </div>
-              <div class="flex items-center gap-1.5">
                 <span v-if="selectedCourrier.details?.priority"
-                  class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase"
+                  class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase ml-1"
                   :class="{
                     'bg-red-50 text-red-700 border-red-200': selectedCourrier.details.priority.toLowerCase() === 'urgent',
                     'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.details.priority.toLowerCase() === 'important',
                     'bg-sky-50 text-sky-700 border-sky-200': selectedCourrier.details.priority.toLowerCase() === 'standard',
                   }">{{ selectedCourrier.details.priority }}</span>
                 <span v-if="selectedCourrier.type === 'arrive' && selectedCourrier.reponses?.length"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">
                   <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Répondu
                 </span>
                 <span v-else-if="selectedCourrier.type === 'arrive'"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-200 ml-1">
                   <Icon name="i-heroicons-clock" class="w-3 h-3" /> En attente
                 </span>
+              </div>
+
+              <!-- Bouton document principal -->
+              <div v-if="selectedCourrier.url && selectedCourrier.url !== 'Inconnu'">
+                <button
+                  v-if="!arriveeFileLoaded && !arriveeFileLoading && !arriveeFileError"
+                  @click="loadArriveeFile"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all border"
+                  :class="selectedCourrier.type === 'depart'
+                    ? 'text-orange-700 bg-orange-50 hover:bg-orange-100 border-orange-200'
+                    : 'text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border-indigo-200'">
+                  <Icon name="i-heroicons-document-arrow-down" class="w-3.5 h-3.5" />
+                  Charger le document
+                </button>
+                <div v-else-if="arriveeFileLoading"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400">
+                  <div class="w-3.5 h-3.5 border-2 border-slate-200 rounded-full animate-spin"
+                    :class="selectedCourrier.type === 'depart' ? 'border-t-orange-500' : 'border-t-indigo-500'"></div>
+                  Chargement...
+                </div>
+                <div v-else-if="arriveeFileError"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-lg">
+                  <Icon name="i-heroicons-exclamation-triangle" class="w-3.5 h-3.5 shrink-0" />
+                  {{ arriveeFileError }}
+                  <button @click="arriveeFileError = ''; loadArriveeFile()" class="ml-1 underline hover:no-underline">Réessayer</button>
+                </div>
+                <div v-else-if="arriveeFileLoaded"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <Icon name="i-heroicons-check-circle" class="w-3.5 h-3.5" />
+                  Document chargé
+                </div>
+              </div>
+              <div v-else
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-lg cursor-not-allowed">
+                <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5" />
+                Aucun document disponible
               </div>
             </div>
 
@@ -132,54 +168,56 @@
                 </div>
               </div>
 
-              <!-- ── Preview document principal ────────────────────────── -->
-              <div class="pt-1">
-                <div v-if="selectedCourrier.url && selectedCourrier.url !== 'Inconnu'">
-                  <button
-                    v-if="!arriveeFileLoaded && !arriveeFileLoading && !arriveeFileError"
-                    @click="loadArriveeFile"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl transition-all hover:shadow-sm">
-                    <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />
-                    Charger le document
-                  </button>
-                  <div v-else-if="arriveeFileLoading"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400">
-                    <div class="w-4 h-4 border-2 border-slate-200 border-t-indigo-500 rounded-full animate-spin"></div>
-                    Chargement...
-                  </div>
-                  <div v-else-if="arriveeFileError"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-xl">
-                    <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
-                    {{ arriveeFileError }}
-                    <button @click="arriveeFileError = ''; loadArriveeFile()"
-                      class="ml-1 underline hover:no-underline">Réessayer</button>
-                  </div>
-                  <div v-else-if="arriveeFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                    <DocumentRpreview :file-preview-url="ariveeBlobUrl" height="400px" />
-                  </div>
-                </div>
-                <div v-else class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed">
-                  <Icon name="i-heroicons-document-text" class="w-4 h-4" />
-                  Aucun document disponible
-                </div>
+              <!-- Preview document principal -->
+              <div v-if="arriveeFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                <DocumentRpreview :file-preview-url="ariveeBlobUrl" height="600px" />
               </div>
             </div>
           </section>
 
-          <!-- ── Section courrier de réponse ─────────────────────────── -->
+          <!-- Section courrier de réponse -->
           <section v-if="selectedCourrier.type === 'arrive' && selectedCourrier.reponses?.length"
             class="bg-white rounded-2xl border border-emerald-200/80 overflow-hidden shadow-sm">
+
+            <!-- Header avec bouton document réponse -->
             <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
               <div class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center">
                   <Icon name="i-heroicons-arrow-uturn-right" class="w-3.5 h-3.5 text-emerald-600" />
                 </div>
                 <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier de réponse</span>
+                <span v-if="reponseData && !loadingReponse"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 ml-1">
+                  <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Chargé
+                </span>
               </div>
-              <span v-if="reponseData && !loadingReponse"
-                class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
-                <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Chargé
-              </span>
+
+              <!-- Bouton document réponse -->
+              <div v-if="reponseData?.rawUrl">
+                <button
+                  v-if="!reponseFileLoaded && !reponseFileLoading && !reponseFileError"
+                  @click="loadReponseFile"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all">
+                  <Icon name="i-heroicons-document-arrow-down" class="w-3.5 h-3.5" />
+                  Charger le document
+                </button>
+                <div v-else-if="reponseFileLoading"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400">
+                  <div class="w-3.5 h-3.5 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+                  Chargement...
+                </div>
+                <div v-else-if="reponseFileError"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-lg">
+                  <Icon name="i-heroicons-exclamation-triangle" class="w-3.5 h-3.5 shrink-0" />
+                  {{ reponseFileError }}
+                  <button @click="reponseFileError = ''; loadReponseFile()" class="ml-1 underline hover:no-underline">Réessayer</button>
+                </div>
+                <div v-else-if="reponseFileLoaded"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <Icon name="i-heroicons-check-circle" class="w-3.5 h-3.5" />
+                  Document chargé
+                </div>
+              </div>
             </div>
 
             <div v-if="loadingReponse" class="flex items-center justify-center gap-3 py-8 text-slate-400">
@@ -212,30 +250,9 @@
                 </div>
               </div>
 
-              <!-- ── Preview document réponse ─────────────────────────── -->
-              <div class="pt-1" v-if="reponseData.rawUrl">
-                <button
-                  v-if="!reponseFileLoaded && !reponseFileLoading && !reponseFileError"
-                  @click="loadReponseFile"
-                  class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all">
-                  <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />
-                  Charger le document de réponse
-                </button>
-                <div v-else-if="reponseFileLoading"
-                  class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400">
-                  <div class="w-4 h-4 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
-                  Chargement...
-                </div>
-                <div v-else-if="reponseFileError"
-                  class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-xl">
-                  <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
-                  {{ reponseFileError }}
-                  <button @click="reponseFileError = ''; loadReponseFile()"
-                    class="ml-1 underline hover:no-underline">Réessayer</button>
-                </div>
-                <div v-else-if="reponseFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-emerald-200 shadow-sm">
-                  <DocumentRpreview :file-preview-url="reponseBlobUrl" height="400px" />
-                </div>
+              <!-- Preview document réponse -->
+              <div v-if="reponseFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-emerald-200 shadow-sm">
+                <DocumentRpreview :file-preview-url="reponseBlobUrl" height="600px" />
               </div>
             </div>
 
@@ -379,10 +396,6 @@
           @click="handleView(item)"
           class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
           :disabled="openingDocumentId === item.id">
-          <Icon
-            :name="openingDocumentId === item.id ? 'i-heroicons-arrow-path' : 'i-heroicons-document-text'"
-            class="w-3.5 h-3.5 shrink-0"
-            :class="openingDocumentId === item.id ? 'animate-spin' : 'group-hover:scale-110 transition-transform'" />
           <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
           <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
         </button>

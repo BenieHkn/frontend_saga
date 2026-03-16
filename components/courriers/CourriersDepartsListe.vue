@@ -38,6 +38,8 @@
 
         <div class="overflow-y-auto flex-1 p-5 space-y-4 bg-slate-50/50">
           <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
+
+            <!-- ── Header section avec bouton document ─────────────────── -->
             <div
               class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
               <div class="flex items-center gap-2">
@@ -45,12 +47,38 @@
                   <Icon name="i-heroicons-paper-airplane" class="w-3.5 h-3.5 text-emerald-600" />
                 </div>
                 <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier départ</span>
-              </div>
-              <div class="flex items-center gap-1.5">
                 <span v-if="selectedCourrier.type_depart"
-                  class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase bg-emerald-50 text-emerald-700 border-emerald-200">
+                  class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase bg-emerald-50 text-emerald-700 border-emerald-200 ml-1">
                   {{ selectedCourrier.type_depart }}
                 </span>
+              </div>
+
+              <!-- Bouton charger le document -->
+              <div v-if="selectedCourrier.document?.url && selectedCourrier.document.url !== 'Inconnu'">
+                <button v-if="!departFileLoaded && !departFileLoading && !departFileError" @click="loadDepartFile"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all">
+                  <Icon name="i-heroicons-document-arrow-down" class="w-3.5 h-3.5" />Charger le document
+                </button>
+                <div v-else-if="departFileLoading"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400">
+                  <div class="w-3.5 h-3.5 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+                  Chargement...
+                </div>
+                <div v-else-if="departFileError"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-lg">
+                  <Icon name="i-heroicons-exclamation-triangle" class="w-3.5 h-3.5 shrink-0" />{{ departFileError }}
+                  <button @click="departFileError = ''; loadDepartFile()"
+                    class="ml-1 underline hover:no-underline">Réessayer</button>
+                </div>
+                <div v-else-if="departFileLoaded"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <Icon name="i-heroicons-check-circle" class="w-3.5 h-3.5" />
+                  Document chargé
+                </div>
+              </div>
+              <div v-else
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-lg cursor-not-allowed">
+                <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5" />Aucun document disponible
               </div>
             </div>
 
@@ -152,33 +180,9 @@
                 </div>
               </div>
 
-              <!-- ── Preview document départ ────────────────────────────── -->
-              <div class="pt-1">
-                <div v-if="selectedCourrier.document?.url && selectedCourrier.document.url !== 'Inconnu'">
-                  <button v-if="!departFileLoaded && !departFileLoading && !departFileError" @click="loadDepartFile"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all hover:shadow-sm">
-                    <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />Charger le document
-                  </button>
-                  <div v-else-if="departFileLoading"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400">
-                    <div class="w-4 h-4 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
-                    Chargement...
-                  </div>
-                  <div v-else-if="departFileError"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-xl">
-                    <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />{{ departFileError }}
-                    <button @click="departFileError = ''; loadDepartFile()"
-                      class="ml-1 underline hover:no-underline">Réessayer</button>
-                  </div>
-                  <div v-else-if="departFileLoaded"
-                    class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                    <DocumentRpreview :file-preview-url="departBlobUrl" height="400px" />
-                  </div>
-                </div>
-                <div v-else
-                  class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed">
-                  <Icon name="i-heroicons-document-text" class="w-4 h-4" />Aucun document disponible
-                </div>
+              <!-- ── Preview document départ (après toutes les données) ── -->
+              <div v-if="departFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                <DocumentRpreview :file-preview-url="departBlobUrl" height="600px" />
               </div>
             </div>
           </section>
@@ -301,15 +305,11 @@
           value }}</span>
       </template>
 
-      <!-- ── Référence cliquable → modal DocumentRpreview ────────────── -->
       <template #cell-reference="{ value, item }">
         <button v-if="item._raw?.document?.url && item._raw.document.url !== 'Inconnu'"
           @click="handleView(item)"
           class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
           :disabled="openingDocumentId === item.id">
-          <Icon :name="openingDocumentId === item.id ? 'i-heroicons-arrow-path' : 'i-heroicons-document-text'"
-            class="w-3.5 h-3.5 shrink-0"
-            :class="openingDocumentId === item.id ? 'animate-spin' : 'group-hover:scale-110 transition-transform'" />
           <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
           <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
         </button>
