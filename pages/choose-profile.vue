@@ -174,6 +174,7 @@ async function handleSelectPoste(entiteUser: EntiteUser) {
     const response = await $fetch<{
       success: boolean
       role: string
+      roles: string[]
       permissions: Record<string, any>
       entite_user: any
       main_entite: any
@@ -192,6 +193,11 @@ async function handleSelectPoste(entiteUser: EntiteUser) {
 
     if (response.role) {
       localStorage.setItem('role', response.role)
+    }
+
+    // ✅ AJOUT
+    if (response.roles && response.roles.length > 0) {
+      localStorage.setItem('roles', JSON.stringify(response.roles))
     }
 
     if (response.permissions) {

@@ -566,12 +566,24 @@ const switchEntite = async (entite) => {
       const targetEntite = response.main_entite || entite;
       localStorage.setItem('selected_entite', JSON.stringify(targetEntite));
       localStorage.setItem('role', response.role);
+
+      // ✅ AJOUT
+      if (response.roles && response.roles.length > 0) {
+        localStorage.setItem('roles', JSON.stringify(response.roles));
+      }
+
       localStorage.setItem('permissions', JSON.stringify(response.permissions));
       if (response.directeur_entite_user_id) {
         localStorage.setItem('directeur_entite_user_id', String(response.directeur_entite_user_id));
       } else {
         localStorage.removeItem('directeur_entite_user_id');
       }
+
+      // ✅ AJOUT : mettre à jour main_entite aussi
+      if (response.main_entite) {
+        localStorage.setItem('main_entite', JSON.stringify(response.main_entite));
+      }
+
       window.location.href = '/dashboard';
     }
   } catch (error) {
