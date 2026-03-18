@@ -209,11 +209,9 @@ const loadDestinataires = async () => {
       throw new Error('Aucune fonction sélectionnée. Veuillez vous reconnecter.')
     }
 
-    // ← AJOUTER cette ligne (elle manque dans handleSubmit)
     const emetteurId = getEmetteurId() ?? entite_user.id
 
-    console.log(`📝 Création d'affectations avec emetteur_id: ${emetteurId}`)
-    // Si secrétariat → on charge les subordonnés du directeur, pas les siens
+    console.log(`📝 Chargement des destinataires pour emetteur_id: ${emetteurId}`)
 
     const response = await $fetch(`${config.public.apiBase}/entite-users/${emetteurId}/subordinates`, {
       method: 'GET',
@@ -224,14 +222,14 @@ const loadDestinataires = async () => {
 
     // ✅ CORRECTION : Inclure is_responsable dans le mapping
     const destinataires = response.data
-      .filter(item => item.user?.statut && item.actif) // Filtrer utilisateurs actifs ET entite_user active
+      .filter(item => item.user?.statut && item.actif)
       .map(item => ({
-        id: item.id, // ✅ C'est le entite_user.id (11, 12, 20...)
+        id: item.id,
         user: item.user,
         entite: item.entite,
         actif: item.actif,
         is_interim: item.is_interim,
-        is_responsable: item.is_responsable, // ✅ AJOUT CRUCIAL
+        is_responsable: item.is_responsable,
       }))
 
     store.setDestinataires(destinataires)
@@ -244,7 +242,7 @@ const loadDestinataires = async () => {
         prenom: destinataires[0].user?.prenom,
         fonction: destinataires[0].entite?.fonction,
         entite: destinataires[0].entite?.libelle,
-        is_responsable: destinataires[0].is_responsable // ✅ Vérifier que c'est bien inclus
+        is_responsable: destinataires[0].is_responsable
       })
     }
   } catch (error) {
@@ -262,17 +260,7 @@ const loadDestinataires = async () => {
 
 // Gérer la soumission
 const handleSubmit = async () => {
-  // Validation
-  if (!store.canSend) {
-    toast.add({
-      title: 'Erreur',
-      description: 'Veuillez remplir tous les champs obligatoires',
-      color: 'red',
-      timeout: 1500,
-    })
-    return
-  }
-
+  // Validation minimale - seulement courriers et destinataires requis
   if (store.selectedCourriers.length === 0) {
     toast.add({
       title: 'Erreur',
@@ -309,7 +297,6 @@ const handleSubmit = async () => {
       throw new Error('Aucune fonction sélectionnée. Veuillez vous reconnecter.')
     }
 
-    // ← AJOUTER cette ligne (elle manque dans handleSubmit)
     const emetteurId = getEmetteurId() ?? entite_user.id
 
     console.log(`📝 Création d'affectations avec emetteur_id: ${emetteurId}`)
@@ -338,12 +325,13 @@ const handleSubmit = async () => {
       for (const destinataireId of store.selectedDestinataires) {
         affectations.push({
           courrier_arrive_id: courrierId,
-          destinataire_id: destinataireId, // ✅ C'est bien le entite_user.id
+          destinataire_id: destinataireId,
           emetteur_id: emetteurId,
-date_affect: new Date().toISOString().split('T')[0],
-          instructions: store.formData.instructions,
+          date_affect: new Date().toISOString().split('T')[0],
+          // ✅ Envoyer null si vide au lieu de chaînes vides
+          instructions: store.formData.instructions || null,
           statut: store.formData.statut,
-          delai_traitement: store.formData.delai_traitement,
+          delai_traitement: store.formData.delai_traitement || null,
           date_cloture: store.showDateCloture && store.formData.date_cloture
             ? store.formData.date_cloture
             : null,

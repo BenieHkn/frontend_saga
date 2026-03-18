@@ -64,18 +64,45 @@
                   </div>
                 </div>
 
+                <!-- ✅ Type de document recherchable -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Type de document *</label>
                   <USelectMenu
-                    v-model="form.type_document_id"
-                    :options="documentTypes"
+                    v-model="selectedDocumentType"
+                    :options="filteredDocumentTypes"
                     value-attribute="id"
                     option-attribute="libelle"
-                    placeholder="Sélectionner le type"
+                    placeholder="Rechercher un type..."
+                    searchable
+                    searchable-placeholder="Tapez pour rechercher..."
                     class="w-full"
-                    :loading="loadingTypes"
                     :ui="{ height: 'h-[42px]' }"
-                  />
+                    :loading="loadingTypes"
+                    @update:model-value="handleDocumentTypeChange"
+                  >
+                    <template #label>
+                      <span v-if="selectedDocumentType" class="truncate">
+                        {{ selectedDocumentType.libelle }}
+                      </span>
+                      <span v-else class="text-gray-400">
+                        Rechercher un type...
+                      </span>
+                    </template>
+                    
+                    <template #option="{ option }">
+                      <div class="flex items-center gap-2">
+                        <Icon name="heroicons:document-text" class="w-4 h-4 text-gray-400" />
+                        <span>{{ option.libelle }}</span>
+                      </div>
+                    </template>
+                  </USelectMenu>
+                  
+                  <p v-if="documentTypes.length === 0 && !loadingTypes" class="text-xs text-amber-600 mt-1">
+                    Aucun type de document disponible
+                  </p>
+                  <p v-else-if="!loadingTypes && documentTypes.length > 0" class="text-xs text-gray-500 mt-1">
+                    {{ documentTypes.length }} type(s) disponible(s)
+                  </p>
                 </div>
               </div>
 
@@ -327,6 +354,7 @@ const errorRequest = ref(null)
 const errors = ref([])
 
 const documentTypes = ref([])
+const selectedDocumentType = ref(null) // ✅ Objet complet au lieu d'un simple ID
 const utilisateurs = ref([])
 
 // ── Formulaire ────────────────────────────────────────────────────────────────
@@ -351,6 +379,11 @@ const form = ref({
 const filePreviewUrl = computed(() => {
   if (!selectedFile.value) return null
   return URL.createObjectURL(selectedFile.value)
+})
+
+// ✅ Types de documents filtrés (pour la recherche)
+const filteredDocumentTypes = computed(() => {
+  return documentTypes.value
 })
 
 const isFormValid = computed(() => {
@@ -400,11 +433,23 @@ const loadDocumentTypes = async () => {
       headers: { Authorization: `Bearer ${authToken.value}` },
     })
     documentTypes.value = response?.data || response || []
+    console.log(`✅ ${documentTypes.value.length} types de documents chargés`)
   } catch (error) {
     console.error('Erreur types de documents:', error)
     toast.add({ title: 'Erreur', description: 'Impossible de charger les types de documents', color: 'red', timeout: 3000 })
   } finally {
     loadingTypes.value = false
+  }
+}
+
+// ✅ Handler pour la sélection du type de document
+const handleDocumentTypeChange = (selected) => {
+  if (selected) {
+    form.value.type_document_id = selected.id
+    console.log('✅ Type de document sélectionné:', selected.libelle, '(ID:', selected.id, ')')
+  } else {
+    form.value.type_document_id = null
+    console.log('❌ Type de document désélectionné')
   }
 }
 
@@ -549,6 +594,7 @@ const resetForm = () => {
     initiateurs: [],
   }
   selectedFile.value = null
+  selectedDocumentType.value = null // ✅ Réinitialiser la sélection
   initiateurIds.value = []
   errors.value = []
   errorRequest.value = null

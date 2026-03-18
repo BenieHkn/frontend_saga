@@ -10,56 +10,38 @@
     <div v-if="showToolbar"
       class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-white border-b border-slate-200">
       <div class="flex items-center gap-2">
-        <UInput
-          v-if="showGlobalSearch && !externalPagination"
-          v-model="globalSearch"
-          icon="i-heroicons-magnifying-glass"
-          placeholder="Recherche globale..."
-          size="sm" class="w-56"
+        <UInput v-if="showGlobalSearch && !externalPagination" v-model="globalSearch"
+          icon="i-heroicons-magnifying-glass" placeholder="Recherche globale..." size="sm" class="w-56"
           @input="onGlobalSearchInput" />
-        <UInput
-          v-if="showGlobalSearch && externalPagination"
-          v-model="globalSearch"
-          icon="i-heroicons-magnifying-glass"
-          placeholder="Recherche globale..."
-          size="sm" class="w-56"
-          @input="onExternalSearchInput" />
-        <UButton
-          v-if="showAdvancedFiltersToggle"
-          size="sm"
-          :color="showAdvancedFilters ? 'indigo' : 'gray'"
-          variant="soft"
-          :icon="showAdvancedFilters ? 'i-heroicons-funnel-solid' : 'i-heroicons-funnel'"
+        <UInput v-if="showGlobalSearch && externalPagination" v-model="globalSearch" icon="i-heroicons-magnifying-glass"
+          placeholder="Recherche globale..." size="sm" class="w-56" @input="onExternalSearchInput" />
+        <UButton v-if="showAdvancedFiltersToggle" size="sm" :color="showAdvancedFilters ? 'indigo' : 'gray'"
+          variant="soft" :icon="showAdvancedFilters ? 'i-heroicons-funnel-solid' : 'i-heroicons-funnel'"
           @click="showAdvancedFilters = !showAdvancedFilters">
           Filtres
-          <UBadge v-if="activeFiltersCount > 0" :label="String(activeFiltersCount)" color="red" size="xs" class="ml-1" />
+          <UBadge v-if="activeFiltersCount > 0" :label="String(activeFiltersCount)" color="red" size="xs"
+            class="ml-1" />
         </UButton>
       </div>
       <div v-if="showPaginationOptions" class="flex items-center gap-2">
         <span class="text-xs text-slate-500">Lignes par page :</span>
-        <USelect
-          v-model="localItemsPerPage"
-          :options="itemsPerPageOptions.map(n => ({ label: String(n), value: n }))"
-          size="sm" class="w-20"
-          @change="onLocalPerPageChange" />
+        <USelect v-model="localItemsPerPage" :options="itemsPerPageOptions.map(n => ({ label: String(n), value: n }))"
+          size="sm" class="w-20" @change="onLocalPerPageChange" />
       </div>
     </div>
 
     <!-- ── FILTRES AVANCÉS ───────────────────────────────────────────────── -->
-    <Transition
-      enter-active-class="transition duration-200 ease-out"
-      enter-from-class="opacity-0 -translate-y-1"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-150 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-1">
+    <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 -translate-y-1"
+      enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-1">
       <div v-if="showAdvancedFilters" class="px-4 py-3 bg-slate-50 border-b border-slate-200">
         <slot name="advanced-filters" />
       </div>
     </Transition>
 
     <!-- ── BARRE SÉLECTION ───────────────────────────────────────────────── -->
-    <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100">
+    <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0"
+      enter-to-class="opacity-100">
       <div v-if="selectable && selectedRows.length > 0"
         class="flex items-center gap-3 px-4 py-2 bg-indigo-50 border-b border-indigo-100">
         <UIcon name="i-heroicons-check-circle" class="text-indigo-500 w-4 h-4" />
@@ -72,13 +54,8 @@
     <div class="relative overflow-x-auto">
 
       <!-- Overlay loading -->
-      <Transition
-        enter-active-class="transition duration-150"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition duration-150"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0">
+      <Transition enter-active-class="transition duration-150" enter-from-class="opacity-0" enter-to-class="opacity-100"
+        leave-active-class="transition duration-150" leave-from-class="opacity-100" leave-to-class="opacity-0">
         <div v-if="showLoading"
           class="absolute inset-0 bg-white/70 backdrop-blur-[1px] z-10 flex items-center justify-center">
           <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-slate-200">
@@ -113,41 +90,40 @@
                     <span v-if="shouldShowLabel(col)" class="block text-center whitespace-nowrap">
                       {{ col.label }}
                     </span>
-                    <button
-                      v-if="showSorting && col.sortable !== false"
+                    <button v-if="showSorting && col.sortable !== false"
                       class="flex items-center justify-center w-6 h-6 rounded hover:bg-indigo-100 transition-colors flex-shrink-0"
-                      :class="sortColumn === col.key ? 'text-indigo-600' : 'text-slate-400'"
-                      @click="sortBy(col.key)">
-                      <svg v-if="sortColumn !== col.key" class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor"><path d="M5 4l3-3 3 3H5zm6 8l-3 3-3-3h6z"/></svg>
-                      <svg v-else-if="sortDirection === 'asc'" class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2l4 6H4l4-6z"/></svg>
-                      <svg v-else class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor"><path d="M8 14l-4-6h8l-4 6z"/></svg>
+                      :class="sortColumn === col.key ? 'text-indigo-600' : 'text-slate-400'" @click="sortBy(col.key)">
+                      <svg v-if="sortColumn !== col.key" class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M5 4l3-3 3 3H5zm6 8l-3 3-3-3h6z" />
+                      </svg>
+                      <svg v-else-if="sortDirection === 'asc'" class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 2l4 6H4l4-6z" />
+                      </svg>
+                      <svg v-else class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 14l-4-6h8l-4 6z" />
+                      </svg>
                     </button>
                     <!-- Bouton filtre multi-select colonne -->
-                    <button
-                      v-if="showMultiSelectFilters && col.multiSelect !== false"
-                      ref="filterBtnRefs"
+                    <button v-if="showMultiSelectFilters && col.multiSelect !== false" ref="filterBtnRefs"
                       :data-col="col.key"
                       class="flex items-center justify-center w-6 h-6 rounded hover:bg-indigo-100 transition-colors flex-shrink-0"
                       :class="hasActiveMultiFilter(col.key) ? 'text-indigo-600 bg-indigo-100' : 'text-slate-400'"
                       @click.stop="openFilterMenu($event, col.key)">
                       <svg class="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V15a1 1 0 01-.447.894l-4 2.5A1 1 0 017 17.5v-7.086L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/>
+                        <path fill-rule="evenodd"
+                          d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V15a1 1 0 01-.447.894l-4 2.5A1 1 0 017 17.5v-7.086L3.293 6.707A1 1 0 013 6V3z"
+                          clip-rule="evenodd" />
                       </svg>
                     </button>
                   </div>
 
                   <!-- Input filtre colonne -->
-                  <div
-                    v-if="showColumnFilters && showColumnInputs && !col.inputHidden"
-                    class="overflow-x-auto scrollbar-thin"
-                    :style="getInputContainerWidth(col)">
-                    <input
-                      v-model="filters[col.key]"
-                      :type="col.inputType ?? 'text'"
+                  <div v-if="showColumnFilters && showColumnInputs && !col.inputHidden"
+                    class="overflow-x-auto scrollbar-thin" :style="getInputContainerWidth(col)">
+                    <input v-model="filters[col.key]" :type="col.inputType ?? 'text'"
                       :placeholder="col.inputPlaceholder ?? col.label"
                       class="px-2 py-1 text-xs font-normal normal-case tracking-normal text-slate-700 bg-white border border-slate-300 rounded focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 placeholder:text-slate-400"
-                      :style="getInputStyle(col)"
-                      @input="onColumnFilterInput(col.key)" />
+                      :style="getInputStyle(col)" @input="onColumnFilterInput(col.key)" />
                   </div>
                 </div>
               </template>
@@ -167,8 +143,7 @@
         </thead>
 
         <tbody>
-          <tr v-for="(item, index) in paginatedData" :key="item.id"
-            class="group transition-colors duration-100"
+          <tr v-for="(item, index) in paginatedData" :key="item.id" class="group transition-colors duration-100"
             :class="rowBg(item.id, index)">
 
             <td v-if="showRowNumbers"
@@ -176,20 +151,20 @@
               {{ startIndex + index + 1 }}
             </td>
 
-            <td v-for="col in visibleColumns" :key="col.key"
-              class="px-3 py-2 border border-slate-100"
+            <td v-for="col in visibleColumns" :key="col.key" class="px-3 py-2 border border-slate-100"
               :class="[col.cellClass, getCellAlignment(col.key)]">
               <slot :name="`cell-${col.key}`" :item="item" :value="item[col.key]" :column="col">
                 <template v-if="col.type === 'document'">
-                  <UButton v-if="item[col.key]" size="xs" color="blue" variant="ghost"
-                    icon="i-heroicons-document-text" @click="$emit('open-document', item[col.key])" />
+                  <UButton v-if="item[col.key]" size="xs" color="blue" variant="ghost" icon="i-heroicons-document-text"
+                    @click="$emit('open-document', item[col.key])" />
                   <UIcon v-else name="i-heroicons-document-text" class="w-5 h-5 text-slate-300 mx-auto" />
                 </template>
                 <template v-else-if="col.type === 'badge'">
                   <UBadge :label="String(item[col.key])" color="indigo" variant="subtle" size="xs" />
                 </template>
                 <template v-else-if="col.type === 'boolean'">
-                  <UBadge :label="item[col.key] ? 'Oui' : 'Non'" :color="item[col.key] ? 'green' : 'red'" variant="subtle" size="xs" />
+                  <UBadge :label="item[col.key] ? 'Oui' : 'Non'" :color="item[col.key] ? 'green' : 'red'"
+                    variant="subtle" size="xs" />
                 </template>
                 <template v-else>
                   <span class="text-slate-700 text-xs">{{ item[col.key] ?? '—' }}</span>
@@ -201,17 +176,20 @@
               <UCheckbox :model-value="selectedRows.includes(item.id)" @change="toggleRowSelect(item.id)" />
             </td>
 
-            <td v-if="showActions"
-              class="sticky right-0 px-3 py-2 text-right border border-slate-100"
-              :class="stickyBg(item.id, index)"
-              style="box-shadow: -3px 0 8px rgba(0,0,0,0.05)">
+            <td v-if="showActions" class="sticky right-0 px-3 py-2 text-right border border-slate-100"
+              :class="stickyBg(item.id, index)" style="box-shadow: -3px 0 8px rgba(0,0,0,0.05)">
               <slot name="actions" :item="item">
                 <div class="flex items-center justify-end gap-1">
-                  <UButton v-if="defaultActions.includes('view')"     size="xs" color="blue"   variant="ghost" icon="i-heroicons-eye"            @click="$emit('view', item)" />
-                  <UButton v-if="defaultActions.includes('edit')"     size="xs" color="indigo" variant="ghost" icon="i-heroicons-pencil"         @click="$emit('edit', item)" />
-                  <UButton v-if="defaultActions.includes('download')" size="xs" color="green"  variant="ghost" icon="i-heroicons-arrow-down-tray" @click="$emit('download', item)" />
-                  <UButton v-if="defaultActions.includes('archive')"  size="xs" color="yellow" variant="ghost" icon="i-heroicons-archive-box"    @click="$emit('archive', item)" />
-                  <UButton v-if="defaultActions.includes('delete')"   size="xs" color="red"    variant="ghost" icon="i-heroicons-trash"          @click="$emit('delete', item)" />
+                  <UButton v-if="defaultActions.includes('view')" size="xs" color="blue" variant="ghost"
+                    icon="i-heroicons-eye" @click="$emit('view', item)" />
+                  <UButton v-if="defaultActions.includes('edit')" size="xs" color="indigo" variant="ghost"
+                    icon="i-heroicons-pencil" @click="$emit('edit', item)" />
+                  <UButton v-if="defaultActions.includes('download')" size="xs" color="green" variant="ghost"
+                    icon="i-heroicons-arrow-down-tray" @click="$emit('download', item)" />
+                  <UButton v-if="defaultActions.includes('archive')" size="xs" color="yellow" variant="ghost"
+                    icon="i-heroicons-archive-box" @click="$emit('archive', item)" />
+                  <UButton v-if="defaultActions.includes('delete')" size="xs" color="red" variant="ghost"
+                    icon="i-heroicons-trash" @click="$emit('delete', item)" />
                 </div>
               </slot>
             </td>
@@ -252,12 +230,10 @@
           :disabled="currentPage <= 1 || showLoading" @click="onPageClick(currentPage - 1)" />
 
         <template v-for="(p, i) in visiblePages" :key="i">
-          <span v-if="p === '...'" class="w-7 h-7 flex items-center justify-center text-xs text-slate-400 select-none">…</span>
-          <UButton v-else size="xs"
-            :color="p === currentPage ? 'indigo' : 'gray'"
-            :variant="p === currentPage ? 'solid' : 'ghost'"
-            :label="String(p)"
-            :disabled="showLoading"
+          <span v-if="p === '...'"
+            class="w-7 h-7 flex items-center justify-center text-xs text-slate-400 select-none">…</span>
+          <UButton v-else size="xs" :color="p === currentPage ? 'indigo' : 'gray'"
+            :variant="p === currentPage ? 'solid' : 'ghost'" :label="String(p)" :disabled="showLoading"
             @click="onPageClick(p)" />
         </template>
 
@@ -272,23 +248,14 @@
   <!-- ══════════════════════════════════════════════════════════════════════ -->
   <Teleport to="body">
     <!-- Backdrop invisible pour fermer au clic extérieur -->
-    <div v-if="filterMenu.show"
-      class="fixed inset-0 z-[9990]"
-      @mousedown.stop="closeFilterMenu" />
+    <div v-if="filterMenu.show" class="fixed inset-0 z-[9990]" @mousedown.stop="closeFilterMenu" />
 
-    <Transition
-      enter-active-class="transition duration-150 ease-out"
-      enter-from-class="opacity-0 scale-95"
-      enter-to-class="opacity-100 scale-100"
-      leave-active-class="transition duration-100 ease-in"
-      leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 scale-95">
-      <div
-        v-if="filterMenu.show"
-        ref="dropdownMenuRef"
+    <Transition enter-active-class="transition duration-150 ease-out" enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-100 ease-in"
+      leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
+      <div v-if="filterMenu.show" ref="dropdownMenuRef"
         class="fixed z-[9999] w-72 bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden"
-        :style="filterMenu.style"
-        @mousedown.stop>
+        :style="filterMenu.style" @mousedown.stop>
 
         <!-- Header -->
         <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-indigo-50">
@@ -302,7 +269,8 @@
               {{ activeMultiFilterCount(filterMenu.column) }}
             </span>
           </div>
-          <button class="w-6 h-6 flex items-center justify-center rounded hover:bg-indigo-100 transition-colors text-slate-400"
+          <button
+            class="w-6 h-6 flex items-center justify-center rounded hover:bg-indigo-100 transition-colors text-slate-400"
             @click="closeFilterMenu">
             <Icon name="i-heroicons-x-mark" class="w-4 h-4" />
           </button>
@@ -310,15 +278,12 @@
 
         <!-- Recherche dans le menu -->
         <div class="px-3 py-2 border-b border-slate-100">
-          <div class="flex items-center gap-2 px-2 py-1.5 bg-slate-50 rounded-lg border border-slate-200 focus-within:border-indigo-400 transition-all">
+          <div
+            class="flex items-center gap-2 px-2 py-1.5 bg-slate-50 rounded-lg border border-slate-200 focus-within:border-indigo-400 transition-all">
             <Icon name="i-heroicons-magnifying-glass" class="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <input
-              v-model="filterMenuSearch"
-              type="text"
-              placeholder="Rechercher une valeur..."
+            <input v-model="filterMenuSearch" type="text" placeholder="Rechercher une valeur..."
               class="flex-1 text-xs bg-transparent outline-none text-slate-700 placeholder:text-slate-400" />
-            <button v-if="filterMenuSearch" @click="filterMenuSearch = ''"
-              class="text-slate-400 hover:text-slate-600">
+            <button v-if="filterMenuSearch" @click="filterMenuSearch = ''" class="text-slate-400 hover:text-slate-600">
               <Icon name="i-heroicons-x-mark" class="w-3 h-3" />
             </button>
           </div>
@@ -329,24 +294,17 @@
 
           <!-- Tout sélectionner -->
           <label class="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-50 cursor-pointer transition-colors">
-            <input
-              type="checkbox"
-              class="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-              :checked="isAllMenuOptionsSelected"
-              :indeterminate="isMenuOptionsIndeterminate"
+            <input type="checkbox" class="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              :checked="isAllMenuOptionsSelected" :indeterminate="isMenuOptionsIndeterminate"
               @change="toggleAllMenuOptions" />
             <span class="text-xs font-semibold text-slate-500">(Tout sélectionner)</span>
           </label>
           <div class="border-t border-slate-100 mx-3 my-0.5" />
 
           <!-- Chaque option -->
-          <label
-            v-for="opt in filteredMenuOptions"
-            :key="opt.value"
+          <label v-for="opt in filteredMenuOptions" :key="opt.value"
             class="flex items-center gap-2.5 px-4 py-1.5 hover:bg-slate-50 cursor-pointer transition-colors">
-            <input
-              type="checkbox"
-              class="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            <input type="checkbox" class="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
               :checked="isOptionChecked(filterMenu.column, opt.value)"
               @change="toggleMenuOption(filterMenu.column, opt.value)" />
             <span class="text-xs text-slate-700 truncate">{{ opt.label }}</span>
@@ -366,8 +324,7 @@
             {{ activeMultiFilterCount(filterMenu.column) }} sélectionné(s)
             / {{ currentMenuOptions.length }} valeur(s)
           </span>
-          <button
-            v-if="activeMultiFilterCount(filterMenu.column) > 0"
+          <button v-if="activeMultiFilterCount(filterMenu.column) > 0"
             class="text-[11px] font-semibold text-red-500 hover:text-red-700 transition-colors"
             @click="resetMultiFilter(filterMenu.column)">
             Réinitialiser
@@ -383,48 +340,48 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 
 const props = defineProps({
-  data:                      { type: Array,   default: () => [] },
-  columns:                   { type: Array,   required: true },
-  loading:                   { type: Boolean, default: false },
-  tabLoading:                { type: Boolean, default: false },
-  selectable:                { type: Boolean, default: true },
-  itemsPerPageOptions:       { type: Array,   default: () => [10, 25, 50, 100] },
-  defaultItemsPerPage:       { type: Number,  default: 10 },
-  showToolbar:               { type: Boolean, default: true },
-  showGlobalSearch:          { type: Boolean, default: true },
+  data: { type: Array, default: () => [] },
+  columns: { type: Array, required: true },
+  loading: { type: Boolean, default: false },
+  tabLoading: { type: Boolean, default: false },
+  selectable: { type: Boolean, default: true },
+  itemsPerPageOptions: { type: Array, default: () => [10, 25, 50, 100] },
+  defaultItemsPerPage: { type: Number, default: 10 },
+  showToolbar: { type: Boolean, default: true },
+  showGlobalSearch: { type: Boolean, default: true },
   showAdvancedFiltersToggle: { type: Boolean, default: true },
-  showColumnFilters:         { type: Boolean, default: true },
-  showSorting:               { type: Boolean, default: true },
-  showMultiSelectFilters:    { type: Boolean, default: true },
-  showPaginationOptions:     { type: Boolean, default: true },
-  showPagination:            { type: Boolean, default: true },
-  showHeader:                { type: Boolean, default: true },
-  showActions:               { type: Boolean, default: true },
-  showRowNumbers:            { type: Boolean, default: false },
-  showColumnInputs:          { type: Boolean, default: true },
-  showColumnLabels:          { type: Boolean, default: true },
-  columnInputSize:           { type: String,  default: null },
-  leftAlignedColumns:        { type: Array,   default: () => [] },
-  hideLabelsWhenInput:       { type: Boolean, default: false },
+  showColumnFilters: { type: Boolean, default: true },
+  showSorting: { type: Boolean, default: true },
+  showMultiSelectFilters: { type: Boolean, default: true },
+  showPaginationOptions: { type: Boolean, default: true },
+  showPagination: { type: Boolean, default: true },
+  showHeader: { type: Boolean, default: true },
+  showActions: { type: Boolean, default: true },
+  showRowNumbers: { type: Boolean, default: false },
+  showColumnInputs: { type: Boolean, default: true },
+  showColumnLabels: { type: Boolean, default: true },
+  columnInputSize: { type: String, default: null },
+  leftAlignedColumns: { type: Array, default: () => [] },
+  hideLabelsWhenInput: { type: Boolean, default: false },
   hideLoadingOnColumnFilter: { type: Boolean, default: false },
   // Options pour le menu multi-select en mode externe
   // format: { colKey: [{ value, label }, ...], ... }
-  columnFilterOptions:       { type: Object,  default: () => ({}) },
+  columnFilterOptions: { type: Object, default: () => ({}) },
   defaultActions: {
     type: Array,
     default: () => ['edit', 'delete'],
     validator: v => v.every(a => ['edit', 'delete', 'view', 'download', 'archive', 'assign'].includes(a)),
   },
-  actionsLabel:         { type: String, default: 'Actions' },
-  emptyStateTitle:      { type: String, default: 'Aucun résultat' },
-  emptyStateText:       { type: String, default: "Essayez d'ajuster vos filtres ou votre recherche." },
-  defaultSortColumn:    { type: String, default: null },
+  actionsLabel: { type: String, default: 'Actions' },
+  emptyStateTitle: { type: String, default: 'Aucun résultat' },
+  emptyStateText: { type: String, default: "Essayez d'ajuster vos filtres ou votre recherche." },
+  defaultSortColumn: { type: String, default: null },
   defaultSortDirection: { type: String, default: 'asc', validator: v => ['asc', 'desc'].includes(v) },
-  externalPagination:   { type: Boolean, default: false },
-  externalTotal:        { type: Number,  default: 0 },
-  externalPage:         { type: Number,  default: 1 },
-  externalLastPage:     { type: Number,  default: 1 },
-  externalPerPage:      { type: Number,  default: 20 },
+  externalPagination: { type: Boolean, default: false },
+  externalTotal: { type: Number, default: 0 },
+  externalPage: { type: Number, default: 1 },
+  externalLastPage: { type: Number, default: 1 },
+  externalPerPage: { type: Number, default: 20 },
 })
 
 const emit = defineEmits([
@@ -443,7 +400,7 @@ const visibleColumns = computed(() => props.columns.filter(c => c.visible !== fa
 const sourceData = computed(() => props.data)
 
 // ── Recherche globale ─────────────────────────────────────────────────────
-const globalSearch        = ref('')
+const globalSearch = ref('')
 const showAdvancedFilters = ref(false)
 
 const onGlobalSearchInput = () => { currentPage.value = 1 }
@@ -479,8 +436,8 @@ const multiSelectFilters = ref(
   props.columns.reduce((acc, col) => ({ ...acc, [col.key]: [] }), {})
 )
 
-const hasActiveMultiFilter    = (col) => (multiSelectFilters.value[col]?.length ?? 0) > 0
-const activeMultiFilterCount  = (col) => multiSelectFilters.value[col]?.length ?? 0
+const hasActiveMultiFilter = (col) => (multiSelectFilters.value[col]?.length ?? 0) > 0
+const activeMultiFilterCount = (col) => multiSelectFilters.value[col]?.length ?? 0
 
 const isOptionChecked = (col, val) => multiSelectFilters.value[col]?.includes(val) ?? false
 
@@ -506,7 +463,7 @@ const onMultiFilterChange = (col) => {
     emit('multi-filter-change', {
       column: col,
       values: [...(multiSelectFilters.value[col] ?? [])],
-      all:    { ...multiSelectFilters.value },
+      all: { ...multiSelectFilters.value },
     })
   } else {
     currentPage.value = 1
@@ -517,10 +474,12 @@ const onMultiFilterChange = (col) => {
 // Mode externe : depuis props.columnFilterOptions
 // Mode interne : calculé depuis les données
 const getColumnOptions = (col) => {
-  if (props.externalPagination && props.columnFilterOptions[col]) {
-    return props.columnFilterOptions[col] // [{ value, label }]
+  console.log('getColumnOptions appelé pour:', col)
+  console.log('externalPagination:', props.externalPagination)
+  console.log('columnFilterOptions[col]:', props.columnFilterOptions[col])
+  if (props.externalPagination) {
+    return (props.columnFilterOptions[col] || [])
   }
-  // Mode interne — options depuis les données
   return [...new Set(sourceData.value.map(i => i[col]))]
     .filter(v => v !== null && v !== undefined && v !== '')
     .map(v => ({ value: v, label: String(v) }))
@@ -528,7 +487,7 @@ const getColumnOptions = (col) => {
 }
 
 // ── Menu filtre colonne ───────────────────────────────────────────────────
-const filterMenu       = ref({ show: false, column: null, style: {} })
+const filterMenu = ref({ show: false, column: null, style: {} })
 const filterMenuSearch = ref('')
 
 const currentMenuOptions = computed(() => {
@@ -569,13 +528,13 @@ const toggleAllMenuOptions = () => {
 
 const openFilterMenu = (event, column) => {
   filterMenuSearch.value = ''
-  const btn  = event.currentTarget
+  const btn = event.currentTarget
   const rect = btn.getBoundingClientRect()
 
-  const menuWidth   = 288 // w-72
-  const spaceBelow  = window.innerHeight - rect.bottom
-  const spaceAbove  = rect.top
-  const openUp      = spaceBelow < 300 && spaceAbove > spaceBelow
+  const menuWidth = 288 // w-72
+  const spaceBelow = window.innerHeight - rect.bottom
+  const spaceAbove = rect.top
+  const openUp = spaceBelow < 300 && spaceAbove > spaceBelow
 
   // Ajuster position horizontale pour ne pas dépasser l'écran
   let left = rect.left
@@ -584,14 +543,14 @@ const openFilterMenu = (event, column) => {
   }
 
   filterMenu.value = {
-    show:   true,
+    show: true,
     column,
     style: {
-      left:           `${left}px`,
+      left: `${left}px`,
       transformOrigin: openUp ? 'bottom left' : 'top left',
       ...(openUp
         ? { bottom: `${window.innerHeight - rect.top + 4}px`, top: 'auto' }
-        : { top:    `${rect.bottom + 4}px`,                   bottom: 'auto' }),
+        : { top: `${rect.bottom + 4}px`, bottom: 'auto' }),
     },
   }
 }
@@ -616,11 +575,11 @@ const recalcFilterMenuPosition = () => {
   const btn = document.querySelector(`[data-col="${filterMenu.value.column}"]`)
   if (!btn) return
 
-  const rect      = btn.getBoundingClientRect()
+  const rect = btn.getBoundingClientRect()
   const menuWidth = 288
   const spaceBelow = window.innerHeight - rect.bottom
   const spaceAbove = rect.top
-  const openUp     = spaceBelow < 300 && spaceAbove > spaceBelow
+  const openUp = spaceBelow < 300 && spaceAbove > spaceBelow
 
   let left = rect.left
   if (left + menuWidth > window.innerWidth) {
@@ -628,11 +587,11 @@ const recalcFilterMenuPosition = () => {
   }
 
   filterMenu.value.style = {
-    left:            `${left}px`,
+    left: `${left}px`,
     transformOrigin: openUp ? 'bottom left' : 'top left',
     ...(openUp
       ? { bottom: `${window.innerHeight - rect.top + 4}px`, top: 'auto' }
-      : { top:    `${rect.bottom + 4}px`,                   bottom: 'auto' }),
+      : { top: `${rect.bottom + 4}px`, bottom: 'auto' }),
   }
 }
 
@@ -655,30 +614,30 @@ onBeforeUnmount(() => {
 })
 
 // ── Tri ───────────────────────────────────────────────────────────────────
-const sortColumn    = ref(props.defaultSortColumn)
+const sortColumn = ref(props.defaultSortColumn)
 const sortDirection = ref(props.defaultSortDirection)
 
 const sortBy = (col) => {
   if (sortColumn.value === col) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
   } else {
-    sortColumn.value    = col
+    sortColumn.value = col
     sortDirection.value = 'asc'
   }
 }
 
 // ── Sélection lignes ──────────────────────────────────────────────────────
-const selectedRows    = ref([])
-const isAllSelected   = computed(() => paginatedData.value.length > 0 && selectedRows.value.length === paginatedData.value.length)
+const selectedRows = ref([])
+const isAllSelected = computed(() => paginatedData.value.length > 0 && selectedRows.value.length === paginatedData.value.length)
 const isIndeterminate = computed(() => selectedRows.value.length > 0 && selectedRows.value.length < paginatedData.value.length)
 
-const toggleSelectAll  = () => { isAllSelected.value ? selectedRows.value = [] : selectedRows.value = paginatedData.value.map(i => i.id) }
-const toggleRowSelect  = (id) => { const i = selectedRows.value.indexOf(id); i > -1 ? selectedRows.value.splice(i, 1) : selectedRows.value.push(id) }
+const toggleSelectAll = () => { isAllSelected.value ? selectedRows.value = [] : selectedRows.value = paginatedData.value.map(i => i.id) }
+const toggleRowSelect = (id) => { const i = selectedRows.value.indexOf(id); i > -1 ? selectedRows.value.splice(i, 1) : selectedRows.value.push(id) }
 
 watch(selectedRows, val => emit('selection-change', [...val]), { deep: true })
 
 // ── Pagination ────────────────────────────────────────────────────────────
-const currentPage       = ref(props.externalPagination ? props.externalPage : 1)
+const currentPage = ref(props.externalPagination ? props.externalPage : 1)
 const localItemsPerPage = ref(props.defaultItemsPerPage)
 
 watch(() => props.externalPage, (val) => { if (props.externalPagination) currentPage.value = val })
@@ -709,12 +668,12 @@ const paginatedData = computed(() =>
 
 const visiblePages = computed(() => {
   const total = totalPages.value
-  const cur   = currentPage.value
+  const cur = currentPage.value
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
   const pages = [1]
   if (cur > 3) pages.push('...')
   const start = Math.max(2, cur - 1)
-  const end   = Math.min(total - 1, cur + 1)
+  const end = Math.min(total - 1, cur + 1)
   for (let i = start; i <= end; i++) pages.push(i)
   if (cur < total - 2) pages.push('...')
   pages.push(total)
@@ -775,18 +734,18 @@ watch(filteredData, () => {
 })
 
 // ── UI helpers ────────────────────────────────────────────────────────────
-const rowBg    = (id, i) => selectedRows.value.includes(id) ? 'bg-indigo-50 hover:bg-indigo-100' : i % 2 === 0 ? 'bg-white hover:bg-indigo-50' : 'bg-slate-50 hover:bg-indigo-50'
+const rowBg = (id, i) => selectedRows.value.includes(id) ? 'bg-indigo-50 hover:bg-indigo-100' : i % 2 === 0 ? 'bg-white hover:bg-indigo-50' : 'bg-slate-50 hover:bg-indigo-50'
 const stickyBg = (id, i) => selectedRows.value.includes(id) ? 'bg-indigo-50 group-hover:bg-indigo-100' : i % 2 === 0 ? 'bg-white group-hover:bg-indigo-50' : 'bg-slate-50 group-hover:bg-indigo-50'
 
 const getInputContainerWidth = (col) => {
-  if (col.inputWidth)         return `width: ${col.inputWidth}`
-  if (props.columnInputSize)  return `width: ${props.columnInputSize}`
+  if (col.inputWidth) return `width: ${col.inputWidth}`
+  if (props.columnInputSize) return `width: ${props.columnInputSize}`
   return 'width: 100%'
 }
 const getInputStyle = (col) => {
-  if (col.inputWidth)        return `width: ${col.inputWidth}`
+  if (col.inputWidth) return `width: ${col.inputWidth}`
   if (props.columnInputSize) return 'width: 100%'
-  const text  = col.inputPlaceholder ?? col.label ?? ''
+  const text = col.inputPlaceholder ?? col.label ?? ''
   const width = Math.max(60, text.length * 7 + 24)
   return `width: ${width}px`
 }
@@ -800,14 +759,37 @@ defineExpose({ selectedRows, filters, multiSelectFilters, currentPage, showAdvan
 </script>
 
 <style>
-.scrollbar-thin::-webkit-scrollbar       { height: 2px; }
-.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-.scrollbar-thin::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 2px; }
+.scrollbar-thin::-webkit-scrollbar {
+  height: 2px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #c7d2fe;
+  border-radius: 2px;
+}
 
 @keyframes progress {
-  0%   { width: 0%;  margin-left: 0; }
-  50%  { width: 60%; margin-left: 20%; }
-  100% { width: 0%;  margin-left: 100%; }
+  0% {
+    width: 0%;
+    margin-left: 0;
+  }
+
+  50% {
+    width: 60%;
+    margin-left: 20%;
+  }
+
+  100% {
+    width: 0%;
+    margin-left: 100%;
+  }
 }
-.animate-progress { animation: progress 1s ease-in-out infinite; }
+
+.animate-progress {
+  animation: progress 1s ease-in-out infinite;
+}
 </style>

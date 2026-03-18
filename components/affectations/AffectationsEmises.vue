@@ -682,17 +682,17 @@ const transformAffectation = (affectation) => {
     instructions:        affectation.instructions || '',
     statut:              affectation.statut        || 'en_cours',
     priority:            affectation.priority      || 'STANDARD',
-    delai_traitement:    formatDate(affectation.delai_traitement),
-    date_cloture:        formatDate(affectation.date_cloture),
+    delai_traitement:    formatDate(affectation.delai_traitement) || '__',
+    date_cloture:        formatDate(affectation.date_cloture) || '_',
     destinataire: {
       nom:      destinataireNom,
       fonction: destinataireCode ? `${destinataireCode} - ${destinataireFonction}` : '',
-      entite:   affectation.destinataire?.entite?.libelle || '',
+      entite:   affectation.destinataire?.entite?.libelle || '_',
     },
     emetteur: {
       nom:      emetteurNom,
       fonction: emetteurCode ? `${emetteurCode} - ${emetteurFonction}` : '',
-      entite:   affectation.emetteur?.entite?.libelle || '',
+      entite:   affectation.emetteur?.entite?.libelle || '_',
     },
     _raw: affectation,
   }

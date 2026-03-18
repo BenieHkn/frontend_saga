@@ -326,7 +326,9 @@
       @search-change="onSearchChange"
       @page-change="onPageChange"
       @per-page-change="onPerPageChange"
-      @column-filter-change="onColumnFilterChange">
+      @column-filter-change="onColumnFilterChange"
+      :column-filter-options="columnFilterOptions"
+      @multi-filter-change="onMultiFilterChange">
 
       <template #advanced-filters>
         <div class="space-y-4">
@@ -591,6 +593,29 @@ const formatDate = (date) => {
   })
 }
 
+// Dans le script
+const onMultiFilterChange = ({ column, values, all }) => {
+  // Stocker les filtres multi-select actifs
+  multiFilters.value = { ...all }
+  currentPage.value = 1
+  refresh(1, perPage.value, false)
+}
+
+const multiFilters = ref({})
+
+// Après filterOptionsData
+const columnFilterOptions = computed(() => ({
+  source: (filterOptionsData.value.services_enreg || [])
+    .map(s => ({ value: s, label: s })),
+  type: [
+    { value: 'arrive', label: 'Arrivé' },
+    { value: 'depart', label: 'Départ' },
+  ],
+  structure: (filterOptionsData.value.structures || [])
+    .map(s => ({ value: s, label: s })),
+  // Ajouter les autres colonnes selon votre API
+}))
+
 const guessMimeType = (filename) => {
   if (!filename) return ''
   const ext = (filename.split('.').pop() || '').toLowerCase()
@@ -748,6 +773,13 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
       params.append('service_emis',  c.source)
     }
     if (c.structure) params.append('structure', c.structure)
+
+    Object.entries(multiFilters.value).forEach(([col, vals]) => {
+      if (vals?.length) {
+        vals.forEach(v => params.append(col, v))
+        // ou selon votre API : params.append(col, vals.join(','))
+      }
+    })
 
     const response = await $fetch(`${base}/documents/type?${params.toString()}`, {
       headers: { Authorization: `Bearer ${authToken}` },

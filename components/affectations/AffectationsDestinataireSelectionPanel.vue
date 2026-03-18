@@ -45,7 +45,7 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Rechercher par nom, fonction ou entité..."
+          placeholder="Rechercher par nom, code, fonction ou agent..."
           class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-slate-700 placeholder:text-slate-400"
         />
       </div>
@@ -75,6 +75,7 @@
         <div class="flex flex-col items-center justify-center gap-3">
           <Icon name="i-heroicons-user-group" class="w-12 h-12 text-slate-300" />
           <p class="text-slate-500">Aucun destinataire trouvé</p>
+          <p class="text-xs text-slate-400">Essayez avec un autre terme de recherche</p>
         </div>
       </div>
 
@@ -152,10 +153,16 @@ const filteredDestinataires = computed(() => {
     const fullName = `${dest.user?.nom || ''} ${dest.user?.prenom || ''}`.toLowerCase()
     const fonction = dest.entite?.fonction?.toLowerCase() || ''
     const entite = dest.entite?.libelle?.toLowerCase() || ''
+    const code = dest.entite?.code?.toLowerCase() || ''
+    
+    // ✅ Pour les non-responsables, ajouter "agent" comme terme de recherche
+    const role = dest.is_responsable ? fonction : 'agent'
     
     return fullName.includes(query) || 
            fonction.includes(query) || 
-           entite.includes(query)
+           entite.includes(query) ||
+           code.includes(query) ||
+           role.includes(query)
   })
 })
 
