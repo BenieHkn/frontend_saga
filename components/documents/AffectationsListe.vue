@@ -963,7 +963,7 @@ const handleCloturer = async (item) => {
     const base      = config.public.apiBase.replace(/\/$/, '')
 
     const result = await $fetch(`${base}/affectations/${item.id}/cloture`, {
-      method:  'PATCH',
+      method:  'PUT',  // PATCH → PUT
       headers: { Authorization: `Bearer ${authToken}` },
     })
 
