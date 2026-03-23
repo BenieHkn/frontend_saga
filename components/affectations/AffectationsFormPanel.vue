@@ -34,7 +34,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
             Date de retour attendue
-            <span class="text-red-500">*</span>
+            <!-- <span class="text-red-500">*</span> -->
           </label>
           <UInput 
             :model-value="store.formData.delai_traitement"
@@ -105,7 +105,7 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">
           Annotations
-          <span class="text-red-500">*</span>
+          <!-- <span class="text-red-500">*</span> -->
         </label>
         <UTextarea 
           :model-value="store.formData.instructions"

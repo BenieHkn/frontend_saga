@@ -19,30 +19,29 @@
   <!-- MODAL DÉTAILS                                                      -->
   <!-- ══════════════════════════════════════════════════════════════════ -->
   <UModal v-model="detailsOpen" :ui="{ width: 'sm:max-w-3xl' }">
-    <div v-if="selectedAffectation" class="flex flex-col max-h-[90vh] bg-white rounded-xl overflow-hidden">
+    <div v-if="selectedAffectation" class="flex flex-col max-h-[90vh] bg-white rounded-xl overflow-hidden shadow-2xl">
 
-      <div class="relative flex items-center justify-between px-6 py-4 shrink-0 overflow-hidden"
-        style="background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);">
-        <div class="absolute inset-0 opacity-10"
-          style="background-image: radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px); background-size: 32px 32px;"></div>
-        <div class="relative flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-inner border border-white/30">
+      <!-- ── Header ──────────────────────────────────────────────────────── -->
+      <div class="flex items-center justify-between px-6 py-4 shrink-0"
+        style="background: linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%);">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center border border-white/20">
             <Icon name="i-heroicons-clipboard-document-list" class="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 class="text-base font-bold text-white leading-tight">Détails de l'affectation</h2>
-            <div class="flex items-center gap-2 mt-0.5">
-              <span class="text-xs text-blue-200 font-medium">#{{ selectedAffectation.id }}</span>
+            <h2 class="text-sm font-bold text-white tracking-tight">Détails de l'affectation</h2>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-[11px] text-blue-200">#{{ selectedAffectation.id }}</span>
               <span v-if="selectedAffectation.statut"
-                class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-md uppercase border bg-white/20 text-white border-white/30">
+                class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full uppercase bg-white/15 text-white border border-white/20 tracking-wide">
                 {{ getStatutLabel(selectedAffectation.statut) }}
               </span>
               <span v-if="selectedAffectation.priority"
-                class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-md uppercase border"
+                class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide"
                 :class="{
-                  'bg-red-400/30 text-red-100 border-red-300/50':         selectedAffectation.priority === 'URGENT',
-                  'bg-orange-400/30 text-orange-100 border-orange-300/50': selectedAffectation.priority === 'IMPORTANT',
-                  'bg-sky-400/30 text-sky-100 border-sky-300/50':          selectedAffectation.priority === 'STANDARD',
+                  'bg-red-400/25 text-red-200 border border-red-300/30':       selectedAffectation.priority === 'URGENT',
+                  'bg-amber-400/25 text-amber-200 border border-amber-300/30': selectedAffectation.priority === 'IMPORTANT',
+                  'bg-white/10 text-blue-100 border border-white/20':          selectedAffectation.priority === 'STANDARD',
                 }">
                 {{ selectedAffectation.priority }}
               </span>
@@ -50,142 +49,175 @@
           </div>
         </div>
         <button @click="closeDetails"
-          class="relative w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 transition-all text-white border border-white/20">
+          class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white/70 hover:text-white border border-white/15">
           <Icon name="i-heroicons-x-mark" class="w-4 h-4" />
         </button>
       </div>
 
-      <div class="overflow-y-auto flex-1 p-5 space-y-4 bg-slate-50/50">
+      <!-- ── Body ────────────────────────────────────────────────────────── -->
+      <div class="overflow-y-auto flex-1 p-5 space-y-4" style="background-color: #f8fafc;">
 
-        <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
-          <div class="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-50 to-sky-50 border-b border-blue-100">
-            <div class="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center">
-              <Icon name="i-heroicons-inbox-arrow-down" class="w-3.5 h-3.5 text-blue-600" />
+        <!-- Courrier associé -->
+        <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100"
+            style="background: linear-gradient(to right, #eff6ff, #f8fafc);">
+
+            <!-- Titre + badges état réponse -->
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-md bg-blue-100 flex items-center justify-center">
+                <Icon name="i-heroicons-inbox-arrow-down" class="w-3.5 h-3.5 text-blue-600" />
+              </div>
+              <span class="text-[11px] font-bold text-blue-800 uppercase tracking-widest">Courrier associé</span>
+              <span
+                v-if="selectedAffectation.a_reponse"
+                class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-50 text-green-700 border border-green-200">
+                <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Répondu
+              </span>
+              <span
+                v-else
+                class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                <Icon name="i-heroicons-clock" class="w-3 h-3" /> En attente
+              </span>
             </div>
-            <span class="text-[11px] font-bold text-blue-700 uppercase tracking-widest">Courrier associé</span>
+
+            <!-- Bouton document -->
+            <div v-if="selectedAffectation._raw?.courrier_arrive?.document?.url &&
+                       selectedAffectation._raw.courrier_arrive.document.url !== 'Inconnu'">
+              <button
+                v-if="!docFileLoaded && !docFileLoading && !docFileError"
+                @click="loadDocFile"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors">
+                <Icon name="i-heroicons-document-arrow-down" class="w-3.5 h-3.5" />
+                Charger le document
+              </button>
+              <div v-else-if="docFileLoading"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-500">
+                <div class="w-3.5 h-3.5 border-2 border-blue-100 border-t-blue-500 rounded-full animate-spin"></div>
+                Chargement...
+              </div>
+              <div v-else-if="docFileError"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                <Icon name="i-heroicons-exclamation-triangle" class="w-3.5 h-3.5 shrink-0" />
+                {{ docFileError }}
+                <button @click="docFileError = ''; loadDocFile()" class="ml-1 underline hover:no-underline">Réessayer</button>
+              </div>
+              <div v-else-if="docFileLoaded"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <Icon name="i-heroicons-check-circle" class="w-3.5 h-3.5" />
+                Document chargé
+              </div>
+            </div>
+            <span v-else
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-lg cursor-not-allowed">
+              <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5" />
+              Aucun document
+            </span>
           </div>
-          <div class="p-4 space-y-3">
-            <div class="grid grid-cols-1 gap-2">
-              <div class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-blue-100">
-                <div class="w-1 shrink-0 bg-gradient-to-b from-blue-400 to-blue-600"></div>
-                <div class="flex-1 p-3 bg-gradient-to-r from-blue-50 to-transparent">
-                  <p class="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">Référence</p>
-                  <p class="text-sm font-bold text-blue-900">{{ selectedAffectation.reference_courrier || 'Sans référence' }}</p>
-                </div>
-              </div>
-              <div class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-amber-100">
-                <div class="w-1 shrink-0 bg-gradient-to-b from-amber-400 to-orange-500"></div>
-                <div class="flex-1 p-3 bg-gradient-to-r from-amber-50 to-transparent">
-                  <p class="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-0.5">Objet</p>
-                  <p class="text-sm text-gray-800 leading-relaxed">{{ selectedAffectation.objet_courrier || 'Non spécifié' }}</p>
-                </div>
-              </div>
-            </div>
 
-            <!-- ── Preview document courrier ──────────────────────────── -->
-            <div class="pt-1">
-              <div v-if="selectedAffectation._raw?.courrier_arrive?.document?.url &&
-                         selectedAffectation._raw.courrier_arrive.document.url !== 'Inconnu'">
-                <!-- Pas encore chargé -->
-                <button
-                  v-if="!docFileLoaded && !docFileLoading && !docFileError"
-                  @click="loadDocFile"
-                  class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-all">
-                  <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />
-                  Charger le document
-                </button>
-                <!-- Chargement -->
-                <div v-else-if="docFileLoading"
-                  class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400">
-                  <div class="w-4 h-4 border-2 border-slate-200 border-t-blue-500 rounded-full animate-spin"></div>
-                  Chargement...
-                </div>
-                <!-- Erreur -->
-                <div v-else-if="docFileError"
-                  class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-xl">
-                  <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
-                  {{ docFileError }}
-                  <button @click="docFileError = ''; loadDocFile()"
-                    class="ml-1 underline hover:no-underline">Réessayer</button>
-                </div>
-                <!-- Préview -->
-                <div v-else-if="docFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                  <DocumentRpreview :file-preview-url="docBlobUrl" height="400px" />
-                </div>
-              </div>
-              <div v-else class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed">
-                <Icon name="i-heroicons-document-text" class="w-4 h-4" />
-                Aucun document disponible
-              </div>
+          <div class="p-4 space-y-3">
+            <div class="flex items-start gap-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
+              <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider mt-0.5 w-20 shrink-0">Référence</span>
+              <p class="text-sm font-bold text-slate-800">{{ selectedAffectation.reference_courrier || 'Sans référence' }}</p>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 w-20 shrink-0">Objet</span>
+              <p class="text-sm text-slate-700 leading-relaxed">{{ selectedAffectation.objet_courrier || 'Non spécifié' }}</p>
             </div>
           </div>
         </section>
 
-        <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
-          <div class="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-sky-50 to-cyan-50 border-b border-sky-100">
-            <div class="w-6 h-6 rounded-lg bg-sky-100 flex items-center justify-center">
-              <Icon name="i-heroicons-clipboard-document-check" class="w-3.5 h-3.5 text-sky-600" />
+        <!-- Informations d'affectation -->
+        <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-100"
+            style="background: linear-gradient(to right, #eff6ff, #f8fafc);">
+            <div class="w-6 h-6 rounded-md bg-blue-100 flex items-center justify-center">
+              <Icon name="i-heroicons-clipboard-document-check" class="w-3.5 h-3.5 text-blue-600" />
             </div>
-            <span class="text-[11px] font-bold text-sky-700 uppercase tracking-widest">Informations d'affectation</span>
+            <span class="text-[11px] font-bold text-blue-800 uppercase tracking-widest">Informations d'affectation</span>
           </div>
-          <div class="p-4 space-y-3">
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-              <div class="p-2.5 bg-white rounded-xl border border-slate-100">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date d'affectation</p>
-                <p class="text-xs text-slate-800">{{ selectedAffectation.date_affect || '—' }}</p>
+          <div class="p-4 space-y-4">
+
+            <!-- Dates & dossier -->
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date d'affectation</p>
+                <p class="text-sm font-medium text-slate-800">{{ selectedAffectation.date_affect || '—' }}</p>
               </div>
-              <div class="p-2.5 bg-white rounded-xl border border-slate-100">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date de retour attendue</p>
-                <p class="text-xs text-slate-800">{{ selectedAffectation.delai_traitement || '—' }}</p>
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Retour attendu</p>
+                <p class="text-sm font-medium text-slate-800">{{ selectedAffectation.delai_traitement || '—' }}</p>
               </div>
-              <div v-if="selectedAffectation.date_cloture" class="p-2.5 bg-white rounded-xl border border-slate-100">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date de clôture</p>
-                <p class="text-xs text-slate-800">{{ selectedAffectation.date_cloture }}</p>
+              <div v-if="selectedAffectation.date_cloture" class="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date de clôture</p>
+                <p class="text-sm font-medium text-slate-800">{{ selectedAffectation.date_cloture }}</p>
               </div>
-              <div v-if="selectedAffectation.dossier && selectedAffectation.dossier !== '—'" class="p-2.5 bg-white rounded-xl border border-slate-100">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Dossier</p>
-                <p class="text-xs text-slate-800">{{ selectedAffectation.dossier }}</p>
+              <div v-if="selectedAffectation.dossier && selectedAffectation.dossier !== '—'"
+                class="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Dossier</p>
+                <p class="text-sm font-medium text-slate-800">{{ selectedAffectation.dossier }}</p>
               </div>
             </div>
-            <div class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-sky-100">
-              <div class="w-1 shrink-0 bg-gradient-to-b from-sky-400 to-cyan-500"></div>
-              <div class="flex-1 p-3 bg-gradient-to-r from-sky-50 to-transparent">
-                <p class="text-[10px] font-bold text-sky-500 uppercase tracking-wider mb-1">Destinataire</p>
+
+            <!-- Destinataire -->
+            <div class="flex items-start gap-3 p-3.5 rounded-lg border border-blue-100 bg-blue-50/40">
+              <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+                <Icon name="i-heroicons-user" class="w-4 h-4 text-blue-600" />
+              </div>
+              <div>
+                <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-1">Destinataire</p>
                 <p class="text-sm font-bold text-slate-800">{{ selectedAffectation.destinataire?.nom || '—' }}</p>
                 <p class="text-xs text-slate-500 mt-0.5">{{ selectedAffectation.destinataire?.fonction }}</p>
-                <p v-if="selectedAffectation.destinataire?.entite" class="text-xs text-slate-400">{{ selectedAffectation.destinataire.entite }}</p>
+                <p v-if="selectedAffectation.destinataire?.entite" class="text-xs text-slate-400 mt-0.5">
+                  {{ selectedAffectation.destinataire.entite }}
+                </p>
               </div>
             </div>
+
+            <!-- Émetteur (admin) -->
             <div v-if="isAdmin && selectedAffectation.emetteur?.nom"
-              class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-slate-100">
-              <div class="w-1 shrink-0 bg-gradient-to-b from-slate-300 to-slate-400"></div>
-              <div class="flex-1 p-3 bg-gradient-to-r from-slate-50 to-transparent">
+              class="flex items-start gap-3 p-3.5 rounded-lg border border-slate-200 bg-slate-50">
+              <div class="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center shrink-0 mt-0.5">
+                <Icon name="i-heroicons-user-circle" class="w-4 h-4 text-slate-500" />
+              </div>
+              <div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Émetteur</p>
                 <p class="text-sm font-bold text-slate-800">{{ selectedAffectation.emetteur.nom }}</p>
                 <p class="text-xs text-slate-500 mt-0.5">{{ selectedAffectation.emetteur.fonction }}</p>
               </div>
             </div>
-            <div v-if="selectedAffectation.instructions"
-              class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-amber-100">
-              <div class="w-1 shrink-0 bg-gradient-to-b from-amber-400 to-yellow-500"></div>
-              <div class="flex-1 p-3 bg-gradient-to-r from-amber-50 to-transparent">
-                <p class="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-1.5">Instructions</p>
-                <p class="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{{ selectedAffectation.instructions }}</p>
-              </div>
+
+            <!-- Instructions -->
+            <div class="p-3.5 rounded-lg border border-amber-200 bg-amber-50/50">
+              <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-2">Instructions</p>
+              <p v-if="selectedAffectation.instructions"
+                class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                {{ selectedAffectation.instructions }}
+              </p>
+              <p v-else class="text-sm text-slate-400 italic">Aucune instruction renseignée</p>
             </div>
-            <div v-else class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-slate-100">
-              <div class="w-1 shrink-0 bg-slate-200"></div>
-              <div class="flex-1 p-3 bg-slate-50">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Instructions</p>
-                <p class="text-xs text-slate-400 italic">Aucune instruction</p>
-              </div>
-            </div>
+
           </div>
         </section>
+
+        <!-- Prévisualisation du document -->
+        <section v-if="docFileLoaded" class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-100"
+            style="background: linear-gradient(to right, #eff6ff, #f8fafc);">
+            <div class="w-6 h-6 rounded-md bg-blue-100 flex items-center justify-center">
+              <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 text-blue-600" />
+            </div>
+            <span class="text-[11px] font-bold text-blue-800 uppercase tracking-widest">Prévisualisation du document</span>
+          </div>
+          <div class="p-4">
+            <DocumentRpreview :file-preview-url="docBlobUrl" height="600px" />
+          </div>
+        </section>
+
       </div>
 
+      <!-- ── Footer ──────────────────────────────────────────────────────── -->
       <div class="px-6 py-3.5 border-t border-slate-100 shrink-0 flex items-center justify-between bg-white">
-        <span class="text-[10px] text-slate-400">Affectation #{{ selectedAffectation.id }}</span>
+        <span class="text-[10px] text-slate-400 font-medium">Affectation #{{ selectedAffectation.id }}</span>
         <UButton color="gray" variant="outline" size="sm" @click="closeDetails">Fermer</UButton>
       </div>
     </div>
@@ -338,12 +370,8 @@
         @click="handleView(item)"
         class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
         :disabled="openingDocumentId === item.id">
-        <Icon
-          :name="openingDocumentId === item.id ? 'i-heroicons-arrow-path' : 'i-heroicons-document-text'"
-          class="w-3.5 h-3.5 shrink-0"
-          :class="openingDocumentId === item.id ? 'animate-spin' : 'group-hover:scale-110 transition-transform'" />
         <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
-        <Icon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
+        <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
       </button>
       <span v-else
         class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]">
@@ -355,19 +383,35 @@
     <!-- ── Actions ──────────────────────────────────────────────────────── -->
     <template #actions="{ item }">
       <div class="flex gap-1.5 justify-end">
+
+        <!-- Voir les détails -->
         <button @click="handleView(item)" title="Voir les détails"
           class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 transition-all group">
           <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
         </button>
-        <button @click="handleQuickAssign(item.courrier_id)" v-if="!isAdmin" title="Affecter ce courrier"
+
+        <!-- Affecter — actif uniquement si le courrier n'a pas encore de réponse -->
+        <button
+          v-if="!isAdmin && !item.a_reponse"
+          @click="handleQuickAssign(item.courrier_id)"
+          title="Affecter ce courrier"
           class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
           <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
         </button>
+        <div
+          v-else-if="!isAdmin && item.a_reponse"
+          title="Ce courrier a déjà une réponse — affectation non disponible"
+          class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-md cursor-not-allowed">
+          <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
+        </div>
+
+        <!-- Modifier le destinataire -->
         <button @click="handleEdit(item)" v-if="!isAdmin"
           class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 transition-all group"
           title="Modifier le destinataire">
           <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-green-600" />
         </button>
+
       </div>
     </template>
 
@@ -529,17 +573,17 @@ const onColumnFilterChange = (val) => {
 // ── Colonnes ──────────────────────────────────────────────────────────────────
 const columns = computed(() => {
   const base = [
-    { key: 'reference_courrier', label: 'Réf. Courrier',           visible: true,  inputPlaceholder: 'Réf...',    width: 'min-w-[200px]', showLabel: false },
-    { key: 'dossier',            label: 'Dossier',                 visible: true,  inputPlaceholder: 'Dossier...', width: 'min-w-[200px]', showLabel: false },
-    { key: 'objet_courrier',     label: 'Objet',                   visible: true,  inputPlaceholder: 'Objet...',   width: 'min-w-[250px]', showLabel: false },
-    { key: 'doc_courrier',       label: 'Document',                visible: false, type: 'document',               filterable: false },
-    { key: 'date_affect',        label: "Date d'affectation",      visible: true,  filterable: false,              width: 'min-w-[120px]', showLabel: false },
+    { key: 'reference_courrier', label: 'Réf. Courrier',           visible: true,  inputPlaceholder: 'Réf...',     width: 'min-w-[200px]', showLabel: false },
+    { key: 'dossier',            label: 'Dossier',                 visible: true,  inputPlaceholder: 'Dossier...',  width: 'min-w-[200px]', showLabel: false },
+    { key: 'objet_courrier',     label: 'Objet',                   visible: true,  inputPlaceholder: 'Objet...',    width: 'min-w-[250px]', showLabel: false },
+    { key: 'doc_courrier',       label: 'Document',                visible: false, type: 'document',                filterable: false },
+    { key: 'date_affect',        label: "Date d'affectation",      visible: true,  filterable: false,               width: 'min-w-[120px]', showLabel: false },
     { key: 'instructions',       label: 'Instructions',            visible: true,  inputPlaceholder: 'Instruct...', width: 'min-w-[200px]', showLabel: false },
     { key: 'statut',             label: 'Statut',                  visible: true,  type: 'badge', filterable: false, width: 'min-w-[120px]', showLabel: false },
     { key: 'priority',           label: 'Priorité',                visible: true,  type: 'badge', filterable: false, width: 'min-w-[120px]', showLabel: false },
-    { key: 'delai_traitement',   label: 'Date de retour attendue', visible: true,  filterable: false,              width: 'min-w-[120px]', showLabel: false },
-    { key: 'date_cloture',       label: 'Date clôture',            visible: false, filterable: false,              width: 'min-w-[120px]' },
-    { key: 'destinataire',       label: 'Destinataire',            visible: true,  filterable: false,              width: 'min-w-[180px]', showLabel: false },
+    { key: 'delai_traitement',   label: 'Date de retour attendue', visible: true,  filterable: false,               width: 'min-w-[120px]', showLabel: false },
+    { key: 'date_cloture',       label: 'Date clôture',            visible: false, filterable: false,               width: 'min-w-[120px]' },
+    { key: 'destinataire',       label: 'Destinataire',            visible: true,  filterable: false,               width: 'min-w-[180px]', showLabel: false },
   ]
   if (isAdmin.value) base.push({ key: 'emetteur', label: 'Émetteur', visible: true, filterable: false, width: 'min-w-[180px]' })
   return base
@@ -568,7 +612,7 @@ const filteredDestinataires = computed(() => {
   if (!searchDestinataire.value) return destinataires.value
   const q = searchDestinataire.value.toLowerCase()
   return destinataires.value.filter(dest =>
-    dest.user?.nom?.toLowerCase().includes(q)    ||
+    dest.user?.nom?.toLowerCase().includes(q)     ||
     dest.user?.prenom?.toLowerCase().includes(q)  ||
     dest.entite?.code?.toLowerCase().includes(q)  ||
     dest.entite?.libelle?.toLowerCase().includes(q)
@@ -655,31 +699,32 @@ const transformAffectation = (affectation) => {
   const destinataireCode     = affectation.destinataire?.entite?.code || ''
   const destinataireFonction = affectation.destinataire?.is_responsable ? affectation.destinataire.entite?.fonction || '' : 'Agent'
 
-  // On ne stocke plus l'URL construite — le nom brut reste dans _raw
   const rawUrl = affectation.courrier_arrive?.document?.url?.trim()
 
   return {
-    id:                  affectation.id,
-    courrier_id:         affectation.courrier_arrive_id || null,
-    reference_courrier:  affectation.courrier_arrive?.document?.reference || '',
-    objet_courrier:      affectation.courrier_arrive?.document?.objet      || '',
-    doc_courrier:        (rawUrl && rawUrl !== 'Inconnu') ? rawUrl : '',  // nom brut uniquement
-    date_affect:         formatDate(affectation.date_affect),
-    dossier:             affectation.dossier      || '—',
-    instructions:        affectation.instructions || '',
-    statut:              affectation.statut        || 'en_cours',
-    priority:            affectation.priority      || 'STANDARD',
-    delai_traitement:    formatDate(affectation.delai_traitement),
-    date_cloture:        formatDate(affectation.date_cloture),
+    id:                 affectation.id,
+    courrier_id:        affectation.courrier_arrive_id || null,
+    reference_courrier: affectation.courrier_arrive?.document?.reference || '',
+    objet_courrier:     affectation.courrier_arrive?.document?.objet      || '',
+    doc_courrier:       (rawUrl && rawUrl !== 'Inconnu') ? rawUrl : '',
+    date_affect:        formatDate(affectation.date_affect),
+    dossier:            affectation.dossier      || '—',
+    instructions:       affectation.instructions || '',
+    statut:             affectation.statut        || 'en_cours',
+    priority:           affectation.priority      || 'STANDARD',
+    delai_traitement:   formatDate(affectation.delai_traitement) || '__',
+    date_cloture:       formatDate(affectation.date_cloture) || '_',
+    // true si le courrier associé a au moins une réponse — pilote le bouton d'affectation
+    a_reponse: !!(affectation.courrier_arrive?.document?.reponses?.length),
     destinataire: {
       nom:      destinataireNom,
       fonction: destinataireCode ? `${destinataireCode} - ${destinataireFonction}` : '',
-      entite:   affectation.destinataire?.entite?.libelle || '',
+      entite:   affectation.destinataire?.entite?.libelle || '_',
     },
     emetteur: {
       nom:      emetteurNom,
       fonction: emetteurCode ? `${emetteurCode} - ${emetteurFonction}` : '',
-      entite:   affectation.emetteur?.entite?.libelle || '',
+      entite:   affectation.emetteur?.entite?.libelle || '_',
     },
     _raw: affectation,
   }
@@ -728,10 +773,10 @@ const fetchAffectations = async (page = 1, per_page = perPage.value, isFirst = f
     if (f.date_affect && f.date_affect.length === 10) params.append('date_affect', f.date_affect)
 
     const c = columnFilters.value
-    if (!f.dossier      && c.dossier)           params.append('dossier',           c.dossier)
-    if (!f.instructions && c.instructions)      params.append('instructions',      c.instructions)
-    if (c.reference_courrier)                   params.append('reference_courrier', c.reference_courrier)
-    if (c.objet_courrier)                       params.append('objet_courrier',     c.objet_courrier)
+    if (!f.dossier      && c.dossier)            params.append('dossier',            c.dossier)
+    if (!f.instructions && c.instructions)       params.append('instructions',       c.instructions)
+    if (c.reference_courrier)                    params.append('reference_courrier',  c.reference_courrier)
+    if (c.objet_courrier)                        params.append('objet_courrier',      c.objet_courrier)
 
     let response
 
@@ -774,7 +819,6 @@ let searchTimeout = null
 watch(searchFilters, (f) => {
   const dateOk = !f.date_affect || f.date_affect.length === 10
   if (!dateOk) return
-
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     currentPage.value = 1
@@ -794,7 +838,6 @@ const onSearchChange  = (val)  => {
 // ── Handlers CRUD ─────────────────────────────────────────────────────────────
 const handleView = (item) => {
   selectedAffectation.value = item
-  // Reset état blob modal
   docFileLoaded.value  = false
   docFileLoading.value = false
   docFileError.value   = ''

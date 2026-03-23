@@ -18,7 +18,7 @@
               <h2 class="text-base font-bold text-white leading-tight">Détails du courrier départ</h2>
               <div class="flex items-center gap-2 mt-0.5">
                 <span class="text-xs text-emerald-100 font-medium">N° {{ selectedCourrier.document?.numero_enreg || '—'
-                  }}</span>
+                }}</span>
                 <span v-if="selectedCourrier.confidentiel"
                   class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-white/20 text-white border border-white/30">
                   <Icon name="i-heroicons-lock-closed" class="w-3 h-3" /> Confidentiel
@@ -38,6 +38,8 @@
 
         <div class="overflow-y-auto flex-1 p-5 space-y-4 bg-slate-50/50">
           <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
+
+            <!-- ── Header section avec bouton document ─────────────────── -->
             <div
               class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
               <div class="flex items-center gap-2">
@@ -45,12 +47,39 @@
                   <Icon name="i-heroicons-paper-airplane" class="w-3.5 h-3.5 text-emerald-600" />
                 </div>
                 <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Courrier départ</span>
-              </div>
-              <div class="flex items-center gap-1.5">
                 <span v-if="selectedCourrier.type_depart"
-                  class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase bg-emerald-50 text-emerald-700 border-emerald-200">
+                  class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase bg-emerald-50 text-emerald-700 border-emerald-200 ml-1">
                   {{ selectedCourrier.type_depart }}
                 </span>
+              </div>
+
+              <!-- Bouton charger le document -->
+              <div v-if="selectedCourrier.document?.url && selectedCourrier.document.url !== 'Inconnu'">
+                <button v-if="!departFileLoaded && !departFileLoading && !departFileError" @click="loadDepartFile"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all">
+                  <Icon name="i-heroicons-document-arrow-down" class="w-3.5 h-3.5" />Charger le document
+                </button>
+                <div v-else-if="departFileLoading"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400">
+                  <div class="w-3.5 h-3.5 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin">
+                  </div>
+                  Chargement...
+                </div>
+                <div v-else-if="departFileError"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-lg">
+                  <Icon name="i-heroicons-exclamation-triangle" class="w-3.5 h-3.5 shrink-0" />{{ departFileError }}
+                  <button @click="departFileError = ''; loadDepartFile()"
+                    class="ml-1 underline hover:no-underline">Réessayer</button>
+                </div>
+                <div v-else-if="departFileLoaded"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <Icon name="i-heroicons-check-circle" class="w-3.5 h-3.5" />
+                  Document chargé
+                </div>
+              </div>
+              <div v-else
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-lg cursor-not-allowed">
+                <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5" />Aucun document disponible
               </div>
             </div>
 
@@ -152,33 +181,9 @@
                 </div>
               </div>
 
-              <!-- ── Preview document départ ────────────────────────────── -->
-              <div class="pt-1">
-                <div v-if="selectedCourrier.document?.url && selectedCourrier.document.url !== 'Inconnu'">
-                  <button v-if="!departFileLoaded && !departFileLoading && !departFileError" @click="loadDepartFile"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all hover:shadow-sm">
-                    <Icon name="i-heroicons-document-arrow-down" class="w-4 h-4" />Charger le document
-                  </button>
-                  <div v-else-if="departFileLoading"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400">
-                    <div class="w-4 h-4 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
-                    Chargement...
-                  </div>
-                  <div v-else-if="departFileError"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-xl">
-                    <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />{{ departFileError }}
-                    <button @click="departFileError = ''; loadDepartFile()"
-                      class="ml-1 underline hover:no-underline">Réessayer</button>
-                  </div>
-                  <div v-else-if="departFileLoaded"
-                    class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                    <DocumentRpreview :file-preview-url="departBlobUrl" height="400px" />
-                  </div>
-                </div>
-                <div v-else
-                  class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed">
-                  <Icon name="i-heroicons-document-text" class="w-4 h-4" />Aucun document disponible
-                </div>
+              <!-- ── Preview document départ (après toutes les données) ── -->
+              <div v-if="departFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                <DocumentRpreview :file-preview-url="departBlobUrl" height="600px" />
               </div>
             </div>
           </section>
@@ -298,18 +303,13 @@
       <template #cell-source="{ value }">
         <span
           class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">{{
-          value }}</span>
+            value }}</span>
       </template>
 
-      <!-- ── Référence cliquable → modal DocumentRpreview ────────────── -->
       <template #cell-reference="{ value, item }">
-        <button v-if="item._raw?.document?.url && item._raw.document.url !== 'Inconnu'"
-          @click="handleView(item)"
+        <button v-if="item._raw?.document?.url && item._raw.document.url !== 'Inconnu'" @click="handleView(item)"
           class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
           :disabled="openingDocumentId === item.id">
-          <Icon :name="openingDocumentId === item.id ? 'i-heroicons-arrow-path' : 'i-heroicons-document-text'"
-            class="w-3.5 h-3.5 shrink-0"
-            :class="openingDocumentId === item.id ? 'animate-spin' : 'group-hover:scale-110 transition-transform'" />
           <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
           <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
         </button>
@@ -361,6 +361,14 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 transition-all group">
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
+          <button v-if="isAdmin()" @click="handleDelete(item)" :disabled="deletingId === item.id"
+            title="Supprimer ce courrier"
+            class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 hover:text-red-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
+            <div v-if="deletingId === item.id"
+              class="w-3.5 h-3.5 border-2 border-red-200 border-t-red-600 rounded-full animate-spin">
+            </div>
+            <Icon v-else name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
+          </button>
         </div>
       </template>
     </DataTablePaginate>
@@ -373,6 +381,7 @@ import DataTablePaginate from '~/components/DataTablePaginate.vue'
 import SearchableSelect from '~/components/SearchableSelect.vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
 import { useAuth } from '~/composables/auth/useAuth'
+import Swal from 'sweetalert2'
 
 const props = defineProps({ entiteId: { type: Number, default: null } })
 const config = useRuntimeConfig()
@@ -400,6 +409,103 @@ const onColumnFilterChange = (val) => {
   columnFilters.value = { ...val }
   clearTimeout(columnFilterTimeout)
   columnFilterTimeout = setTimeout(() => { currentPage.value = 1; refresh(1, perPage.value, false) }, 400)
+}
+
+const deletingId = ref(null)
+
+const handleDelete = async (item) => {
+  const { isConfirmed } = await Swal.fire({
+    title: 'Supprimer ce courrier ?',
+    html: `
+      <div class="text-sm text-slate-600 space-y-2 text-left">
+        <p>Vous êtes sur le point de supprimer le courrier départ :</p>
+        <div class="mt-2 p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+          <p class="text-xs"><span class="font-bold text-slate-500 uppercase tracking-wide">Référence</span><br>
+            <span class="font-semibold text-slate-800">${item.reference || '—'}</span></p>
+          <p class="text-xs mt-1"><span class="font-bold text-slate-500 uppercase tracking-wide">Objet</span><br>
+            <span class="text-slate-700">${item.objet || '—'}</span></p>
+        </div>
+        <div class="flex items-start gap-2 mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <svg class="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          </svg>
+          <p class="text-red-700 text-xs">Cette action est <strong>irréversible</strong>. Le fichier associé sera également supprimé du serveur.</p>
+        </div>
+      </div>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: `
+      <svg class="w-4 h-4 inline mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+      </svg>Oui, supprimer`,
+    cancelButtonText: 'Annuler',
+    focusCancel: true,
+    reverseButtons: true,
+    customClass: {
+      popup: 'rounded-2xl shadow-2xl px-6 py-5 max-w-md',
+      title: 'text-base font-bold text-slate-800 pt-2',
+      htmlContainer: 'mt-2',
+      confirmButton: 'inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-red-400',
+      cancelButton: 'inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-all mr-2 focus:outline-none focus:ring-2 focus:ring-slate-300',
+      actions: 'mt-4 gap-2',
+      icon: 'border-red-300 text-red-500',
+    },
+    buttonsStyling: false,
+  })
+
+  if (!isConfirmed) return
+
+  deletingId.value = item.id
+  try {
+    const authToken = localStorage.getItem('auth_token') || ''
+    const base = config.public.apiBase.replace(/\/$/, '')
+
+    await $fetch(`${base}/courriers-departs/${item.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    await Swal.fire({
+      title: 'Courrier supprimé',
+      html: `<p class="text-sm text-slate-600">Le courrier <strong>${item.reference || '#' + item.id}</strong> a été supprimé avec succès.</p>`,
+      icon: 'success',
+      confirmButtonText: 'Fermer',
+      timer: 3000,
+      timerProgressBar: true,
+      customClass: {
+        popup: 'rounded-2xl shadow-2xl px-6 py-5 max-w-sm',
+        title: 'text-base font-bold text-slate-800 pt-2',
+        htmlContainer: 'mt-1',
+        confirmButton: 'inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-all focus:outline-none',
+        timerProgressBar: 'bg-emerald-400',
+      },
+      buttonsStyling: false,
+    })
+
+    await refresh(currentPage.value, perPage.value, false)
+
+  } catch (err) {
+    console.error('❌ Erreur suppression:', err)
+
+    await Swal.fire({
+      title: 'Erreur',
+      html: `<p class="text-sm text-slate-600">${err?.data?.message || 'Impossible de supprimer ce courrier.'}</p>`,
+      icon: 'error',
+      confirmButtonText: 'Fermer',
+      customClass: {
+        popup: 'rounded-2xl shadow-2xl px-6 py-5 max-w-sm',
+        title: 'text-base font-bold text-slate-800 pt-2',
+        htmlContainer: 'mt-1',
+        confirmButton: 'inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all focus:outline-none',
+      },
+      buttonsStyling: false,
+    })
+  } finally {
+    deletingId.value = null
+  }
 }
 
 const columns = [

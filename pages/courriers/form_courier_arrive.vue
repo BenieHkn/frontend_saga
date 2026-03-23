@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto p-6">
+    <div class="mx-auto p-6">
       <!-- Main Content -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <!-- Left Column: Form (col-6) -->
@@ -61,32 +61,27 @@
                   </div>
                 </div>
 
-                <div>
+                <div v-if="form.type_arrivee !== 'autre'">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Type de document *
+                    Structure
                   </label>
-                  <USelectMenu
-                    v-model="form.type_document_id"
-                    :options="documentTypes"
-                    value-attribute="id"
-                    option-attribute="libelle"
-                    placeholder="Sélectionner le type"
-                    class="w-full"
-                    :ui="{ height: 'h-[42px]' }"
-                    :loading="loadingTypes"
-                  />
-                  <p v-if="documentTypes.length === 0 && !loadingTypes" class="text-xs text-amber-600 mt-1">
-                    Aucun type de document disponible
-                  </p>
+                  <UInput v-model="form.structure" placeholder="Nom de la structure" class="w-full h-12" />
                 </div>
+
               </div>
 
               <!-- Structure conditionnelle -->
-              <div v-if="form.type_arrivee !== 'autre'">
+
+              <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Structure
+                  Type de document *
                 </label>
-                <UInput v-model="form.structure" placeholder="Nom de la structure" class="w-full h-12" />
+                <USelectMenu v-model="selectedDocumentType" :options="filteredDocumentTypes" option-attribute="libelle"
+                  placeholder="Rechercher un type..." searchable searchable-placeholder="Rechercher..." class="w-full"
+                  :ui="{ height: 'h-[42px]' }" :loading="loadingTypes" @search="searchQuery = $event" />
+                <p v-if="documentTypes.length === 0 && !loadingTypes" class="text-xs text-amber-600 mt-1">
+                  Aucun type de document disponible
+                </p>
               </div>
 
               <div v-if="form.type_arrivee === 'autre'">
@@ -151,7 +146,7 @@
 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Objet *</label>
-                  <UInput v-model="form.objet" placeholder="Objet du courrier" class="w-full h-12" />
+                  <UTextarea :rows="3" size="lg" v-model="form.objet" placeholder="Objet du courrier" required />
                 </div>
 
                 <div class="flex items-center space-x-2">
@@ -164,12 +159,8 @@
                 <UButton type="button" @click="handleCancel" color="gray" variant="outline">
                   ANNULER
                 </UButton>
-                <UButton
-                  :disabled="!isFormValid || loading"
-                  type="submit"
-                  class="bg-gradient-to-br from-emerald-800 to-blue-800 text-white dark:text-white"
-                  :loading="loading"
-                >
+                <UButton :disabled="!isFormValid || loading" type="submit"
+                  class="bg-gradient-to-br from-emerald-800 to-blue-800 text-white dark:text-white" :loading="loading">
                   SAUVEGARDER
                 </UButton>
               </div>
@@ -223,6 +214,21 @@ const authToken = ref("")
 const errorRequest = ref(null)
 const sansReference = ref(false)
 const documentTypes = ref([])
+const selectedDocumentType = ref(null)
+const searchQuery = ref('')
+
+const filteredDocumentTypes = computed(() => {
+  if (!searchQuery.value) return documentTypes.value
+  const q = searchQuery.value.toLowerCase()
+  return documentTypes.value.filter(t =>
+    t.libelle?.toLowerCase().includes(q)
+  )
+})
+
+watch(selectedDocumentType, (val) => {
+  form.value.type_document_id = val?.id ?? null
+})
+
 const errors = ref([])
 
 // ── Formulaire ────────────────────────────────────────────────────────────────

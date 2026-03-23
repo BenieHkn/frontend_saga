@@ -43,7 +43,6 @@
       :left-aligned-columns="['code', 'libelle', 'user_name', 'is_interim']" 
       :show-delete-action="false"
       @edit="onEdit"
-      @view="onView"
       @selection-change="onSelectionChange">
      
       <!-- Advanced Filters -->
@@ -123,14 +122,6 @@
         </span>
       </template>
 
-      <!-- <template #cell-piece_jointe_url="{ value }">
-        <a v-if="value" :href="value" target="_blank"
-          class="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 transition-colors">
-          <Icon name="i-heroicons-paper-clip" class="w-3 h-3" />
-          Voir
-        </a>
-        <span v-else class="text-xs text-slate-400 italic">Aucun fichier</span>
-      </template> -->
       <template #cell-piece_jointe_url="{ value }">
         <button
           v-if="value"
@@ -250,53 +241,6 @@
               </p>
             </div>
 
-            <!-- Ajout/modification de pièce jointe -->
-            <!-- <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                {{ selectedItem.piece_jointe_url ? 'Remplacer la pièce jointe' : 'Ajouter une pièce jointe' }}
-                <span class="text-xs font-normal text-slate-500 ml-2">(Optionnel)</span>
-              </label>
-              <div
-                class="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors"
-                :class="editForm.newFile
-                  ? 'border-green-300 bg-green-50'
-                  : 'border-slate-300 bg-slate-50 hover:border-indigo-400 hover:bg-indigo-50'"
-                @click="editFileInputRef?.click()"
-              >
-                <input
-                  ref="editFileInputRef"
-                  type="file"
-                  @change="handleEditFileChange"
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                  class="hidden"
-                />
-
-                <div v-if="editForm.newFile" class="flex items-center justify-between gap-3">
-                  <div class="flex items-center gap-3 min-w-0">
-                    <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-green-100">
-                      <Icon name="i-heroicons-document" class="w-4 h-4 text-green-600" />
-                    </div>
-                    <div class="text-left min-w-0">
-                      <p class="text-sm font-semibold text-slate-800 truncate">{{ editForm.newFile.name }}</p>
-                      <p class="text-xs text-slate-500">{{ formatFileSize(editForm.newFile.size) }}</p>
-                    </div>
-                  </div>
-                  <button type="button" @click.stop="removeEditFile"
-                    class="flex-shrink-0 p-1.5 rounded-full text-red-400 hover:text-red-600 hover:bg-red-100 transition-colors">
-                    <Icon name="i-heroicons-x-mark" class="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div v-else class="flex flex-col items-center gap-2 py-1">
-                  <Icon name="i-heroicons-arrow-up-tray" class="w-8 h-8 text-slate-300" />
-                  <p class="text-xs text-slate-500">
-                    <span class="font-semibold text-indigo-600">Cliquez</span> pour sélectionner un fichier
-                  </p>
-                  <p class="text-[10px] text-slate-400">PDF, Word, Images — max 5 Mo</p>
-                </div>
-              </div>
-            </div> -->
-
             <!-- Message pour réactivation -->
             <div v-if="!selectedItem.statut" class="p-3 bg-green-50 border border-green-200 rounded-lg">
               <p class="text-sm text-green-800">
@@ -344,33 +288,6 @@
 
     <UModal v-model="showAttachmentModal" :ui="{ width: 'sm:max-w-4xl' }">
       <UCard :ui="{ body: { padding: 'p-0' } }">
-        <!-- <template #header>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <Icon
-                :name="attachmentType === 'pdf' ? 'i-heroicons-document-text' : attachmentType === 'image' ? 'i-heroicons-photo' : 'i-heroicons-document'"
-                class="w-5 h-5 text-indigo-600"
-              />
-              <h3 class="text-base font-bold text-slate-900 truncate max-w-sm">
-                {{ attachmentFileName }}
-              </h3>
-            </div>
-            <div class="flex items-center gap-2">
-              
-              <a
-                v-if="attachmentBlobUrl"
-                :href="attachmentBlobUrl"
-                :download="attachmentFileName"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                <Icon name="i-heroicons-arrow-down-tray" class="w-3.5 h-3.5" />
-                Télécharger
-              </a>
-              <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" @click="closeAttachmentModal" />
-            </div>
-          </div>
-        </template> -->
-
         <!-- Chargement -->
         <div v-if="attachmentLoading" class="flex flex-col items-center justify-center gap-3 py-20 bg-slate-50">
           <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -520,19 +437,6 @@ const openAttachmentModal = async (path) => {
   }
 }
 
-// — Fermeture : libère la mémoire du Blob
-const closeAttachmentModal = () => {
-  showAttachmentModal.value = false
-  setTimeout(() => {
-    if (attachmentBlobUrl.value) {
-      URL.revokeObjectURL(attachmentBlobUrl.value)
-      attachmentBlobUrl.value = ''
-    }
-    attachmentType.value = ''
-    attachmentFileName.value = ''
-    attachmentError.value = null
-  }, 200)
-}
 // Fin Voir
 
 // Configuration colonnes
@@ -564,13 +468,6 @@ const formatDate = (dateString) => {
     return dateString
   }
 }
-
-// const formatFileSize = (bytes) => {
-//   if (!bytes) return ''
-//   if (bytes < 1024) return bytes + ' o'
-//   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko'
-//   return (bytes / (1024 * 1024)).toFixed(1) + ' Mo'
-// }
 
 const transformPointsCritiques = (response) => {
   console.log('📦 Response complète assignations:', response)
@@ -633,31 +530,6 @@ const filteredColumns = computed(() => {
     return column
   })
 })
-
-// Gestion fichier dans le modal
-const handleEditFileChange = (event) => {
-  const file = event.target.files?.[0]
-  if (!file) return
-  
-  // Validation
-  if (file.size > 5 * 1024 * 1024) {
-    useToast().add({ title: 'Fichier invalide', description: 'Le fichier ne doit pas dépasser 5 Mo', color: 'red' })
-    return
-  }
-  
-  const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/jpg', 'image/png']
-  if (!allowedTypes.includes(file.type)) {
-    useToast().add({ title: 'Fichier invalide', description: 'Format non autorisé (PDF, Word, JPG, PNG)', color: 'red' })
-    return
-  }
-  
-  editForm.value.newFile = file
-}
-
-const removeEditFile = () => {
-  editForm.value.newFile = null
-  if (editFileInputRef.value) editFileInputRef.value.value = ''
-}
 
 // Fonctions du modal
 const closeEditModal = () => {
@@ -771,12 +643,6 @@ const submitEdit = async () => {
   } finally {
     submitting.value = false
   }
-}
-
-// Handlers
-const onView = (item) => {
-  console.log('👁️ Voir assignation :', item)
-  navigateTo(`/point-critique/assignment/${item.id}`)
 }
 
 const onEdit = (item) => {

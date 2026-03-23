@@ -89,7 +89,7 @@ const closeDetail = () => {
           Fermer
         </UButton>
         <UButton color="blue" :to="`/dossiers/${dossier.id}`">
-          <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-4 h-4 mr-2" />
+          <UIcon name="i-heroicons-eye" class="w-4 h-4 mr-2" />
           Voir la page complète
         </UButton>
       </div>

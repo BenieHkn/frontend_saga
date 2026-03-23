@@ -33,7 +33,7 @@
             Annuler
           </button>
 
-          <button @click="handleSubmit" :disabled="!store.canSend"
+          <button @click="handleSubmit" :disabled="!canSubmit"
             class="group px-6 py-3 rounded-xl font-semibold bg-gradient-to-br from-emerald-700 to-blue-800 text-white hover:from-emerald-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 flex items-center gap-2">
             Créer {{ store.selectedDestinataires.length > 0 ? store.selectedDestinataires.length : '' }}
             affectation{{ store.selectedDestinataires.length > 1 ? 's' : '' }}
@@ -105,9 +105,23 @@
               <span class="w-3 h-3 rounded-full" :class="getStatutColor(store.formData.statut).dot"></span>
               <span class="font-medium">{{ store.formData.statut }}</span>
             </div>
-            <div class="flex items-center gap-2 text-sm text-slate-600">
+            
+            <!-- Délai de traitement - optionnel -->
+            <div v-if="store.formData.delai_traitement" class="flex items-center gap-2 text-sm text-slate-600">
               <Icon name="i-heroicons-clock" class="w-4 h-4" />
               <span>{{ formatDate(store.formData.delai_traitement) }}</span>
+            </div>
+            <div v-else class="flex items-center gap-2 text-sm text-slate-400">
+              <Icon name="i-heroicons-clock" class="w-4 h-4" />
+              <span class="italic">Aucun délai défini</span>
+            </div>
+
+            <!-- Instructions - optionnel -->
+            <div v-if="store.formData.instructions" class="mt-3 pt-3 border-t border-slate-200">
+              <div class="flex items-start gap-2 text-sm text-slate-700">
+                <Icon name="i-heroicons-document-text" class="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span class="line-clamp-2">{{ store.formData.instructions }}</span>
+              </div>
             </div>
 
             <!-- Dossier d'affectation si créé -->
@@ -135,7 +149,10 @@
               {{ store.selectedCourriers.length > 1 ? `pour les ${store.selectedCourriers.length} courriers` : 'pour le courrier' }}
             </p>
             <p v-if="store.useFolder && store.folderName" class="text-sm text-indigo-700 font-medium mt-1">
-              📁 Grouped dans le dossier : <strong>{{ store.folderName }}</strong>
+              📁 Groupé dans le dossier : <strong>{{ store.folderName }}</strong>
+            </p>
+            <p v-if="!store.formData.instructions && !store.formData.delai_traitement" class="text-sm text-slate-500 mt-1">
+              💡 Instructions et délai de traitement sont optionnels
             </p>
           </div>
         </div>
@@ -151,7 +168,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAffectationsStore } from '~/stores/affectations'
 import FolderAffectationModal from '~/components/affectations/FolderAffectationModal.vue'
 
@@ -159,6 +176,11 @@ const store = useAffectationsStore()
 const folderModalRef = ref(null)
 
 const emit = defineEmits(['cancel', 'submit'])
+
+// ✅ Validation simplifiée : seulement courriers et destinataires requis
+const canSubmit = computed(() => {
+  return store.selectedCourriers.length > 0 && store.selectedDestinataires.length > 0
+})
 
 // Obtenir un courrier par son ID
 const getCourrier = (courrierId) => {
