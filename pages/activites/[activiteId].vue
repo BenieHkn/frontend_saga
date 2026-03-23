@@ -1,6 +1,5 @@
 <script setup>
 import { useActivite } from '@/composables/activite/useActivite'
-import { useTache } from '@/composables/taches/useTaches'
 import { useMembre } from '@/composables/membres/useMembres'
 import { formatDateFR } from '@/composables/codirs/useCodir'
 
@@ -10,31 +9,23 @@ const router      = useRouter()
 const route       = useRoute()
 const toast       = useToast()
 const activiteApi = useActivite()
-const tacheApi    = useTache()
 const membreApi   = useMembre()
+
+const activiteId = Number(route.params.activiteId)
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const activite           = ref(null)
 const currentDossier     = ref(null)
 const currentOrdreDuJour = ref(null)
 const currentCodir       = ref(null)
-const membres            = ref([])
-const loading            = ref(false)
+const loading            = ref(true)
 
 onMounted(async () => {
   currentDossier.value     = JSON.parse(localStorage.getItem('currentDossier'))
   currentOrdreDuJour.value = JSON.parse(localStorage.getItem('currentOrdreDuJour'))
   currentCodir.value       = JSON.parse(localStorage.getItem('currentCodir'))
 
-  // Toujours appeler l'API pour avoir les tâches à jour
-  // Le localStorage sert uniquement à pré-remplir le libellé pendant le chargement
-  activite.value = JSON.parse(localStorage.getItem('currentActivite'))
-  // affichage immédiat du libellé
-
-  // const [fresh, mems] = await Promise.all([
-  //   activiteApi.getActivite(Number(route.params.activiteId)),
-  //   membreApi.getMembres(),
-  // ])
+  await refreshActivite()
 })
 
 const taches = computed(() => activite.value?.taches ?? [])
@@ -42,81 +33,22 @@ const taches = computed(() => activite.value?.taches ?? [])
 // ── Refresh ───────────────────────────────────────────────────────────────────
 const refreshActivite = async () => {
   loading.value = true
-  const fresh = await activiteApi.getActivite(activite.value.id)
-  activite.value = null
-  await nextTick()
-  activite.value = fresh
-  if(process.client) {
-    localStorage.setItem('currentActivite', JSON.stringify(activite.value))
-  }
-  loading.value = false
-}
-
-// ── Options membres ───────────────────────────────────────────────────────────
-const membreOptions = computed(() =>
-  membres.value.map(m => ({
-    label: m.entite_user?.user?.nom + ' ' + m.entite_user?.user?.prenom ?? `Membre #${m.id}`,
-    value: m.id,
-  }))
-)
-
-// ── Priorité ──────────────────────────────────────────────────────────────────
-const PRIORITE_OPTIONS = [
-  { label: 'Haute',   value: 'Haute' },
-  { label: 'Moyenne', value: 'Moyenne' },
-  { label: 'Basse',   value: 'Basse' },
-]
-
-// ── Création de tâche ─────────────────────────────────────────────────────────
-const tacheModal = ref(false)
-const tacheForm  = reactive({
-  intitule:   '',
-  date_debut: '',
-  date_fin:   '',
-  priorite:   'Moyenne',
-  avancement: '',
-  membre_ids: [],
-})
-
-const resetTacheForm = () => Object.assign(tacheForm, {
-  intitule: '', date_debut: '', date_fin: '',
-  priorite: 'Moyenne', avancement: '', membre_ids: [],
-})
-
-const createTache = async () => {
-  if (!tacheForm.intitule.trim() || !tacheForm.date_debut || !tacheForm.date_fin) {
-    toast.add({
-      title: 'Champs requis manquants',
-      color: 'orange',
-      icon: 'i-heroicons-exclamation-triangle',
-    })
-    return
-  }
   try {
-    await tacheApi.createTache({
-      ...tacheForm,
-      dossier_id: currentDossier.value?.id,
-      activite_id: activite.value.id,
-      codir_id: currentCodir.value?.id,
-    })
-    await refreshActivite()
-    toast.add({
-      title: 'Tâche créée',
-      description: `"${tacheForm.intitule}" a été créée avec succès`,
-      color: 'green',
-      icon: 'i-heroicons-check-circle',
-    })
-    tacheModal.value = false
-    resetTacheForm()
+    // ✅ Toujours appeler l'API — données fraîches avec pivot codirs
+    activite.value = await activiteApi.getActivite(activiteId)
+    if (process.client) {
+      localStorage.setItem('currentActivite', JSON.stringify(activite.value))
+    }
   } catch {
-    toast.add({
-      title: 'Erreur',
-      description: 'Impossible de créer la tâche',
-      color: 'red',
-      icon: 'i-heroicons-exclamation-circle',
-    })
+    // Fallback localStorage si l'API échoue
+    activite.value = JSON.parse(localStorage.getItem('currentActivite'))
+  } finally {
+    loading.value = false
   }
 }
+
+// ── Modale tâche ──────────────────────────────────────────────────────────────
+const tacheModal = ref(false)
 </script>
 
 <template>
@@ -156,7 +88,6 @@ const createTache = async () => {
           </div>
         </div>
 
-        <!-- ── Métadonnées ─────────────────────────────────────────────── -->
         <div class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
@@ -179,7 +110,6 @@ const createTache = async () => {
             </div>
           </div>
 
-          <!-- Action associée -->
           <div v-if="activite.action?.libelle" class="mt-4 bg-violet-50 dark:bg-violet-950/20 rounded-lg p-4 flex items-center gap-3">
             <UIcon name="i-heroicons-link" class="w-4 h-4 text-violet-500 shrink-0" />
             <div>
@@ -190,7 +120,7 @@ const createTache = async () => {
         </div>
       </div>
 
-      <!-- ── Tâches ──────────────────────────────────────────────────────── -->
+      <!-- ── Tâches ─────────────────────────────────────────────────────── -->
       <section>
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-base font-semibold flex items-center gap-2">
@@ -216,7 +146,7 @@ const createTache = async () => {
             <div class="flex-1 min-w-0">
               <TacheCard
                 :tache="tache"
-                :codirId="currentCodir?.id"
+                :codir-id="currentCodir?.id"
                 @updated="refreshActivite"
               />
             </div>
@@ -227,48 +157,11 @@ const createTache = async () => {
     </template>
   </div>
 
-  <!-- ── Modale création tâche ──────────────────────────────────────────────── -->
-  <UModal v-model="tacheModal">
-    <UCard class="rounded-2xl max-h-[80vh] flex flex-col">
-      <template #header>
-        <h3 class="font-semibold">Nouvelle tâche</h3>
-      </template>
-
-      <div class="p-2 flex flex-col gap-4 overflow-y-auto">
-        <UFormGroup label="Intitulé" required>
-          <UInput v-model="tacheForm.intitule" placeholder="Ex: Préparer le rapport" size="md" />
-        </UFormGroup>
-
-        <div class="grid grid-cols-2 gap-4">
-          <UFormGroup label="Date de début" required>
-            <UInput v-model="tacheForm.date_debut" type="date" size="md" />
-          </UFormGroup>
-          <UFormGroup label="Date de fin" required>
-            <UInput v-model="tacheForm.date_fin" type="date" size="md" />
-          </UFormGroup>
-        </div>
-
-        <UFormGroup label="Priorité">
-          <USelect v-model="tacheForm.priorite" :options="PRIORITE_OPTIONS" size="md" />
-        </UFormGroup>
-
-        <UFormGroup label="Membres assignés">
-          <AppSelectSearch
-            v-model="tacheForm.membre_ids"
-            :options="membreOptions"
-            :multiple="true"
-            :loading="membreApi.loading.value"
-            placeholder="Rechercher des membres..."
-          />
-        </UFormGroup>
-      </div>
-
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <UButton color="gray" variant="ghost" @click="tacheModal = false">Annuler</UButton>
-          <UButton color="blue" :loading="tacheApi.loading.value" @click="createTache">Créer</UButton>
-        </div>
-      </template>
-    </UCard>
-  </UModal>
+  <!-- ── Modale création tâche — composant autonome ────────────────────────── -->
+  <TacheFormModal
+    v-model="tacheModal"
+    :activite-id="activite?.id"
+    :action-id="activite?.action?.id ?? null"
+    @created="refreshActivite"
+  />
 </template>

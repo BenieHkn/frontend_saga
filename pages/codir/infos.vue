@@ -22,9 +22,7 @@ const codirId = ref(null)
 const membres = ref([])
 
 onMounted(() => {
-  if(!process.client){
-    return
-  }
+  if (!process.client) return
   const raw = localStorage.getItem('currentCodir')
   if (raw) {
     codir.value = JSON.parse(raw)
@@ -41,21 +39,55 @@ const steps = [
 ]
 const currentStep = 2
 
-const STEP_KEY = computed(()=>"codir_step_" + codirId.value)
+const STEP_KEY = computed(() => 'codir_step_' + codirId.value)
 
 const goPrev = () => {
-    if(process.client)
-    {
-        localStorage.setItem(STEP_KEY.value, String(currentStep - 1))
-    }
-     router.push(`/codir/${codirId.value}`)
+  if (process.client)
+    localStorage.setItem(STEP_KEY.value, String(currentStep - 1))
+  router.push(`/codir/${codirId.value}`)
 }
+
+// ── Modale de confirmation "présences non sauvegardées" ───────────────────────
+const confirmModal = ref(false)
+
+/**
+ * Indique si les présences ont été sauvegardées en base depuis le dernier
+ * changement. On passe à false dès qu'un changement local survient, et à
+ * true après un savePresencesToDb réussi.
+ */
+const presencesSaved = ref(true)
+
+/**
+ * Appelé au clic sur "Suivant".
+ * - Si aucun membre ou déjà sauvegardé → navigation directe.
+ * - Sinon → modale de confirmation.
+ */
 const goNext = () => {
-    if(process.client)
-    {
-        localStorage.setItem(STEP_KEY.value, String(currentStep + 1))
-    }
-    router.push(`/codir/preview`)
+  if (!membres.value.length || presencesSaved.value) {
+    navigateNext()
+    return
+  }
+  confirmModal.value = true
+}
+
+/** Navigation effective vers l'étape suivante. */
+const navigateNext = () => {
+  if (process.client)
+    localStorage.setItem(STEP_KEY.value, String(currentStep + 1))
+  router.push('/codir/preview')
+}
+
+/** L'utilisateur choisit de sauvegarder puis continuer. */
+const confirmSaveAndNext = async () => {
+  confirmModal.value = false
+  await savePresencesToDb()
+  navigateNext()
+}
+
+/** L'utilisateur choisit de continuer sans sauvegarder. */
+const confirmSkipAndNext = () => {
+  confirmModal.value = false
+  navigateNext()
 }
 
 // ── Formulaire heure de fin ───────────────────────────────────────────────────
@@ -71,7 +103,6 @@ const saveHeureFin = async () => {
   saving.value = true
   try {
     await store.updateCodir(codirId.value, { heure_fin: heureFin.value })
-    // Mettre à jour le localStorage
     const updated = { ...codir.value, heure_fin: `${codir.value.date.substring(0, 10)}T${heureFin.value}:00.000000Z` }
     codir.value = updated
     localStorage.setItem('currentCodir', JSON.stringify(updated))
@@ -83,73 +114,30 @@ const saveHeureFin = async () => {
   }
 }
 
-// ── Collecte des membres uniques du CODIR ─────────────────────────────────────
-/**
- * Parcourt récursivement l'objet CODIR et collecte tous les membres uniques.
- * Clé d'unicité : nom + prénom + rôle.
- * Retourne une liste triée : Président → Secrétaire → Rapporteur → Suppléant → Membre
- */
-const ROLE_ORDER = ['Président', 'Secrétaire', 'Rapporteur', 'Suppléant', 'Membre']
-
-// const collectMembres = (obj, seen = new Set(), result = []) => {
-//   if (!obj || typeof obj !== 'object') return result
-//   for (const m of (obj.membres ?? [])) {
-//     const u = m.entite_user?.user
-//     if (!u) continue
-//     const key = `${u.nom}|${u.prenom}|${m.role}`
-//     if (!seen.has(key)) {
-//       seen.add(key)
-//       result.push({
-//         key,
-//         id: m.id, // Ajout de l'ID du membre pour la validation Laravel
-//         nom: u.nom,
-//         prenom: u.prenom,
-//         role: m.role,
-//         name: `${u.prenom} ${u.nom}`,
-//         initials: `${(u.prenom?.[0] ?? '').toUpperCase()}${(u.nom?.[0] ?? '').toUpperCase()}`,
-//       })
-//     }
-//   }
-//   for (const val of Object.values(obj)) {
-//     if (Array.isArray(val)) for (const item of val) collectMembres(item, seen, result)
-//   }
-//   return result
-// }
-
-// const membres = computed(() => {
-//   if (!codir.value) return []
-//   const list = collectMembres(codir.value)
-//   return [...list].sort((a, b) => {
-//     const ia = ROLE_ORDER.indexOf(a.role)
-//     const ib = ROLE_ORDER.indexOf(b.role)
-//     return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
-//   })
-// })
-
-// ── État de présence (local, non persisté en DB pour l'instant) ───────────────
-// Stocké dans localStorage pour survivre à une navigation
+// ── État de présence ──────────────────────────────────────────────────────────
 const PRESENCE_KEY = computed(() => `presence-${codirId.value}`)
-
-const presenceState = ref({}) // { key: { status, reason } }
+const presenceState = ref({})
 
 onMounted(() => {
   const raw = localStorage.getItem(PRESENCE_KEY.value)
   if (raw) presenceState.value = JSON.parse(raw)
+  savePresencesToDb()
 })
 
-const savePresence = () => {
-  if(process.client)
-  localStorage.setItem(PRESENCE_KEY.value, JSON.stringify(presenceState.value))
+const savePresenceLocal = () => {
+  if (process.client)
+    localStorage.setItem(PRESENCE_KEY.value, JSON.stringify(presenceState.value))
 }
 
 const onPresenceChange = ({ key, status, reason }) => {
   presenceState.value[key] = { status, reason }
-  savePresence()
+  savePresenceLocal()
+  // ← Un changement local invalide la sauvegarde en base
+  presencesSaved.value = false
 }
 
 // Statistiques de présence
 const stats = computed(() => {
-  const vals = Object.values(presenceState.value)
   const presents = membres.value.filter(m =>
     !presenceState.value[m.key] || presenceState.value[m.key].status === 'present'
   ).length
@@ -160,35 +148,35 @@ const stats = computed(() => {
 // ── Sauvegarde des présences en base de données ───────────────────────────────
 const savePresencesToDb = async () => {
   if (!codirId.value || !membres.value.length) return
-  
+
   try {
-    // Transformer les données locales pour l'API
     const presences = membres.value.map(membre => {
-      console.log("L'id du membre ", membre.id)
       const presence = presenceState.value[membre.key] || { status: 'present', reason: '' }
       return {
-        membre_id: membre.id, // Note: il faudra s'assurer que l'ID membre est disponible
+        membre_id: membre.id,
         is_present: presence.status === 'present',
         motivation_absence: presence.status === 'absent' ? presence.reason : null,
-// Par défaut, à implémenter selon les besoins
       }
     })
 
     await savePresences(codirId.value, presences)
-    
-    toast.add({ 
-      title: 'Présences enregistrées', 
+
+    // ← Sauvegarde réussie
+    presencesSaved.value = true
+
+    toast.add({
+      title: 'Présences enregistrées',
       description: `${presences.length} présences ont été sauvegardées avec succès`,
-      color: 'green', 
-      icon: 'i-heroicons-check-circle' 
+      color: 'green',
+      icon: 'i-heroicons-check-circle',
     })
   } catch (error) {
     console.error('Erreur lors de la sauvegarde des présences:', error)
-    toast.add({ 
-      title: 'Erreur', 
+    toast.add({
+      title: 'Erreur',
       description: "Impossible d'enregistrer les présences",
-      color: 'red', 
-      icon: 'i-heroicons-exclamation-circle' 
+      color: 'red',
+      icon: 'i-heroicons-exclamation-circle',
     })
   }
 }
@@ -289,18 +277,33 @@ const savePresencesToDb = async () => {
               </span>
             </div>
 
-            <!-- Bouton de sauvegarde -->
-            <UButton
-              v-if="membres.length"
-              color="violet"
-              variant="soft"
-              size="xs"
-              icon="i-heroicons-cloud-arrow-up"
-              :loading="presenceLoading"
-              @click="savePresencesToDb"
-            >
-              Sauvegarder
-            </UButton>
+            <!-- Bouton de sauvegarde + indicateur -->
+            <div v-if="membres.length" class="flex items-center gap-2">
+              <span
+                v-if="!presencesSaved"
+                class="flex items-center gap-1 text-xs text-amber-500"
+              >
+                <UIcon name="i-heroicons-exclamation-triangle" class="w-3.5 h-3.5" />
+                Non sauvegardé
+              </span>
+              <span
+                v-else
+                class="flex items-center gap-1 text-xs text-green-500"
+              >
+                <UIcon name="i-heroicons-check-circle" class="w-3.5 h-3.5" />
+                Sauvegardé
+              </span>
+              <UButton
+                color="violet"
+                variant="soft"
+                size="xs"
+                icon="i-heroicons-cloud-arrow-up"
+                :loading="presenceLoading"
+                @click="savePresencesToDb"
+              >
+                Sauvegarder
+              </UButton>
+            </div>
           </div>
         </div>
 
@@ -331,25 +334,46 @@ const savePresencesToDb = async () => {
 
       <!-- ── Navigation stepper ─────────────────────────────────────────────── -->
       <div class="flex items-center justify-between pt-6 border-t border-gray-100 dark:border-gray-800">
-        <UButton
-          icon="i-heroicons-arrow-left"
-          color="gray"
-          variant="ghost"
-          @click="goPrev"
-        >
+        <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" @click="goPrev">
           Précédent
         </UButton>
 
         <span class="text-sm text-gray-400">Étape {{ currentStep }} sur {{ steps.length }}</span>
 
-        <UButton
-          trailing-icon="i-heroicons-arrow-right"
-          color="blue"
-          @click="goNext"
-        >
+        <UButton trailing-icon="i-heroicons-arrow-right" color="blue" @click="goNext">
           Suivant
         </UButton>
       </div>
     </template>
   </div>
+
+  <!-- ── Modale confirmation présences non sauvegardées ─────────────────────── -->
+  <UModal v-model="confirmModal">
+    <UCard class="rounded-2xl">
+      <template #header>
+        <div class="flex items-center gap-2">
+          <UIcon name="i-heroicons-exclamation-triangle" class="text-amber-500 w-5 h-5" />
+          <h3 class="font-semibold">Présences non sauvegardées</h3>
+        </div>
+      </template>
+
+      <p class="text-sm text-gray-600 dark:text-gray-400 px-1 py-2">
+        Vous avez modifié la liste de présence sans la sauvegarder en base de données.
+        Voulez-vous sauvegarder avant de continuer ?
+      </p>
+
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <!-- Continuer sans sauvegarder -->
+          <UButton color="gray" variant="ghost" @click="confirmSkipAndNext">
+            Continuer sans sauvegarder
+          </UButton>
+          <!-- Sauvegarder puis continuer -->
+          <UButton color="violet" icon="i-heroicons-cloud-arrow-up" :loading="presenceLoading" @click="confirmSaveAndNext">
+            Sauvegarder et continuer
+          </UButton>
+        </div>
+      </template>
+    </UCard>
+  </UModal>
 </template>

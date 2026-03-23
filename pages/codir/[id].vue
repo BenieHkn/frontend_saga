@@ -10,6 +10,7 @@ import {
 } from '@/composables/codirs/useCodir'
 
 import {useMembre} from '@/composables/membres/useMembres'
+import { useOrdreDuJour } from '~/composables/ordres-du-jour/useOrdreDuJour'
 
 definePageMeta({ title: 'Détail CODIR' })
 
@@ -23,9 +24,10 @@ const {
   error,
   getCodir,
   updateCodir,
-  createOrdreDuJour,
   detachODJ,
 } = useCodir()
+
+const ordreDuJourApi = useOrdreDuJour()
 
 const membreApi = useMembre()
 
@@ -108,7 +110,7 @@ const resetOrdreForm = () => Object.assign(ordreForm, { libelle: '', statut: 'ac
 const addOrdre = async () => {
   if (!ordreForm.libelle) return
   try {
-    await createOrdreDuJour(ordreForm)
+    await ordreDuJourApi.createOrdre(ordreForm)
     await fetchCodir()
     toast.add({
       title: 'Ordre du jour créé',
@@ -133,7 +135,6 @@ const handleDetachOrdre = async (ordreId) => {
   try {
     await detachODJ(id, ordreId)
     await fetchCodir()
-    freshCodir()  // refresh pour voir les changements
     toast.add({ title: 'Ordre du jour retiré', color: 'green', icon: 'i-heroicons-check-circle' })
   } catch {
     toast.add({
