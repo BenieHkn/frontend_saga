@@ -1,43 +1,53 @@
 <template>
   <div class="w-full font-sans">
-    <UModal v-model="isOpen" :ui="{ width: 'sm:max-w-6xl', height: 'h-[95vh]' }">
-      <div class="flex flex-col h-full bg-slate-100 dark:bg-zinc-950 overflow-hidden relative">
-        
-        <div class="flex justify-between items-center px-6 py-3 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 shrink-0">
-          <div class="flex items-center gap-3">
-            <UIcon :name="isPDF ? 'i-heroicons-document-text' : 'i-heroicons-photo'" class="text-primary-600 w-5 h-5" />
-            <span class="text-sm font-bold truncate max-w-[300px]">{{ props.selectedFile?.name }}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <UButton icon="i-heroicons-arrow-down-tray" color="gray" variant="ghost" @click="downloadFile" />
-            <UButton icon="i-heroicons-x-mark" color="gray" variant="ghost" @click="isOpen = false" class="rounded-full" />
-          </div>
-        </div>
+    <Teleport to="body">
+      <Transition enter-active-class="transition-opacity duration-200" enter-from-class="opacity-0"
+        enter-to-class="opacity-100" leave-active-class="transition-opacity duration-200" leave-from-class="opacity-100"
+        leave-to-class="opacity-0">
+        <div v-if="isOpen" class="fixed inset-0 z-[9999] flex items-center justify-center"
+          style="background: rgba(0, 0, 0, 0.82); backdrop-filter: blur(4px);" @click.self="isOpen = false">
+          <!-- Bouton fermer -->
+          <button @click="isOpen = false"
+            class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white border border-white/20">
+            <UIcon name="i-heroicons-x-mark" class="w-5 h-5" />
+          </button>
 
-        <div class="flex-1 overflow-auto p-4 md:p-10 flex justify-center bg-slate-200/50 dark:bg-zinc-900/50">
-          <div 
-            class="transition-transform duration-200 ease-out origin-top shadow-2xl bg-white"
-            :style="{ transform: `scale(${zoomLevel})`, width: isPDF ? '100%' : 'auto' }"
-          >
-            <iframe
-              v-if="isPDF && filePreviewUrl"
-              :src="`${filePreviewUrl}#toolbar=0&navpanes=0`"
-              class="w-full min-h-[80vh]"
-              frameborder="0"
-            />
-            <img v-else-if="isImage" :src="filePreviewUrl" class="max-w-full" />
+          <!-- Contrôles zoom -->
+          <div
+            class="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/15">
+            <UButton icon="i-heroicons-minus" size="xs" color="gray" variant="ghost" class="text-white"
+              @click="changeZoom(-0.1)" />
+            <span class="text-[10px] font-mono font-bold text-white/80 w-10 text-center">{{ Math.round(zoomLevel * 100)
+              }}%</span>
+            <UButton icon="i-heroicons-plus" size="xs" color="gray" variant="ghost" class="text-white"
+              @click="changeZoom(0.1)" />
+            <div class="w-[1px] h-3 bg-white/20 mx-1" />
+            <UButton icon="i-heroicons-arrow-path" size="xs" color="gray" variant="ghost" class="text-white"
+              @click="zoomLevel = 1" />
+          </div>
+
+          <!-- Document -->
+          <div class="w-[90vw] h-[90vh] overflow-auto rounded-lg"
+            style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;">
+            <div class="transition-transform duration-200 ease-out origin-top"
+              :style="{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }">
+              <object v-if="filePreviewUrl" :data="`${filePreviewUrl}#toolbar=0&navpanes=0&scrollbar=0`"
+                type="application/pdf" class="w-full" style="min-height: 90vh;">
+                <div class="flex flex-col items-center justify-center h-full p-8 text-white">
+                  <UIcon name="i-heroicons-document-text" class="w-16 h-16 text-white/40 mb-4" />
+                  <p class="text-sm text-white/60 mb-4">Impossible d'afficher le PDF dans cette fenêtre.</p>
+                  <a :href="filePreviewUrl" target="_blank"
+                    class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+                    <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-4 h-4" />
+                    Ouvrir dans un nouvel onglet
+                  </a>
+                </div>
+              </object>
+            </div>
           </div>
         </div>
-
-        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl border border-slate-200 dark:border-zinc-700">
-          <UButton icon="i-heroicons-minus" size="xs" color="gray" variant="ghost" @click="changeZoom(-0.1)" />
-          <span class="text-[10px] font-mono font-black w-10 text-center">{{ Math.round(zoomLevel * 100) }}%</span>
-          <UButton icon="i-heroicons-plus" size="xs" color="gray" variant="ghost" @click="changeZoom(0.1)" />
-          <div class="w-[1px] h-3 bg-slate-300 mx-1" />
-          <UButton icon="i-heroicons-arrow-path" size="xs" color="gray" variant="ghost" @click="zoomLevel = 1" />
-        </div>
-      </div>
-    </UModal>
+      </Transition>
+    </Teleport>
 
     <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-slate-200 dark:border-zinc-800 overflow-hidden sticky top-6">
       
@@ -56,7 +66,7 @@
         </div>
       </div>
 
-      <div class="relative bg-slate-50 dark:bg-zinc-950 h-[500px] overflow-hidden flex flex-col">
+      <div class="relative bg-slate-50 dark:bg-zinc-950 h-[730px] overflow-hidden flex flex-col">
         <div v-if="!props.selectedFile" class="h-full flex flex-col items-center justify-center opacity-30">
           <UIcon name="i-heroicons-document" class="w-8 h-8 mb-2" />
           <span class="text-[10px] uppercase font-bold tracking-widest">Aucun document</span>
@@ -70,7 +80,7 @@
             <iframe
               v-if="isPDF"
               :src="`${filePreviewUrl}#view=FitH&toolbar=0`"
-              class="w-full h-[480px] rounded border border-slate-200 dark:border-zinc-800 bg-white"
+              class="w-full h-[730px] rounded border border-slate-200 dark:border-zinc-800 bg-white"
             />
             <img v-else-if="isImage" :src="filePreviewUrl" class="max-w-full mx-auto rounded shadow-sm" />
           </div>

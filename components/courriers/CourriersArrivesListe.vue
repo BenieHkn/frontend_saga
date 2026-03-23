@@ -388,6 +388,12 @@
         </span>
       </template>
 
+      <template #cell-type_document="{ value }">
+        <span
+          class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">{{
+            value || 'N/A' }}</span>
+      </template>
+
       <!-- ── Référence cliquable → ouvre via Blob ────────────────────── -->
       <template #cell-reference="{ value, item }">
         <button v-if="item._raw?.document?.url && item._raw.document.url !== 'Inconnu'"
@@ -422,10 +428,19 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 transition-all group">
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
-          <button v-if="!isAdmin()" @click="handleQuickAssign(item.id)" title="Affecter ce courrier"
+          <button
+            v-if="!isAdmin() && !item._raw?.document?.reponses?.length"
+            @click="handleQuickAssign(item.id)"
+            title="Affecter ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
+          <div
+            v-else-if="!isAdmin() && item._raw?.document?.reponses?.length"
+            title="Ce courrier a déjà une réponse — affectation non disponible"
+            class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-md cursor-not-allowed">
+            <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
+          </div>
           <button
             v-if="!item._raw?.document?.reponses?.length && !isAdmin()"
             @click="handleReply(item)"
@@ -544,7 +559,7 @@ const columns = [
   { key: 'date_enregistrement', label: "Date d'enregistrement", visible: false, filterable: false },
   { key: 'date_courrier',       label: 'Date du Courrier',      visible: false, filterable: false },
   { key: 'url',                 label: 'Document',              visible: false, type: 'document', filterable: false },
-  { key: 'type_arrivee',        label: "Type d'arrivée",        visible: false, filterable: false },
+  { key: 'type_document',        label: "Type de document",        visible: true, filterable: false },
   { key: 'priority',            label: 'Priorité',              visible: true,  type: 'badge',    filterable: false },
   { key: 'structure',           label: 'Structure / Usager',    visible: true,  inputPlaceholder: 'Structure...' },
 ]
@@ -673,6 +688,7 @@ const transformCourriers = (response) => {
     // On ne construit plus d'URL directe — le nom brut suffit pour fetchFileAsBlob
     url:                  (courrier.document?.url && courrier.document.url !== 'Inconnu') ? courrier.document.url : '',
     type_arrivee:         courrier.type_arrivee || '',
+    type_document:        courrier.document?.type_document?.libelle,
     priority:             courrier.priority     || '',
     _raw:                 courrier,
   }))

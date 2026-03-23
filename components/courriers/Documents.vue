@@ -19,7 +19,7 @@
                 <span class="w-1 h-1 rounded-full bg-indigo-300"></span>
                 <span class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-md uppercase border"
                   :class="{
-                    'bg-blue-400/30 text-blue-100 border-blue-300/50': selectedCourrier.type === 'arrive',
+                    'bg-blue-400/30 text-blue-100 border-blue-300/50':   selectedCourrier.type === 'arrive',
                     'bg-orange-400/30 text-orange-100 border-orange-300/50': selectedCourrier.type === 'depart',
                   }">
                   {{ selectedCourrier.type || '—' }}
@@ -36,13 +36,14 @@
         <div class="overflow-y-auto flex-1 p-5 space-y-4 bg-slate-50/50">
           <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
 
-            <!-- Header section avec bouton document principal -->
+            <!-- Header section -->
             <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100"
               :class="selectedCourrier.type === 'depart' ? 'bg-gradient-to-r from-orange-50 to-amber-50' : 'bg-gradient-to-r from-indigo-50 to-blue-50'">
               <div class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded-lg flex items-center justify-center"
                   :class="selectedCourrier.type === 'depart' ? 'bg-orange-100' : 'bg-indigo-100'">
-                  <Icon :name="selectedCourrier.type === 'depart' ? 'i-heroicons-paper-airplane' : 'i-heroicons-inbox-arrow-down'"
+                  <Icon
+                    :name="selectedCourrier.type === 'depart' ? 'i-heroicons-paper-airplane' : 'i-heroicons-inbox-arrow-down'"
                     class="w-3.5 h-3.5"
                     :class="selectedCourrier.type === 'depart' ? 'text-orange-600' : 'text-indigo-600'" />
                 </div>
@@ -53,10 +54,12 @@
                 <span v-if="selectedCourrier.details?.priority"
                   class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase ml-1"
                   :class="{
-                    'bg-red-50 text-red-700 border-red-200': selectedCourrier.details.priority.toLowerCase() === 'urgent',
+                    'bg-red-50 text-red-700 border-red-200':   selectedCourrier.details.priority.toLowerCase() === 'urgent',
                     'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.details.priority.toLowerCase() === 'important',
-                    'bg-sky-50 text-sky-700 border-sky-200': selectedCourrier.details.priority.toLowerCase() === 'standard',
+                    'bg-sky-50 text-sky-700 border-sky-200':   selectedCourrier.details.priority.toLowerCase() === 'standard',
                   }">{{ selectedCourrier.details.priority }}</span>
+
+                <!-- Badge répondu / en attente (courriers arrivés uniquement) -->
                 <span v-if="selectedCourrier.type === 'arrive' && selectedCourrier.reponses?.length"
                   class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">
                   <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Répondu
@@ -154,13 +157,15 @@
                   </p>
                   <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.date_enreg) || '—' }}</p>
                 </div>
-                <div v-if="selectedCourrier.date_courrier" class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                <div v-if="selectedCourrier.date_courrier"
+                  class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
                   <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Date du courrier
                   </p>
                   <p class="text-xs text-slate-800">{{ formatDate(selectedCourrier.date_courrier) }}</p>
                 </div>
-                <div v-if="selectedCourrier.type_document" class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                <div v-if="selectedCourrier.type_document"
+                  class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
                   <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Type de document
                   </p>
@@ -179,7 +184,6 @@
           <section v-if="selectedCourrier.type === 'arrive' && selectedCourrier.reponses?.length"
             class="bg-white rounded-2xl border border-emerald-200/80 overflow-hidden shadow-sm">
 
-            <!-- Header avec bouton document réponse -->
             <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
               <div class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center">
@@ -192,7 +196,6 @@
                 </span>
               </div>
 
-              <!-- Bouton document réponse -->
               <div v-if="reponseData?.rawUrl">
                 <button
                   v-if="!reponseFileLoaded && !reponseFileLoading && !reponseFileError"
@@ -250,7 +253,6 @@
                 </div>
               </div>
 
-              <!-- Preview document réponse -->
               <div v-if="reponseFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-emerald-200 shadow-sm">
                 <DocumentRpreview :file-preview-url="reponseBlobUrl" height="600px" />
               </div>
@@ -392,7 +394,6 @@
         </span>
       </template>
 
-      <!-- ── Référence cliquable → modal DocumentRpreview via Blob ─────── -->
       <template #cell-reference="{ value, item }">
         <button v-if="item._raw?.url && item._raw.url !== 'Inconnu'"
           @click="handleView(item)"
@@ -432,31 +433,49 @@
 
       <template #actions="{ item }">
         <div class="flex gap-1.5 justify-end">
+
+          <!-- Voir les détails -->
           <button @click="handleView(item)" title="Voir les détails"
             class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 transition-all group">
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
 
+          <!-- Boutons spécifiques aux courriers arrivés -->
           <template v-if="item.type === 'arrive'">
-            <button v-if="!isAdmin()" @click="handleQuickAssign(item._raw?.details?.id)" title="Affecter ce courrier"
+
+            <!-- Affecter — grisé si réponse déjà envoyée -->
+            <button
+              v-if="!isAdmin() && !item.a_reponse"
+              @click="handleQuickAssign(item.courrier_arrive_id)"
+              title="Affecter ce courrier"
               class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
               <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
             </button>
+            <div
+              v-else-if="!isAdmin() && item.a_reponse"
+              title="Ce courrier a déjà une réponse — affectation non disponible"
+              class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-md cursor-not-allowed">
+              <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
+            </div>
+
+            <!-- Répondre — grisé si réponse déjà envoyée -->
             <button
-              v-if="!item._raw?.reponses?.length && !isAdmin()"
+              v-if="!item.a_reponse && !isAdmin()"
               @click="handleReply(item)"
               title="Répondre au courrier"
               class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 transition-all group">
               <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
             </button>
             <div
-              v-else-if="item._raw?.reponses?.length && !isAdmin()"
+              v-else-if="item.a_reponse && !isAdmin()"
               title="Ce courrier a déjà une réponse"
               class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-500 border border-green-100 rounded-md cursor-default">
               <Icon name="i-heroicons-check-circle" class="w-4 h-4" />
             </div>
+
           </template>
 
+          <!-- Actions admin -->
           <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
             <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
@@ -465,6 +484,7 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 transition-all group">
             <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
           </button>
+
         </div>
       </template>
 
@@ -533,12 +553,14 @@ const hasActiveFilters = computed(() =>
 const resetFilters = () => {
   searchFilters.value = defaultFilters()
   columnFilters.value = {}
+  multiFilters.value  = {}
   currentPage.value   = 1
   refresh(1, perPage.value, false)
 }
 
 // ── Filtres colonnes ──────────────────────────────────────────────────────────
 const columnFilters = ref({})
+const multiFilters  = ref({})
 
 let columnFilterTimeout = null
 const onColumnFilterChange = (val) => {
@@ -548,6 +570,12 @@ const onColumnFilterChange = (val) => {
     currentPage.value = 1
     refresh(1, perPage.value, false)
   }, 400)
+}
+
+const onMultiFilterChange = ({ all }) => {
+  multiFilters.value = { ...all }
+  currentPage.value  = 1
+  refresh(1, perPage.value, false)
 }
 
 // ── Colonnes ──────────────────────────────────────────────────────────────────
@@ -565,12 +593,22 @@ const columns = [
   { key: 'structure',           label: 'Structure / Usager',  visible: true,  inputPlaceholder: 'Structure...' },
 ]
 
+const columnFilterOptions = computed(() => ({
+  source: (filterOptionsData.value.services_enreg || []).map(s => ({ value: s, label: s })),
+  type: [
+    { value: 'arrive', label: 'Arrivé' },
+    { value: 'depart', label: 'Départ' },
+  ],
+  structure: (filterOptionsData.value.structures || []).map(s => ({ value: s, label: s })),
+}))
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
 const detailsOpen      = ref(false)
 const selectedCourrier = ref(null)
 const loadingReponse   = ref(false)
 const reponseData      = ref(null)
 
-// État fichier document principal (arrivée)
+// État fichier document principal
 const arriveeFileLoaded  = ref(false)
 const arriveeFileLoading = ref(false)
 const arriveeFileError   = ref('')
@@ -582,7 +620,6 @@ const reponseFileLoading = ref(false)
 const reponseFileError   = ref('')
 const reponseBlobUrl     = ref('')
 
-// Spinner sur le bouton référence pendant le fetch
 const openingDocumentId = ref(null)
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
@@ -592,29 +629,6 @@ const formatDate = (date) => {
     day: '2-digit', month: 'long', year: 'numeric'
   })
 }
-
-// Dans le script
-const onMultiFilterChange = ({ column, values, all }) => {
-  // Stocker les filtres multi-select actifs
-  multiFilters.value = { ...all }
-  currentPage.value = 1
-  refresh(1, perPage.value, false)
-}
-
-const multiFilters = ref({})
-
-// Après filterOptionsData
-const columnFilterOptions = computed(() => ({
-  source: (filterOptionsData.value.services_enreg || [])
-    .map(s => ({ value: s, label: s })),
-  type: [
-    { value: 'arrive', label: 'Arrivé' },
-    { value: 'depart', label: 'Départ' },
-  ],
-  structure: (filterOptionsData.value.structures || [])
-    .map(s => ({ value: s, label: s })),
-  // Ajouter les autres colonnes selon votre API
-}))
 
 const guessMimeType = (filename) => {
   if (!filename) return ''
@@ -646,7 +660,7 @@ const fetchFileAsBlob = async (rawUrl, dateEnreg) => {
   return { blob, mimeType: blob.type || guessMimeType(rawUrl) }
 }
 
-// ── Charger le fichier principal dans la modal détails ────────────────────────
+// ── Charger le fichier principal dans la modal ────────────────────────────────
 const loadArriveeFile = async () => {
   const rawUrl    = selectedCourrier.value?.url
   const dateEnreg = selectedCourrier.value?.date_enreg
@@ -668,7 +682,7 @@ const loadArriveeFile = async () => {
   }
 }
 
-// ── Charger le fichier de réponse dans la modal détails ───────────────────────
+// ── Charger le fichier de réponse dans la modal ───────────────────────────────
 const loadReponseFile = async () => {
   const rawUrl    = reponseData.value?.rawUrl
   const dateEnreg = reponseData.value?.rawDateEnreg
@@ -690,7 +704,7 @@ const loadReponseFile = async () => {
   }
 }
 
-// ── Libérer tous les blobs de la modal détails ────────────────────────────────
+// ── Libérer tous les blobs de la modal ───────────────────────────────────────
 const revokeModalBlobs = () => {
   if (ariveeBlobUrl.value)  { URL.revokeObjectURL(ariveeBlobUrl.value);  ariveeBlobUrl.value  = '' }
   if (reponseBlobUrl.value) { URL.revokeObjectURL(reponseBlobUrl.value); reponseBlobUrl.value = '' }
@@ -703,6 +717,8 @@ const transformCourriers = (response) => {
     id:                   doc.id,
     source:               doc.details?.service_enreg || doc.details?.service_emis || '',
     type:                 doc.type,
+    // ID du CourrierArrive (≠ ID du Document) — utilisé pour l'affectation
+    courrier_arrive_id:   doc.type === 'arrive' ? (doc.details?.id ?? null) : null,
     numero_enreg:         doc.numero_enreg  || '',
     reference:            doc.reference     || '',
     structure:            doc.details?.structure || doc.details?.autre_structure || '',
@@ -713,6 +729,9 @@ const transformCourriers = (response) => {
     url:                  (doc.url && doc.url !== 'Inconnu') ? doc.url : '',
     type_arrivee:         doc.details?.type_arrivee || '',
     priority:             doc.details?.priority     || '',
+    // true si ce courrier arrivé a au moins une réponse —
+    // pilote les boutons "Affecter" et "Répondre"
+    a_reponse: doc.type === 'arrive' ? !!(doc.reponses?.length) : false,
     _raw:                 doc,
   }))
 }
@@ -768,17 +787,11 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
     if (!f.reference    && c.reference)    params.append('reference',    c.reference)
     if (!f.objet        && c.objet)        params.append('objet',        c.objet)
     if (!f.type         && c.type)         params.append('type',         c.type)
-    if (c.source) {
-      params.append('service_enreg', c.source)
-      params.append('service_emis',  c.source)
-    }
-    if (c.structure) params.append('structure', c.structure)
+    if (c.source)    params.append('service_enreg', c.source)
+    if (c.structure) params.append('structure',     c.structure)
 
     Object.entries(multiFilters.value).forEach(([col, vals]) => {
-      if (vals?.length) {
-        vals.forEach(v => params.append(col, v))
-        // ou selon votre API : params.append(col, vals.join(','))
-      }
+      if (vals?.length) vals.forEach(v => params.append(col, v))
     })
 
     const response = await $fetch(`${base}/documents/type?${params.toString()}`, {
@@ -806,7 +819,6 @@ const onFiltersChange = () => {
   const dateEnregOk   = !f.date_enreg    || f.date_enreg.length    === 10
   const dateCourierOk = !f.date_courrier || f.date_courrier.length === 10
   if (!dateEnregOk || !dateCourierOk) return
-
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     currentPage.value = 1
@@ -826,7 +838,6 @@ const onSearchChange  = (val)  => {
 // ── Ouvrir la modal détails ───────────────────────────────────────────────────
 const handleView = async (item) => {
   const doc = item._raw || item
-
   revokeModalBlobs()
   selectedCourrier.value   = doc
   arriveeFileLoaded.value  = false
@@ -872,7 +883,6 @@ const loadReponseData = async (documentId) => {
     if (!doc) { reponseData.value = null; return }
 
     const rawUrl = (doc?.document?.url || '').trim()
-
     reponseData.value = {
       reference:    doc?.document?.reference || 'Sans référence',
       objet:        doc?.document?.objet     || 'Non spécifié',

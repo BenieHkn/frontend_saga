@@ -1,9 +1,10 @@
 <template>
   <div class="min-h-screen bg-gray-50 p-6">
-    <div class="max-w-7xl mx-auto">
+    <div class="mx-auto">
 
       <!-- Bandeau mode réponse -->
-      <div v-if="isReplyMode" class="mb-6 flex items-start gap-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm">
+      <div v-if="isReplyMode"
+        class="mb-6 flex items-start gap-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm">
         <div class="flex-shrink-0 w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
           <Icon name="i-heroicons-arrow-uturn-right" class="w-5 h-5 text-emerald-600" />
         </div>
@@ -21,7 +22,8 @@
             </span>
           </div>
         </div>
-        <button @click="cancelReply" class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors" title="Annuler la réponse">
+        <button @click="cancelReply" class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+          title="Annuler la réponse">
           <Icon name="i-heroicons-x-mark" class="w-5 h-5" />
         </button>
       </div>
@@ -54,10 +56,13 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Pièce jointe *</label>
                   <div class="relative">
-                    <input ref="fileInput" type="file" @change="handleFileChange" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden" />
+                    <input ref="fileInput" type="file" @change="handleFileChange"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden" />
                     <div class="flex gap-2">
-                      <UButton @click="$refs.fileInput.click()" type="button" color="yellow" variant="outline" icon="heroicons:arrow-up-tray" class="flex-shrink-0" />
-                      <div class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-600 truncate flex items-center">
+                      <UButton @click="$refs.fileInput.click()" type="button" color="yellow" variant="outline"
+                        icon="heroicons:arrow-up-tray" class="flex-shrink-0" />
+                      <div
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-600 truncate flex items-center">
                         {{ selectedFile ? selectedFile.name : "Aucun fichier sélectionné" }}
                       </div>
                     </div>
@@ -65,17 +70,16 @@
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Type de document *</label>
-                  <USelectMenu
-                    v-model="form.type_document_id"
-                    :options="documentTypes"
-                    value-attribute="id"
-                    option-attribute="libelle"
-                    placeholder="Sélectionner le type"
-                    class="w-full"
-                    :loading="loadingTypes"
-                    :ui="{ height: 'h-[42px]' }"
-                  />
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Type de document *
+                  </label>
+                  <USelectMenu v-model="selectedDocumentType" :options="filteredDocumentTypes"
+                    option-attribute="libelle" placeholder="Rechercher un type..." searchable
+                    searchable-placeholder="Rechercher..." class="w-full" :ui="{ height: 'h-[42px]' }"
+                    :loading="loadingTypes" @search="searchQuery = $event" />
+                  <p v-if="documentTypes.length === 0 && !loadingTypes" class="text-xs text-amber-600 mt-1">
+                    Aucun type de document disponible
+                  </p>
                 </div>
               </div>
 
@@ -85,7 +89,8 @@
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Destinataire{{ isReplyMode ? ' *' : '' }}
                   </label>
-                  <UInput v-model="form.destinataire" :placeholder="isReplyMode ? '' : 'Nom du destinataire'" class="w-full h-12" />
+                  <UInput v-model="form.destinataire" :placeholder="isReplyMode ? '' : 'Nom du destinataire'"
+                    class="w-full h-12" />
                   <p v-if="isReplyMode" class="text-[11px] text-gray-400 mt-1">
                     Pré-rempli avec la structure émettrice du courrier original
                   </p>
@@ -122,7 +127,7 @@
 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Objet *</label>
-                  <UInput v-model="form.objet" placeholder="Objet du courrier" class="w-full h-12" />
+                  <UTextarea :rows="3" size="lg" v-model="form.objet" placeholder="Objet du courrier" required />
                 </div>
 
                 <div class="flex items-center space-x-4">
@@ -132,17 +137,9 @@
                 <!-- Initiateurs : uniquement en mode création (pas en réponse) -->
                 <div v-if="!isReplyMode">
                   <label class="block text-sm font-medium text-gray-700 mb-2">Initiateurs *</label>
-                  <USelectMenu
-                    v-model="form.initiateurs"
-                    :options="utilisateurs"
-                    value-attribute="id"
-                    option-attribute="display_name"
-                    placeholder="Sélectionner les initiateurs"
-                    class="w-full"
-                    multiple
-                    :loading="loadingUsers"
-                    :ui="{ height: 'h-[42px]' }"
-                  />
+                  <USelectMenu v-model="form.initiateurs" :options="utilisateurs" value-attribute="id"
+                    option-attribute="display_name" placeholder="Sélectionner les initiateurs" class="w-full" multiple
+                    :loading="loadingUsers" :ui="{ height: 'h-[42px]' }" />
                   <p v-if="form.initiateurs.length > 0" class="text-xs text-green-600 mt-1">
                     {{ form.initiateurs.length }} initiateur(s) sélectionné(s)
                   </p>
@@ -168,30 +165,27 @@
                 </div>
 
                 <!-- Règle hiérarchique -->
-                <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 leading-snug">
+                <p
+                  class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 leading-snug">
                   Vous pouvez retirer uniquement l'agent le plus bas de la chaîne.
                   Aucun saut hiérarchique n'est autorisé.
                 </p>
 
                 <!-- Liste des affectés du haut vers le bas -->
                 <div class="space-y-2">
-                  <div
-                    v-for="affecte in affectesOptionsEnrichis"
-                    :key="affecte.id"
+                  <div v-for="affecte in affectesOptionsEnrichis" :key="affecte.id"
                     class="flex items-center justify-between p-2.5 rounded-lg border transition-all duration-150"
                     :class="{
                       'bg-indigo-50 border-indigo-200': initiateurIds.includes(affecte.id),
                       'bg-gray-50 border-gray-100 opacity-60': !initiateurIds.includes(affecte.id),
-                    }"
-                  >
+                    }">
                     <!-- Rang + identité -->
                     <div class="flex items-center gap-2">
                       <div
                         class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
                         :class="initiateurIds.includes(affecte.id)
                           ? 'bg-indigo-200 text-indigo-800'
-                          : 'bg-gray-200 text-gray-500'"
-                      >
+                          : 'bg-gray-200 text-gray-500'">
                         {{ affecte.rang + 1 }}
                       </div>
                       <div>
@@ -202,47 +196,32 @@
 
                     <!-- Statut + bouton action -->
                     <div class="flex items-center gap-2">
-                      <span
-                        class="text-xs px-2 py-0.5 rounded-full font-medium"
-                        :class="{
-                          'bg-amber-100 text-amber-700': affecte.affectation.statut === 'en cours',
-                          'bg-green-100 text-green-700': affecte.affectation.statut === 'cloturé',
-                        }"
-                      >
+                      <span class="text-xs px-2 py-0.5 rounded-full font-medium" :class="{
+                        'bg-amber-100 text-amber-700': affecte.affectation.statut === 'en cours',
+                        'bg-green-100 text-green-700': affecte.affectation.statut === 'cloturé',
+                      }">
                         {{ affecte.affectation.statut }}
                       </span>
 
                       <!-- Retirer (dernier rang actif uniquement) -->
-                      <button
-                        v-if="initiateurIds.includes(affecte.id)"
-                        type="button"
-                        @click="toggleInitiateur(affecte.id)"
-                        :disabled="!peutEtreRetire(affecte)"
-                        :title="peutEtreRetire(affecte)
+                      <button v-if="initiateurIds.includes(affecte.id)" type="button"
+                        @click="toggleInitiateur(affecte.id)" :disabled="!peutEtreRetire(affecte)" :title="peutEtreRetire(affecte)
                           ? 'Retirer cet agent des initiateurs'
                           : 'Retirez d\'abord les agents de rang inférieur'"
-                        class="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
-                        :class="peutEtreRetire(affecte)
+                        class="w-6 h-6 rounded-full flex items-center justify-center transition-colors" :class="peutEtreRetire(affecte)
                           ? 'bg-red-100 hover:bg-red-200 text-red-600 cursor-pointer'
-                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'"
-                      >
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'">
                         <Icon name="i-heroicons-minus" class="w-3 h-3" />
                       </button>
 
                       <!-- Réintégrer (rang juste après le dernier actif) -->
-                      <button
-                        v-else
-                        type="button"
-                        @click="toggleInitiateur(affecte.id)"
-                        :disabled="affecte.rang !== dernierRangActif + 1"
-                        :title="affecte.rang === dernierRangActif + 1
+                      <button v-else type="button" @click="toggleInitiateur(affecte.id)"
+                        :disabled="affecte.rang !== dernierRangActif + 1" :title="affecte.rang === dernierRangActif + 1
                           ? 'Réintégrer cet agent comme initiateur'
                           : 'Réintégrez d\'abord l\'agent de rang supérieur'"
-                        class="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
-                        :class="affecte.rang === dernierRangActif + 1
+                        class="w-6 h-6 rounded-full flex items-center justify-center transition-colors" :class="affecte.rang === dernierRangActif + 1
                           ? 'bg-green-100 hover:bg-green-200 text-green-600 cursor-pointer'
-                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'"
-                      >
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'">
                         <Icon name="i-heroicons-plus" class="w-3 h-3" />
                       </button>
                     </div>
@@ -260,12 +239,8 @@
                 <UButton type="button" @click="handleCancel" color="gray" variant="outline">
                   ANNULER
                 </UButton>
-                <UButton
-                  type="submit"
-                  :disabled="!isFormValid || loading"
-                  :loading="loading"
-                  class="bg-gradient-to-br from-emerald-800 to-blue-800 text-white dark:text-white"
-                >
+                <UButton type="submit" :disabled="!isFormValid || loading" :loading="loading"
+                  class="bg-gradient-to-br from-emerald-800 to-blue-800 text-white dark:text-white">
                   {{ isReplyMode ? 'ENVOYER LA RÉPONSE' : 'SAUVEGARDER' }}
                 </UButton>
               </div>
@@ -327,6 +302,20 @@ const errorRequest = ref(null)
 const errors = ref([])
 
 const documentTypes = ref([])
+const selectedDocumentType = ref(null)
+const searchQuery = ref('')
+
+const filteredDocumentTypes = computed(() => {
+  if (!searchQuery.value) return documentTypes.value
+  const q = searchQuery.value.toLowerCase()
+  return documentTypes.value.filter(t =>
+    t.libelle?.toLowerCase().includes(q)
+  )
+})
+
+watch(selectedDocumentType, (val) => {
+  form.value.type_document_id = val?.id ?? null
+})
 const utilisateurs = ref([])
 
 // ── Formulaire ────────────────────────────────────────────────────────────────
@@ -502,18 +491,18 @@ const validateForm = () => {
   const newErrors = []
 
   if (!form.value.numero_enreg) newErrors.push("Le numéro d'enregistrement est obligatoire.")
-  if (!form.value.date_enreg)   newErrors.push("La date d'enregistrement est obligatoire.")
-  if (!form.value.reference)    newErrors.push('La référence est obligatoire.')
+  if (!form.value.date_enreg) newErrors.push("La date d'enregistrement est obligatoire.")
+  if (!form.value.reference) newErrors.push('La référence est obligatoire.')
   if (!form.value.date_courier) newErrors.push('La date du courrier est obligatoire.')
-  if (!form.value.objet)        newErrors.push("L'objet est obligatoire.")
+  if (!form.value.objet) newErrors.push("L'objet est obligatoire.")
   if (!form.value.type_document_id) newErrors.push('Le type de document est obligatoire.')
-  if (!form.value.url)          newErrors.push('La pièce jointe est obligatoire.')
-  if (!form.value.type_depart)  newErrors.push('Le type de départ est obligatoire.')
-  if (!form.value.date_depart)  newErrors.push('La date de départ est obligatoire.')
+  if (!form.value.url) newErrors.push('La pièce jointe est obligatoire.')
+  if (!form.value.type_depart) newErrors.push('Le type de départ est obligatoire.')
+  if (!form.value.date_depart) newErrors.push('La date de départ est obligatoire.')
 
   if (isReplyMode.value) {
-    if (!form.value.destinataire)     newErrors.push('Le destinataire est obligatoire.')
-    if (!initiateurIds.value.length)  newErrors.push('Au moins un initiateur est requis.')
+    if (!form.value.destinataire) newErrors.push('Le destinataire est obligatoire.')
+    if (!initiateurIds.value.length) newErrors.push('Au moins un initiateur est requis.')
   } else {
     if (!form.value.initiateurs.length) newErrors.push('Veuillez sélectionner au moins un initiateur.')
   }
@@ -562,18 +551,18 @@ const cancelReply = () => {
 // ── Construction du FormData ──────────────────────────────────────────────────
 const buildBaseFormData = (selectedFunction) => {
   const fd = new FormData()
-  fd.append('numero_enreg',     form.value.numero_enreg)
-  fd.append('date_enreg',       form.value.date_enreg)
-  fd.append('reference',        form.value.reference)
-  fd.append('date_courrier',    form.value.date_courier)
-  fd.append('date_depart',      form.value.date_depart)
-  fd.append('objet',            form.value.objet)
-  fd.append('large_diffusion',  form.value.large_diffusion ? '1' : '0')
-  fd.append('confidentiel',     form.value.confidentiel ? '1' : '0')
+  fd.append('numero_enreg', form.value.numero_enreg)
+  fd.append('date_enreg', form.value.date_enreg)
+  fd.append('reference', form.value.reference)
+  fd.append('date_courrier', form.value.date_courier)
+  fd.append('date_depart', form.value.date_depart)
+  fd.append('objet', form.value.objet)
+  fd.append('large_diffusion', form.value.large_diffusion ? '1' : '0')
+  fd.append('confidentiel', form.value.confidentiel ? '1' : '0')
   fd.append('type_document_id', String(form.value.type_document_id))
-  fd.append('type_depart',      form.value.type_depart)
-  fd.append('service_emis',     selectedFunction?.code || 'Non défini')
-  fd.append('destinataire',     form.value.destinataire || '')
+  fd.append('type_depart', form.value.type_depart)
+  fd.append('service_emis', selectedFunction?.code || 'Non défini')
+  fd.append('destinataire', form.value.destinataire || '')
   if (form.value.url) fd.append('fichier', form.value.url)
 
   // Initiateurs selon le mode
@@ -702,6 +691,7 @@ onMounted(async () => {
     // Pré-remplir le destinataire
     const c = courrierToReply.value
     form.value.destinataire = c.autre_structure || c.structure || ''
+    form.value.objet = c.document?.objet || c.objet || ''
 
     // Initialiser TOUS les affectés comme initiateurs par défaut
     initiateurIds.value = (courrierToReply.value.affectations || [])
