@@ -195,7 +195,7 @@ const handleCreate = async () => {
       <UIcon name="i-heroicons-folder-open" class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
       <h3 class="text-lg font-semibold mb-2">Aucun CODIR</h3>
       <p class="text-gray-500 mb-6">Commencez par créer votre premier CODIR</p>
-      <UButton @click="createModal = true" color="blue" icon="i-heroicons-plus">Créer un CODIR</UButton>
+      <UButton v-if="peutGererCodir()" @click="createModal = true" color="blue" icon="i-heroicons-plus">Créer un CODIR</UButton>
     </div>
 
     <!-- Vues -->
