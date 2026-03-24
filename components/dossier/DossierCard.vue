@@ -1,62 +1,14 @@
 <script setup>
-import { useCodirsStore } from '@/stores/codirs'
-import { useToast } from '#imports'
-import { ref } from 'vue'
-
 const props = defineProps({
   dossier: { type: Object, required: true },
 })
 
 const emit = defineEmits(['deleted', 'click'])
 
-const codirStore = useCodirsStore()
-const toast = useToast()
+// ✅ Pas d'argument dans l'emit — le parent connaît déjà l'id
+const removeDossier = () => emit('deleted')
 
-// Modal de confirmation
-const showDeleteModal = ref(false)
-
-const removeDossier = async () => {
-  showDeleteModal.value = true
-}
-
-const clickDossier = () => {
-  emit('click', props.dossier)
-}
-
-const confirmDelete = async () => {
-  showDeleteModal.value = false
-
-  try {
-    await codirStore.removeDossier(codirStore.currentOrdreDuJour.id, props.dossier.id)
-
-    toast.add({
-      title: 'Dossier supprimé',
-      description: `"${props.dossier.libelle}" a été supprimé avec succès`,
-      color: 'green',
-      icon: 'i-heroicons-check-circle',
-    })
-
-    emit('deleted', props.dossier.id)
-  } catch {
-    toast.add({
-      title: 'Erreur',
-      description: 'Impossible de supprimer le dossier',
-      color: 'red',
-      icon: 'i-heroicons-exclamation-circle',
-    })
-  }
-}
-
-const cancelDelete = () => {
-  showDeleteModal.value = false
-  toast.add({
-    title: 'Suppression annulée',
-    description: `La suppression du dossier "${props.dossier.libelle}" a été annulée`,
-    color: 'gray',
-    icon: 'i-heroicons-x-circle',
-    timeout: 2000,
-  })
-}
+const clickDossier = () => emit('click', props.dossier)
 </script>
 
 <template>

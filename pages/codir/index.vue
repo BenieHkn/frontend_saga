@@ -5,6 +5,7 @@ import { useAuth } from '~/composables/auth/useAuth'
 definePageMeta({ title: 'Listing CODIR' })
 
 const router = useRouter()
+const toast  = useNuxtApp().$toast ?? useToast() // ✅ FIX — toast manquant
 const { loading, error, getCodirs, createCodir, downloadPdf } = useCodir()
 const createModal = ref(false)
 const createForm  = reactive({ heure_debut: '', heure_fin: '' })
@@ -75,7 +76,7 @@ const paginatedCodirs = computed(() => {
 
 // ── Handlers navigation ───────────────────────────────────────────────────────
 const handleView = (item) => {
-    if (process.client) {
+  if (process.client) {
     const STEP_KEY  = `codir_step_${item.id}`
     const savedStep = localStorage.getItem(STEP_KEY)
     const step      = savedStep ? parseInt(savedStep) : 1
@@ -89,7 +90,7 @@ const handleView = (item) => {
 const handleDownload = async (item) => {
   try {
     const blob = await downloadPdf(item.id)
-    const url  = window.URL.createObjectURL(blob) 
+    const url  = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href  = url
     link.setAttribute('download', `codir_${item.id}.pdf`)
@@ -98,20 +99,17 @@ const handleDownload = async (item) => {
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
   } catch (e) {
-    const message = ref("Impossible de télécharger le document")
     toast.add({
       title: 'Erreur',
-      description: message.value,
-      color: 'error'
+      description: 'Impossible de télécharger le document',
+      color: 'red',
+      icon: 'i-heroicons-exclamation-circle',
     })
     console.error('Erreur téléchargement :', e)
   }
-} 
+}
 
 // ── Modale création ───────────────────────────────────────────────────────────
-
-
-// Date du jour au format YYYY-MM-DD
 const today = new Date().toISOString().split('T')[0]
 
 const handleCreate = async () => {
@@ -128,13 +126,11 @@ const handleCreate = async () => {
     const payload = {
       date:        today,
       heure_debut: createForm.heure_debut,
-      heure_fin:   null,  // nullable
+      heure_fin:   null,
       statut:      'soumis',
     }
     const created = await createCodir(payload)
-    console.log('Payload envoyé :', payload)
 
-    // Optimistic update
     codirs.value.unshift(created)
     localStorage.setItem('codirs', JSON.stringify(codirs.value))
 
@@ -147,7 +143,6 @@ const handleCreate = async () => {
     createModal.value = false
     resetCreate()
 
-    // Naviguer directement vers le CODIR créé
     handleView({ id: created.id, _raw: created })
 
   } catch {
@@ -299,7 +294,7 @@ const handleCreate = async () => {
       <template #footer>
         <div class="flex justify-end gap-2">
           <UButton color="gray" variant="ghost" @click="createModal = false; resetCreate()">Annuler</UButton>
-          <CustomButton btnText="Créer et ouvrir" @click="handleCreate" :modal="false" icon="i-heroicons-folder-open" :loading="loading"/>
+          <CustomButton btnText="Créer et ouvrir" @click="handleCreate" :modal="false" icon="i-heroicons-folder-open" :loading="loading" />
         </div>
       </template>
     </UCard>

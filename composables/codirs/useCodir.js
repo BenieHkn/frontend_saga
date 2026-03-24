@@ -15,16 +15,22 @@ export const formatDateShort = (iso) =>
 // ── Config statuts ────────────────────────────────────────────────────────────
 
 export const STATUT_CONFIG = {
-  soumis:    { label: 'Soumis',   uiColor: 'blue',   dotClass: 'bg-blue-400',   badgeClass: 'text-blue-600 bg-blue-50 dark:bg-blue-950/40' },
-  clos:      { label: 'Clos',     uiColor: 'green',  dotClass: 'bg-green-400',  badgeClass: 'text-green-600 bg-green-50 dark:bg-green-950/40' },
+  soumis: { label: 'Soumis', uiColor: 'blue',  dotClass: 'bg-blue-400',  badgeClass: 'text-blue-600 bg-blue-50 dark:bg-blue-950/40' },
+  clos:   { label: 'Clos',   uiColor: 'green', dotClass: 'bg-green-400', badgeClass: 'text-green-600 bg-green-50 dark:bg-green-950/40' },
 }
+
+export const PRIORITE_OPTIONS = [
+  { label: 'Haute',   value: 'Haute' },
+  { label: 'Moyenne', value: 'Moyenne' },
+  { label: 'Basse',   value: 'Basse' },
+]
 
 export const getStatutConfig = (statut) =>
   STATUT_CONFIG[statut] ?? { label: statut, uiColor: 'gray', dotClass: 'bg-gray-400', badgeClass: 'text-gray-500 bg-gray-100' }
 
 export const STATUT_OPTIONS = [
-  { label: 'soumis',     value: 'soumis' },
-  { label: 'Clos',     value: 'clos' },
+  { label: 'Soumis', value: 'soumis' }, // ✅ FIX 1 — label 'soumis' → 'Soumis' (cohérence avec STATUT_CONFIG)
+  { label: 'Clos',   value: 'clos' },
 ]
 
 export const TACHE_STATUT_OPTIONS = [
@@ -45,25 +51,39 @@ export const PRIORITE_CONFIG = {
 export function useCodir() {
   const { loading, error, call } = useRequestApi()
 
+  // ✅ FIX 2 — codir doit être un ref accessible dans fetchCodir
+  const codir = ref(null)
+
   return {
     loading,
     error,
-    getCodirs:        ()                    => call('/codirs'),
-    getCodir:         (id)                  => call(`/codirs/${id}`),
-    createCodir:      (body)                => call('/codirs', { method: 'POST', body }),
-    updateCodir:      (id, body)            => call(`/codirs/${id}`, { method: 'PUT', body }),
-    deleteCodir:      (id)                  => call(`/codirs/${id}`, { method: 'DELETE' }),
-    attachPrev:       (id)                  => call(`/codirs/${id}/attach-previous`, { method: 'POST' }),
-    attachODJ:        (codirId, ordreId)    => call(`/codirs/${codirId}/ordres-du-jour`, { method: 'POST', body: { ordre_du_jour_id: ordreId } }),
-    detachODJ:        (codirId, ordreId)    => call(`/codirs/${codirId}/ordres-du-jour/${ordreId}`, { method: 'DELETE' }),
-    attachTache:      (codirId, body)       => call(`/codirs/${codirId}/taches`, { method: 'POST', body }),
+    codir,
+    getCodirs:        ()                       => call('/codirs'),
+    getCodir:         (id)                     => call(`/codirs/${id}`),
+    createCodir:      (body)                   => call('/codirs', { method: 'POST', body }),
+    updateCodir:      (id, body)               => call(`/codirs/${id}`, { method: 'PUT', body }),
+    deleteCodir:      (id)                     => call(`/codirs/${id}`, { method: 'DELETE' }),
+    attachPrev:       (id)                     => call(`/codirs/${id}/attach-previous`, { method: 'POST' }),
+    attachODJ:        (codirId, ordreId)       => call(`/codirs/${codirId}/ordres-du-jour`, { method: 'POST', body: { ordre_du_jour_id: ordreId } }),
+    detachODJ:        (codirId, ordreId)       => call(`/codirs/${codirId}/ordres-du-jour/${ordreId}`, { method: 'DELETE' }),
+    attachTache:      (codirId, body)          => call(`/codirs/${codirId}/taches`, { method: 'POST', body }),
     updateTachePivot: (codirId, tacheId, body) => call(`/codirs/${codirId}/taches/${tacheId}`, { method: 'PUT', body }),
-    detachTache:      (codirId, tacheId)    => call(`/codirs/${codirId}/taches/${tacheId}`, { method: 'DELETE' }),
-    // Gestion des présences
-    savePresences:    (id, presences)       => call(`/codirs/${id}/presences`, { method: 'POST', body: { presences } }),
-    getPresences:     (id)                  => call(`/codirs/${id}/presences`),
-    downloadPdf: (id) => call(`/codirs/${id}/downloadPdf`, { method: 'GET', blob: true }),
-    generatePdf: (id)                 => call(`/codirs/${id}/generatePdf`, { method: 'POST' }),
-    cloturerCodir: (id)               => call(`/codirs/${id}/cloturerCodir`, { method: 'PATCH' }),
+    detachTache:      (codirId, tacheId)       => call(`/codirs/${codirId}/taches/${tacheId}`, { method: 'DELETE' }),
+    savePresences:    (id, presences)          => call(`/codirs/${id}/presences`, { method: 'POST', body: { presences } }),
+    getPresences:     (id)                     => call(`/codirs/${id}/presences`),
+    downloadPdf:      (id)                     => call(`/codirs/${id}/downloadPdf`, { method: 'GET', blob: true }),
+    generatePdf:      (id)                     => call(`/codirs/${id}/generatePdf`, { method: 'POST' }),
+    cloturerCodir:    (id)                     => call(`/codirs/${id}/cloturerCodir`, { method: 'PATCH' }),
+
+    // ✅ FIX 3 — fetchCodir : syntaxe corrigée (async{} → async () => {})
+    //            et appel via call() au lieu de getCodir() non défini dans ce scope
+    fetchCodir: async (id) => {
+      const data = await call(`/codirs/${id}`)
+      codir.value = data
+      if (process.client){
+        localStorage.setItem('currentCodir', JSON.stringify(data))
+      }
+      return data
+    },
   }
 }

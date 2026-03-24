@@ -17,6 +17,8 @@ const activiteApi = useActivite();
 const membreApi = useMembre();
 const actionApi = useAction();
 
+const dossierId = route.params.dossierId;
+
 // ── State ─────────────────────────────────────────────────────────────────────
 const dossier = ref(null);
 const currentOrdreDuJour = ref(null);
@@ -25,17 +27,21 @@ const membres = ref([]);
 const loading = ref(true);
 
 onMounted(async () => {
-  dossier.value = JSON.parse(localStorage.getItem("currentDossier"));
-  currentOrdreDuJour.value = JSON.parse(
-    localStorage.getItem("currentOrdreDuJour"),
-  );
-  currentCodir.value = JSON.parse(localStorage.getItem("currentCodir"));
+  currentOrdreDuJour.value = JSON.parse(localStorage.getItem("currentOrdreDuJour"))
+  currentCodir.value       = JSON.parse(localStorage.getItem("currentCodir"))
+  membres.value            = JSON.parse(localStorage.getItem("membres") ?? "[]")
 
-  // Toujours charger depuis l'API pour avoir les données fraîches
-  
-  membres.value = localStorage.getItem("membres") ? JSON.parse(localStorage.getItem("membres")) : [];
-  loading.value = false;
-});
+  try {
+    // ✅ Toujours appeler l'API — données fraîches avec pivot codirs
+    dossier.value = await dossierApi.getDossier(dossierId)
+    localStorage.setItem("currentDossier", JSON.stringify(dossier.value))
+  } catch {
+    // Fallback localStorage si l'API échoue
+    dossier.value = JSON.parse(localStorage.getItem("currentDossier"))
+  } finally {
+    loading.value = false
+  }
+})
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 const tabs = [

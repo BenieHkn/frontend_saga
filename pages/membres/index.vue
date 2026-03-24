@@ -77,14 +77,14 @@ const tableData = computed(() =>
 // ── Modale création ───────────────────────────────────────────────────────────
 const createModal = ref(false)
 const createForm  = reactive({
-  entite_user_ids:    [],
+  entite_user_id:     null,   // ✅ FIX 3 — nom unifié (singulier)
   estSecretaireCodir: false,
   statut:             true,
   date_debut:         '',
 })
 
 const resetCreate = () => Object.assign(createForm, {
-  entite_user_ids:    [],
+  entite_user_id:     null,   // ✅ FIX 3 — cohérent avec la déclaration
   estSecretaireCodir: false,
   statut:             true,
   date_debut:         '',
@@ -96,21 +96,11 @@ const openCreate = () => {
 }
 
 const handleCreate = async () => {
-  if (!createForm.entite_user_ids.length || !createForm.date_debut) {
+  // ✅ FIX 1 — condition de validation corrigée
+  if (!createForm.entite_user_id) {
     toast.add({
       title: 'Champs requis manquants',
-      description: 'Sélectionnez au moins un utilisateur et une date de début',
-      color: 'orange',
-      icon: 'i-heroicons-exclamation-triangle',
-    })
-    return
-  }
-
-  // Un seul secrétaire possible
-  if (createForm.estSecretaireCodir && createForm.entite_user_ids.length > 1) {
-    toast.add({
-      title: 'Impossible',
-      description: 'Un seul secrétaire CODIR peut être désigné à la fois',
+      description: 'Sélectionnez au moins un utilisateur',
       color: 'orange',
       icon: 'i-heroicons-exclamation-triangle',
     })
@@ -118,18 +108,15 @@ const handleCreate = async () => {
   }
 
   try {
-    await Promise.all(
-      createForm.entite_user_ids.map(entite_user_id =>
-        membreApi.createMembre({
-          entite_user_id,
-          role: createForm.estSecretaireCodir ? 'secretaire_codir' : 'membre',
-          statut:             createForm.statut,
-          date_debut:         createForm.date_debut,
-        })
-      )
-    )
+    // ✅ FIX 2 — Promise.all supprimé, appel direct
+    await membreApi.createMembre({
+      entite_user_id: createForm.entite_user_id,
+      role:           createForm.estSecretaireCodir ? 'secretaire_codir' : 'membre',
+      statut:         createForm.statut,
+      date_debut:     createForm.date_debut,
+    })
     toast.add({
-      title: `${createForm.entite_user_ids.length} membre(s) créé(s)`,
+      title: 'Membre créé',
       color: 'green',
       icon: 'i-heroicons-check-circle',
     })
@@ -137,7 +124,7 @@ const handleCreate = async () => {
     resetCreate()
     await fetchMembres()
   } catch (e) {
-    const message = e?.data?.message ?? e?.message ?? 'Impossible de créer les membres'
+    const message = e?.data?.message ?? e?.message ?? 'Impossible de créer le membre'
     toast.add({
       title: 'Erreur',
       description: message,
@@ -285,16 +272,18 @@ const handleView = (item) => {
 
       <div class="p-2 flex flex-col gap-4">
 
-        <UFormGroup label="Utilisateurs" required>
+        <UFormGroup label="Utilisateur" required>
+          <!-- ✅ FIX 3 — v-model unifié sur entite_user_id (singulier) -->
           <AppSelectSearch
-            v-model="createForm.entite_user_ids"
+            v-model="createForm.entite_user_id"
             :options="entiteUserOptions"
-            :multiple="true"
+            :multiple="false"
             :loading="entiteUserApi.loading.value"
-            placeholder="Rechercher des utilisateurs..."
+            placeholder="Rechercher un utilisateur..."
           />
-          <p v-if="createForm.entite_user_ids.length" class="text-xs text-blue-600 mt-1">
-            {{ createForm.entite_user_ids.length }} utilisateur(s) sélectionné(s)
+          <!-- ✅ FIX 4 — condition sécurisée, pas de .length sur null -->
+          <p v-if="createForm.entite_user_id" class="text-xs text-blue-600 mt-1">
+            1 utilisateur sélectionné
           </p>
         </UFormGroup>
 
