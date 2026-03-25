@@ -741,12 +741,16 @@ const loadReponseData = async (reponseId) => {
   if (!reponseId) return
   loadingReponse.value = true
   try {
-    const authToken  = localStorage.getItem('auth_token') || ''
-    const allDeparts = await $fetch(`${config.public.apiBase}/courriers-departs`, {
-      headers: { Authorization: `Bearer ${authToken}` },
-    })
-    const list = Array.isArray(allDeparts?.data) ? allDeparts.data : []
-    const doc  = list.find(cd => cd.document_id === reponseId) || null
+    const authToken = localStorage.getItem('auth_token') || ''
+    
+    // Chercher directement par document_id au lieu de tout charger
+    const result = await $fetch(
+      `${config.public.apiBase}/courriers-departs?document_id=${reponseId}`,
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    )
+    
+    const list = Array.isArray(result?.data) ? result.data : []
+    const doc = list[0] ?? null
     if (!doc) { reponseData.value = null; return }
 
     const rawUrl = (doc?.document?.url || '').trim()
