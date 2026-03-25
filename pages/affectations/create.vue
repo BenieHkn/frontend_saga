@@ -10,15 +10,16 @@
     <!-- Col 2 — Prévisualisation                                           -->
     <!-- Col 3 — Sélection destinataires                                    -->
     <!-- ══════════════════════════════════════════════════════════════════ -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 px-6">
+    <!-- Prévisualisation — pleine largeur -->
+    <div class="mb-6 px-6">
+      <AffectationsCourrierPreviewPanel />
+    </div>
 
+    <!-- Grille 2 colonnes : courriers + destinataires -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 px-6">
       <!-- Col 1 : Sélection courriers -->
       <AffectationsCourrierSelectionPanel :loading="courrierLoading" />
-
-      <!-- Col 2 : Prévisualisation du / des courrier(s) sélectionné(s) -->
-      <AffectationsCourrierPreviewPanel />
-
-      <!-- Col 3 : Sélection destinataires -->
+      <!-- Col 2 : Sélection destinataires -->
       <AffectationsDestinataireSelectionPanel :loading="destinataireLoading" />
     </div>
 
@@ -55,28 +56,28 @@
 import { ref, onMounted } from 'vue'
 import { useAffectationsStore } from '~/stores/affectations'
 import { useRoute } from 'vue-router'
-import AffectationsCourrierSelectionPanel    from '~/components/affectations/AffectationsCourrierSelectionPanel.vue'
-import AffectationsCourrierPreviewPanel      from '~/components/affectations/AffectationsCourrierPreviewPanel.vue'
+import AffectationsCourrierSelectionPanel from '~/components/affectations/AffectationsCourrierSelectionPanel.vue'
+import AffectationsCourrierPreviewPanel from '~/components/affectations/AffectationsCourrierPreviewPanel.vue'
 import AffectationsDestinataireSelectionPanel from '~/components/affectations/AffectationsDestinataireSelectionPanel.vue'
-import AffectationsFormPanel                 from '~/components/affectations/AffectationsFormPanel.vue'
-import AffectationsSummaryBar                from '~/components/affectations/AffectationsSummaryBar.vue'
-import PageHeader                            from '~/components/PageHeader.vue'
-import { useAuth }                           from '~/composables/auth/useAuth'
+import AffectationsFormPanel from '~/components/affectations/AffectationsFormPanel.vue'
+import AffectationsSummaryBar from '~/components/affectations/AffectationsSummaryBar.vue'
+import PageHeader from '~/components/PageHeader.vue'
+import { useAuth } from '~/composables/auth/useAuth'
 
 const config = useRuntimeConfig()
 
 useHead({ title: 'Nouvelle Affectation' })
 
-const store  = useAffectationsStore()
-const toast  = useToast()
+const store = useAffectationsStore()
+const toast = useToast()
 const router = useRouter()
-const route  = useRoute()
+const route = useRoute()
 const { getEmetteurId, voitTousCourriers, isSA } = useAuth()
 
-const authToken             = ref('')
-const courrierLoading       = ref(false)
-const destinataireLoading   = ref(false)
-const submitting            = ref(false)
+const authToken = ref('')
+const courrierLoading = ref(false)
+const destinataireLoading = ref(false)
+const submitting = ref(false)
 const preSelectedCourrierId = ref(null)
 
 // ── Charger les courriers ─────────────────────────────────────────────────────
@@ -106,7 +107,7 @@ const loadCourriers = async () => {
     }
 
     const emetteurId = getEmetteurId() ?? entite_user.id
-    const endpoint   = (voitTousCourriers() || isSA())
+    const endpoint = (voitTousCourriers() || isSA())
       ? `${config.public.apiBase}/courriers-arrives/non-affectes`
       : `${config.public.apiBase}/courriers-arrives/affectes/entite-user/${emetteurId}`
 
@@ -116,25 +117,25 @@ const loadCourriers = async () => {
     })
 
     const courriers = response.data.map(courrier => ({
-      id:           courrier.id,
-      reference:    courrier.document?.reference    || '',
-      objet:        courrier.document?.objet        || '',
-      structure:    courrier.structure || courrier.autre_structure || '',
+      id: courrier.id,
+      reference: courrier.document?.reference || '',
+      objet: courrier.document?.objet || '',
+      structure: courrier.structure || courrier.autre_structure || '',
       date_courrier: courrier.document?.date_courrier || '',
-      priority:     courrier.priority || 'STANDARD',
+      priority: courrier.priority || 'STANDARD',
       confidentiel: courrier.document?.confidentiel || false,
       // URL complète construite pour le fetch Bearer (buildDocumentUrl côté panel)
       url: courrier.document?.url && courrier.document.url !== 'Inconnu'
         ? (() => {
-            const base     = config.public.apiBase.replace(/\/$/, '')
-            const filename = courrier.document.url.startsWith('/') ? courrier.document.url.slice(1) : courrier.document.url
-            if (!courrier.document.date_enreg) return `${base}/file/documents/${filename}`
-            const d     = new Date(courrier.document.date_enreg)
-            const year  = d.getFullYear()
-            const month = String(d.getMonth() + 1).padStart(2, '0')
-            const day   = String(d.getDate()).padStart(2, '0')
-            return `${base}/file/documents/${year}/${month}/${day}/${filename}`
-          })()
+          const base = config.public.apiBase.replace(/\/$/, '')
+          const filename = courrier.document.url.startsWith('/') ? courrier.document.url.slice(1) : courrier.document.url
+          if (!courrier.document.date_enreg) return `${base}/file/documents/${filename}`
+          const d = new Date(courrier.document.date_enreg)
+          const year = d.getFullYear()
+          const month = String(d.getMonth() + 1).padStart(2, '0')
+          const day = String(d.getDate()).padStart(2, '0')
+          return `${base}/file/documents/${year}/${month}/${day}/${filename}`
+        })()
         : '',
     }))
 
@@ -173,7 +174,7 @@ const loadDestinataires = async () => {
     if (!entite_user?.id) throw new Error('Aucune fonction sélectionnée. Veuillez vous reconnecter.')
 
     const emetteurId = getEmetteurId() ?? entite_user.id
-    const response   = await $fetch(`${config.public.apiBase}/entite-users/${emetteurId}/subordinates`, {
+    const response = await $fetch(`${config.public.apiBase}/entite-users/${emetteurId}/subordinates`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${authToken.value}` },
     })
@@ -181,11 +182,11 @@ const loadDestinataires = async () => {
     const destinataires = response.data
       .filter(item => item.user?.statut && item.actif)
       .map(item => ({
-        id:             item.id,
-        user:           item.user,
-        entite:         item.entite,
-        actif:          item.actif,
-        is_interim:     item.is_interim,
+        id: item.id,
+        user: item.user,
+        entite: item.entite,
+        actif: item.actif,
+        is_interim: item.is_interim,
         is_responsable: item.is_responsable,
       }))
 
@@ -218,7 +219,7 @@ const handleSubmit = async () => {
     }
     if (!entite_user?.id) throw new Error('Aucune fonction sélectionnée. Veuillez vous reconnecter.')
 
-    const emetteurId     = getEmetteurId() ?? entite_user.id
+    const emetteurId = getEmetteurId() ?? entite_user.id
     const isMultiCourrier = store.selectedCourriers.length > 1
 
     const affectations = []
@@ -226,15 +227,15 @@ const handleSubmit = async () => {
       for (const destinataireId of store.selectedDestinataires) {
         affectations.push({
           courrier_arrive_id: courrierId,
-          destinataire_id:    destinataireId,
-          emetteur_id:        emetteurId,
-          date_affect:        new Date().toISOString().split('T')[0],
-          instructions:       store.formData.instructions || null,
-          statut:             store.formData.statut,
-          delai_traitement:   store.formData.delai_traitement   || null,
-          date_cloture:       store.showDateCloture && store.formData.date_cloture ? store.formData.date_cloture : null,
-          dossier:            isMultiCourrier && store.folderName ? store.folderName : null,
-          priority:           store.formData.priority,
+          destinataire_id: destinataireId,
+          emetteur_id: emetteurId,
+          date_affect: new Date().toISOString().split('T')[0],
+          instructions: store.formData.instructions || null,
+          statut: store.formData.statut,
+          delai_traitement: store.formData.delai_traitement || null,
+          date_cloture: store.showDateCloture && store.formData.date_cloture ? store.formData.date_cloture : null,
+          dossier: isMultiCourrier && store.folderName ? store.folderName : null,
+          priority: store.formData.priority,
         })
       }
     }
@@ -242,8 +243,8 @@ const handleSubmit = async () => {
     const responses = await Promise.all(
       affectations.map(payload =>
         $fetch(`${config.public.apiBase}/affectations`, {
-          method:  'POST',
-          body:    payload,
+          method: 'POST',
+          body: payload,
           headers: { Authorization: `Bearer ${authToken.value}`, 'Content-Type': 'application/json' },
         })
       )
@@ -267,10 +268,10 @@ const handleSubmit = async () => {
       ? Object.entries(error.data.errors).map(([f, m]) => `${f}: ${Array.isArray(m) ? m.join(', ') : m}`)
       : []
     toast.add({
-      title:       'Erreur de validation',
+      title: 'Erreur de validation',
       description: errorDetails.length ? `${errorMessage}\n\n${errorDetails.join('\n')}` : errorMessage,
-      color:       'red',
-      timeout:     5000,
+      color: 'red',
+      timeout: 5000,
     })
     submitting.value = false
   }
@@ -288,7 +289,7 @@ const handleCancel = () => {
 onMounted(async () => {
   if (process.client) {
     authToken.value = localStorage.getItem('auth_token') || ''
-    const savedId   = sessionStorage.getItem('preselected_courrier_id')
+    const savedId = sessionStorage.getItem('preselected_courrier_id')
     if (savedId) {
       preSelectedCourrierId.value = parseInt(savedId)
       sessionStorage.removeItem('preselected_courrier_id')
