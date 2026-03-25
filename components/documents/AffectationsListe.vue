@@ -742,15 +742,16 @@ const loadReponseData = async (reponseId) => {
   loadingReponse.value = true
   try {
     const authToken = localStorage.getItem('auth_token') || ''
-    
-    // Chercher directement par document_id au lieu de tout charger
+    const base = config.public.apiBase.replace(/\/$/, '')
+
     const result = await $fetch(
-      `${config.public.apiBase}/courriers-departs?document_id=${reponseId}`,
+      `${base}/courriers-departs?document_id=${reponseId}&per_page=1`,
       { headers: { Authorization: `Bearer ${authToken}` } }
     )
-    
+
     const list = Array.isArray(result?.data) ? result.data : []
     const doc = list[0] ?? null
+
     if (!doc) { reponseData.value = null; return }
 
     const rawUrl = (doc?.document?.url || '').trim()
