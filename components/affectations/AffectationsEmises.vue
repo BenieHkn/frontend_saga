@@ -61,8 +61,6 @@
         <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
           <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100"
             style="background: linear-gradient(to right, #eff6ff, #f8fafc);">
-
-            <!-- Titre + badges état réponse -->
             <div class="flex items-center gap-2">
               <div class="w-6 h-6 rounded-md bg-blue-100 flex items-center justify-center">
                 <Icon name="i-heroicons-inbox-arrow-down" class="w-3.5 h-3.5 text-blue-600" />
@@ -363,7 +361,6 @@
       </span>
     </template>
 
-    <!-- ── Référence cliquable → ouvre via Blob ──────────────────────── -->
     <template #cell-reference_courrier="{ value, item }">
       <button
         v-if="item._raw?.courrier_arrive?.document?.url && item._raw.courrier_arrive.document.url !== 'Inconnu'"
@@ -384,33 +381,64 @@
     <template #actions="{ item }">
       <div class="flex gap-1.5 justify-end">
 
-        <!-- Voir les détails -->
-        <button @click="handleView(item)" title="Voir les détails"
+        <!-- Voir les détails — toujours actif -->
+        <button
+          @click="handleView(item)"
+          title="Voir les détails"
           class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 transition-all group">
           <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
         </button>
 
-        <!-- Affecter — actif uniquement si le courrier n'a pas encore de réponse -->
-        <button
-          v-if="!isAdmin && !item.a_reponse"
-          @click="handleQuickAssign(item.courrier_id)"
-          title="Affecter ce courrier"
-          class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
-          <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
-        </button>
-        <div
-          v-else-if="!isAdmin && item.a_reponse"
-          title="Ce courrier a déjà une réponse — affectation non disponible"
-          class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-md cursor-not-allowed">
-          <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
-        </div>
+        <!-- Bouton Affecter -->
+        <template v-if="!isAdmin">
+          <button
+            v-if="!isActionBlocked(item)"
+            @click="handleQuickAssign(item.courrier_id)"
+            title="Affecter ce courrier"
+            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
+            <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
+          </button>
+          <div
+            v-else
+            :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+            class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
+            <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
+          </div>
+        </template>
 
-        <!-- Modifier le destinataire -->
-        <button @click="handleEdit(item)" v-if="!isAdmin"
-          class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 transition-all group"
-          title="Modifier le destinataire">
-          <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-green-600" />
-        </button>
+        <!-- Bouton Modifier destinataire -->
+        <template v-if="!isAdmin">
+          <button
+            v-if="!isActionBlocked(item)"
+            @click="handleEdit(item)"
+            title="Modifier le destinataire"
+            class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 transition-all group">
+            <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-green-600" />
+          </button>
+          <div
+            v-else
+            :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+            class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
+            <Icon name="i-heroicons-pencil" class="w-4 h-4" />
+          </div>
+        </template>
+
+        <!-- Bouton Clôturer -->
+        <template v-if="!isAdmin">
+          <button
+            v-if="!isActionBlocked(item)"
+            @click="handleCloture(item)"
+            title="Clôturer l'affectation"
+            class="inline-flex items-center justify-center w-8 h-8 bg-rose-50 text-rose-700 border border-rose-100 rounded-md hover:bg-rose-200 transition-all group">
+            <Icon name="i-heroicons-lock-closed" class="w-4 h-4 group-hover:text-rose-600" />
+          </button>
+          <div
+            v-else
+            :title="item.is_cloture ? 'Déjà clôturée' : 'Ce courrier a déjà une réponse'"
+            class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
+            <Icon name="i-heroicons-lock-closed" class="w-4 h-4" />
+          </div>
+        </template>
 
       </div>
     </template>
@@ -573,7 +601,7 @@ const onColumnFilterChange = (val) => {
 // ── Colonnes ──────────────────────────────────────────────────────────────────
 const columns = computed(() => {
   const base = [
-    { key: 'reference_courrier', label: 'Réf. Courrier',           visible: true,  inputPlaceholder: 'Réf...',     width: 'min-w-[200px]', showLabel: false },
+    { key: 'reference_courrier', label: 'Réf. Courrier',           visible: true,  inputPlaceholder: 'Réf...',      width: 'min-w-[200px]', showLabel: false },
     { key: 'dossier',            label: 'Dossier',                 visible: true,  inputPlaceholder: 'Dossier...',  width: 'min-w-[200px]', showLabel: false },
     { key: 'objet_courrier',     label: 'Objet',                   visible: true,  inputPlaceholder: 'Objet...',    width: 'min-w-[250px]', showLabel: false },
     { key: 'doc_courrier',       label: 'Document',                visible: false, type: 'document',                filterable: false },
@@ -618,6 +646,11 @@ const filteredDestinataires = computed(() => {
     dest.entite?.libelle?.toLowerCase().includes(q)
   )
 })
+
+// ── Helper : actions bloquées si clôturé OU courrier déjà répondu ─────────────
+const isActionBlocked = (item) => {
+  return item.is_cloture || item.a_reponse
+}
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
 const formatDate = (date) => {
@@ -714,8 +747,10 @@ const transformAffectation = (affectation) => {
     priority:           affectation.priority      || 'STANDARD',
     delai_traitement:   formatDate(affectation.delai_traitement) || '__',
     date_cloture:       formatDate(affectation.date_cloture) || '_',
-    // true si le courrier associé a au moins une réponse — pilote le bouton d'affectation
-    a_reponse: !!(affectation.courrier_arrive?.document?.reponses?.length),
+    // ✅ Bloquant : courrier déjà répondu
+    a_reponse:  !!(affectation.courrier_arrive?.document?.reponses?.length),
+    // ✅ Bloquant : affectation clôturée
+    is_cloture: affectation.statut === 'cloture',
     destinataire: {
       nom:      destinataireNom,
       fonction: destinataireCode ? `${destinataireCode} - ${destinataireFonction}` : '',
@@ -773,10 +808,10 @@ const fetchAffectations = async (page = 1, per_page = perPage.value, isFirst = f
     if (f.date_affect && f.date_affect.length === 10) params.append('date_affect', f.date_affect)
 
     const c = columnFilters.value
-    if (!f.dossier      && c.dossier)            params.append('dossier',            c.dossier)
-    if (!f.instructions && c.instructions)       params.append('instructions',       c.instructions)
-    if (c.reference_courrier)                    params.append('reference_courrier',  c.reference_courrier)
-    if (c.objet_courrier)                        params.append('objet_courrier',      c.objet_courrier)
+    if (!f.dossier      && c.dossier)       params.append('dossier',           c.dossier)
+    if (!f.instructions && c.instructions)  params.append('instructions',      c.instructions)
+    if (c.reference_courrier)               params.append('reference_courrier', c.reference_courrier)
+    if (c.objet_courrier)                   params.append('objet_courrier',     c.objet_courrier)
 
     let response
 
@@ -881,6 +916,47 @@ const confirmChangeDestinataire = async () => {
     toast.add({ title: 'Erreur', description: errorResponse.message || 'Impossible de communiquer avec le serveur', color: 'red', timeout: 3000 })
   } finally {
     submitting.value = false
+  }
+}
+
+// ── Clôturer une affectation ──────────────────────────────────────────────────
+const handleCloture = async (item) => {
+  const result = await Swal.fire({
+    title: 'Clôturer cette affectation ?',
+    html: `
+      <div style="text-align:left;padding:8px">
+        <p style="margin-bottom:12px;color:#374151">Cette action marquera l'affectation comme clôturée.</p>
+        <div style="background:#f9fafb;border-radius:8px;padding:16px;border:1px solid #e5e7eb">
+          <p style="font-weight:700;color:#1e40af;margin-bottom:8px">Affectation #${item.id}</p>
+          <p style="font-size:14px;color:#374151">
+            <strong>Courrier :</strong> ${item.reference_courrier}<br>
+            <strong>Destinataire :</strong> ${item.destinataire.nom}
+          </p>
+        </div>
+      </div>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#be123c',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Oui, clôturer',
+    cancelButtonText: 'Annuler',
+    reverseButtons: true,
+  })
+
+  if (!result.isConfirmed) return
+
+  try {
+    const authToken = localStorage.getItem('auth_token')
+    await $fetch(`${config.public.apiBase}/affectations/${item.id}/cloture`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+    })
+    toast.add({ title: 'Clôturée !', description: 'L\'affectation a été clôturée avec succès', color: 'green', timeout: 1500 })
+    await fetchAffectations(currentPage.value, perPage.value, false)
+  } catch (err) {
+    const errorResponse = err.data || err.response?._data || {}
+    toast.add({ title: 'Erreur', description: errorResponse.message || 'Impossible de clôturer l\'affectation', color: 'red', timeout: 3000 })
   }
 }
 

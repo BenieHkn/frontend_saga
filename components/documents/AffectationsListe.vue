@@ -82,11 +82,8 @@
             <select v-model="searchFilters.statut"
               class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
               <option value="">Tous</option>
-              <option value="en attente">En attente</option>
               <option value="en cours">En cours</option>
-              <option value="traite">Traité</option>
               <option value="cloture">Clôturé</option>
-              <option value="annule">Annulé</option>
             </select>
           </div>
           <div class="flex-1 min-w-[140px]">
@@ -137,13 +134,6 @@
       </span>
     </template>
 
-    <!-- ── Cellule instructions ── -->
-    <template #cell-instructions="{ value }">
-      <span class="block max-w-[300px] line-clamp-2 text-xs text-slate-700" :title="value">
-        {{ value || 'Aucune instruction' }}
-      </span>
-    </template>
-
     <!-- ── Cellule objet ── -->
     <template #cell-objet_courrier="{ value }">
       <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
@@ -174,47 +164,51 @@
     <template #actions="{ item }">
       <div class="flex gap-1.5 justify-end">
 
-        <!-- Voir les détails -->
+        <!-- Voir les détails — toujours actif -->
         <button @click="handleViewDetails(item)" title="Voir les détails"
           class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
           <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
         </button>
 
-        <!-- Affecter — actif uniquement si le courrier n'a pas encore de réponse -->
-        <button
-          v-if="isResponsable && !item.a_reponse"
-          @click="handleQuickAssign(item.courrier_id)"
-          :disabled="!item.courrier_id"
-          title="Affecter ce courrier"
-          class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
-          <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
-        </button>
-        <div
-          v-else-if="isResponsable && item.a_reponse"
-          title="Ce courrier a déjà une réponse — affectation non disponible"
-          class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-md cursor-not-allowed">
-          <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
-        </div>
+        <!-- Bouton Affecter -->
+        <template v-if="isResponsable">
+          <button
+            v-if="!isActionBlocked(item)"
+            @click="handleQuickAssign(item.courrier_id)"
+            :disabled="!item.courrier_id"
+            title="Affecter ce courrier"
+            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
+            <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
+          </button>
+          <div
+            v-else
+            :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+            class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
+            <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
+          </div>
+        </template>
 
-        <!-- Transférer — actif uniquement si le courrier n'a pas encore de réponse -->
-        <button
-          v-if="isResponsable && !item.a_reponse"
-          @click="handleQuickTransfer(item.courrier_id)"
-          :disabled="!item.courrier_id"
-          title="Transférer ce courrier"
-          class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
-          <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4 group-hover:text-green-600" />
-        </button>
-        <div
-          v-else-if="isResponsable && item.a_reponse"
-          title="Ce courrier a déjà une réponse — transfert non disponible"
-          class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-md cursor-not-allowed">
-          <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4" />
-        </div>
+        <!-- Bouton Transférer -->
+        <template v-if="isResponsable">
+          <button
+            v-if="!isActionBlocked(item)"
+            @click="handleQuickTransfer(item.courrier_id)"
+            :disabled="!item.courrier_id"
+            title="Transférer ce courrier"
+            class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
+            <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4 group-hover:text-green-600" />
+          </button>
+          <div
+            v-else
+            :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+            class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
+            <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4" />
+          </div>
+        </template>
 
-        <!-- Clôturer -->
+        <!-- Bouton Clôturer -->
         <button
-          v-if="!['cloture', 'annule'].includes(item.statut)"
+          v-if="!isActionBlocked(item)"
           @click="handleCloturer(item)"
           :disabled="cloturingId === item.id"
           title="Clôturer cette affectation"
@@ -224,8 +218,8 @@
         </button>
         <div
           v-else
-          title="Affectation déjà clôturée"
-          class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-md cursor-not-allowed">
+          :title="item.is_cloture ? 'Déjà clôturée' : 'Ce courrier a déjà une réponse'"
+          class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
           <Icon name="i-heroicons-lock-closed" class="w-4 h-4" />
         </div>
 
@@ -279,16 +273,14 @@
       <!-- Corps -->
       <div class="overflow-y-auto flex-1 p-5 space-y-4 bg-slate-50/50">
 
-        <!-- ── Section courrier associé ──────────────────────────────────── -->
+        <!-- ── Section courrier associé ── -->
         <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
-
           <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
             <div class="flex items-center gap-2">
               <div class="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center">
                 <Icon name="i-heroicons-inbox-arrow-down" class="w-3.5 h-3.5 text-blue-600" />
               </div>
               <span class="text-[11px] font-bold text-blue-700 uppercase tracking-widest">Courrier associé</span>
-              <!-- Badge état réponse -->
               <span v-if="selectedAffectation.a_reponse"
                 class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-50 text-green-700 border border-green-200">
                 <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Répondu
@@ -299,7 +291,7 @@
               </span>
             </div>
 
-            <!-- Bouton charger le document du courrier associé -->
+            <!-- Bouton charger le document -->
             <div v-if="selectedAffectation._raw?.courrier_arrive?.document?.url &&
               selectedAffectation._raw.courrier_arrive.document.url !== 'Inconnu'">
               <button v-if="!docFileLoaded && !docFileLoading && !docFileError" @click="loadDocFile"
@@ -348,18 +340,15 @@
                 </div>
               </div>
             </div>
-
-            <!-- Preview document courrier associé -->
             <div v-if="docFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
               <DocumentRpreview :file-preview-url="docBlobUrl" height="500px" />
             </div>
           </div>
         </section>
 
-        <!-- ── Section courrier de réponse ───────────────────────────────── -->
+        <!-- ── Section courrier de réponse ── -->
         <section v-if="selectedAffectation.a_reponse"
           class="bg-white rounded-2xl border border-emerald-200/80 overflow-hidden shadow-sm">
-
           <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
             <div class="flex items-center gap-2">
               <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center">
@@ -371,8 +360,6 @@
                 <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Chargé
               </span>
             </div>
-
-            <!-- Bouton document réponse -->
             <div v-if="reponseData?.rawUrl">
               <button
                 v-if="!reponseFileLoaded && !reponseFileLoading && !reponseFileError"
@@ -405,13 +392,11 @@
             </div>
           </div>
 
-          <!-- Loader -->
           <div v-if="loadingReponse" class="flex items-center justify-center gap-3 py-8 text-slate-400">
             <div class="w-5 h-5 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
             <span class="text-xs font-medium">Chargement du courrier de réponse...</span>
           </div>
 
-          <!-- Données -->
           <div v-else-if="reponseData" class="p-4 space-y-3">
             <div class="flex items-stretch gap-0 rounded-xl overflow-hidden border border-emerald-100">
               <div class="w-1 shrink-0 bg-gradient-to-b from-emerald-400 to-teal-500"></div>
@@ -440,21 +425,18 @@
                 <p class="text-xs text-slate-800">{{ reponseData.type_depart }}</p>
               </div>
             </div>
-
-            <!-- Preview document réponse -->
             <div v-if="reponseFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-emerald-200 shadow-sm">
               <DocumentRpreview :file-preview-url="reponseBlobUrl" height="500px" />
             </div>
           </div>
 
-          <!-- Erreur -->
           <div v-else class="flex items-center gap-2 m-4 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
             <Icon name="i-heroicons-exclamation-triangle" class="w-4 h-4 shrink-0" />
             Impossible de charger les détails du courrier de réponse.
           </div>
         </section>
 
-        <!-- ── Section informations d'affectation ─────────────────────────── -->
+        <!-- ── Section informations d'affectation ── -->
         <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
           <div class="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-50 to-sky-50 border-b border-blue-100">
             <div class="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -464,12 +446,6 @@
           </div>
           <div class="p-4 space-y-3">
             <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-              <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <span class="w-1.5 h-1.5 rounded-full bg-blue-300 inline-block"></span>Type
-                </p>
-                <p class="text-xs font-semibold text-slate-800">{{ selectedAffectation.type || '—' }}</p>
-              </div>
               <div class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
                   <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Date d'affectation
@@ -555,9 +531,9 @@ const columns = [
   { key: 'reference_courrier', label: 'Référence du Courrier', visible: true,  inputPlaceholder: 'Réf...', showLabel: false },
   { key: 'objet_courrier',     label: 'Objet',                 visible: true,  showLabel: false },
   { key: 'doc_courrier',       label: 'Document',              visible: false, type: 'document', filterable: false },
+  { key: 'structure',          label: 'Structure',             visible: true,  filterable: false, showLabel: false },
   { key: 'date_affect',        label: "Date d'affectation",    visible: true,  filterable: false },
   { key: 'instructions',       label: 'Annotations',           visible: true,  filterable: false },
-  { key: 'type',               label: 'Type',                  visible: true,  filterable: false },
   { key: 'statut',             label: 'Statut',                visible: true,  type: 'badge', filterable: false },
   { key: 'priority',           label: 'Priorité',              visible: true,  type: 'badge', filterable: false },
   { key: 'delai_traitement',   label: 'Date de retour attendue', visible: true, filterable: false },
@@ -583,20 +559,18 @@ const selectedAffectation = ref(null)
 const loadingReponse      = ref(false)
 const reponseData         = ref(null)
 
-// État fichier document du courrier associé
 const docFileLoaded  = ref(false)
 const docFileLoading = ref(false)
 const docFileError   = ref('')
 const docBlobUrl     = ref('')
 
-// État fichier document de réponse
 const reponseFileLoaded  = ref(false)
 const reponseFileLoading = ref(false)
 const reponseFileError   = ref('')
 const reponseBlobUrl     = ref('')
 
-// Ouverture depuis le tableau
 const openingDocumentId = ref(null)
+const cloturingId       = ref(null)
 
 // ── Filtres avancés ───────────────────────────────────────────────────────────
 const defaultFilters = () => ({
@@ -609,7 +583,7 @@ const defaultFilters = () => ({
   date_cloture:       '',
   statut:             '',
   priority:           '',
-  type:               '',
+  structure:          '',
 })
 
 const searchFilters = ref(defaultFilters())
@@ -639,7 +613,6 @@ const onColumnFilterChange = (val) => {
   }, 400)
 }
 
-// ── Watch filtres avancés ─────────────────────────────────────────────────────
 let searchTimeout = null
 watch(searchFilters, () => {
   clearTimeout(searchTimeout)
@@ -648,6 +621,11 @@ watch(searchFilters, () => {
     refresh(1, perPage.value, false)
   }, 400)
 }, { deep: true })
+
+// ── Helper : actions bloquées si clôturé OU courrier déjà répondu ─────────────
+const isActionBlocked = (item) => {
+  return item.is_cloture || item.a_reponse
+}
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
 const formatDate = (date) => {
@@ -661,7 +639,6 @@ const guessMimeType = (filename) => {
   return { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' }[ext] || ''
 }
 
-// ── Construction URL API fichier ──────────────────────────────────────────────
 const buildDocumentUrl = (rawUrl, dateEnreg) => {
   if (!rawUrl || rawUrl === 'Inconnu') return null
   const base     = config.public.apiBase.replace(/\/$/, '')
@@ -674,7 +651,6 @@ const buildDocumentUrl = (rawUrl, dateEnreg) => {
   return `${base}/file/documents/${year}/${month}/${day}/${filename}`
 }
 
-// ── Fetch blob avec token Bearer ──────────────────────────────────────────────
 const fetchFileAsBlob = async (rawUrl, dateEnreg) => {
   const url = buildDocumentUrl(rawUrl, dateEnreg)
   if (!url) throw new Error('URL du fichier introuvable')
@@ -685,7 +661,6 @@ const fetchFileAsBlob = async (rawUrl, dateEnreg) => {
   return { blob, mimeType: blob.type || guessMimeType(rawUrl) }
 }
 
-// ── Charger le document du courrier associé ───────────────────────────────────
 const loadDocFile = async () => {
   const rawDoc    = selectedAffectation.value?._raw?.courrier_arrive?.document
   const rawUrl    = rawDoc?.url
@@ -695,20 +670,17 @@ const loadDocFile = async () => {
   docFileLoaded.value  = false
   docFileError.value   = ''
   if (docBlobUrl.value) { URL.revokeObjectURL(docBlobUrl.value); docBlobUrl.value = '' }
-
   try {
     const { blob } = await fetchFileAsBlob(rawUrl, dateEnreg)
     docBlobUrl.value    = URL.createObjectURL(blob)
     docFileLoaded.value = true
   } catch (err) {
-    console.error('❌ Erreur chargement document:', err)
     docFileError.value = err.message || 'Erreur lors du chargement'
   } finally {
     docFileLoading.value = false
   }
 }
 
-// ── Charger le document de réponse ────────────────────────────────────────────
 const loadReponseFile = async () => {
   const rawUrl    = reponseData.value?.rawUrl
   const dateEnreg = reponseData.value?.rawDateEnreg
@@ -717,43 +689,35 @@ const loadReponseFile = async () => {
   reponseFileLoaded.value  = false
   reponseFileError.value   = ''
   if (reponseBlobUrl.value) { URL.revokeObjectURL(reponseBlobUrl.value); reponseBlobUrl.value = '' }
-
   try {
     const { blob } = await fetchFileAsBlob(rawUrl, dateEnreg)
     reponseBlobUrl.value    = URL.createObjectURL(blob)
     reponseFileLoaded.value = true
   } catch (err) {
-    console.error('❌ Erreur chargement fichier réponse:', err)
     reponseFileError.value = err.message || 'Erreur lors du chargement'
   } finally {
     reponseFileLoading.value = false
   }
 }
 
-// ── Libérer tous les blobs ────────────────────────────────────────────────────
 const revokeModalBlobs = () => {
   if (docBlobUrl.value)     { URL.revokeObjectURL(docBlobUrl.value);     docBlobUrl.value     = '' }
   if (reponseBlobUrl.value) { URL.revokeObjectURL(reponseBlobUrl.value); reponseBlobUrl.value = '' }
 }
 
-// ── Charger le courrier de réponse depuis l'API ───────────────────────────────
 const loadReponseData = async (reponseId) => {
   if (!reponseId) return
   loadingReponse.value = true
   try {
     const authToken = localStorage.getItem('auth_token') || ''
-    const base = config.public.apiBase.replace(/\/$/, '')
-
-    const result = await $fetch(
+    const base      = config.public.apiBase.replace(/\/$/, '')
+    const result    = await $fetch(
       `${base}/courriers-departs?document_id=${reponseId}&per_page=1`,
       { headers: { Authorization: `Bearer ${authToken}` } }
     )
-
     const list = Array.isArray(result?.data) ? result.data : []
-    const doc = list[0] ?? null
-
+    const doc  = list[0] ?? null
     if (!doc) { reponseData.value = null; return }
-
     const rawUrl = (doc?.document?.url || '').trim()
     reponseData.value = {
       reference:    doc?.document?.reference || 'Sans référence',
@@ -766,7 +730,6 @@ const loadReponseData = async (reponseId) => {
       rawDateEnreg: doc?.document?.date_enreg || null,
     }
   } catch (e) {
-    console.error('❌ Erreur chargement réponse:', e)
     reponseData.value = null
   } finally {
     loadingReponse.value = false
@@ -804,15 +767,17 @@ const transformerDonneesAPI = (reponseAPI) => {
       doc_courrier:       (rawUrl && rawUrl !== 'Inconnu') ? rawUrl : '',
       date_affect:        formatDate(affectation.date_affect),
       instructions:       affectation.instructions || '',
-      type:               affectation.type_affectation || '',
+      structure:          affectation?.courrier_arrive?.structure || '',
       statut:             affectation.statut   || '',
       priority:           affectation.priority || '',
       delai_traitement:   formatDate(affectation.delai_traitement),
       date_cloture:       formatDate(affectation.date_cloture),
       emetteur:           emetteurFormate,
       destinataire:       destinataireFormate,
-      // true si le courrier associé a au moins une réponse
-      a_reponse: !!(affectation?.courrier_arrive?.document?.reponses?.length),
+      // ✅ Bloquant : courrier déjà répondu
+      a_reponse:  !!(affectation?.courrier_arrive?.document?.reponses?.length),
+      // ✅ Bloquant : affectation clôturée
+      is_cloture: affectation.statut === 'cloture',
       _raw: affectation,
     }
   })
@@ -820,36 +785,24 @@ const transformerDonneesAPI = (reponseAPI) => {
 
 // ── Chargement ────────────────────────────────────────────────────────────────
 const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
-  if (isFirst) {
-    initialLoading.value = true
-  } else {
-    loading.value = true
-  }
+  if (isFirst) { initialLoading.value = true } else { loading.value = true }
   error.value = null
 
   try {
-    const authToken = localStorage.getItem('auth_token') || ''
-
-    let entite_user = null
+    const authToken     = localStorage.getItem('auth_token') || ''
+    let entite_user     = null
     const savedFunction = localStorage.getItem('entite_user')
     if (savedFunction) {
       entite_user         = JSON.parse(savedFunction)
       isResponsable.value = entite_user.is_responsable || false
     }
-
-    if (!entite_user?.id) {
-      error.value = 'Aucune fonction user sélectionnée'
-      return
-    }
+    if (!entite_user?.id) { error.value = 'Aucune fonction user sélectionnée'; return }
 
     const destinataireId = isSecDir()
       ? (getDirecteurEntiteUserId() ?? entite_user.id)
       : entite_user.id
 
-    const params = new URLSearchParams({
-      page:     String(page),
-      per_page: String(per_page),
-    })
+    const params = new URLSearchParams({ page: String(page), per_page: String(per_page) })
 
     const f = searchFilters.value
     if (f.search)             params.append('search',             f.search)
@@ -861,7 +814,7 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
     if (f.date_cloture)       params.append('date_cloture',       f.date_cloture)
     if (f.statut)             params.append('statut',             f.statut)
     if (f.priority)           params.append('priority',           f.priority)
-    if (f.type)               params.append('type_affectation',   f.type)
+    if (f.structure)          params.append('structure',          f.structure)
 
     const c = columnFilters.value
     if (!f.reference_courrier && c.reference_courrier) params.append('reference_courrier', c.reference_courrier)
@@ -880,7 +833,6 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
     total.value           = reponse.meta?.total        ?? affectationData.value.length
 
   } catch (err) {
-    console.error('❌ Erreur chargement affectations:', err)
     error.value = err.message || 'Erreur lors du chargement des données'
     toast.add({ title: 'Erreur', description: 'Impossible de charger les affectations', color: 'red', timeout: 1500 })
   } finally {
@@ -917,16 +869,12 @@ const handleViewDetails = async (item) => {
   reponseData.value         = null
   detailsOpen.value         = true
 
-  // Charger automatiquement le courrier de réponse si disponible
   if (item.a_reponse) {
     const reponses  = item._raw?.courrier_arrive?.document?.reponses || []
     const reponseId = reponses[0]?.reponse_id
     if (reponseId) await loadReponseData(reponseId)
   }
 }
-
-// ── Clôture ───────────────────────────────────────────────────────────────────
-const cloturingId = ref(null)
 
 const handleCloturer = async (item) => {
   const { isConfirmed } = await Swal.fire({
@@ -966,9 +914,8 @@ const handleCloturer = async (item) => {
   try {
     const authToken = localStorage.getItem('auth_token') || ''
     const base      = config.public.apiBase.replace(/\/$/, '')
-
-    const result = await $fetch(`${base}/affectations/${item.id}/cloture`, {
-      method:  'PUT',  // PATCH → PUT
+    const result    = await $fetch(`${base}/affectations/${item.id}/cloture`, {
+      method:  'PUT',
       headers: { Authorization: `Bearer ${authToken}` },
     })
 
@@ -977,17 +924,17 @@ const handleCloturer = async (item) => {
     await Swal.fire({
       title: 'Clôturée avec succès',
       html: nb > 0
-        ? `<p class="text-sm text-slate-600">Affectation <strong>#${item.id}</strong> clôturée.<br><span class="inline-flex items-center gap-1 mt-2 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-semibold"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>${nb} affectation(s) subordonnée(s) clôturée(s)</span></p>`
+        ? `<p class="text-sm text-slate-600">Affectation <strong>#${item.id}</strong> clôturée.<br><span class="inline-flex items-center gap-1 mt-2 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-semibold">${nb} affectation(s) subordonnée(s) clôturée(s)</span></p>`
         : `<p class="text-sm text-slate-600">Affectation <strong>#${item.id}</strong> clôturée avec succès.</p>`,
       icon: 'success',
       confirmButtonText: 'Fermer',
       timer: 3500,
       timerProgressBar: true,
       customClass: {
-        popup:         'rounded-2xl shadow-2xl px-6 py-5 max-w-sm',
-        title:         'text-base font-bold text-slate-800 pt-2',
-        htmlContainer: 'mt-1',
-        confirmButton: 'inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-all focus:outline-none',
+        popup:            'rounded-2xl shadow-2xl px-6 py-5 max-w-sm',
+        title:            'text-base font-bold text-slate-800 pt-2',
+        htmlContainer:    'mt-1',
+        confirmButton:    'inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-all focus:outline-none',
         timerProgressBar: 'bg-emerald-400',
       },
       buttonsStyling: false,
@@ -996,8 +943,6 @@ const handleCloturer = async (item) => {
     await refresh(currentPage.value, perPage.value, false)
 
   } catch (err) {
-    console.error('❌ Erreur clôture:', err)
-
     await Swal.fire({
       title: 'Erreur',
       html: `<p class="text-sm text-slate-600">${err?.data?.message || 'Impossible de clôturer l\'affectation.'}</p>`,

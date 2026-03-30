@@ -134,15 +134,24 @@
                   <UCheckbox v-model="form.large_diffusion" label="Large diffusion" />
                 </div>
 
-                <!-- Initiateurs : uniquement en mode création (pas en réponse) -->
+                <!-- ── Initiateurs : mode création ── -->
                 <div v-if="!isReplyMode">
                   <label class="block text-sm font-medium text-gray-700 mb-2">Initiateurs *</label>
-                  <USelectMenu v-model="form.initiateurs" :options="utilisateurs" value-attribute="id"
-                    option-attribute="display_name" placeholder="Sélectionner les initiateurs" class="w-full" multiple
-                    :loading="loadingUsers" :ui="{ height: 'h-[42px]' }" />
-                  <p v-if="form.initiateurs.length > 0" class="text-xs text-green-600 mt-1">
-                    {{ form.initiateurs.length }} initiateur(s) sélectionné(s)
-                  </p>
+                  <USelectMenu v-model="selectedInitiateurs" :options="utilisateurs" option-attribute="display_name"
+                    placeholder="Rechercher un initiateur..." class="w-full" multiple searchable
+                    searchable-placeholder="Nom, prénom ou entité..." :loading="loadingUsers"
+                    :ui="{ height: 'h-[42px]' }" />
+                  <!-- Tags des initiateurs sélectionnés -->
+                  <div v-if="selectedInitiateurs.length > 0" class="flex flex-wrap gap-1.5 mt-2">
+                    <span v-for="init in selectedInitiateurs" :key="init.id"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full">
+                      {{ init.display_name }}
+                      <button type="button"
+                        @click="selectedInitiateurs = selectedInitiateurs.filter(i => i.id !== init.id)">
+                        <Icon name="i-heroicons-x-mark" class="w-3 h-3 hover:text-indigo-900" />
+                      </button>
+                    </span>
+                  </div>
                   <p v-else class="text-xs text-gray-500 mt-1">
                     Sélectionnez un ou plusieurs initiateurs pour ce courrier
                   </p>
@@ -308,15 +317,17 @@ const searchQuery = ref('')
 const filteredDocumentTypes = computed(() => {
   if (!searchQuery.value) return documentTypes.value
   const q = searchQuery.value.toLowerCase()
-  return documentTypes.value.filter(t =>
-    t.libelle?.toLowerCase().includes(q)
-  )
+  return documentTypes.value.filter(t => t.libelle?.toLowerCase().includes(q))
 })
 
 watch(selectedDocumentType, (val) => {
   form.value.type_document_id = val?.id ?? null
 })
+
 const utilisateurs = ref([])
+
+// ── Initiateurs mode création (objets complets, pas juste les ids) ─────────────
+const selectedInitiateurs = ref([])
 
 // ── Formulaire ────────────────────────────────────────────────────────────────
 const form = ref({
@@ -333,7 +344,6 @@ const form = ref({
   destinataire: '',
   confidentiel: false,
   service_emis: '',
-  initiateurs: [],
 })
 
 // ── Computed ──────────────────────────────────────────────────────────────────
@@ -358,16 +368,14 @@ const isFormValid = computed(() => {
     return base && form.value.destinataire !== '' && initiateurIds.value.length > 0
   }
 
-  return base && form.value.initiateurs.length > 0
+  return base && selectedInitiateurs.value.length > 0
 })
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatDate = (date) => {
   if (!date) return ''
   return new Date(date).toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
+    day: '2-digit', month: 'long', year: 'numeric',
   })
 }
 
@@ -424,8 +432,6 @@ const loadUtilisateurs = async () => {
 // LOGIQUE INITIATEURS EN MODE RÉPONSE
 // ════════════════════════════════════════════════════════════════════════════════
 
-// Affectés enrichis, triés par index (0 = sommet hiérarchique, dernier = base)
-// Si votre API retourne un ordre différent, triez ici sur affectation.entite.niveau
 const affectesOptionsEnrichis = computed(() => {
   if (!courrierToReply.value?.affectations?.length) return []
 
@@ -453,10 +459,8 @@ const affectesOptionsEnrichis = computed(() => {
   })
 })
 
-// IDs des initiateurs sélectionnés pour la réponse (initialisés avec tous les affectés)
 const initiateurIds = ref([])
 
-// Rang le plus élevé parmi les initiateurs actifs (= agent le plus bas dans la hiérarchie)
 const dernierRangActif = computed(() => {
   if (!initiateurIds.value.length) return -1
   const rangsActifs = affectesOptionsEnrichis.value
@@ -465,8 +469,6 @@ const dernierRangActif = computed(() => {
   return Math.max(...rangsActifs)
 })
 
-// Un agent peut être retiré seulement s'il est LE dernier de la chaîne (rang max)
-// et qu'il ne serait pas le seul initiateur restant
 const peutEtreRetire = (affecte) => {
   return affecte.rang === dernierRangActif.value && initiateurIds.value.length > 1
 }
@@ -476,11 +478,9 @@ const toggleInitiateur = (affecteId) => {
   if (!affecte) return
 
   if (initiateurIds.value.includes(affecteId)) {
-    // Retrait : uniquement si c'est le dernier de la chaîne active
     if (!peutEtreRetire(affecte)) return
     initiateurIds.value = initiateurIds.value.filter(id => id !== affecteId)
   } else {
-    // Réajout : uniquement si son rang est juste après le dernier actif (pas de saut)
     if (affecte.rang !== dernierRangActif.value + 1) return
     initiateurIds.value = [...initiateurIds.value, affecteId]
   }
@@ -504,7 +504,7 @@ const validateForm = () => {
     if (!form.value.destinataire) newErrors.push('Le destinataire est obligatoire.')
     if (!initiateurIds.value.length) newErrors.push('Au moins un initiateur est requis.')
   } else {
-    if (!form.value.initiateurs.length) newErrors.push('Veuillez sélectionner au moins un initiateur.')
+    if (!selectedInitiateurs.value.length) newErrors.push('Veuillez sélectionner au moins un initiateur.')
   }
 
   errors.value = newErrors
@@ -535,9 +535,9 @@ const resetForm = () => {
     destinataire: '',
     confidentiel: false,
     service_emis: '',
-    initiateurs: [],
   }
   selectedFile.value = null
+  selectedInitiateurs.value = []
   initiateurIds.value = []
   errors.value = []
   errorRequest.value = null
@@ -567,10 +567,9 @@ const buildBaseFormData = (selectedFunction) => {
 
   // Initiateurs selon le mode
   if (isReplyMode.value) {
-    // En mode réponse : initiateurs = affectés sélectionnés (entite_user_id)
     const ids = affectesOptionsEnrichis.value
       .filter(a => initiateurIds.value.includes(a.id))
-      .map(a => a.affectation.destinataire_id) // destinataire_id = entite_user_id
+      .map(a => a.affectation.destinataire_id)
     ids.forEach((id, index) => fd.append(`initiateurs[${index}]`, id))
   }
 
@@ -596,7 +595,8 @@ const submitReponse = async (selectedFunction) => {
 const submitCreation = async (selectedFunction) => {
   const fd = buildBaseFormData(selectedFunction)
 
-  const initiateurIdsCreation = form.value.initiateurs.map(i => typeof i === 'object' ? i.id : i)
+  // Extraire les ids depuis les objets complets
+  const initiateurIdsCreation = selectedInitiateurs.value.map(i => i.id)
   initiateurIdsCreation.forEach((id, index) => fd.append(`initiateurs[${index}]`, id))
 
   const response = await $fetch(`${config.public.apiBase}/courriers-departs`, {
@@ -688,7 +688,6 @@ onMounted(async () => {
   }
 
   if (isReplyMode.value && courrierToReply.value) {
-    // Pré-remplir le destinataire
     const c = courrierToReply.value
     form.value.destinataire = c.autre_structure || c.structure || ''
     form.value.objet = c.document?.objet || c.objet || ''
