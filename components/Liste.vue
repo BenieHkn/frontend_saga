@@ -394,7 +394,7 @@ const props = defineProps({
 const store          = useAffectationsStore()
 const courriersStore = useCourriersStore()
 const config         = useRuntimeConfig()
-const { isAdmin }    = useAuth()
+const { isAdmin, isSP, isSA } = useAuth()
 
 const filterFields = [
   { id: 'source',      label: 'Source' },
@@ -552,11 +552,8 @@ const refresh = async () => {
   error.value   = null
   try {
     const authToken = localStorage.getItem('auth_token') || ''
-    let endpoint    = `${config.public.apiBase}/courriers-arrives/urgents-sans-reponse`
-    if (props.entiteId) {
-      const selectedEntite = JSON.parse(localStorage.getItem('selected_entite') || 'null')
-      if (selectedEntite?.code) endpoint += `?service_enreg=${selectedEntite.code}`
-    }
+    const endpoint  = `${config.public.apiBase}/courriers-arrives/urgents-sans-reponse`
+
     const response  = await $fetch(endpoint, {
       headers: { Authorization: `Bearer ${authToken}` },
     })

@@ -981,7 +981,7 @@ const handleQuickAssign = (courrierId) => {
 const handleQuickTransfer = (courrierId) => {
   if (!courrierId) { toast.add({ title: 'Erreur', description: 'ID du courrier introuvable', color: 'red', timeout: 1500 }); return }
   if (process.client) sessionStorage.setItem('preselected_courrier_id_transfer', courrierId.toString())
-  navigateTo('/affectations-transferts/form-transfert')
+  navigateTo('/affectations_transferts/form_transfert')
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────

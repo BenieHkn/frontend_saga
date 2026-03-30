@@ -256,7 +256,7 @@ const handleSubmit = async () => {
     if (failureCount === 0) {
       toast.add({ title: 'Succès ! 🎉', description: `${affectations.length} affectation(s) créée(s) avec succès`, color: 'green', timeout: 2000 })
       store.resetForm()
-      setTimeout(() => router.push('/affectations-transferts'), 1500)
+      setTimeout(() => router.push('/affectations_transferts'), 1500)
     } else {
       toast.add({ title: 'Avertissement', description: `${successCount} affectation(s) créée(s), ${failureCount} échec(s)`, color: 'orange', timeout: 1500 })
       submitting.value = false
@@ -281,7 +281,7 @@ const handleSubmit = async () => {
 const handleCancel = () => {
   if (confirm('Êtes-vous sûr de vouloir annuler ? Les données saisies seront perdues.')) {
     store.resetForm()
-    router.push('/affectations-transferts')
+    router.push('/affectations_transferts')
   }
 }
 

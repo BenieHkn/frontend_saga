@@ -136,7 +136,7 @@ const allMenuItems = computed(() => [
     name: !isSA() && !isSP() && !isDG()
       ? 'Affectations & Transferts'
       : 'Affectations',
-    path: '/affectations-transferts',
+    path: '/affectations_transferts',
     icon: 'heroicons:clipboard-document-check-20-solid',
     visible: peutVoirAffectations.value,
   },

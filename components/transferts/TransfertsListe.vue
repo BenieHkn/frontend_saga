@@ -11,7 +11,7 @@
         <Icon name="i-heroicons-arrow-path" class="w-4 h-4" />
         Actualiser
       </button>
-      <NuxtLink v-if="peutTransferer() && !isAdmin()" to="/affectations-transferts/form-transfert"
+      <NuxtLink v-if="peutTransferer() && !isAdmin()" to="/affectations_transferts/form_transfert"
         class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-all hover:shadow-md">
         <Icon name="i-heroicons-plus" class="w-4 h-4" />
         Nouveau

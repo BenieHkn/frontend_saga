@@ -324,7 +324,7 @@ const handleSendFiles = async () => {
   showNotification(result)
 
   if (result.success && result.type === 'success') {
-    setTimeout(() => navigateTo('/affectations-transferts'), 2000)
+    setTimeout(() => navigateTo('/affectations_transferts'), 2000)
   } else if (result.type === 'warning') {
     setTimeout(async () => {
       const confirmResult = await Swal.fire({
@@ -346,7 +346,7 @@ const handleSendFiles = async () => {
         cancelButtonColor: '#6b7280',
       })
 
-      if (confirmResult.isConfirmed) navigateTo('/affectations-transferts')
+      if (confirmResult.isConfirmed) navigateTo('/affectations_transferts')
     }, 2000)
   }
 }

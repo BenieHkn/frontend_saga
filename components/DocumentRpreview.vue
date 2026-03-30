@@ -14,9 +14,17 @@
             <UIcon name="i-heroicons-x-mark" class="w-5 h-5" />
           </button>
 
-          <!-- Contrôles zoom -->
+          <!-- Contrôles zoom et actions -->
           <div
             class="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/15">
+            <!-- Téléchargement -->
+            <UButton icon="i-heroicons-arrow-down-tray" size="xs" color="gray" variant="ghost" class="text-white"
+              @click="downloadFile" title="Télécharger" />
+            <!-- Impression -->
+            <UButton icon="i-heroicons-printer" size="xs" color="gray" variant="ghost" class="text-white"
+              @click="printFile" title="Imprimer" />
+            <div class="w-[1px] h-3 bg-white/20 mx-1" />
+            <!-- Zoom -->
             <UButton icon="i-heroicons-minus" size="xs" color="gray" variant="ghost" class="text-white"
               @click="changeZoom(-0.1)" />
             <span class="text-[10px] font-mono font-bold text-white/80 w-10 text-center">{{ Math.round(zoomLevel * 100)
@@ -64,10 +72,19 @@
         </div>
 
         <div class="flex items-center gap-1" v-if="filePreviewUrl && !loading">
+          <!-- Téléchargement -->
+          <UButton icon="i-heroicons-arrow-down-tray" size="xs" variant="ghost" color="gray" @click="downloadFile"
+            title="Télécharger" />
+          <!-- Impression -->
+          <UButton icon="i-heroicons-printer" size="xs" variant="ghost" color="gray" @click="printFile"
+            title="Imprimer" />
+          <div class="w-[1px] h-3 bg-slate-200 mx-1"></div>
+          <!-- Zoom -->
           <UButton icon="i-heroicons-minus" size="xs" variant="ghost" color="gray" @click="changeZoom(-0.1)" />
           <span class="text-[9px] font-mono font-bold text-slate-500">{{ Math.round(zoomLevel * 100) }}%</span>
           <UButton icon="i-heroicons-plus" size="xs" variant="ghost" color="gray" @click="changeZoom(0.1)" />
           <div class="w-[1px] h-3 bg-slate-200 mx-1"></div>
+          <!-- Plein écran -->
           <UButton icon="i-heroicons-arrows-pointing-out" size="xs" variant="ghost" color="primary"
             @click="isOpen = true" />
         </div>
@@ -152,6 +169,49 @@ const changeZoom = (delta) => {
   const newZoom = zoomLevel.value + delta
   if (newZoom >= 0.3 && newZoom <= 2) {
     zoomLevel.value = parseFloat(newZoom.toFixed(1))
+  }
+}
+
+const downloadFile = () => {
+  if (!props.filePreviewUrl) return
+
+  const link = document.createElement('a')
+  link.href = props.filePreviewUrl
+  
+  // Essayer d'extraire le nom du fichier de l'URL ou utiliser un nom par défaut
+  const fileName = props.selectedFile?.nom_fichier || 
+                   props.filePreviewUrl.split('/').pop() || 
+                   'document.pdf'
+  
+  link.download = fileName
+  link.target = '_blank'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+const printFile = () => {
+  if (!props.filePreviewUrl) return
+
+  // Créer une iframe cachée pour l'impression
+  const iframe = document.createElement('iframe')
+  iframe.style.display = 'none'
+  iframe.src = props.filePreviewUrl
+  document.body.appendChild(iframe)
+
+  iframe.onload = () => {
+    try {
+      iframe.contentWindow.print()
+      // Nettoyer après un délai
+      setTimeout(() => {
+        document.body.removeChild(iframe)
+      }, 1000)
+    } catch (e) {
+      console.error('Erreur lors de l\'impression:', e)
+      // Fallback: ouvrir dans un nouvel onglet pour impression
+      window.open(props.filePreviewUrl, '_blank')
+      document.body.removeChild(iframe)
+    }
   }
 }
 

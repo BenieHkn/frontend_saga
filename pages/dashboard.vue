@@ -111,8 +111,12 @@ const props = defineProps({
 
 const { isSP, isSA, isDG, isAdmin, isSecDir, getEmetteurId } = useAuth()
 
-// ─── Helpers rôle ─────────────────────────────────────────────────────────────
-const isGenerales = computed(() => isDG() || isSA() || isSP() || isAdmin())
+// ── Contrôle de l'affichage des infos par service ─────────────────
+// DG, Admin, SP et SA voient tous le détail "SP: x | SA: y"
+const isGenerales = computed(() => isDG() || isAdmin() || isSP() || isSA())
+
+// ── Contrôle de l'endpoint à appeler ─────────────────────────────
+const isSecretariat = computed(() => isSP() || isSA())
 
 // ─── Dropdown ─────────────────────────────────────────────────────────────────
 const dropdownOpen = ref(false)
@@ -170,63 +174,48 @@ const formatInfo = (data) => {
 const fetchStats = async () => {
   try {
     statsLoading.value = true
-    const token = localStorage.getItem('auth_token')
+    const token  = localStorage.getItem('auth_token')
     const config = useRuntimeConfig()
 
-    console.log('🔍 isGenerales:', isGenerales.value)
-    console.log('🔍 isSecDir:', isSecDir())
-    console.log('🔍 roles:', localStorage.getItem('roles'))
-    console.log('🔍 directeur_entite_user_id:', localStorage.getItem('directeur_entite_user_id'))
-    console.log('🔍 entite_user:', localStorage.getItem('entite_user'))
-
-    if (isGenerales.value) {
+    if (isDG() || isAdmin()) {
+      // DG / Admin → endpoint général, toutes les stats
       const response = await $fetch(`${config.public.apiBase}/statistiques/generales`, {
         headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
       })
       if (response?.success) stats.value = response.data
 
+    } else if (isSP() || isSA()) {
+      // SP / SA → endpoint secretariat, stats filtrées par périmètre
+      const response = await $fetch(`${config.public.apiBase}/statistiques/secretariat`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+      })
+      if (response?.success) stats.value = response.data
+
     } else {
-      const entiteUser = JSON.parse(localStorage.getItem('entite_user') || '{}')
+      // Autres → stats personnelles par entite-user
+      const entiteUser   = JSON.parse(localStorage.getItem('entite_user') || '{}')
       const entiteUserId = entiteUser?.entite_user_id ?? entiteUser?.id
-      const statsId = getEmetteurId() ?? entiteUserId
+      const statsId      = getEmetteurId() ?? entiteUserId
 
-      console.log('🔍 entiteUserId:', entiteUserId)
-      console.log('🔍 getEmetteurId():', getEmetteurId())
-      console.log('🔍 statsId final:', statsId)
-      console.log('🔍 URL appelée:', `${config.public.apiBase}/statistiques/entite-user/${statsId}`)
-
-      if (!statsId) {
-        console.warn('❌ Aucun statsId résolu')
-        return
-      }
+      if (!statsId) { console.warn('❌ Aucun statsId résolu'); return }
 
       const response = await $fetch(
         `${config.public.apiBase}/statistiques/entite-user/${statsId}`,
         { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } }
       )
 
-      console.log('🔍 response complète:', JSON.stringify(response, null, 2))
-
       if (response?.success) {
         const d = response.data
         isResponsable.value = d.is_responsable
 
-        console.log('🔍 is_responsable:', d.is_responsable)
-        console.log('🔍 d.courriers:', d.courriers)
-        console.log('🔍 d.documents:', d.documents)
-        console.log('🔍 d.affectations:', d.affectations)
-        console.log('🔍 d.transferts:', d.transferts)
-
         if (d.is_responsable || isSecDir()) {
           stats.value = {
-            total_courriers_arrives: d.courriers?.affectes                           ?? 0,
-            courriers_departs:       d.documents?.visibles                           ?? 0,
-            affectations_en_cours:   d.affectations?.emises                          ?? 0,
+            total_courriers_arrives: d.courriers?.affectes  ?? 0,
+            courriers_departs:       d.documents?.visibles  ?? 0,
+            affectations_en_cours:   d.affectations?.emises ?? 0,
             total_affectations:     (d.transferts?.recus ?? 0) + (d.transferts?.emis ?? 0),
-            arrives_par_service:    {},
-            departs_par_service:    {},
-            en_attente_par_service: {},
-            affectes_par_service:   {},
+            arrives_par_service: {}, departs_par_service: {},
+            en_attente_par_service: {}, affectes_par_service: {},
           }
         } else {
           stats.value = {
@@ -234,26 +223,18 @@ const fetchStats = async () => {
             courriers_departs:       d.documents?.visibles    ?? 0,
             affectations_en_cours:   d.affectations?.en_cours ?? 0,
             total_affectations:      d.affectations?.traitees ?? 0,
-            arrives_par_service:    {},
-            departs_par_service:    {},
-            en_attente_par_service: {},
-            affectes_par_service:   {},
+            arrives_par_service: {}, departs_par_service: {},
+            en_attente_par_service: {}, affectes_par_service: {},
           }
         }
-
-        console.log('🔍 stats.value final:', JSON.stringify(stats.value, null, 2))
-      } else {
-        console.warn('❌ response.success est false ou response vide:', response)
       }
     }
   } catch (error) {
     console.error('❌ Erreur fetchStats:', error)
-    console.error('❌ Détail:', error?.data ?? error?.message ?? error)
   } finally {
     statsLoading.value = false
   }
 }
-
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)

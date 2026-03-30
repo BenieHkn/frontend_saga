@@ -62,7 +62,7 @@ onMounted(async () => {
           <UForm @submit="login" :state="form" class="space-y-6">
 
             <UFormGroup label="Email" name="email" :ui="{ label: { base: 'text-white font-medium mb-2' } }">
-              <UInput v-model="form.email" placeholder="Votre email" color="white" variant="outline" size="xl" :ui="{
+              <UInput v-model="form.email"   @blur="form.email = form.email.trim()" placeholder="Votre email" color="white" variant="outline" size="xl" :ui="{
                 rounded: 'rounded-2xl',
                 base: 'bg-white text-gray-900 focus:ring-emerald-400',
                 placeholder: 'placeholder-gray-400'

@@ -244,33 +244,35 @@ export const useAuth = () => {
   // VALIDATION
   // =====================
 
-  const validateForm = () => {
-    authError.value = ''
+const validateForm = () => {
+  authError.value = ''
 
-    if (!form.email?.trim()) {
-      authError.value = 'Veuillez entrer votre adresse email'
-      return false
-    }
+  // ← Trimmer d'abord avant toute validation
+  form.email = form.email.trim()
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(form.email)) {
-      authError.value = 'Veuillez entrer une adresse email valide'
-      return false
-    }
-
-    if (!form.password) {
-      authError.value = 'Veuillez entrer votre mot de passe'
-      return false
-    }
-
-    if (form.password.length < 6) {
-      authError.value = 'Le mot de passe doit contenir au moins 6 caractères'
-      return false
-    }
-
-    return true
+  if (!form.email) {
+    authError.value = 'Veuillez entrer votre adresse email'
+    return false
   }
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(form.email)) {
+    authError.value = 'Veuillez entrer une adresse email valide'
+    return false
+  }
+
+  if (!form.password) {
+    authError.value = 'Veuillez entrer votre mot de passe'
+    return false
+  }
+
+  if (form.password.length < 6) {
+    authError.value = 'Le mot de passe doit contenir au moins 6 caractères'
+    return false
+  }
+
+  return true
+}
   // =====================
   // ONESIGNAL
   // =====================
