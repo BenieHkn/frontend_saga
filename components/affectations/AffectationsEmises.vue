@@ -272,7 +272,7 @@
               class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
           </div>
           <div class="flex-1 min-w-[160px]">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Instructions</label>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Annotations</label>
             <input v-model="searchFilters.instructions" placeholder="Filtrer..."
               class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
           </div>
@@ -424,7 +424,7 @@
         </template>
 
         <!-- Bouton Clôturer -->
-        <template v-if="!isAdmin">
+        <!-- <template v-if="!isAdmin">
           <button
             v-if="!isActionBlocked(item)"
             @click="handleCloture(item)"
@@ -438,7 +438,7 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
             <Icon name="i-heroicons-lock-closed" class="w-4 h-4" />
           </div>
-        </template>
+        </template> -->
 
       </div>
     </template>
@@ -606,14 +606,14 @@ const columns = computed(() => {
     { key: 'objet_courrier',     label: 'Objet',                   visible: true,  inputPlaceholder: 'Objet...',    width: 'min-w-[250px]', showLabel: false },
     { key: 'doc_courrier',       label: 'Document',                visible: false, type: 'document',                filterable: false },
     { key: 'date_affect',        label: "Date d'affectation",      visible: true,  filterable: false,               width: 'min-w-[120px]', showLabel: false },
-    { key: 'instructions',       label: 'Instructions',            visible: true,  inputPlaceholder: 'Instruct...', width: 'min-w-[200px]', showLabel: false },
-    { key: 'statut',             label: 'Statut',                  visible: true,  type: 'badge', filterable: false, width: 'min-w-[120px]', showLabel: false },
-    { key: 'priority',           label: 'Priorité',                visible: true,  type: 'badge', filterable: false, width: 'min-w-[120px]', showLabel: false },
-    { key: 'delai_traitement',   label: 'Date de retour attendue', visible: true,  filterable: false,               width: 'min-w-[120px]', showLabel: false },
-    { key: 'date_cloture',       label: 'Date clôture',            visible: false, filterable: false,               width: 'min-w-[120px]' },
-    { key: 'destinataire',       label: 'Destinataire',            visible: true,  filterable: false,               width: 'min-w-[180px]', showLabel: false },
+    { key: 'instructions',       label: 'Instructions',            visible: true,  inputPlaceholder: 'Annota...', width: 'min-w-[200px]', showLabel: false },
+    { key: 'statut',             label: 'Statut',                  visible: true,  type: 'badge', filterable: false, width: 'min-w-[120px]' },
+    { key: 'priority',           label: 'Priorité',                visible: true,  type: 'badge', filterable: false, width: 'min-w-[120px]' },
+    { key: 'delai_traitement',   label: 'Délai',                   visible: true,  filterable: false,               width: 'min-w-[120px]', showLabel: true },
+    { key: 'date_cloture',       label: 'Date clôture',            visible: false, filterable: false,               width: 'min-w-[120px]', showLabel: true },
+    { key: 'destinataire',       label: 'Destinataire',            visible: true,  filterable: false,               width: 'min-w-[180px]', inputPlaceholder: 'Emetteur' },
   ]
-  if (isAdmin.value) base.push({ key: 'emetteur', label: 'Émetteur', visible: true, filterable: false, width: 'min-w-[180px]' })
+  if (isAdmin.value) base.push({ key: 'emetteur', label: 'Émetteur', visible: true, inputPlaceholder: 'Emetteur', filterable: false, width: 'min-w-[180px]' })
   return base
 })
 

@@ -207,7 +207,7 @@
         </template>
 
         <!-- Bouton Clôturer -->
-        <button
+        <!-- <button
           v-if="!isActionBlocked(item)"
           @click="handleCloturer(item)"
           :disabled="cloturingId === item.id"
@@ -221,7 +221,7 @@
           :title="item.is_cloture ? 'Déjà clôturée' : 'Ce courrier a déjà une réponse'"
           class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
           <Icon name="i-heroicons-lock-closed" class="w-4 h-4" />
-        </div>
+        </div> -->
 
       </div>
     </template>
