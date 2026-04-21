@@ -17,7 +17,7 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Type d'arrivée *
+                    Type d'arrivée <span class="text-red-600">*</span> 
                   </label>
                   <USelect v-model="form.type_arrivee" :options="[
                     { label: 'Directe', value: 'directe' },
@@ -30,7 +30,7 @@
                 <!-- Priorité -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Priorité *
+                    Priorité <span class="text-red-600">*</span> 
                   </label>
                   <USelect v-model="form.priorite" :options="[
                     { label: 'STANDARD', value: 'STANDARD' },
@@ -44,7 +44,7 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Pièce jointe *
+                    Pièce jointe <span class="text-red-600">*</span> 
                   </label>
                   <div class="relative">
                     <input ref="fileInput" type="file" @change="handleFileChange"
@@ -63,7 +63,7 @@
 
                 <div v-if="form.type_arrivee !== 'autre'">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Structure
+                    Structure <span class="text-red-600">*</span> 
                   </label>
                   <UInput v-model="form.structure" placeholder="Nom de la structure" class="w-full h-12" />
                 </div>
@@ -74,7 +74,7 @@
 
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Type de document *
+                  Type de document <span class="text-red-600">*</span> 
                 </label>
                 <USelectMenu v-model="selectedDocumentType" :options="filteredDocumentTypes" option-attribute="libelle"
                   placeholder="Rechercher un type..." searchable searchable-placeholder="Rechercher..." class="w-full"
@@ -120,11 +120,11 @@
               <div class="pt-4 border-t border-gray-100 space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">N° d'enregistrement *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">N° d'enregistrement <span class="text-red-600">*</span> </label>
                     <UInput v-model="form.numero_enreg" placeholder="Numéro d'enregistrement" class="w-full h-12" />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Date d'enregistrement *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date d'enregistrement <span class="text-red-600">*</span> </label>
                     <UInput v-model="form.date_enreg" type="date" class="w-full h-12" />
                   </div>
                 </div>
@@ -140,12 +140,12 @@
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Date du courrier *</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Date du courrier <span class="text-red-600">*</span> </label>
                   <UInput v-model="form.date_courier" type="date" class="w-full h-12" />
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Objet *</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Objet <span class="text-red-600">*</span> </label>
                   <UTextarea :rows="3" size="lg" v-model="form.objet" placeholder="Objet du courrier" required />
                 </div>
 

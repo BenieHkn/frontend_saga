@@ -14,6 +14,12 @@
         </div>
       </template>
 
+      <template #large_diffusion>
+        <div class="space-y-4">
+          <LargeDiffusion />
+        </div>
+      </template>
+
       <template #visibilite>
         <div class="space-y-4">
           <CourriersVisibles />
@@ -27,6 +33,7 @@
 <script setup>
 import { ref } from 'vue'
 import AffectationsListe from '~/components/documents/AffectationsListe.vue'
+import LargeDiffusion from '~/components/documents/LargeDiffusion.vue'
 import CourriersVisibles from '~/components/documents/CourriersVisibles.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import AppTabs from '~/components/AppTabs.vue'
@@ -35,6 +42,7 @@ useHead({ title: 'Mes Documents - Sagar Revolution' })
 
 const tabList = ref([
   { id: 'affectations', label: 'Documents reçus', icon: 'i-heroicons-inbox', count: null },
+  { id: 'large_diffusion', label: 'Large Diffusion', icon: 'i-heroicons-eye', count: null },
   { id: 'visibilite', label: 'Initiés/Paraphés', icon: 'i-heroicons-eye', count: null },
 ])
 </script>

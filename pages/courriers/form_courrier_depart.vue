@@ -44,7 +44,7 @@
             <form @submit.prevent="handleSubmit" class="space-y-4">
               <!-- Type de départ -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Type de départ *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Type de départ <span class="text-red-600">*</span> </label>
                 <USelect v-model="form.type_depart" :options="[
                   { label: 'Interne', value: 'interne' },
                   { label: 'Externe', value: 'externe' },
@@ -54,7 +54,7 @@
               <!-- Upload et Type de Document -->
               <div class="grid grid-cols-1 gap-4 pt-4 border-t border-gray-100">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Pièce jointe *</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Pièce jointe <span class="text-red-600">*</span> </label>
                   <div class="relative">
                     <input ref="fileInput" type="file" @change="handleFileChange"
                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden" />
@@ -71,7 +71,7 @@
 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Type de document *
+                    Type de document <span class="text-red-600">*</span> 
                   </label>
                   <USelectMenu v-model="selectedDocumentType" :options="filteredDocumentTypes"
                     option-attribute="libelle" placeholder="Rechercher un type..." searchable
@@ -96,7 +96,7 @@
                   </p>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Date de départ *</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Date de départ <span class="text-red-600">*</span> </label>
                   <UInput v-model="form.date_depart" type="date" class="w-full h-12" />
                 </div>
               </div>
@@ -105,38 +105,38 @@
               <div class="pt-4 border-t border-gray-100 space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Numéro d'enregistrement *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Numéro d'enregistrement <span class="text-red-600">*</span> </label>
                     <UInput v-model="form.numero_enreg" placeholder="Numéro d'enregistrement" class="w-full h-12" />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Date d'enregistrement *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date d'enregistrement <span class="text-red-600">*</span> </label>
                     <UInput v-model="form.date_enreg" type="date" class="w-full h-12" />
                   </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Référence *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Référence <span class="text-red-600">*</span> </label>
                     <UInput v-model="form.reference" placeholder="Référence du document" class="w-full h-12" />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Date du courrier *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date du courrier <span class="text-red-600">*</span> </label>
                     <UInput v-model="form.date_courier" type="date" class="w-full h-12" />
                   </div>
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Objet *</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Objet <span class="text-red-600">*</span> </label>
                   <UTextarea :rows="3" size="lg" v-model="form.objet" placeholder="Objet du courrier" required />
                 </div>
 
-                <div class="flex items-center space-x-4">
+                <!-- <div class="flex items-center space-x-4">
                   <UCheckbox v-model="form.large_diffusion" label="Large diffusion" />
-                </div>
+                </div> -->
 
                 <!-- ── Initiateurs : mode création ── -->
                 <div v-if="!isReplyMode">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Initiateurs *</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Initiateurs <span class="text-red-600">*</span> </label>
                   <USelectMenu v-model="selectedInitiateurs" :options="utilisateurs" option-attribute="display_name"
                     placeholder="Rechercher un initiateur..." class="w-full" multiple searchable
                     searchable-placeholder="Nom, prénom ou entité..." :loading="loadingUsers"

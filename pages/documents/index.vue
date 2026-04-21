@@ -7,7 +7,7 @@
     <AllCourriers v-else-if="isReady && isSA()" :entite-id="selectedFunction?.id" />
 
     <!-- Autres : mes affectations -->
-    <AffectationsListe v-else-if="isReady && selectedFunction" />
+    <MyDocuments v-else-if="isReady && selectedFunction" />
 
     <div v-else-if="!isReady" class="flex items-center justify-center min-h-[400px]">
       <div class="text-center">
@@ -37,7 +37,7 @@ import { useAuth } from '~/composables/auth/useAuth'
 const AllCourriers = defineAsyncComponent(() =>
   import('~/components/documents/AllCourriers.vue')
 )
-const AffectationsListe = defineAsyncComponent(() =>
+const MyDocuments = defineAsyncComponent(() =>
   import('~/components/documents/MyDocuments.vue')
 )
 
