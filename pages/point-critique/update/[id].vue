@@ -228,7 +228,7 @@
 
 <script setup>
 useHead({
-  title: "Modification d'un Point Critique - Sagar Revolution",
+  title: "Modification d'un Point Critique - SAGA",
 });
 
 const route = useRoute()

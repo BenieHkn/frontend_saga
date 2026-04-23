@@ -8,7 +8,7 @@ import TypeDocumentDash from '~/components/type_document/TypeDocumentDash.vue';
 
 // Configuration du titre de la page
 useHead({
-  title: 'Type de document - Saga Revolution',
+  title: 'Type de document - Saga',
 })
 </script>
 

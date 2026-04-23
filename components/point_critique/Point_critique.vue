@@ -137,7 +137,7 @@ import Swal from 'sweetalert2'
 const config = useRuntimeConfig()
 
 useHead({
-  title: "Points Critiques - Sagar Revolution",
+  title: "Points Critiques - Saga",
 });
 
 // --- Configuration colonnes ---

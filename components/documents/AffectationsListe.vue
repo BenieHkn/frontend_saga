@@ -35,7 +35,7 @@
   <!-- DataTablePaginate -->
   <DataTablePaginate :loading="loading" :data="affectationData" :columns="columns" :selectable="false"
     :default-sort-column="null" :show-row-numbers="true" :show-actions="true" :default-actions="[]"
-    :items-per-page-options="[10, 25, 50, 100]" :default-items-per-page="25"
+    :items-per-page-options="[10, 20, 50, 100]" :default-items-per-page="20"
     :left-aligned-columns="['objet_courrier', 'instructions', 'reference_courrier', 'emetteur', 'destinataire']"
     :external-pagination="true" :external-total="total" :external-page="currentPage" :external-last-page="totalPages"
     :external-per-page="perPage" @search-change="onSearchChange" @page-change="onPageChange"
@@ -524,11 +524,12 @@ const { isSecDir, getDirecteurEntiteUserId } = useAuth()
 const config = useRuntimeConfig()
 const toast  = useToast()
 
-useHead({ title: 'Documents reçus - Sagar Revolution' })
+useHead({ title: 'Documents reçus - Saga' })
 
 // ── Colonnes ──────────────────────────────────────────────────────────────────
 const columns = [
   { key: 'reference_courrier', label: 'Référence du Courrier', visible: true,  inputPlaceholder: 'Réf...', showLabel: false },
+  { key: 'numero_enreg',       label: "Enr.",           visible: true,   showLabel: false },
   { key: 'objet_courrier',     label: 'Objet',                 visible: true,  showLabel: false },
   { key: 'doc_courrier',       label: 'Document',              visible: false, type: 'document', filterable: false },
   { key: 'structure',          label: 'Structure',             visible: true,  filterable: false, showLabel: false },
@@ -550,7 +551,7 @@ const error           = ref(null)
 const currentPage     = ref(1)
 const totalPages      = ref(1)
 const total           = ref(0)
-const perPage         = ref(25)
+const perPage         = ref(20)
 const isResponsable   = ref(false)
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
@@ -576,6 +577,7 @@ const cloturingId       = ref(null)
 const defaultFilters = () => ({
   search:             '',
   reference_courrier: '',
+  numero_enreg:       '',
   objet_courrier:     '',
   emetteur:           '',
   date_affect:        '',
@@ -728,6 +730,7 @@ const loadReponseData = async (reponseId) => {
       service_emis: doc?.service_emis        || null,
       rawUrl:       (rawUrl && rawUrl !== 'Inconnu') ? rawUrl : null,
       rawDateEnreg: doc?.document?.date_enreg || null,
+      numero_enreg: doc?.document?.numero_enreg || '',
     }
   } catch (e) {
     reponseData.value = null
@@ -763,6 +766,7 @@ const transformerDonneesAPI = (reponseAPI) => {
       id:                 affectation.id,
       courrier_id:        affectation.courrier_arrive_id || null,
       reference_courrier: affectation?.courrier_arrive?.document?.reference || '',
+      numero_enreg:       affectation?.courrier_arrive?.document?.numero_enreg || '',
       objet_courrier:     affectation?.courrier_arrive?.document?.objet      || '',
       doc_courrier:       (rawUrl && rawUrl !== 'Inconnu') ? rawUrl : '',
       date_affect:        formatDate(affectation.date_affect),
@@ -807,6 +811,7 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
     const f = searchFilters.value
     if (f.search)             params.append('search',             f.search)
     if (f.reference_courrier) params.append('reference_courrier', f.reference_courrier)
+    if (f.numero_enreg)       params.append('numero_enreg',       f.numero_enreg)
     if (f.objet_courrier)     params.append('objet_courrier',     f.objet_courrier)
     if (f.emetteur)           params.append('emetteur',           f.emetteur)
     if (f.date_affect)        params.append('date_affect',        f.date_affect)
@@ -818,6 +823,7 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
 
     const c = columnFilters.value
     if (!f.reference_courrier && c.reference_courrier) params.append('reference_courrier', c.reference_courrier)
+    if (!f.numero_enreg       && c.numero_enreg)       params.append('numero_enreg', c.numero_enreg)
     if (!f.objet_courrier     && c.objet_courrier)     params.append('objet_courrier',     c.objet_courrier)
     if (!f.emetteur           && c.emetteur)           params.append('emetteur',           c.emetteur)
 

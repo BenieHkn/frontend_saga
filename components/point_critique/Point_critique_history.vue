@@ -346,7 +346,7 @@ import { useApi } from '~/composables/useApi'
 import { ref, computed, watch } from 'vue'
 
 useHead({
-  title: "Assignations Points Critiques - Sagar Revolution",
+  title: "Assignations Points Critiques - SAGA",
 });
 
 // États

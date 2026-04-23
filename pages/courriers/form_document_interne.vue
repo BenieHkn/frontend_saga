@@ -218,7 +218,7 @@ import { useFormDocumentInterne } from "../../composables/courriers/useFormDocum
 import ToastComponent from "../../components/ToastComponent.vue"
 
 useHead({
-    title: "Nouveau Document Interne - Sagar Revolution",
+    title: "Nouveau Document Interne - SAGA",
 });
 
 // ✅ Import des composables

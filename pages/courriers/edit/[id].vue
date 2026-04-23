@@ -197,7 +197,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 
-useHead({ title: 'Modifier un Courrier Arrivé - Sagar Revolution' })
+useHead({ title: 'Modifier un Courrier Arrivé - SAGA' })
 
 const config = useRuntimeConfig()
 const toast = useToast()

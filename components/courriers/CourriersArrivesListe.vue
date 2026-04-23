@@ -429,27 +429,27 @@
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
           <button
-            v-if="!isAdmin() && !item._raw?.document?.reponses?.length"
+            v-if="!isAdmin() && !isDCCIQ() && !item._raw?.document?.reponses?.length"
             @click="handleQuickAssign(item.id)"
             title="Affecter ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
           <div
-            v-else-if="!isAdmin() && item._raw?.document?.reponses?.length"
+            v-else-if="!isAdmin() && !isDCCIQ() && item._raw?.document?.reponses?.length"
             title="Ce courrier a déjà une réponse — affectation non disponible"
             class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-md cursor-not-allowed">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
           </div>
           <button
-            v-if="!item._raw?.document?.reponses?.length && !isAdmin()"
+            v-if="!item._raw?.document?.reponses?.length && !isAdmin() &&  !isDCCIQ() && !isDG()"
             @click="handleReply(item)"
             title="Répondre au courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 transition-all group">
             <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
           </button>
           <div
-            v-else-if="!isAdmin()"
+            v-else-if="!isAdmin() &&  !isDCCIQ() && !isDG()"
             title="Ce courrier a déjà une réponse"
             class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-500 border border-green-100 rounded-md cursor-default">
             <Icon name="i-heroicons-check-circle" class="w-4 h-4" />
@@ -486,7 +486,7 @@ const props = defineProps({
 const store          = useAffectationsStore()
 const courriersStore = useCourriersStore()
 const config         = useRuntimeConfig()
-const { isAdmin, isSP, isSA } = useAuth()
+const { isAdmin, isDCCIQ, isDG } = useAuth()
 
 // ── État table ────────────────────────────────────────────────────────────────
 const courriers      = ref([])

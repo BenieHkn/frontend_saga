@@ -257,7 +257,7 @@
 
 <script setup>
 useHead({
-  title: "Nouveau Utilisateur - Sagar Revolution",
+  title: "Nouveau Utilisateur - SAGA",
 });
 
 // ✅ DÉCLARATION DES ÉTATS

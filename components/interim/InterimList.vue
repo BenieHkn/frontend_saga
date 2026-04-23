@@ -275,7 +275,7 @@ import DataTable from '~/components/DataTable.vue'
 import { ref, computed, watch } from 'vue'
 
 useHead({
-  title: "Intérims - Sagar Revolution",
+  title: "Intérims - Saga",
 });
 
 const showEditModal = ref(false)

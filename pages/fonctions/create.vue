@@ -201,7 +201,7 @@
 
 <script setup>
 useHead({
-  title: "Nouvelle Fonction - Sagar Revolution",
+  title: "Nouvelle Fonction - SAGA",
 });
 
 // ✅ ÉTATS

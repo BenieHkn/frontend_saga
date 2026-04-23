@@ -290,7 +290,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useCourriersStore } from '~/stores/courriers'
 
 useHead({
-  title: "Courrier Départ - Sagar Revolution",
+  title: "Courrier Départ - SAGA",
 })
 
 const toast = useToast()

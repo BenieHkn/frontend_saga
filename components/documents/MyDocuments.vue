@@ -38,7 +38,7 @@ import CourriersVisibles from '~/components/documents/CourriersVisibles.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import AppTabs from '~/components/AppTabs.vue'
 
-useHead({ title: 'Mes Documents - Sagar Revolution' })
+useHead({ title: 'Mes Documents - SAGA' })
 
 const tabList = ref([
   { id: 'affectations', label: 'Documents reçus', icon: 'i-heroicons-inbox', count: null },

@@ -199,7 +199,7 @@
 
 <script setup>
 useHead({
-  title: "Nouveau Courrier Arrivée - Sagar Revolution",
+  title: "Nouveau Courrier Arrivée - SAGA",
 });
 
 const config = useRuntimeConfig()

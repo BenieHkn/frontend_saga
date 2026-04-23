@@ -494,7 +494,7 @@ import Pagination from '~/components/Pagination.vue';
 import Swal from 'sweetalert2';
 
 useHead({
-  title: "Liste des Affectations - Sagar Revolution",
+  title: "Liste des Affectations - SAGA",
 });
 
 // ============================================================================

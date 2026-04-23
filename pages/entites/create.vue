@@ -313,7 +313,7 @@
 
 <script setup>
 useHead({
-  title: "Nouvelle Entité - Sagar Revolution",
+  title: "Nouvelle Entité - SAGA",
 });
 
 // ✅ ÉTATS

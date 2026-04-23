@@ -8,7 +8,7 @@ import Permissions from '~/components/permissions/Permissions.vue';
 
 // Configuration du titre de la page
 useHead({
-  title: 'Permissions - Saga Revolution',
+  title: 'Permissions - Saga',
 })
 </script>
 

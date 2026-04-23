@@ -344,7 +344,7 @@
 import { ref, computed, onUnmounted } from 'vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
 
-useHead({ title: "Rattachement de Courriers - Sagar Revolution" })
+useHead({ title: "Rattachement de Courriers - SAGA" })
 
 const authToken = ref('')
 const toast     = useToast()

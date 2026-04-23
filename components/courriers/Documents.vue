@@ -445,14 +445,14 @@
 
             <!-- Affecter — grisé si réponse déjà envoyée -->
             <button
-              v-if="!isAdmin() && !item.a_reponse"
+              v-if="!isAdmin() && !item.a_reponse && !isDCCIQ()"
               @click="handleQuickAssign(item.courrier_arrive_id)"
               title="Affecter ce courrier"
               class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
               <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
             </button>
             <div
-              v-else-if="!isAdmin() && item.a_reponse"
+              v-else-if="!isAdmin() && item.a_reponse && !isDCCIQ()"
               title="Ce courrier a déjà une réponse — affectation non disponible"
               class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-md cursor-not-allowed">
               <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
@@ -460,30 +460,30 @@
 
             <!-- Répondre — grisé si réponse déjà envoyée -->
             <button
-              v-if="!item.a_reponse && !isAdmin()"
+              v-if="!item.a_reponse && !isAdmin() && !isDCCIQ() && !isDG()"
               @click="handleReply(item)"
               title="Répondre au courrier"
               class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 transition-all group">
               <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
             </button>
             <div
-              v-else-if="item.a_reponse && !isAdmin()"
+              v-else-if="item.a_reponse && !isAdmin() && !isDCCIQ() && !isDG()"
               title="Ce courrier a déjà une réponse"
               class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-500 border border-green-100 rounded-md cursor-default">
               <Icon name="i-heroicons-check-circle" class="w-4 h-4" />
             </div>
 
+            <!-- Actions admin -->
+            <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier"
+              class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
+              <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
+            </button>
+            <button v-if="isAdmin()" @click="onDelete(item)" title="Supprimer"
+              class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 transition-all group">
+              <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
+            </button>
           </template>
 
-          <!-- Actions admin -->
-          <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
-            <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
-          </button>
-          <button v-if="isAdmin()" @click="onDelete(item)" title="Supprimer"
-            class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 transition-all group">
-            <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
-          </button>
 
         </div>
       </template>
@@ -509,7 +509,7 @@ const props = defineProps({
 const store          = useAffectationsStore()
 const courriersStore = useCourriersStore()
 const config         = useRuntimeConfig()
-const { isAdmin }    = useAuth()
+const { isAdmin, isDCCIQ, isDG }    = useAuth()
 
 // ── État table ────────────────────────────────────────────────────────────────
 const courriers      = ref([])

@@ -63,7 +63,7 @@ const goTo = (ordre) => {
   if (process.client) {
     localStorage.setItem("currentOrdreDuJour", JSON.stringify(ordre));
   }
-  navigateTo(`/ordres-du-jour/${ordre.id}`);
+  navigateTo(`/ordres_du_jour/${ordre.id}`);
 };
 
 // ── Statut ────────────────────────────────────────────────────────────────────

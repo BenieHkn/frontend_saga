@@ -165,6 +165,6 @@ const saveProfile = () => {
 }
 
 useHead({
-  title: 'Profile - Sagar Revolution'
+  title: 'Profile - SAGA '
 })
 </script>

@@ -54,7 +54,7 @@ import AffectationsSummaryBar from '~/components/affectations/AffectationsSummar
 import PageHeader from '~/components/PageHeader.vue'
 
 useHead({
-  title: 'Nouvelle Affectation - Sagar Revolution',
+  title: 'Nouvelle Affectation - SAGA',
 })
 
 const store = useAffectationsStore()

@@ -346,7 +346,7 @@ const entiteId = route.params.id
 const config = useRuntimeConfig()
 
 useHead({
-  title: "Modification Entité - Sagar Revolution",
+  title: "Modification Entité - SAGA",
 });
 
 // ✅ ÉTATS

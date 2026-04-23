@@ -533,7 +533,7 @@ const { getEmetteurId, isAdmin: _isAdmin, getUser } = useAuth()
 
 const isAdmin = computed(() => process.client ? _isAdmin() : false)
 
-useHead({ title: 'Affectations - Sagar Revolution' })
+useHead({ title: 'Affectations - Saga' })
 
 // ── État table ────────────────────────────────────────────────────────────────
 const tableData      = ref([])

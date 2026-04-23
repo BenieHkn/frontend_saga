@@ -50,7 +50,7 @@ import { useAuth } from '~/composables/auth/useAuth'
 const { isSP, isSA, isDG } = useAuth()
 
 useHead({
-  title: 'Affectations et Transferts - Sagar Revolution',
+  title: 'Affectations et Transferts - SAGA ',
 })
 
 const allTabList = ref([

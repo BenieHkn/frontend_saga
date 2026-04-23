@@ -279,24 +279,14 @@
       <template #cell-ref_depart="{ value, item }">
         <div class="w-full">
           <button
-            v-if="item._raw?.reponse?.url && item._raw.reponse.url !== 'Inconnu'"
             @click="viewDetails(item)"
             :disabled="openingDocumentId === `${item.id}-depart`"
             class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
             :title="`Ouvrir le document ${value}`">
-            <Icon
-              :name="openingDocumentId === `${item.id}-depart` ? 'i-heroicons-arrow-path' : 'i-heroicons-document-text'"
-              class="w-3.5 h-3.5 shrink-0"
-              :class="openingDocumentId === `${item.id}-depart` ? 'animate-spin' : 'group-hover:scale-110 transition-transform'" />
+            
             <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
             <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
           </button>
-          <span v-else
-            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
-            :title="value">
-            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
-            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
-          </span>
         </div>
       </template>
 
@@ -370,7 +360,7 @@ import { ref, onMounted } from 'vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
 import Swal from 'sweetalert2'
 
-useHead({ title: "Rattachements de Courriers - Sagar Revolution" })
+useHead({ title: "Rattachements de Courriers - SAGA" })
 
 const config = useRuntimeConfig()
 

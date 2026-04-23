@@ -1,20 +1,7 @@
 <template>
   <div>
     <!-- DG et SP : tous les courriers -->
-    <AllCourriers v-if="isReady && (isSP() || isDG() || isAdmin())" />
-
-    <!-- SA : même interface mais filtrée par son entité -->
-    <AllCourriers v-else-if="isReady && isSA()" :entite-id="selectedFunction?.id" />
-
-    <!-- Autres : mes affectations -->
-    <MyDocuments v-else-if="isReady && selectedFunction" />
-
-    <div v-else-if="!isReady" class="flex items-center justify-center min-h-[400px]">
-      <div class="text-center">
-        <Icon name="i-heroicons-arrow-path" class="w-12 h-12 text-blue-500 mx-auto mb-4 animate-spin" />
-        <p class="text-sm text-gray-600">Chargement...</p>
-      </div>
-    </div>
+    <AllCourriers v-if="isReady && voitTousCourriers()" />
 
     <div v-else class="flex items-center justify-center min-h-[400px]">
       <div class="text-center">
@@ -37,11 +24,8 @@ import { useAuth } from '~/composables/auth/useAuth'
 const AllCourriers = defineAsyncComponent(() =>
   import('~/components/documents/AllCourriers.vue')
 )
-const MyDocuments = defineAsyncComponent(() =>
-  import('~/components/documents/MyDocuments.vue')
-)
 
-const { isSA, isSP, isDG, isAdmin } = useAuth()
+const { voitTousCourriers, isAdmin } = useAuth()
 
 const selectedFunction = ref(null)
 const isReady = ref(false)

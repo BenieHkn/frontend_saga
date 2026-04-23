@@ -224,7 +224,7 @@
     <!-- DataTablePaginate -->
     <DataTablePaginate :loading="loading" :data="courrierData" :columns="columns" :selectable="false"
         :show-row-numbers="true" :default-sort-column="null" :show-actions="true" :default-actions="[]"
-        :items-per-page-options="[10, 25, 50, 100]" :default-items-per-page="25"
+        :items-per-page-options="[10, 20, 50, 100]" :default-items-per-page="20"
         :left-aligned-columns="['objet', 'destinataire', 'service_emis']" :external-pagination="true"
         :external-total="total" :external-page="currentPage" :external-last-page="totalPages"
         :external-per-page="perPage" @search-change="onSearchChange" @page-change="onPageChange"
@@ -388,7 +388,7 @@ const error = ref(null)
 const currentPage = ref(1)
 const totalPages = ref(1)
 const total = ref(0)
-const perPage = ref(25)
+const perPage = ref(20)
 
 // ── Options filtres dynamiques ────────────────────────────────────────────────
 const filterOptions = ref({ types_depart: [] })

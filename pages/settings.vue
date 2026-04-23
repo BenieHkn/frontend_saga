@@ -237,7 +237,7 @@ const tabs = [
 ]
 
 const settings = ref({
-  appName: 'Sagar Revolution',
+  appName: 'SAGA',
   defaultLanguage: 'en',
   maintenanceMode: false,
   sessionTimeout: 30,
@@ -265,6 +265,6 @@ const saveSettings = () => {
 }
 
 useHead({
-  title: 'Settings - Sagar Revolution'
+  title: 'Settings - SAGA'
 })
 </script>

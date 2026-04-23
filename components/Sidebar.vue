@@ -21,7 +21,54 @@
         </div>
       </NuxtLink>
 
-      <!-- Configuration — admin uniquement -->
+      <!-- ── Audit (Statistiques + Courriers) ── -->
+      <div v-if="isDCCIQ() || isAdmin()" class="pt-2">
+      <!-- <div v-if="voitStats()" class="pt-2"> -->
+        <button @click="toggleAudit"
+          class="flex items-center justify-between w-full px-4 py-3.5 rounded-xl transition-all duration-200"
+          :class="[
+            isAuditRouteActive
+              ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg'
+              : 'text-gray-700 hover:bg-emerald-800 hover:text-white',
+          ]">
+          <div class="flex items-center">
+            <Icon name="heroicons:magnifying-glass-circle-20-solid" class="h-6 w-6 shrink-0" />
+            <span v-if="isExpanded" class="ml-4 font-bold tracking-wide">Audit</span>
+          </div>
+          <Icon
+            v-if="isExpanded"
+            :name="auditMenuOpen ? 'heroicons:chevron-up' : 'heroicons:chevron-down'"
+            class="h-4 w-4 opacity-70"
+          />
+          <!-- Tooltip collapsed -->
+          <div v-if="!isExpanded"
+            class="absolute left-16 bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+            Audit
+          </div>
+        </button>
+
+        <!-- Sous-menus Audit -->
+        <div v-if="auditMenuOpen && isExpanded" class="ml-10 space-y-2 mt-2 animate-slide-down">
+          <NuxtLink to="/audit/stats"
+            class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+            :class="route.path === '/audit/stats' || route.path.startsWith('/audit/stats/')
+              ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg'
+              : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+            <Icon name="heroicons:chart-bar-20-solid" class="h-4 w-4 shrink-0" />
+            Statistiques
+          </NuxtLink>
+          <NuxtLink to="/audit/courriers"
+            class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+            :class="route.path === '/audit/courriers' || route.path.startsWith('/audit/courriers/')
+              ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg'
+              : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+            <Icon name="heroicons:envelope-open-20-solid" class="h-4 w-4 shrink-0" />
+            Courriers
+          </NuxtLink>
+        </div>
+      </div>
+
+      <!-- ── Configuration — admin uniquement ── -->
       <div v-if="peutVoirConfig()" class="pt-4 mt-4 border-t border-gray-200">
         <button @click="toggleSettings"
           class="flex items-center justify-between w-full px-4 py-3.5 text-gray-700 hover:text-gray-900 rounded-xl hover:bg-gray-100 transition-all">
@@ -49,24 +96,15 @@
             :class="route.path === '/interim' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
             Intérim
           </NuxtLink>
-          <NuxtLink to="/type-document"
-            class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+          <NuxtLink to="/type-document" class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors"
             :class="route.path === '/type-document' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
             Types de documents
           </NuxtLink>
-          <!-- <NuxtLink to="/modeles-document"
-            class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors"
-            :class="route.path === '/modeles-document' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
-            Modèles de documents
-          </NuxtLink> -->
-          <NuxtLink to="/permissions"
-            class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+          <NuxtLink to="/permissions" class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors"
             :class="route.path === '/permissions' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
             Permissions
           </NuxtLink>
-
-          <NuxtLink to="/membres"
-            class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+          <NuxtLink to="/membres" class="block text-sm px-3 py-2 rounded-lg font-bold transition-colors"
             :class="route.path === '/membres' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
             Membres CODIR
           </NuxtLink>
@@ -79,8 +117,7 @@
       class="absolute -right-5 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-[50] transition-all duration-500 group">
       <div
         class="absolute inset-0 rounded-full transition-all duration-300 bg-gradient-to-br from-emerald-700 to-blue-800 backdrop-blur-md border border-white/40 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] group-hover:scale-110 group-hover:bg-emerald-500/80">
-        <div class="absolute inset-[2px] rounded-full bg-gradient-to-tr from-emerald-400/20 to-white/30 opacity-60">
-        </div>
+        <div class="absolute inset-[2px] rounded-full bg-gradient-to-tr from-emerald-400/20 to-white/30 opacity-60"></div>
       </div>
       <Icon :name="isExpanded ? 'heroicons:chevron-left-20-solid' : 'heroicons:chevron-right-20-solid'"
         class="h-6 w-6 text-white relative z-10 drop-shadow-sm" />
@@ -104,18 +141,26 @@ const {
   isSP,
   isSA,
   isDG,
+  isDCCIQ, 
+  isAdmin
 } = useAuth()
 
-const isExpanded = ref(true)
+const isExpanded       = ref(true)
 const settingsMenuOpen = ref(false)
+const auditMenuOpen    = ref(false)
 const emit = defineEmits(['sidebar-toggle'])
 
-//pour définir l'item active
-const isItemActive = (item) => {
-  return route.path === item.path || route.path.startsWith(item.path + '/')
-}
+// ── Item actif ────────────────────────────────────────────────────────────────
+const isItemActive = (item) =>
+  route.path === item.path || route.path.startsWith(item.path + '/')
 
-// ── Visibilité des items ──────────────────────────────────────────────────────
+// ── Routes Audit ──────────────────────────────────────────────────────────────
+const auditRoutes = ['/stats', '/audit/courriers']
+const isAuditRouteActive = computed(() =>
+  auditRoutes.some(p => route.path === p || route.path.startsWith(p + '/'))
+)
+
+// ── Menu items (sans Statistiques — géré séparément sous Audit) ───────────────
 const peutVoirPreArchivage = computed(() => isSP() || isSA() || peutVoirConfig())
 const peutVoirAffectations = computed(() => !isAgent())
 
@@ -153,12 +198,6 @@ const allMenuItems = computed(() => [
     visible: peutVoirCodir(),
   },
   {
-    name: 'Statistiques',
-    path: '/stats',
-    icon: 'heroicons:chart-bar-20-solid',
-    visible: voitStats(),
-  },
-  {
     name: 'Pré-Archivage',
     path: '/archivage',
     icon: 'heroicons:archive-box-20-solid',
@@ -166,9 +205,7 @@ const allMenuItems = computed(() => [
   },
 ])
 
-const menuItems = computed(() =>
-  allMenuItems.value.filter(item => item.visible)
-)
+const menuItems = computed(() => allMenuItems.value.filter(item => item.visible))
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 const toggleSidebar = () => {
@@ -181,18 +218,25 @@ const toggleSettings = () => {
   settingsMenuOpen.value = !settingsMenuOpen.value
 }
 
-// ── Ouvrir config si on est sur une route config ──────────────────────────────
+const toggleAudit = () => {
+  if (!isExpanded.value) toggleSidebar()
+  auditMenuOpen.value = !auditMenuOpen.value
+}
+
+// ── Auto-ouvrir les menus selon la route active ───────────────────────────────
 const isSettingsRouteActive = computed(() =>
-  ['/entites', '/utilisateurs', '/point-critique', '/interim', 'membres_codir'].some(
-    path => route.path === path
+  ['/entites', '/utilisateurs', '/point-critique', '/interim', '/membres'].some(
+    p => route.path === p
   )
 )
 
 watch(isSettingsRouteActive, (isActive) => {
-  if (isActive && !settingsMenuOpen.value) {
-    settingsMenuOpen.value = true
-  }
+  if (isActive && !settingsMenuOpen.value) settingsMenuOpen.value = true
 })
+
+watch(isAuditRouteActive, (isActive) => {
+  if (isActive && !auditMenuOpen.value) auditMenuOpen.value = true
+}, { immediate: true })
 
 onMounted(() => {
   if (window.innerWidth < 1024) isExpanded.value = false

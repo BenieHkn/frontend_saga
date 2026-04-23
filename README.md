@@ -1,4 +1,4 @@
-# Sagar Revolution
+# SAGA
 update 31/03/2026 14h50
 A modern admin dashboard template inspired by DeskApp, built with Nuxt.js, NuxtUI, and Tailwind CSS.
 
@@ -35,7 +35,7 @@ A modern admin dashboard template inspired by DeskApp, built with Nuxt.js, NuxtU
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd sagar_revolution_by_julio
+cd saga_revolution_by_julio
 ```
 
 2. Install dependencies:
