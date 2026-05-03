@@ -779,7 +779,7 @@ const transformerDonneesAPI = (reponseAPI) => {
       emetteur:           emetteurFormate,
       destinataire:       destinataireFormate,
       // ✅ Bloquant : courrier déjà répondu
-      a_reponse:  !!(affectation?.courrier_arrive?.document?.reponses?.length),
+      a_reponse:  !!(affectation?.courrier_arrive?.document?.reponse),
       // ✅ Bloquant : affectation clôturée
       is_cloture: affectation.statut === 'cloture',
       _raw: affectation,
@@ -876,8 +876,8 @@ const handleViewDetails = async (item) => {
   detailsOpen.value         = true
 
   if (item.a_reponse) {
-    const reponses  = item._raw?.courrier_arrive?.document?.reponses || []
-    const reponseId = reponses[0]?.reponse_id
+    const reponse = item._raw?.courrier_arrive?.document?.reponse
+    const reponseId = reponse?.reponse_id
     if (reponseId) await loadReponseData(reponseId)
   }
 }

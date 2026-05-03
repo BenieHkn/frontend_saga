@@ -41,6 +41,8 @@ const MyDocuments = defineAsyncComponent(() =>
   import('~/components/documents/MyDocuments.vue')
 )
 
+useHead({ title: "Documents - SAGA" })
+
 const { isSA, isSP, isDG, isAdmin } = useAuth()
 
 const selectedFunction = ref(null)

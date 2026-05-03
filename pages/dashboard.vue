@@ -14,7 +14,7 @@
 
       <div class="flex items-end">
         <!-- Dropdown Nouveau — DG, SA, SP -->
-        <div v-if="isDG() || isSA() || isSP()" class="relative" ref="dropdownRef">
+        <div v-if="isSA() || isSP()" class="relative" ref="dropdownRef">
           <UBadge color="blue" variant="soft" size="lg" class="ml-auto cursor-pointer"
             @click="dropdownOpen = !dropdownOpen">
             <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
@@ -104,6 +104,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '~/composables/auth/useAuth'
 import AffectationsListe from '~/components/documents/AffectationsListe.vue'
+
+useHead({ title: "Tableau de bord - SAGA" })
 
 const props = defineProps({
   entiteId: { type: Number, default: null }

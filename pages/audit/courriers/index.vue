@@ -21,6 +21,8 @@
 import { ref, onMounted } from 'vue'
 import { useAuth } from '~/composables/auth/useAuth'
 
+useHead({ title: "Courriers - SAGA" })
+
 const AllCourriers = defineAsyncComponent(() =>
   import('~/components/documents/AllCourriers.vue')
 )

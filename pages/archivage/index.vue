@@ -567,6 +567,8 @@ import { ref, computed, watch, onMounted } from 'vue'
 import DataTablePaginate from '~/components/DataTablePaginate.vue'
 import SearchableSelect from '~/components/SearchableSelect.vue'
 
+useHead({ title: "Archivage - SAGA" })
+
 const config = useRuntimeConfig()
 
 // ── Toggle pending / archived ─────────────────────────────────────────────

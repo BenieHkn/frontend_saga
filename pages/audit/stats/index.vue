@@ -221,6 +221,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
+useHead({ title: "Statistiques - SAGA" })
+
 const config = useRuntimeConfig()
 const loading = ref(true)
 const exportLoading = ref(false)

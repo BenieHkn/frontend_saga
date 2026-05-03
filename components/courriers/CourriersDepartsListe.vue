@@ -361,6 +361,10 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 transition-all group">
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
+          <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier"
+            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
+            <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
+          </button>
           <button v-if="isAdmin()" @click="handleDelete(item)" :disabled="deletingId === item.id"
             title="Supprimer ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 hover:text-red-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
@@ -525,6 +529,7 @@ const columns = [
   { key: 'confidentiel', label: 'Confidentiel', visible: false, filterable: false },
 ]
 
+const onEdit = (item) => navigateTo(`/courriers/form_courrier_depart_edit/${item.id}`)
 // ── Modal détails ─────────────────────────────────────────────────────────────
 const detailsOpen = ref(false)
 const selectedCourrier = ref(null)

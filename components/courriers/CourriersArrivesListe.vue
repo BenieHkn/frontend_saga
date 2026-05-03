@@ -38,7 +38,7 @@
                   'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.priority?.toLowerCase() === 'important',
                   'bg-sky-50 text-sky-700 border-sky-200':       !selectedCourrier.priority || selectedCourrier.priority?.toLowerCase() === 'standard',
                 }">{{ selectedCourrier.priority || 'STANDARD' }}</span>
-                <span v-if="selectedCourrier.document?.reponses?.length"
+                <span v-if="selectedCourrier.document?.reponse"
                   class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-50 text-green-700 border border-green-200 ml-1">
                   <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Répondu
                 </span>
@@ -134,7 +134,7 @@
           </section>
 
           <!-- Section réponse -->
-          <section v-if="selectedCourrier.document?.reponses?.length"
+          <section v-if="selectedCourrier.document?.reponse"
             class="bg-white rounded-xl border border-emerald-200 overflow-hidden">
 
             <!-- Header avec bouton document réponse -->
@@ -429,27 +429,27 @@
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
           <button
-            v-if="!isAdmin() && !isDCCIQ() && !item._raw?.document?.reponses?.length"
+            v-if="!isAdmin() && !isDCCIQ() && !item._raw?.document?.reponse"
             @click="handleQuickAssign(item.id)"
             title="Affecter ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
           <div
-            v-else-if="!isAdmin() && !isDCCIQ() && item._raw?.document?.reponses?.length"
+            v-else-if="!isAdmin() && !isDCCIQ() && item._raw?.document?.reponse"
             title="Ce courrier a déjà une réponse — affectation non disponible"
             class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-md cursor-not-allowed">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
           </div>
           <button
-            v-if="!item._raw?.document?.reponses?.length && !isAdmin() &&  !isDCCIQ() && !isDG()"
+            v-if="!item._raw?.document?.reponse && !isAdmin() && !isDCCIQ() && !isDG()"
             @click="handleReply(item)"
             title="Répondre au courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 transition-all group">
             <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
           </button>
           <div
-            v-else-if="!isAdmin() &&  !isDCCIQ() && !isDG()"
+            v-else-if="!isAdmin() && !isDCCIQ() && !isDG() && item._raw?.document?.reponse"
             title="Ce courrier a déjà une réponse"
             class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-500 border border-green-100 rounded-md cursor-default">
             <Icon name="i-heroicons-check-circle" class="w-4 h-4" />
@@ -807,9 +807,9 @@ const handleView = async (item) => {
   reponseData.value        = null
   detailsOpen.value        = true
 
-  const reponses = courrier.document?.reponses || []
-  if (reponses.length) {
-    const courierDepartId = reponses[0]?.reponse_id
+  const reponse = courrier.document?.reponse
+  if (reponse) {
+    const courierDepartId = reponse.reponse_id
     if (courierDepartId) await loadReponseData(courierDepartId)
   }
 }
@@ -830,12 +830,17 @@ const loadReponseData = async (documentId) => {
   if (!documentId) return
   loadingReponse.value = true
   try {
-    const authToken  = localStorage.getItem('auth_token') || ''
-    const allDeparts = await $fetch(`${config.public.apiBase}/courriers-departs`, {
+    const authToken = localStorage.getItem('auth_token') || ''
+    const base      = config.public.apiBase.replace(/\/$/, '')
+
+    // Chercher directement par document_id plutôt que charger tous les départs
+    const response = await $fetch(`${base}/courriers-departs?document_id=${documentId}`, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
-    const list = Array.isArray(allDeparts?.data) ? allDeparts.data : []
-    const doc  = list.find(cd => cd.document_id === documentId) || null
+
+    const list = Array.isArray(response?.data) ? response.data : []
+    const doc  = list[0] || null
+
     if (!doc) { reponseData.value = null; return }
 
     const rawUrl = (doc?.document?.url || '').trim()
@@ -848,7 +853,7 @@ const loadReponseData = async (documentId) => {
       type_depart:  doc?.type_depart         || null,
       service_emis: doc?.service_emis        || null,
       rawUrl:       (rawUrl && rawUrl !== 'Inconnu') ? rawUrl : null,
-      rawDateEnreg: doc?.document?.date_enreg || null,  // date ISO pour buildDocumentUrl
+      rawDateEnreg: doc?.document?.date_enreg || null,
     }
   } catch (e) {
     console.error('❌ Erreur chargement réponse:', e)
@@ -857,7 +862,6 @@ const loadReponseData = async (documentId) => {
     loadingReponse.value = false
   }
 }
-
 // ── Handlers actions ──────────────────────────────────────────────────────────
 const handleQuickAssign = (courrierId) => {
   store.selectCourrierFromQuickAction(courrierId)
@@ -866,7 +870,7 @@ const handleQuickAssign = (courrierId) => {
 
 const handleReply = (item) => {
   const courrier = item._raw || item
-  if (courrier.document?.reponses?.length) {
+  if (courrier.document?.reponse) {
     Swal.fire({ title: 'Déjà répondu', text: 'Ce courrier a déjà reçu une réponse.', icon: 'info', confirmButtonColor: '#2563eb' })
     return
   }
@@ -874,7 +878,7 @@ const handleReply = (item) => {
   navigateTo('/courriers/form_courrier_depart')
 }
 
-const onEdit = (item) => navigateTo(`/courriers/edit/${item.id}`)
+const onEdit = (item) => navigateTo(`/courriers/form_courier_arrive_edit/${item.id}`)
 
 const onDelete = async (item) => {
   const result = await Swal.fire({

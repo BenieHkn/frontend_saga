@@ -38,7 +38,7 @@
                   'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.priority?.toLowerCase() === 'important',
                   'bg-sky-50 text-sky-700 border-sky-200':       !selectedCourrier.priority || selectedCourrier.priority?.toLowerCase() === 'standard',
                 }">{{ selectedCourrier.priority || 'STANDARD' }}</span>
-                <span v-if="selectedCourrier.document?.reponses?.length"
+                <span v-if="selectedCourrier.document?.reponse"
                   class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-50 text-green-700 border border-green-200 ml-1">
                   <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Répondu
                 </span>
@@ -134,7 +134,7 @@
           </section>
 
           <!-- Section réponse -->
-          <section v-if="selectedCourrier.document?.reponses?.length"
+          <section v-if="selectedCourrier.document?.reponse"
             class="bg-white rounded-xl border border-emerald-200 overflow-hidden">
 
             <!-- Header avec bouton document réponse -->
@@ -769,9 +769,9 @@ const handleView = async (item) => {
   reponseData.value        = null
   detailsOpen.value        = true
 
-  const reponses = courrier.document?.reponses || []
-  if (reponses.length) {
-    const courierDepartId = reponses[0]?.reponse_id
+  const reponse = courrier.document?.reponse
+  if (reponse) {
+    const courierDepartId = reponse.reponse_id
     if (courierDepartId) await loadReponseData(courierDepartId)
   }
 }

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="min-h-screen bg-slate-50 p-6 font-sans">
     <!-- ── Modal Détails ── -->
     <UModal v-model="detailsOpen" :ui="{ width: 'sm:max-w-5xl' }">
       <div v-if="selectedItem" class="flex flex-col max-h-[90vh] bg-white rounded-xl overflow-hidden">
@@ -8,9 +8,11 @@
         <div class="relative flex items-center justify-between px-6 py-4 shrink-0 overflow-hidden"
           style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%);">
           <div class="absolute inset-0 opacity-10"
-            style="background-image: radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px); background-size: 32px 32px;"></div>
+            style="background-image: radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px); background-size: 32px 32px;">
+          </div>
           <div class="relative flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-inner border border-white/30">
+            <div
+              class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-inner border border-white/30">
               <Icon name="i-heroicons-link" class="w-5 h-5 text-white" />
             </div>
             <div>
@@ -35,9 +37,8 @@
 
           <!-- Section Courrier Arrivée -->
           <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
-
-            <!-- Header avec bouton document arrivée -->
-            <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-slate-100">
+            <div
+              class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-slate-100">
               <div class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded-lg bg-indigo-100 flex items-center justify-center">
                   <Icon name="i-heroicons-inbox-arrow-down" class="w-3.5 h-3.5 text-indigo-600" />
@@ -46,9 +47,7 @@
               </div>
 
               <div v-if="selectedItem._raw?.document?.url && selectedItem._raw.document.url !== 'Inconnu'">
-                <button
-                  v-if="!arriveeFileLoaded && !arriveeFileLoading && !arriveeFileError"
-                  @click="loadArriveeFile"
+                <button v-if="!arriveeFileLoaded && !arriveeFileLoading && !arriveeFileError" @click="loadArriveeFile"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all">
                   <Icon name="i-heroicons-document-arrow-down" class="w-3.5 h-3.5" />
                   Charger le document
@@ -94,8 +93,6 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Preview document arrivée -->
               <div v-if="arriveeFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
                 <DocumentRpreview :file-preview-url="arriveeBlobUrl" height="600px" />
               </div>
@@ -113,9 +110,8 @@
 
           <!-- Section Courrier Départ -->
           <section class="bg-white rounded-2xl border border-emerald-200/80 overflow-hidden shadow-sm">
-
-            <!-- Header avec bouton document départ -->
-            <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+            <div
+              class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
               <div class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center">
                   <Icon name="i-heroicons-paper-airplane" class="w-3.5 h-3.5 text-emerald-600" />
@@ -124,9 +120,7 @@
               </div>
 
               <div v-if="selectedItem._raw?.reponse?.url && selectedItem._raw.reponse.url !== 'Inconnu'">
-                <button
-                  v-if="!departFileLoaded && !departFileLoading && !departFileError"
-                  @click="loadDepartFile"
+                <button v-if="!departFileLoaded && !departFileLoading && !departFileError" @click="loadDepartFile"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all">
                   <Icon name="i-heroicons-document-arrow-down" class="w-3.5 h-3.5" />
                   Charger le document
@@ -172,8 +166,6 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Preview document départ -->
               <div v-if="departFileLoaded" class="mt-2 rounded-xl overflow-hidden border border-emerald-200 shadow-sm">
                 <DocumentRpreview :file-preview-url="departBlobUrl" height="600px" />
               </div>
@@ -196,7 +188,8 @@
                   </p>
                   <p class="text-xs text-slate-800">{{ selectedItem.created_at || '—' }}</p>
                 </div>
-                <div v-if="selectedItem.created_by" class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
+                <div v-if="selectedItem.created_by"
+                  class="p-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all">
                   <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block"></span>Créé par
                   </p>
@@ -216,7 +209,7 @@
     </UModal>
 
     <!-- En-tête -->
-    <div class="flex items-center justify-between mb-6">
+    <!-- <div class="flex items-center justify-between mb-6">
       <h1 class="flex items-center gap-3 text-2xl font-bold text-slate-800">
         <Icon name="i-heroicons-link" class="w-7 h-7 text-blue-600" />
         Rattachements de Courriers
@@ -234,7 +227,18 @@
           </UButton>
         </UBadge>
       </div>
-    </div>
+    </div> -->
+
+    <PageHeader
+      v-if="!isAdmin()"
+      title="Rattachements de Courriers" 
+      subtitle="Gestion des rattachements de courriers"
+      btnText="Nouveau"
+      to="/rattachements/create" />
+    <PageHeader
+      v-else
+      title="Rattachements de Courriers" 
+      subtitle="Gestion des rattachements de courriers" />
 
     <!-- Erreur -->
     <div v-if="error"
@@ -244,71 +248,84 @@
       <button @click="error = null" class="text-lg opacity-60 hover:opacity-100 transition-opacity">✕</button>
     </div>
 
-    <!-- Loader -->
-    <div v-if="loading" class="flex flex-col items-center justify-center py-16 gap-4">
-      <div class="w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
-      <p class="text-sm text-slate-500">Chargement des rattachements...</p>
-    </div>
+    <!-- DataTablePaginate -->
+    <DataTablePaginate
+      :loading="loading"
+      :data="rattachementData"
+      :columns="columns"
+      :selectable="false"
+      :default-sort-column="null"
+      :show-row-numbers="true"
+      :show-actions="true"
+      :default-actions="[]"
+      :items-per-page-options="[10, 20, 50, 100]"
+      :default-items-per-page="20"
+      :left-aligned-columns="['objet_arrivee', 'objet_depart', 'ref_depart', 'ref_arrivee']"
+      :hide-labels-when-input="true"
+      :external-pagination="true"
+      :external-total="total"
+      :external-page="currentPage"
+      :external-last-page="totalPages"
+      :external-per-page="perPage"
+      @search-change="onSearchChange"
+      @page-change="onPageChange"
+      @per-page-change="onPerPageChange"
+      @column-filter-change="onColumnFilterChange"
+      @view="viewDetails"
+      @delete="deleteItem">
 
-    <!-- DataTable -->
-    <DataTable v-else ref="dataTableRef" :default-sort-column="null" :show-row-numbers="true" :data="rattachementData"
-      :columns="columns" :selectable="false" :default-items-per-page="10" :items-per-page-options="[10, 25, 50, 100]"
-      :left-aligned-columns="['objet_arrivee', 'objet_depart', 'ref_depart', 'ref_arrivee']" @view="viewDetails"
-      @delete="deleteItem" @selection-change="handleSelectionChange">
+      <!-- ── Filtres avancés ─────────────────────────────────────────── -->
+      <template #advanced-filters>
+        <div class="space-y-4">
+          <div class="flex flex-wrap gap-3">
+            <div class="flex-1 min-w-[140px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Réf. arrivée</label>
+              <input v-model="searchFilters.ref_arrivee" placeholder="Filtrer..."
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+            </div>
+            <div class="flex-1 min-w-[200px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Objet arrivée</label>
+              <input v-model="searchFilters.objet_arrivee" placeholder="Filtrer..."
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+            </div>
+            <div class="flex-1 min-w-[140px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Réf. départ</label>
+              <input v-model="searchFilters.ref_depart" placeholder="Filtrer..."
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+            </div>
+            <div class="flex-1 min-w-[200px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Objet départ</label>
+              <input v-model="searchFilters.objet_depart" placeholder="Filtrer..."
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+            </div>
+            <div class="flex-1 min-w-[160px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de création (jj/mm/aaaa)</label>
+              <input v-model="searchFilters.date_creation" placeholder="ex: 15/03/2024"
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+            </div>
+          </div>
 
-      <template #advanced-filters="{ filters, onFilter }">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">Date de création</label>
-            <input v-model="filters.created_at" type="date"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              @input="onFilter" />
+          <div v-if="hasActiveFilters" class="flex justify-end">
+            <button @click="resetFilters"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-all">
+              <Icon name="i-heroicons-x-mark" class="w-3.5 h-3.5" />
+              Réinitialiser les filtres
+            </button>
           </div>
         </div>
       </template>
 
-      <template #selection-actions="{ selected }">
-        <button @click="deleteSelected(selected)"
-          class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 transition-all">
-          <Icon name="i-heroicons-trash" class="w-4 h-4" />
-          Supprimer ({{ selected.length }})
-        </button>
-      </template>
-
-      <!-- Référence départ cliquable → Blob -->
-      <template #cell-ref_depart="{ value, item }">
-        <div class="w-full">
-          <button
-            @click="viewDetails(item)"
-            :disabled="openingDocumentId === `${item.id}-depart`"
-            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
-            :title="`Ouvrir le document ${value}`">
-            
-            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
-            <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
-          </button>
-        </div>
-      </template>
-
-      <template #cell-objet_depart="{ value }">
-        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">{{ value }}</span>
-      </template>
-
-      <!-- Référence arrivée cliquable → Blob -->
+      <!-- Référence arrivée cliquable -->
       <template #cell-ref_arrivee="{ value, item }">
         <div class="w-full">
-          <button
-            v-if="item._raw?.document?.url && item._raw.document.url !== 'Inconnu'"
+          <button v-if="item._raw?.document?.url && item._raw.document.url !== 'Inconnu'"
             @click="viewDetails(item)"
-            :disabled="openingDocumentId === `${item.id}-arrivee`"
-            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
-            :title="`Ouvrir le document ${value}`">
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]">
             <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
             <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
           </button>
           <span v-else
-            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
-            :title="value">
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]">
             <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
             <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
           </span>
@@ -316,6 +333,21 @@
       </template>
 
       <template #cell-objet_arrivee="{ value }">
+        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">{{ value }}</span>
+      </template>
+
+      <!-- Référence départ cliquable -->
+      <template #cell-ref_depart="{ value, item }">
+        <div class="w-full">
+          <button @click="viewDetails(item)"
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]">
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+            <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
+          </button>
+        </div>
+      </template>
+
+      <template #cell-objet_depart="{ value }">
         <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">{{ value }}</span>
       </template>
 
@@ -351,56 +383,94 @@
           </UBadge>
         </div>
       </template>
-    </DataTable>
+    </DataTablePaginate>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import DataTablePaginate from '~/components/DataTablePaginate.vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
 import Swal from 'sweetalert2'
+import { useAuth } from '~/composables/auth/useAuth'
+
 
 useHead({ title: "Rattachements de Courriers - SAGA" })
+const { isAdmin } = useAuth()
+
 
 const config = useRuntimeConfig()
 
 // ── Colonnes ──────────────────────────────────────────────────────────────────
 const columns = [
-  { key: "ref_arrivee",   label: "Réf. Arrivée",    visible: true,  width: 'min-w-[150px]', showLabel: false },
-  { key: "objet_arrivee", label: "Objet Arrivée",   visible: true,  width: 'min-w-[250px]', showLabel: false },
-  { key: "doc_arrivee",   label: "Doc. Arrivée",    visible: false, type: 'document', width: 'w-24', showLabel: false },
-  { key: "link",          label: "→",               visible: true,  width: 'w-16', sortable: false, filterable: false },
-  { key: "ref_depart",    label: "Réf. Départ",     visible: true,  width: 'min-w-[150px]', showLabel: false },
-  { key: "objet_depart",  label: "Objet Départ",    visible: true,  width: 'min-w-[250px]', showLabel: false },
-  { key: "doc_depart",    label: "Doc. Départ",     visible: false, type: 'document', width: 'w-24' },
-  { key: "created_at",    label: "Date de création", visible: true, width: 'min-w-[140px]', showLabel: false },
+  { key: "ref_arrivee",   label: "Réf. Arrivée",     visible: true, width: 'min-w-[150px]', showLabel: false },
+  { key: "objet_arrivee", label: "Objet Arrivée",    visible: true, width: 'min-w-[250px]', showLabel: false },
+  { key: "link",          label: "→",                visible: true, width: 'w-16', sortable: false, filterable: false },
+  { key: "ref_depart",    label: "Réf. Départ",      visible: true, width: 'min-w-[150px]', showLabel: false },
+  { key: "objet_depart",  label: "Objet Départ",     visible: true, width: 'min-w-[250px]', showLabel: false },
+  { key: "created_at",    label: "Date de création", visible: true, width: 'min-w-[140px]', showLabel: false, filterable: false },
 ]
 
-// ── État ──────────────────────────────────────────────────────────────────────
+// ── État table ────────────────────────────────────────────────────────────────
 const authToken        = ref('')
 const rattachementData = ref([])
 const loading          = ref(false)
 const error            = ref(null)
-const dataTableRef     = ref(null)
-const toast            = useToast()
+const currentPage      = ref(1)
+const totalPages       = ref(1)
+const total            = ref(0)
+const perPage          = ref(20)
 
-// Modal
+// ── Filtres avancés ───────────────────────────────────────────────────────────
+const defaultFilters = () => ({
+  search:        '',
+  ref_arrivee:   '',
+  objet_arrivee: '',
+  ref_depart:    '',
+  objet_depart:  '',
+  date_creation: '',
+})
+
+const searchFilters    = ref(defaultFilters())
+const columnFilters    = ref({})
+let   columnFilterTimeout = null
+let   searchTimeout       = null
+
+const hasActiveFilters = computed(() =>
+  Object.values(searchFilters.value).some(v => v !== '') ||
+  Object.values(columnFilters.value).some(v => v !== '')
+)
+
+const resetFilters = () => {
+  searchFilters.value = defaultFilters()
+  columnFilters.value = {}
+  currentPage.value   = 1
+  refresh(1, perPage.value)
+}
+
+const onColumnFilterChange = (val) => {
+  columnFilters.value = { ...val }
+  clearTimeout(columnFilterTimeout)
+  columnFilterTimeout = setTimeout(() => {
+    currentPage.value = 1
+    refresh(1, perPage.value)
+  }, 400)
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
 const detailsOpen  = ref(false)
 const selectedItem = ref(null)
 
-// États blob — document arrivée dans la modal
 const arriveeFileLoaded  = ref(false)
 const arriveeFileLoading = ref(false)
 const arriveeFileError   = ref('')
 const arriveeBlobUrl     = ref('')
 
-// États blob — document départ dans la modal
 const departFileLoaded  = ref(false)
 const departFileLoading = ref(false)
 const departFileError   = ref('')
 const departBlobUrl     = ref('')
 
-// Ouverture depuis le tableau
 const openingDocumentId = ref(null)
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
@@ -415,7 +485,6 @@ const guessMimeType = (filename) => {
   return { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' }[ext] || ''
 }
 
-// ── Construction URL API fichier ──────────────────────────────────────────────
 const buildDocumentUrl = (rawUrl, dateEnreg) => {
   if (!rawUrl || rawUrl === 'Inconnu') return null
   const base     = config.public.apiBase.replace(/\/$/, '')
@@ -428,7 +497,6 @@ const buildDocumentUrl = (rawUrl, dateEnreg) => {
   return `${base}/file/documents/${year}/${month}/${day}/${filename}`
 }
 
-// ── Fetch blob avec token Bearer ──────────────────────────────────────────────
 const fetchFileAsBlob = async (rawUrl, dateEnreg) => {
   const url = buildDocumentUrl(rawUrl, dateEnreg)
   if (!url) throw new Error('URL du fichier introuvable')
@@ -439,7 +507,12 @@ const fetchFileAsBlob = async (rawUrl, dateEnreg) => {
   return { blob, mimeType: blob.type || guessMimeType(rawUrl) }
 }
 
-// ── Charger document arrivée dans la modal ────────────────────────────────────
+const revokeModalBlobs = () => {
+  if (arriveeBlobUrl.value) { URL.revokeObjectURL(arriveeBlobUrl.value); arriveeBlobUrl.value = '' }
+  if (departBlobUrl.value)  { URL.revokeObjectURL(departBlobUrl.value);  departBlobUrl.value  = '' }
+}
+
+// ── Chargement fichiers modal ─────────────────────────────────────────────────
 const loadArriveeFile = async () => {
   const rawDoc    = selectedItem.value?._raw?.document
   const rawUrl    = rawDoc?.url
@@ -460,7 +533,6 @@ const loadArriveeFile = async () => {
   }
 }
 
-// ── Charger document départ dans la modal ─────────────────────────────────────
 const loadDepartFile = async () => {
   const rawDoc    = selectedItem.value?._raw?.reponse
   const rawUrl    = rawDoc?.url
@@ -481,52 +553,88 @@ const loadDepartFile = async () => {
   }
 }
 
-// ── Ouvrir depuis le tableau ──────────────────────────────────────────────────
-// side = 'arrivee' | 'depart'
 // ── Transform ─────────────────────────────────────────────────────────────────
-const transformerDonneesAPI = (reponseAPI) => {
-  if (!reponseAPI?.data) throw new Error('Format de réponse API invalide')
-  return reponseAPI.data.map(rattachement => {
-    const rawArriveeUrl = rattachement.document?.url?.trim()
-    const rawDepartUrl  = rattachement.reponse?.url?.trim()
-    return {
-      id:            rattachement.id,
-      ref_arrivee:   rattachement?.document?.reference || '',
-      objet_arrivee: rattachement?.document?.objet     || '',
-      doc_arrivee:   (rawArriveeUrl && rawArriveeUrl !== 'Inconnu') ? rawArriveeUrl : '',  // nom brut
-      link:          '→',
-      ref_depart:    rattachement?.reponse?.reference  || '',
-      objet_depart:  rattachement?.reponse?.objet      || '',
-      doc_depart:    (rawDepartUrl  && rawDepartUrl  !== 'Inconnu') ? rawDepartUrl  : '',  // nom brut
-      created_at:    formatDate(rattachement.created_at),
-      created_by:    rattachement.user?.name || 'Système',
-      _raw:          rattachement,
-    }
-  })
+const transformerDonneesAPI = (response) => {
+  if (!response?.data) throw new Error('Format de réponse API invalide')
+  return response.data.map(rattachement => ({
+    id:            rattachement.id,
+    ref_arrivee:   rattachement.document?.reference || '',
+    objet_arrivee: rattachement.document?.objet     || '',
+    link:          '→',
+    ref_depart:    rattachement.reponse?.reference  || '',
+    objet_depart:  rattachement.reponse?.objet      || '',
+    created_at:    formatDate(rattachement.created_at),
+    created_by:    rattachement.user?.name || 'Système',
+    _raw:          rattachement,
+  }))
 }
 
-// ── Chargement ────────────────────────────────────────────────────────────────
-const loadData = async () => {
-  if (!authToken.value) { error.value = "Token d'authentification manquant"; return }
+// ── Chargement paginé ─────────────────────────────────────────────────────────
+const refresh = async (page = 1, per_page = perPage.value) => {
   loading.value = true
   error.value   = null
   try {
-    const reponse = await $fetch(`${config.public.apiBase}/reponses`, {
-      method:  'GET',
-      headers: { Authorization: `Bearer ${authToken.value}` },
+    const token  = localStorage.getItem('auth_token') || ''
+    const base   = config.public.apiBase.replace(/\/$/, '')
+    const params = new URLSearchParams({ page: String(page), per_page: String(per_page) })
+
+    const f = searchFilters.value
+    if (f.search)        params.append('search',        f.search)
+    if (f.ref_arrivee)   params.append('ref_arrivee',   f.ref_arrivee)
+    if (f.objet_arrivee) params.append('objet_arrivee', f.objet_arrivee)
+    if (f.ref_depart)    params.append('ref_depart',    f.ref_depart)
+    if (f.objet_depart)  params.append('objet_depart',  f.objet_depart)
+    if (f.date_creation && f.date_creation.length === 10)
+      params.append('date_creation', f.date_creation)
+
+    const c = columnFilters.value
+    if (!f.ref_arrivee   && c.ref_arrivee)   params.append('ref_arrivee',   c.ref_arrivee)
+    if (!f.objet_arrivee && c.objet_arrivee) params.append('objet_arrivee', c.objet_arrivee)
+    if (!f.ref_depart    && c.ref_depart)    params.append('ref_depart',    c.ref_depart)
+    if (!f.objet_depart  && c.objet_depart)  params.append('objet_depart',  c.objet_depart)
+
+    const response = await $fetch(`${base}/reponses?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
     })
-    rattachementData.value = transformerDonneesAPI(reponse)
+
+    rattachementData.value = transformerDonneesAPI(response)
+    currentPage.value      = response.meta.current_page
+    totalPages.value       = response.meta.last_page
+    total.value            = response.meta.total
+
   } catch (err) {
-    console.error('❌ Erreur de chargement:', err)
+    console.error('❌ Erreur chargement rattachements:', err)
     error.value = err.message || 'Impossible de charger les rattachements'
-    toast.add({ title: "Erreur", description: "Impossible de charger les rattachements", color: "red", timeout: 1500 })
   } finally {
     loading.value = false
   }
 }
 
-// ── Modal détails ─────────────────────────────────────────────────────────────
+// ── Handlers pagination ───────────────────────────────────────────────────────
+const onPageChange    = (page) => refresh(page, perPage.value)
+const onPerPageChange = (val)  => { perPage.value = val; refresh(1, val) }
+const onSearchChange  = (val)  => {
+  searchFilters.value.search = val
+  currentPage.value = 1
+  refresh(1, perPage.value)
+}
+
+watch(searchFilters, (f) => {
+  const dateOk = !f.date_creation || f.date_creation.length === 10
+  if (!dateOk) return
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    currentPage.value = 1
+    refresh(1, perPage.value)
+  }, 400)
+}, { deep: true })
+
+// ── Bouton Actualiser ─────────────────────────────────────────────────────────
+const loadData = () => refresh(currentPage.value, perPage.value)
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
 const viewDetails = (item) => {
+  revokeModalBlobs()
   selectedItem.value       = item
   arriveeFileLoaded.value  = false
   arriveeFileLoading.value = false
@@ -534,25 +642,20 @@ const viewDetails = (item) => {
   departFileLoaded.value   = false
   departFileLoading.value  = false
   departFileError.value    = ''
-  if (arriveeBlobUrl.value) { URL.revokeObjectURL(arriveeBlobUrl.value); arriveeBlobUrl.value = '' }
-  if (departBlobUrl.value)  { URL.revokeObjectURL(departBlobUrl.value);  departBlobUrl.value  = '' }
-  detailsOpen.value = true
+  detailsOpen.value        = true
 }
 
 const closeDetails = () => {
-  detailsOpen.value  = false
-  selectedItem.value = null
-  arriveeFileLoaded.value = false
-  arriveeFileError.value  = ''
-  departFileLoaded.value  = false
-  departFileError.value   = ''
-  if (arriveeBlobUrl.value) { URL.revokeObjectURL(arriveeBlobUrl.value); arriveeBlobUrl.value = '' }
-  if (departBlobUrl.value)  { URL.revokeObjectURL(departBlobUrl.value);  departBlobUrl.value  = '' }
+  revokeModalBlobs()
+  detailsOpen.value        = false
+  selectedItem.value       = null
+  arriveeFileLoaded.value  = false
+  arriveeFileError.value   = ''
+  departFileLoaded.value   = false
+  departFileError.value    = ''
 }
 
-// ── Handlers ──────────────────────────────────────────────────────────────────
-const handleSelectionChange = (selected) => console.log(`${selected.length} ligne(s) sélectionnée(s)`, selected)
-
+// ── Suppression ───────────────────────────────────────────────────────────────
 const deleteItem = async (item) => {
   const result = await Swal.fire({
     title: 'Confirmer la suppression',
@@ -577,65 +680,38 @@ const deleteItem = async (item) => {
   })
   if (!result.isConfirmed) return
   try {
+    const token = localStorage.getItem('auth_token') || ''
     await $fetch(`${config.public.apiBase}/reponses/${item.id}`, {
-      method: 'DELETE', headers: { Authorization: `Bearer ${authToken.value}` },
+      method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
     })
     await Swal.fire({ title: 'Supprimé !', text: 'Le rattachement a été supprimé avec succès', icon: 'success', timer: 2000, showConfirmButton: false })
-    await loadData()
+    await refresh(currentPage.value, perPage.value)
   } catch (err) {
     await Swal.fire({ title: 'Erreur', text: 'Impossible de supprimer le rattachement', icon: 'error', confirmButtonColor: '#2563eb' })
-  }
-}
-
-const deleteSelected = async (selectedIds) => {
-  const result = await Swal.fire({
-    title: 'Suppression multiple',
-    html: `<div class="text-left"><p class="mb-3">Êtes-vous sûr de vouloir supprimer <strong class="text-red-600">${selectedIds.length} rattachement(s)</strong> ?</p><p class="text-sm text-red-600 font-semibold">Cette action est irréversible.</p></div>`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#dc2626',
-    cancelButtonColor: '#6b7280',
-    confirmButtonText: `Supprimer ${selectedIds.length}`,
-    cancelButtonText: 'Annuler',
-    reverseButtons: true,
-  })
-  if (!result.isConfirmed) return
-  try {
-    await Promise.all(
-      selectedIds.map(id => $fetch(`${config.public.apiBase}/reponses/${id}`, {
-        method: 'DELETE', headers: { Authorization: `Bearer ${authToken.value}` },
-      }))
-    )
-    await Swal.fire({ title: 'Supprimés !', text: `${selectedIds.length} rattachement(s) supprimé(s)`, icon: 'success', timer: 2000, showConfirmButton: false })
-    await loadData()
-  } catch (err) {
-    await Swal.fire({ title: 'Erreur', text: 'Impossible de supprimer les rattachements', icon: 'error', confirmButtonColor: '#2563eb' })
   }
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
   if (process.client) authToken.value = localStorage.getItem('auth_token') || ''
-  await loadData()
+  await refresh(1, perPage.value)
 })
 </script>
 
 <style scoped>
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 :deep(.swal2-html-container) { margin: 1rem 0; }
 :deep(.swal2-actions) { gap: 0.75rem; }
-:deep(.swal2-confirm), :deep(.swal2-cancel) {
+:deep(.swal2-confirm),
+:deep(.swal2-cancel) {
   padding: 0.625rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
   transition: all 0.2s;
 }
-:deep(.swal2-confirm):hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+:deep(.swal2-confirm):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
 :deep(.swal2-cancel):hover { background-color: #4b5563 !important; }
 </style>

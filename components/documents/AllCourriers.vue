@@ -1,5 +1,6 @@
 <template>
   <!-- <div class="flex h-screen overflow-hidden bg-white"> -->
+  <div class="min-h-screen bg-slate-50 p-6 font-sans">
     <!-- <main
       class="flex-1 p-4 lg:p-8 transition-all duration-500"
       > -->
@@ -40,6 +41,7 @@
   <!-- </UContainer> -->
   <!-- </main> -->
   <!-- </div> -->
+  </div>
 </template>
 
 <script setup>

@@ -117,6 +117,12 @@
               <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider mt-0.5 w-20 shrink-0">Référence</span>
               <p class="text-sm font-bold text-slate-800">{{ selectedAffectation.reference_courrier || 'Sans référence' }}</p>
             </div>
+
+            <div v-if="selectedAffectation.numero_enreg" class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 w-20 shrink-0">N° Enreg.</span>
+              <p class="text-sm font-mono font-semibold text-slate-800">{{ selectedAffectation.numero_enreg }}</p>
+            </div>
+
             <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 w-20 shrink-0">Objet</span>
               <p class="text-sm text-slate-700 leading-relaxed">{{ selectedAffectation.objet_courrier || 'Non spécifié' }}</p>
@@ -356,7 +362,7 @@
     </template>
 
     <template #cell-objet_courrier="{ value }">
-      <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
+      <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words" :title="value">
         {{ value }}
       </span>
     </template>
@@ -375,6 +381,15 @@
         <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
         <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
       </span>
+    </template>
+
+    <template #cell-numero_enreg="{ value }">
+      <span
+        v-if="value"
+        class="inline-flex items-center px-2.5 py-0.5 text-xs font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 rounded-md">
+        {{ value }}
+      </span>
+      <span v-else class="text-xs text-slate-400 italic">—</span>
     </template>
 
     <!-- ── Actions ──────────────────────────────────────────────────────── -->
@@ -601,19 +616,20 @@ const onColumnFilterChange = (val) => {
 // ── Colonnes ──────────────────────────────────────────────────────────────────
 const columns = computed(() => {
   const base = [
-    { key: 'reference_courrier', label: 'Réf. Courrier',           visible: true,  inputPlaceholder: 'Réf...',      width: 'min-w-[200px]', showLabel: false },
-    { key: 'dossier',            label: 'Dossier',                 visible: true,  inputPlaceholder: 'Dossier...',  width: 'min-w-[200px]', showLabel: false },
-    { key: 'objet_courrier',     label: 'Objet',                   visible: true,  inputPlaceholder: 'Objet...',    width: 'min-w-[250px]', showLabel: false },
-    { key: 'doc_courrier',       label: 'Document',                visible: false, type: 'document',                filterable: false },
-    { key: 'date_affect',        label: "Date d'affectation",      visible: true,  filterable: false,               width: 'min-w-[120px]', showLabel: false },
-    { key: 'instructions',       label: 'Instructions',            visible: true,  inputPlaceholder: 'Annota...', width: 'min-w-[200px]', showLabel: false },
-    { key: 'statut',             label: 'Statut',                  visible: true,  type: 'badge', filterable: false, width: 'min-w-[120px]' },
-    { key: 'priority',           label: 'Priorité',                visible: true,  type: 'badge', filterable: false, width: 'min-w-[120px]' },
-    { key: 'delai_traitement',   label: 'Délai',                   visible: true,  filterable: false,               width: 'min-w-[120px]', showLabel: true },
-    { key: 'date_cloture',       label: 'Date clôture',            visible: false, filterable: false,               width: 'min-w-[120px]', showLabel: true },
-    { key: 'destinataire',       label: 'Destinataire',            visible: true,  filterable: false,               width: 'min-w-[180px]', inputPlaceholder: 'Emetteur' },
+    { key: 'reference_courrier', label: 'Réf. Courrier',           visible: true,  inputPlaceholder: 'Réf...', showLabel: false },
+    { key: 'numero_enreg', label: 'N° Enreg.', visible: true, showLabel: false, inputWidth: '40px', inputPlaceholder: 'Enr.' },  // ← ajouter
+    { key: 'dossier',            label: 'Dossier',                 visible: true, inputWidth: '40px', inputPlaceholder: 'Dossier...',  showLabel: false },
+    { key: 'objet_courrier',     label: 'Objet',                   visible: true,  inputPlaceholder: 'Objet...',  showLabel: false },
+    { key: 'doc_courrier',       label: 'Document',                visible: false, type: 'document', filterable: false },
+    { key: 'date_affect',        label: "Date d'affectation",      visible: true,  filterable: false, showLabel: false },
+    { key: 'instructions',       label: 'Instructions',            visible: true,  inputPlaceholder: 'Annota...', showLabel: false },
+    { key: 'statut',             label: 'Statut',                  visible: true,  type: 'badge', filterable: false },
+    { key: 'priority',           label: 'Priorité',                visible: true,  type: 'badge', filterable: false },
+    { key: 'delai_traitement',   label: 'Délai',                   visible: true,  filterable: false, showLabel: true },
+    { key: 'date_cloture',       label: 'Date clôture',            visible: false, filterable: false, showLabel: true },
+    { key: 'destinataire',       label: 'Destinataire',            visible: true,  filterable: false, inputPlaceholder: 'Emetteur' },
   ]
-  if (isAdmin.value) base.push({ key: 'emetteur', label: 'Émetteur', visible: true, inputPlaceholder: 'Emetteur', filterable: false, width: 'min-w-[180px]' })
+  if (isAdmin.value) base.push({ key: 'emetteur', label: 'Émetteur', visible: true, inputPlaceholder: 'Emetteur', filterable: false })
   return base
 })
 
@@ -738,6 +754,7 @@ const transformAffectation = (affectation) => {
     id:                 affectation.id,
     courrier_id:        affectation.courrier_arrive_id || null,
     reference_courrier: affectation.courrier_arrive?.document?.reference || '',
+    numero_enreg:       affectation.courrier_arrive?.document?.numero_enreg || '',
     objet_courrier:     affectation.courrier_arrive?.document?.objet      || '',
     doc_courrier:       (rawUrl && rawUrl !== 'Inconnu') ? rawUrl : '',
     date_affect:        formatDate(affectation.date_affect),
@@ -748,7 +765,7 @@ const transformAffectation = (affectation) => {
     delai_traitement:   formatDate(affectation.delai_traitement) || '__',
     date_cloture:       formatDate(affectation.date_cloture) || '_',
     // ✅ Bloquant : courrier déjà répondu
-    a_reponse:  !!(affectation.courrier_arrive?.document?.reponses?.length),
+    a_reponse:  !!(affectation.courrier_arrive?.document?.reponse),
     // ✅ Bloquant : affectation clôturée
     is_cloture: affectation.statut === 'cloture',
     destinataire: {
@@ -811,6 +828,7 @@ const fetchAffectations = async (page = 1, per_page = perPage.value, isFirst = f
     if (!f.dossier      && c.dossier)       params.append('dossier',           c.dossier)
     if (!f.instructions && c.instructions)  params.append('instructions',      c.instructions)
     if (c.reference_courrier)               params.append('reference_courrier', c.reference_courrier)
+    if (c.numero_enreg)                     params.append('numero_enreg',       c.numero_enreg)
     if (c.objet_courrier)                   params.append('objet_courrier',     c.objet_courrier)
 
     let response

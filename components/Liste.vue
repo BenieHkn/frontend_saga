@@ -46,7 +46,7 @@
                     'bg-amber-50 text-amber-700 border-amber-200': selectedCourrier.priority?.toLowerCase() === 'important',
                     'bg-sky-50 text-sky-700 border-sky-200': !selectedCourrier.priority || selectedCourrier.priority?.toLowerCase() === 'standard',
                   }">{{ selectedCourrier.priority || 'STANDARD' }}</span>
-                <span v-if="selectedCourrier.document?.reponses?.length"
+                <span v-if="selectedCourrier.document?.reponse"
                   class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">
                   <Icon name="i-heroicons-check-circle" class="w-3 h-3" /> Répondu
                 </span>
@@ -154,7 +154,7 @@
           </section>
 
           <!-- Section réponse -->
-          <section v-if="selectedCourrier.document?.reponses?.length"
+          <section v-if="selectedCourrier.document?.reponse"
             class="bg-white rounded-2xl border border-emerald-200/80 overflow-hidden shadow-sm">
 
             <!-- Header avec bouton document réponse -->
@@ -323,7 +323,7 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
-          <button v-if="!item._complete?.document?.reponses?.length && !isAdmin()" @click="handleReply(item)"
+          <button v-if="!item._complete?.document?.reponse && !isAdmin()" @click="handleReply(item)"
             title="Répondre au courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group">
             <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
@@ -580,9 +580,9 @@ const handleView = async (item) => {
   reponseData.value        = null
   detailsOpen.value        = true
 
-  const reponses = courrier.document?.reponses || []
-  if (reponses.length) {
-    const courierDepartId = reponses[0]?.reponse_id
+  const reponse = courrier.document?.reponse
+  if (reponse) {
+    const courierDepartId = reponse.reponse_id
     if (courierDepartId) await loadReponseData(courierDepartId)
   }
 }
@@ -643,7 +643,7 @@ const handleQuickAssign = (courrierId) => {
 
 const handleReply = (item) => {
   const courrier = item._complete || item
-  if (courrier.document?.reponses?.length) {
+  if (courrier.document?.reponse) {
     Swal.fire({ title: 'Déjà répondu', text: 'Ce courrier a déjà reçu une réponse.', icon: 'info', confirmButtonColor: '#2563eb' })
     return
   }

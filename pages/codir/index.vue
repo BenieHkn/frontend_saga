@@ -4,6 +4,8 @@ import { useAuth } from '~/composables/auth/useAuth'
 
 definePageMeta({ title: 'Listing CODIR' })
 
+useHead({ title: "CODIR - SAGA" })
+
 const router = useRouter()
 const toast  = useNuxtApp().$toast ?? useToast() // ✅ FIX — toast manquant
 const { loading, error, getCodirs, createCodir, downloadPdf } = useCodir()
