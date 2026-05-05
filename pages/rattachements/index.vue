@@ -209,41 +209,47 @@
     </UModal>
 
     <!-- En-tête -->
+    <!-- <div class="flex items-center justify-between mb-6">
+      <h1 class="flex items-center gap-3 text-2xl font-bold text-slate-800">
+        <Icon name="i-heroicons-link" class="w-7 h-7 text-blue-600" />
+        Rattachements de Courriers
+      </h1>
+      <div class="flex items-center gap-3">
+        <button @click="loadData"
+          class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all hover:shadow-md">
+          <Icon name="i-heroicons-arrow-path" class="w-4 h-4" />
+          Actualiser
+        </button>
+        <UBadge color="blue" variant="soft" size="lg" class="ml-auto">
+          <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
+          <UButton to="/rattachements/create" variant="text" size="sm" class="p-0 m-0 text-blue-600">
+            Nouveau
+          </UButton>
+        </UBadge>
+      </div>
+    </div> -->
+
     <PageHeader
       v-if="!isAdmin()"
-      title="Rattachements de Courriers"
+      title="Rattachements de Courriers" 
       subtitle="Gestion des rattachements de courriers"
       btnText="Nouveau"
       to="/rattachements/create" />
     <PageHeader
       v-else
-      title="Rattachements de Courriers"
+      title="Rattachements de Courriers" 
       subtitle="Gestion des rattachements de courriers" />
 
-    <!-- Loader premier chargement -->
-    <div v-if="initialLoading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
-      <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-      <span class="text-sm font-medium">Chargement des données...</span>
-    </div>
-
     <!-- Erreur -->
-    <div v-else-if="error"
-      class="flex items-center gap-4 p-5 bg-red-50 border border-red-200 rounded-xl max-w-2xl">
-      <Icon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-red-600 shrink-0" />
-      <div class="flex-1">
-        <p class="text-sm font-bold text-red-900">Erreur de chargement</p>
-        <p class="text-xs text-red-700">{{ error }}</p>
-      </div>
-      <button
-        class="px-4 py-2 text-xs font-bold text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors shrink-0"
-        @click="refresh(currentPage, perPage, false)">
-        Réessayer
-      </button>
+    <div v-if="error"
+      class="flex items-center gap-3 p-4 mb-5 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+      <Icon name="i-heroicons-exclamation-triangle" class="w-5 h-5 flex-shrink-0" />
+      <span class="flex-1">{{ error }}</span>
+      <button @click="error = null" class="text-lg opacity-60 hover:opacity-100 transition-opacity">✕</button>
     </div>
 
     <!-- DataTablePaginate -->
     <DataTablePaginate
-      v-else
       :loading="loading"
       :data="rattachementData"
       :columns="columns"
@@ -388,8 +394,10 @@ import DocumentRpreview from '~/components/DocumentRpreview.vue'
 import Swal from 'sweetalert2'
 import { useAuth } from '~/composables/auth/useAuth'
 
+
 useHead({ title: "Rattachements de Courriers - SAGA" })
 const { isAdmin } = useAuth()
+
 
 const config = useRuntimeConfig()
 
@@ -407,7 +415,6 @@ const columns = [
 const authToken        = ref('')
 const rattachementData = ref([])
 const loading          = ref(false)
-const initialLoading   = ref(false)  // ← AJOUT
 const error            = ref(null)
 const currentPage      = ref(1)
 const totalPages       = ref(1)
@@ -438,7 +445,7 @@ const resetFilters = () => {
   searchFilters.value = defaultFilters()
   columnFilters.value = {}
   currentPage.value   = 1
-  refresh(1, perPage.value, false)
+  refresh(1, perPage.value)
 }
 
 const onColumnFilterChange = (val) => {
@@ -446,7 +453,7 @@ const onColumnFilterChange = (val) => {
   clearTimeout(columnFilterTimeout)
   columnFilterTimeout = setTimeout(() => {
     currentPage.value = 1
-    refresh(1, perPage.value, false)
+    refresh(1, perPage.value)
   }, 400)
 }
 
@@ -563,14 +570,9 @@ const transformerDonneesAPI = (response) => {
 }
 
 // ── Chargement paginé ─────────────────────────────────────────────────────────
-const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {  // ← AJOUT isFirst
-  if (isFirst) {
-    initialLoading.value = true
-  } else {
-    loading.value = true
-  }
-  error.value = null
-
+const refresh = async (page = 1, per_page = perPage.value) => {
+  loading.value = true
+  error.value   = null
   try {
     const token  = localStorage.getItem('auth_token') || ''
     const base   = config.public.apiBase.replace(/\/$/, '')
@@ -595,12 +597,6 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
       headers: { Authorization: `Bearer ${token}` },
     })
 
-    // ← AJOUT garde défensive
-    if (!response?.meta?.current_page) {
-      console.error('❌ Réponse API inattendue:', JSON.stringify(response))
-      throw new Error('Réponse du serveur invalide ou session expirée')
-    }
-
     rattachementData.value = transformerDonneesAPI(response)
     currentPage.value      = response.meta.current_page
     totalPages.value       = response.meta.last_page
@@ -610,18 +606,17 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
     console.error('❌ Erreur chargement rattachements:', err)
     error.value = err.message || 'Impossible de charger les rattachements'
   } finally {
-    initialLoading.value = false  // ← AJOUT
-    loading.value        = false
+    loading.value = false
   }
 }
 
 // ── Handlers pagination ───────────────────────────────────────────────────────
-const onPageChange    = (page) => refresh(page, perPage.value, false)
-const onPerPageChange = (val)  => { perPage.value = val; refresh(1, val, false) }
+const onPageChange    = (page) => refresh(page, perPage.value)
+const onPerPageChange = (val)  => { perPage.value = val; refresh(1, val) }
 const onSearchChange  = (val)  => {
   searchFilters.value.search = val
   currentPage.value = 1
-  refresh(1, perPage.value, false)
+  refresh(1, perPage.value)
 }
 
 watch(searchFilters, (f) => {
@@ -630,12 +625,12 @@ watch(searchFilters, (f) => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     currentPage.value = 1
-    refresh(1, perPage.value, false)
+    refresh(1, perPage.value)
   }, 400)
 }, { deep: true })
 
 // ── Bouton Actualiser ─────────────────────────────────────────────────────────
-const loadData = () => refresh(currentPage.value, perPage.value, false)
+const loadData = () => refresh(currentPage.value, perPage.value)
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 const viewDetails = (item) => {
@@ -690,7 +685,7 @@ const deleteItem = async (item) => {
       method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
     })
     await Swal.fire({ title: 'Supprimé !', text: 'Le rattachement a été supprimé avec succès', icon: 'success', timer: 2000, showConfirmButton: false })
-    await refresh(currentPage.value, perPage.value, false)
+    await refresh(currentPage.value, perPage.value)
   } catch (err) {
     await Swal.fire({ title: 'Erreur', text: 'Impossible de supprimer le rattachement', icon: 'error', confirmButtonColor: '#2563eb' })
   }
@@ -699,7 +694,7 @@ const deleteItem = async (item) => {
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
   if (process.client) authToken.value = localStorage.getItem('auth_token') || ''
-  await refresh(1, perPage.value, true)  // ← isFirst = true
+  await refresh(1, perPage.value)
 })
 </script>
 
