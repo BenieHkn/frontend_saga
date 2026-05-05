@@ -712,22 +712,24 @@ const revokeModalBlobs = () => {
 // ── Transform (on garde le nom brut, pas d'URL construite) ───────────────────
 const transformCourriers = (response) => {
   if (!response?.data) throw new Error('Format de réponse API invalide')
-  return response.data.map((courrier) => ({
-    id:                   courrier.id,
-    source:               courrier.service_enreg || '',
-    numero_enreg:         courrier.document?.numero_enreg || '',
-    reference:            courrier.document?.reference    || '',
-    structure:            courrier.structure || courrier.autre_structure || '',
-    date_enregistrement:  formatDate(courrier.document?.date_enreg),
-    objet:                courrier.document?.objet        || '',
-    date_courrier:        formatDate(courrier.document?.date_courrier),
-    // On ne construit plus d'URL directe — le nom brut suffit pour fetchFileAsBlob
-    url:                  (courrier.document?.url && courrier.document.url !== 'Inconnu') ? courrier.document.url : '',
-    type_arrivee:         courrier.type_arrivee || '',
-    type_document:        courrier.document?.type_document?.libelle,
-    priority:             courrier.priority     || '',
-    _raw:                 courrier,
-  }))
+  return response.data.map((courrier) => {
+    console.log('🔍 reponse pour', courrier.document?.reference, ':', JSON.stringify(courrier.document?.reponse))
+    return {
+      id:                   courrier.id,
+      source:               courrier.service_enreg || '',
+      numero_enreg:         courrier.document?.numero_enreg || '',
+      reference:            courrier.document?.reference    || '',
+      structure:            courrier.structure || courrier.autre_structure || '',
+      date_enregistrement:  formatDate(courrier.document?.date_enreg),
+      objet:                courrier.document?.objet        || '',
+      date_courrier:        formatDate(courrier.document?.date_courrier),
+      url:                  (courrier.document?.url && courrier.document.url !== 'Inconnu') ? courrier.document.url : '',
+      type_arrivee:         courrier.type_arrivee || '',
+      type_document:        courrier.document?.type_document?.libelle,
+      priority:             courrier.priority     || '',
+      _raw:                 courrier,
+    }
+  })
 }
 
 // ── Chargement options filtres ────────────────────────────────────────────────
