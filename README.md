@@ -1,5 +1,5 @@
 # SAGA
-update 05/05/2026 17h37
+update 06/05/2026 12h22
 A modern admin dashboard template inspired by DeskApp, built with Nuxt.js, NuxtUI, and Tailwind CSS.
 
 ## Features
