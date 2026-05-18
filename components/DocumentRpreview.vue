@@ -190,28 +190,52 @@ const downloadFile = () => {
   document.body.removeChild(link)
 }
 
-const printFile = () => {
+const printFile = async () => {
   if (!props.filePreviewUrl) return
 
-  // Créer une iframe cachée pour l'impression
-  const iframe = document.createElement('iframe')
-  iframe.style.display = 'none'
-  iframe.src = props.filePreviewUrl
-  document.body.appendChild(iframe)
+  try {
+    // Récupérer le PDF en tant que Blob pour éviter les restrictions cross-origin
+    const response = await fetch(props.filePreviewUrl)
+    if (!response.ok) throw new Error('Network response was not ok')
+    const blob = await response.blob()
+    const blobUrl = URL.createObjectURL(blob)
 
-  iframe.onload = () => {
-    try {
-      iframe.contentWindow.print()
-      // Nettoyer après un délai
-      setTimeout(() => {
-        document.body.removeChild(iframe)
-      }, 1000)
-    } catch (e) {
-      console.error('Erreur lors de l\'impression:', e)
-      // Fallback: ouvrir dans un nouvel onglet pour impression
-      window.open(props.filePreviewUrl, '_blank')
-      document.body.removeChild(iframe)
+    const iframe = document.createElement('iframe')
+    iframe.style.display = 'none'
+    iframe.src = blobUrl
+    document.body.appendChild(iframe)
+
+    const cleanup = () => {
+      if (iframe.parentNode) document.body.removeChild(iframe)
+      try { URL.revokeObjectURL(blobUrl) } catch (e) { /* ignore */ }
     }
+
+    // Si l'on peut imprimer via l'iframe, lancer l'impression, sinon fallback vers nouvel onglet
+    iframe.onload = () => {
+      try {
+        iframe.contentWindow.focus()
+        iframe.contentWindow.print()
+        setTimeout(cleanup, 1000)
+      } catch (e) {
+        console.error("Erreur lors de l'impression via iframe:", e)
+        window.open(blobUrl, '_blank')
+        cleanup()
+      }
+    }
+
+    // Timeout de sécurité si onload ne se déclenche pas
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        try {
+          window.open(blobUrl, '_blank')
+        } catch (e) { console.error(e) }
+        cleanup()
+      }
+    }, 5000)
+  } catch (e) {
+    console.error('Erreur lors de l\'impression:', e)
+    // Fallback: ouvrir dans un nouvel onglet pour impression
+    window.open(props.filePreviewUrl, '_blank')
   }
 }
 

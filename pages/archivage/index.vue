@@ -56,6 +56,11 @@
         :external-last-page="totalPages"
         :external-per-page="perPage"
         :column-filter-options="columnFilterOptions"
+        :show-period-filter="true"
+        :periode-date-field="searchFilters.date_field"
+        :periode-date-from="searchFilters.date_from"
+        :periode-date-to="searchFilters.date_to"
+        @period-filter-change="onPeriodFilterChange"
         @multi-filter-change="onMultiFilterChange"
         @search-change="onSearchChange"
         @page-change="onPageChange"
@@ -571,6 +576,15 @@ useHead({ title: "Archivage - SAGA" })
 
 const config = useRuntimeConfig()
 
+const onPeriodFilterChange = ({ field, from, to }) => {
+  searchFilters.value.date_field = field
+  searchFilters.value.date_from  = from
+  searchFilters.value.date_to    = to
+  currentPage.value = 1
+  refresh(1, perPage.value, false)
+}
+const isFullDate = (v) => /^\d{2}\/\d{2}\/\d{4}$/.test((v || '').trim())
+
 // ── Toggle pending / archived ─────────────────────────────────────────────
 const currentFilter = ref('pending')
 const filterOptions = [
@@ -617,7 +631,9 @@ const defaultFilters = () => ({
   search: '', numero_enreg: '', reference: '', objet: '',
   date_enreg: '', date_courrier: '', type: '', type_document_id: '',
   confidentiel: '', type_arrivee: '', service_enreg: '', structure: '',
-  priority: '', type_depart: '', service_emis: '', destinataire: '',
+  priority: '', type_depart: '', service_emis: '', destinataire: '', date_from: '',
+  date_to:   '',
+  date_field: 'date_enreg',
 })
 
 const searchFilters    = ref(defaultFilters())
@@ -807,6 +823,9 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false, sile
     if (f.type_depart)      params.append('type_depart',      f.type_depart)
     if (f.service_emis)     params.append('service_emis',     f.service_emis)
     if (f.destinataire)     params.append('destinataire',     f.destinataire)
+    if (f.date_from && isFullDate(f.date_from)) params.append('date_from',  f.date_from)
+    if (f.date_to   && isFullDate(f.date_to))   params.append('date_to',    f.date_to)
+    if (f.date_from || f.date_to)               params.append('date_field', f.date_field)
 
     const c = columnFilters.value
     if (!f.numero_enreg && c.numero_enreg) params.append('numero_enreg', c.numero_enreg)

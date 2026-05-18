@@ -9,20 +9,71 @@
     <!-- ── TOOLBAR ──────────────────────────────────────────────────────── -->
     <div v-if="showToolbar"
       class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-white border-b border-slate-200">
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+
+        <!-- Recherche globale -->
         <UInput v-if="showGlobalSearch && !externalPagination" v-model="globalSearch"
           icon="i-heroicons-magnifying-glass" placeholder="Recherche globale..." size="sm" class="w-56"
           @input="onGlobalSearchInput" />
-        <UInput v-if="showGlobalSearch && externalPagination" v-model="globalSearch" icon="i-heroicons-magnifying-glass"
-          placeholder="Recherche globale..." size="sm" class="w-56" @input="onExternalSearchInput" />
+        <UInput v-if="showGlobalSearch && externalPagination" v-model="globalSearch"
+          icon="i-heroicons-magnifying-glass" placeholder="Recherche globale..." size="sm" class="w-56"
+          @input="onExternalSearchInput" />
+
+        <!-- ── Filtre période ─────────────────────────────────────── -->
+        <template v-if="showPeriodFilter">
+          <!-- Sélecteur de champ -->
+          <select
+            v-model="localPeriodField"
+            class="h-8 px-2 text-xs text-slate-700 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer"
+            @change="onPeriodChange">
+            <option value="date_enreg">Date d'enreg.</option>
+            <option value="date_courrier">Date courrier</option>
+          </select>
+
+          <!-- Du -->
+          <div class="flex items-center gap-1">
+            <span class="text-[11px] text-slate-400 font-medium whitespace-nowrap">Du</span>
+            <input
+              v-model="localPeriodFrom"
+              type="text"
+              placeholder="jj/mm/aaaa"
+              maxlength="10"
+              class="h-8 w-28 px-2 text-xs text-slate-700 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+              @input="onPeriodInput" />
+          </div>
+
+          <!-- Au -->
+          <div class="flex items-center gap-1">
+            <span class="text-[11px] text-slate-400 font-medium whitespace-nowrap">au</span>
+            <input
+              v-model="localPeriodTo"
+              type="text"
+              placeholder="jj/mm/aaaa"
+              maxlength="10"
+              class="h-8 w-28 px-2 text-xs text-slate-700 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+              @input="onPeriodInput" />
+          </div>
+
+          <!-- Effacer période -->
+          <button
+            v-if="localPeriodFrom || localPeriodTo"
+            class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-500 transition-colors"
+            title="Effacer la période"
+            @click="clearPeriod">
+            <Icon name="i-heroicons-x-mark" class="w-3.5 h-3.5" />
+          </button>
+        </template>
+        <!-- ── /Filtre période ─────────────────────────────────────── -->
+
+        <!-- Bouton filtres avancés -->
         <UButton v-if="showAdvancedFiltersToggle" size="sm" :color="showAdvancedFilters ? 'indigo' : 'gray'"
           variant="soft" :icon="showAdvancedFilters ? 'i-heroicons-funnel-solid' : 'i-heroicons-funnel'"
           @click="showAdvancedFilters = !showAdvancedFilters">
           Filtres
-          <UBadge v-if="activeFiltersCount > 0" :label="String(activeFiltersCount)" color="red" size="xs"
-            class="ml-1" />
+          <UBadge v-if="activeFiltersCount > 0" :label="String(activeFiltersCount)" color="red" size="xs" class="ml-1" />
         </UButton>
       </div>
+
       <div v-if="showPaginationOptions" class="flex items-center gap-2">
         <span class="text-xs text-slate-500">Lignes par page :</span>
         <USelect v-model="localItemsPerPage" :options="itemsPerPageOptions.map(n => ({ label: String(n), value: n }))"
@@ -382,6 +433,10 @@ const props = defineProps({
   externalPage: { type: Number, default: 1 },
   externalLastPage: { type: Number, default: 1 },
   externalPerPage: { type: Number, default: 20 },
+  periodeDateField:  { type: String,  default: 'date_enreg' }, // champ actif
+  periodeDateFrom:   { type: String,  default: '' },
+  periodeDateTo:     { type: String,  default: '' },
+  showPeriodFilter:  { type: Boolean, default: false },
 })
 
 const emit = defineEmits([
@@ -391,6 +446,7 @@ const emit = defineEmits([
   'search-change',
   'column-filter-change',
   'multi-filter-change',
+  'period-filter-change',
 ])
 
 // ── Colonnes visibles ─────────────────────────────────────────────────────
@@ -401,6 +457,45 @@ const sourceData = computed(() => props.data)
 
 // ── Recherche globale ─────────────────────────────────────────────────────
 const globalSearch = ref('')
+
+// ── Filtre période ────────────────────────────────────────────────────────
+const localPeriodField = ref(props.periodeDateField)
+const localPeriodFrom  = ref(props.periodeDateFrom)
+const localPeriodTo    = ref(props.periodeDateTo)
+
+const isFullDate = (v) => /^\d{2}\/\d{2}\/\d{4}$/.test(v.trim())
+
+let periodDebounce = null
+const onPeriodInput = () => {
+  // N'envoie que si les dates saisies sont complètes (ou vides)
+  const fromOk = !localPeriodFrom.value || isFullDate(localPeriodFrom.value)
+  const toOk   = !localPeriodTo.value   || isFullDate(localPeriodTo.value)
+  if (!fromOk || !toOk) return
+  clearTimeout(periodDebounce)
+  periodDebounce = setTimeout(() => emitPeriod(), 500)
+}
+
+const onPeriodChange = () => emitPeriod()
+
+const emitPeriod = () => {
+  emit('period-filter-change', {
+    field: localPeriodField.value,
+    from:  localPeriodFrom.value,
+    to:    localPeriodTo.value,
+  })
+}
+
+const clearPeriod = () => {
+  localPeriodFrom.value = ''
+  localPeriodTo.value   = ''
+  emitPeriod()
+}
+
+// Sync si le parent réinitialise les valeurs depuis l'extérieur
+watch(() => props.periodeDateFrom, v => { localPeriodFrom.value = v })
+watch(() => props.periodeDateTo,   v => { localPeriodTo.value   = v })
+watch(() => props.periodeDateField, v => { localPeriodField.value = v })
+
 const showAdvancedFilters = ref(false)
 
 const onGlobalSearchInput = () => { currentPage.value = 1 }
