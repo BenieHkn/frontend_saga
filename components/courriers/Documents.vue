@@ -319,7 +319,8 @@
       :external-pagination="true" :external-total="total" :external-page="currentPage" :external-last-page="totalPages"
       :external-per-page="perPage" @search-change="onSearchChange" @page-change="onPageChange"
       @per-page-change="onPerPageChange" @column-filter-change="onColumnFilterChange"
-      :column-filter-options="columnFilterOptions" @multi-filter-change="onMultiFilterChange">
+      :column-filter-options="columnFilterOptions" @multi-filter-change="onMultiFilterChange"
+      :row-class="rowClassByDocument">
 
       <template #advanced-filters>
         <div class="space-y-4">
@@ -432,6 +433,48 @@
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
 
+          <div v-if="item.isAffected" class="relative" @mouseenter="openAffectationPreview($event, item)" @mouseleave="closeAffectationPreview">
+            <button @click="openAffectationDetails(item)" type="button"
+              :title="item.isAffected ? 'Voir le circuit d\'affectation' : 'Aucune affectation'"
+              class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-orange-700 border border-orange-100 rounded-md hover:bg-orange-100 transition-all group">
+              <Icon name="i-heroicons-users" class="w-4 h-4 group-hover:text-orange-900" />
+            </button>
+
+            <Teleport to="body">
+              <div v-if="hoveredAffectationItemId === item.id"
+                class="fixed z-[9999] w-[340px] bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 text-xs text-slate-700 pointer-events-none"
+                :style="tooltipStyle">
+                <div class="flex items-center justify-between gap-2 mb-3">
+                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Circuit d'affectation</div>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-100 text-[10px]">
+                    <Icon name="i-heroicons-users" class="w-3 h-3" />
+                    {{ item.isAffected ? 'Affecté' : 'Vide' }}
+                  </span>
+                </div>
+                <div class="space-y-2">
+                  <template v-if="item.affectation_circuit?.length">
+                    <div v-for="(node, idx) in item.affectation_circuit" :key="idx"
+                      class="rounded-xl border border-slate-100 bg-slate-50 p-2.5 space-y-1.5">
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="text-[11px] font-semibold text-slate-800">{{ node.emetteur }}</div>
+                        <span v-if="node.raw?.id"
+                          class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-bold rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100">
+                          #{{ node.raw.id }}
+                        </span>
+                      </div>
+                      <div class="pl-2 space-y-1 text-[11px] text-slate-600 border-l-2 border-slate-200">
+                        <div><strong>Destinataires :</strong> {{ node.destinataires.join(', ') || 'Aucun destinataire' }}</div>
+                        <div><strong>Priorité :</strong> {{ node.priority || '—' }}</div>
+                        <div><strong>Instruction :</strong> {{ node.instructions || 'Aucune instruction' }}</div>
+                      </div>
+                    </div>
+                  </template>
+                  <div v-else class="text-[11px] text-slate-500 py-1">Aucun circuit d'affectation trouvé.</div>
+                </div>
+              </div>
+            </Teleport>
+          </div>
+
           <!-- ══════════════════════════════════════════════════════════════ -->
           <!-- ACTIONS COURRIER ARRIVÉ                                        -->
           <!-- ══════════════════════════════════════════════════════════════ -->
@@ -488,6 +531,71 @@
       </template>
 
     </DataTablePaginate>
+
+    <UModal v-model="affectationModalOpen" :ui="{ width: 'sm:max-w-3xl' }">
+      <div v-if="selectedAffectationItem" class="bg-white rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Détails de l'affectation</h2>
+            <p class="text-xs text-slate-500">Circuit d'affectation et instructions</p>
+          </div>
+          <button @click="closeAffectationDetails"
+            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
+            <Icon name="i-heroicons-x-mark" class="w-4 h-4" />
+          </button>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700">
+            <div class="mb-3 text-sm font-semibold text-slate-900">Document</div>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <div>
+                <div class="text-[10px] uppercase tracking-[0.18em] text-slate-500">Référence</div>
+                <div class="font-medium text-slate-800">{{ selectedAffectationItem.reference || '—' }}</div>
+              </div>
+              <div>
+                <div class="text-[10px] uppercase tracking-[0.18em] text-slate-500">N° d'enreg.</div>
+                <div class="font-medium text-slate-800">{{ selectedAffectationItem.numero_enreg || '—' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <template v-if="selectedAffectationItem.affectation_circuit?.length">
+              <div v-for="(node, idx) in selectedAffectationItem.affectation_circuit" :key="idx"
+                class="rounded-2xl border border-slate-200 p-4 bg-white shadow-sm">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                  <div>
+                    <div class="text-[11px] uppercase tracking-[0.18em] text-slate-500">Émetteur</div>
+                    <div class="mt-1 font-semibold text-slate-900">{{ node.emetteur }}</div>
+                  </div>
+                  <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-orange-50 text-orange-700 text-[11px] border border-orange-100">
+                    <Icon name="i-heroicons-flag" class="w-3 h-3" /> {{ node.priority || 'Normale' }}
+                  </span>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <div class="text-[10px] uppercase tracking-[0.18em] text-slate-500">Destinataires</div>
+                    <div class="mt-1 text-sm text-slate-700">{{ node.destinataires.join(', ') || 'Aucun destinataire' }}</div>
+                  </div>
+                  <div>
+                    <div class="text-[10px] uppercase tracking-[0.18em] text-slate-500">Statut</div>
+                    <div class="mt-1 text-sm text-slate-700">{{ node.statut || '—' }}</div>
+                  </div>
+                </div>
+                <div class="mt-4 text-[11px] text-slate-600">
+                  <div class="font-semibold text-slate-800 mb-1">Instruction</div>
+                  <p class="whitespace-pre-line">{{ node.instructions || 'Aucune instruction fournie.' }}</p>
+                </div>
+              </div>
+            </template>
+            <div v-else class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500">
+              Aucune donnée de circuit d'affectation disponible.
+            </div>
+          </div>
+        </div>
+      </div>
+    </UModal>
   </div>
 </template>
 
@@ -501,6 +609,7 @@ import { useCourriersStore } from '~/stores/courriers'
 import { useAuth } from '~/composables/auth/useAuth'
 import Swal from 'sweetalert2'
 
+const tooltipStyle = ref({})
 const props = defineProps({
   entiteId: { type: Number, default: null }
 })
@@ -734,8 +843,145 @@ const transformCourriers = (response) => {
     type_depart: doc.details?.type_depart || '',
     priority: doc.details?.priority || '',
     a_reponse: doc.type === 'arrive' ? !!doc.reponse : false,
+    affectation_circuit: [],
+    isAffected: false,
     _raw: doc,
   }))
+}
+
+const getAffectationEntityText = (entity) => {
+  if (!entity) return 'Inconnu'
+  if (typeof entity === 'string') return entity
+
+  const fullName = [entity.user?.nom, entity.user?.prenom].filter(Boolean).join(' ')
+  const code = entity.entite?.code || entity.entite?.libelle || ''
+  const role = entity.is_responsable ? entity.entite?.fonction || 'Responsable' : entity.fonction || 'Agent'
+
+  return [fullName, code, role].filter(Boolean).join(' • ') || 'Inconnu'
+}
+
+const normalizeAffectationDestinataires = (destinataires) => {
+  if (!destinataires) return []
+  if (Array.isArray(destinataires)) return destinataires.map(getAffectationEntityText).filter(Boolean)
+  return [getAffectationEntityText(destinataires)]
+}
+
+const flattenAffectationEntries = (entry) => {
+  if (!entry) return []
+  if (Array.isArray(entry.affectations) && entry.affectations.length) {
+    return entry.affectations.flatMap(flattenAffectationEntries)
+  }
+  return [entry]
+}
+
+const parseAffectationCircuit = (response) => {
+  const data = response?.data
+  let entries = []
+
+  if (Array.isArray(data)) {
+    entries = data.flatMap(flattenAffectationEntries)
+  } else if (data) {
+    if (Array.isArray(data.affectations)) {
+      entries = data.affectations.flatMap(flattenAffectationEntries)
+    } else {
+      entries = flattenAffectationEntries(data)
+    }
+  }
+
+  const circuit = entries.map((entry) => ({
+    emetteur: getAffectationEntityText(entry.emetteur || entry.expediteur || entry.user || entry.created_by),
+    destinataires: normalizeAffectationDestinataires(entry.destinataires || entry.destinataire || entry.recepteurs || entry.users),
+    instructions: entry.instructions || entry.instruction || entry.message || '',
+    priority: entry.priority || entry.priorite || '',
+    statut: entry.statut || entry.status || '',
+    date_affect: entry.date_affect || entry.date_affectation || '',
+    raw: entry,
+  }))
+
+  return {
+    circuit,
+    isAffected: circuit.length > 0,
+  }
+}
+
+const fetchAffectationCircuit = async (documentId) => {
+  if (!documentId) return { circuit: [], isAffected: false }
+  try {
+    const authToken = localStorage.getItem('auth_token') || ''
+    const base = config.public.apiBase.replace(/\/$/, '')
+    const response = await $fetch(`${base}/documents/${documentId}/affectation-circuit`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+    return parseAffectationCircuit(response)
+  } catch (err) {
+    console.error(`❌ Erreur chargement affectation-circuit pour document ${documentId}:`, err)
+    return { circuit: [], isAffected: false }
+  }
+}
+
+const loadAffectationCircuits = async (documents) => {
+  if (!Array.isArray(documents) || documents.length === 0) return
+  await Promise.all(documents.map(async (doc) => {
+    const circuit = await fetchAffectationCircuit(doc.id)
+    doc.isAffected = circuit.isAffected
+    doc.affectation_circuit = circuit.circuit
+  }))
+}
+
+const rowClassByDocument = (item) => item?.isAffected ? '!bg-orange-50 !hover:bg-orange-100' : ''
+
+const hoveredAffectationItemId = ref(null)
+const affectationModalOpen = ref(false)
+const selectedAffectationItem = ref(null)
+
+const openAffectationPreview = (event, item) => {
+  const btn = event.currentTarget.querySelector('button')
+  if (btn) {
+    const rect = btn.getBoundingClientRect()
+    const tooltipHeight = 300 // hauteur estimée max de la card
+    const spaceBelow = window.innerHeight - rect.bottom
+    const spaceAbove = rect.top
+
+    if (spaceBelow >= tooltipHeight || spaceBelow >= spaceAbove) {
+      // Afficher en bas
+      tooltipStyle.value = {
+        top: `${rect.bottom + 8}px`,
+        right: `${window.innerWidth - rect.right}px`,
+      }
+    } else {
+      // Afficher en haut
+      tooltipStyle.value = {
+        bottom: `${window.innerHeight - rect.top + 8}px`,
+        right: `${window.innerWidth - rect.right}px`,
+      }
+    }
+  }
+  hoveredAffectationItemId.value = item?.id || null
+}
+
+const closeAffectationPreview = () => {
+  hoveredAffectationItemId.value = null
+}
+
+const openAffectationDetails = async (item) => {
+  if (!item) return
+  selectedAffectationItem.value = item
+  if (!item.affectation_circuit?.length && item.isAffected) {
+    const circuit = await fetchAffectationCircuit(item.id)
+    item.affectation_circuit = circuit.circuit
+    item.isAffected = circuit.isAffected
+  }
+  affectationModalOpen.value = true
+}
+
+const closeAffectationDetails = () => {
+  affectationModalOpen.value = false
+  selectedAffectationItem.value = null
+}
+
+const formatCircuitLabel = (node) => {
+  const destinatairesText = node.destinataires.length ? node.destinataires.join(', ') : 'Aucun destinataire'
+  return `De ${node.emetteur} à ${destinatairesText}`
 }
 
 // ── Handler affectation (VERSION CORRIGÉE) ────────────────────────────────
@@ -859,6 +1105,7 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
     })
 
     courriers.value = transformCourriers(response)
+    await loadAffectationCircuits(courriers.value)
     currentPage.value = response.meta.current_page
     totalPages.value = response.meta.last_page
     total.value = response.meta.total

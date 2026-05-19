@@ -195,7 +195,7 @@
 
         <tbody>
           <tr v-for="(item, index) in paginatedData" :key="item.id" class="group transition-colors duration-100"
-            :class="rowBg(item.id, index)">
+            :class="[rowBg(item.id, index), rowClass(item, index)]">
 
             <td v-if="showRowNumbers"
               class="px-3 py-2 text-center text-xs font-semibold text-indigo-500 border border-slate-100">
@@ -228,7 +228,7 @@
             </td>
 
             <td v-if="showActions" class="sticky right-0 px-3 py-2 text-right border border-slate-100"
-              :class="stickyBg(item.id, index)" style="box-shadow: -3px 0 8px rgba(0,0,0,0.05)">
+              :class="[stickyBg(item.id, index), rowClass(item, index)]" style="box-shadow: -3px 0 8px rgba(0,0,0,0.05)">
               <slot name="actions" :item="item">
                 <div class="flex items-center justify-end gap-1">
                   <UButton v-if="defaultActions.includes('view')" size="xs" color="blue" variant="ghost"
@@ -433,6 +433,7 @@ const props = defineProps({
   externalPage: { type: Number, default: 1 },
   externalLastPage: { type: Number, default: 1 },
   externalPerPage: { type: Number, default: 20 },
+  rowClass: { type: [Function, String], default: null },
   periodeDateField:  { type: String,  default: 'date_enreg' }, // champ actif
   periodeDateFrom:   { type: String,  default: '' },
   periodeDateTo:     { type: String,  default: '' },
@@ -569,9 +570,6 @@ const onMultiFilterChange = (col) => {
 // Mode externe : depuis props.columnFilterOptions
 // Mode interne : calculé depuis les données
 const getColumnOptions = (col) => {
-  console.log('getColumnOptions appelé pour:', col)
-  console.log('externalPagination:', props.externalPagination)
-  console.log('columnFilterOptions[col]:', props.columnFilterOptions[col])
   if (props.externalPagination) {
     return (props.columnFilterOptions[col] || [])
   }
@@ -829,8 +827,15 @@ watch(filteredData, () => {
 })
 
 // ── UI helpers ────────────────────────────────────────────────────────────
-const rowBg = (id, i) => selectedRows.value.includes(id) ? 'bg-indigo-50 hover:bg-indigo-100' : i % 2 === 0 ? 'bg-white hover:bg-indigo-50' : 'bg-slate-50 hover:bg-indigo-50'
-const stickyBg = (id, i) => selectedRows.value.includes(id) ? 'bg-indigo-50 group-hover:bg-indigo-100' : i % 2 === 0 ? 'bg-white group-hover:bg-indigo-50' : 'bg-slate-50 group-hover:bg-indigo-50'
+const rowClass = (item, i) => {
+  if (!props.rowClass) return ''
+  return typeof props.rowClass === 'function'
+    ? props.rowClass(item, i) || ''
+    : String(props.rowClass)
+}
+
+const rowBg = (id, i) => props.rowClass ? '' : selectedRows.value.includes(id) ? 'bg-indigo-50 hover:bg-indigo-100' : i % 2 === 0 ? 'bg-white hover:bg-indigo-50' : 'bg-slate-50 hover:bg-indigo-50'
+const stickyBg = (id, i) => props.rowClass ? '' : selectedRows.value.includes(id) ? 'bg-indigo-50 group-hover:bg-indigo-100' : i % 2 === 0 ? 'bg-white group-hover:bg-indigo-50' : 'bg-slate-50 group-hover:bg-indigo-50'
 
 const getInputContainerWidth = (col) => {
   if (col.inputWidth) return `width: ${col.inputWidth}`

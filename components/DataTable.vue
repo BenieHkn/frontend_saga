@@ -131,7 +131,7 @@
 
         <tbody>
           <tr v-for="(item, index) in paginatedData" :key="item.id" class="group transition-colors duration-100"
-            :class="rowBg(item.id, index)">
+            :class="rowBg(item, index)">
 
             <!-- N° ligne -->
             <td v-if="showRowNumbers"
@@ -453,8 +453,10 @@ const toggleOption = (col, val) => {
 const resetFilter = (col) => { multiSelectFilters.value[col] = [] }
 
 // ── UI helpers ────────────────────────────────────────────────────────────
-const rowBg = (id, index) => {
+const rowBg = (item, index) => {
+  const id = item?.id
   if (selectedRows.value.includes(id)) return 'bg-indigo-50 hover:bg-indigo-100'
+  if (item?.isAffected) return '!bg-orange-50 !hover:bg-orange-100'
   return index % 2 === 0 ? 'bg-white hover:bg-indigo-50' : 'bg-slate-50 hover:bg-indigo-50'
 }
 
