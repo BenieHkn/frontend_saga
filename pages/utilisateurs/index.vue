@@ -70,7 +70,8 @@
             { id: 'matricule', label: 'Matricule' },
             { id: 'nom', label: 'Nom' },
             { id: 'prenom', label: 'Prénom' },
-            { id: 'email', label: 'Email' }
+            { id: 'email', label: 'Email' },
+            { id: 'points_critiques', label: 'Entité' }
           ]" :key="field.id">
             <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
               {{ field.label }}
@@ -917,7 +918,10 @@ const loadUtilisateurs = async () => {
 
       // ── Colonne "Entité" (points_critiques) ─────────────────────────────
       const entiteAffichee = entitePrincipale
-        ? [{ libelle: entitePrincipale.entite?.libelle || '' }]
+        ? [{
+            libelle: entitePrincipale.entite?.libelle || '',
+            code:    entitePrincipale.entite?.code   || ''
+          }]
         : []
 
       // ── Fonctions intérimaires ────────────────────────────────────────────
