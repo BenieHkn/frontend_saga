@@ -18,259 +18,265 @@
     </div>
   </div>
 
-  <!-- Erreur -->
-  <div v-if="error" class="flex items-center gap-4 p-5 mb-5 bg-red-50 border border-red-200 rounded-xl max-w-2xl">
-    <Icon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-red-600 shrink-0" />
-    <div class="flex-1">
-      <p class="text-sm font-bold text-red-900">Erreur de chargement</p>
-      <p class="text-xs text-red-700">{{ error }}</p>
-    </div>
-    <button
-      class="px-4 py-2 text-xs font-bold text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors shrink-0"
-      @click="refresh(currentPage, perPage, false)">
-      Réessayer
-    </button>
+  <!-- Loader premier chargement -->
+  <div v-if="initialLoading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
+    <div class="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+    <span class="text-sm font-medium">Chargement des données...</span>
   </div>
-
-  <!-- DataTablePaginate -->
-  <DataTablePaginate :loading="loading" :data="affectationData" :columns="columns" :selectable="false"
-    :default-sort-column="null" :show-row-numbers="true" :show-actions="true" :default-actions="[]"
-    :items-per-page-options="[10, 20, 50, 100]" :default-items-per-page="20"
-    :left-aligned-columns="['objet_courrier', 'instructions', 'reference_courrier', 'emetteur', 'destinataire']"
-    :external-pagination="true" :external-total="total" :external-page="currentPage" :external-last-page="totalPages"
-    :external-per-page="perPage" @search-change="onSearchChange" @page-change="onPageChange"
-    @per-page-change="onPerPageChange" @column-filter-change="onColumnFilterChange">
-
-    <!-- ── Filtres avancés ── -->
-    <template #advanced-filters>
-      <div class="space-y-4">
-        <div class="flex flex-wrap gap-3">
-          <div class="flex-1 min-w-[140px]">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Référence</label>
-            <input v-model="searchFilters.reference_courrier" placeholder="Filtrer..."
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
-          </div>
-          <div class="flex-1 min-w-[200px]">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Objet</label>
-            <input v-model="searchFilters.objet_courrier" placeholder="Filtrer..."
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
-          </div>
-          <div class="flex-1 min-w-[160px]">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Émetteur</label>
-            <input v-model="searchFilters.emetteur" placeholder="Filtrer..."
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
-          </div>
-          <div class="flex-1 min-w-[150px]">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date d'affectation</label>
-            <input v-model="searchFilters.date_affect" type="date"
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
-          </div>
-        </div>
-        <div class="flex flex-wrap gap-3">
-          <div class="flex-1 min-w-[150px]">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de retour attendue</label>
-            <input v-model="searchFilters.delai_traitement" type="date"
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
-          </div>
-          <div class="flex-1 min-w-[150px]">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de clôture</label>
-            <input v-model="searchFilters.date_cloture" type="date"
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
-          </div>
-          <div class="flex-1 min-w-[140px]">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Statut</label>
-            <select v-model="searchFilters.statut"
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
-              <option value="">Tous</option>
-              <option value="en cours">En cours</option>
-              <option value="cloture">Clôturé</option>
-            </select>
-          </div>
-          <div class="flex-1 min-w-[140px]">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Priorité</label>
-            <select v-model="searchFilters.priority"
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
-              <option value="">Toutes</option>
-              <option value="URGENT">Urgent</option>
-              <option value="IMPORTANT">Important</option>
-              <option value="STANDARD">Standard</option>
-            </select>
-          </div>
-          <div class="flex-1 min-w-[140px]">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type</label>
-            <select v-model="searchFilters.type"
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
-              <option value="">Tous</option>
-              <option value="affectation">Affectation</option>
-              <option value="transfert">Transfert</option>
-            </select>
-          </div>
-        </div>
-        <div v-if="hasActiveFilters" class="flex justify-end">
-          <button @click="resetFilters"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-all">
-            <Icon name="i-heroicons-x-mark" class="w-3.5 h-3.5" />
-            Réinitialiser les filtres
-          </button>
-        </div>
+  <template v-else>
+    <!-- Erreur -->
+    <div v-if="error" class="flex items-center gap-4 p-5 mb-5 bg-red-50 border border-red-200 rounded-xl max-w-2xl">
+      <Icon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-red-600 shrink-0" />
+      <div class="flex-1">
+        <p class="text-sm font-bold text-red-900">Erreur de chargement</p>
+        <p class="text-xs text-red-700">{{ error }}</p>
       </div>
-    </template>
+      <button
+        class="px-4 py-2 text-xs font-bold text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors shrink-0"
+        @click="refresh(currentPage, perPage, false)">
+        Réessayer
+      </button>
+    </div>
 
-    <!-- ── Cellule statut ── -->
-    <template #cell-statut="{ value }">
-      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
-        :class="getStatutClasses(value)">
-        <span class="w-2 h-2 rounded-full mr-1.5" :class="getStatutDotClass(value)"></span>
-        {{ value }}
-      </span>
-    </template>
+    <!-- DataTablePaginate -->
+    <DataTablePaginate :loading="loading" :data="affectationData" :columns="columns" :selectable="false" :row-class="rowClassByAffectation"
+      :default-sort-column="null" :show-row-numbers="true" :show-actions="true" :default-actions="[]"
+      :items-per-page-options="[10, 20, 50, 100]" :default-items-per-page="20"
+      :left-aligned-columns="['objet_courrier', 'instructions', 'reference_courrier', 'emetteur', 'destinataire']"
+      :external-pagination="true" :external-total="total" :external-page="currentPage" :external-last-page="totalPages"
+      :external-per-page="perPage" @search-change="onSearchChange" @page-change="onPageChange"
+      @per-page-change="onPerPageChange" @column-filter-change="onColumnFilterChange">
 
-    <!-- ── Cellule priorité ── -->
-    <template #cell-priority="{ value }">
-      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
-        :class="getPriorityClasses(value)">
-        <span class="w-2 h-2 rounded-full mr-1.5" :class="getPriorityDotClass(value)"></span>
-        {{ value }}
-      </span>
-    </template>
-
-    <!-- ── Cellule objet ── -->
-    <template #cell-objet_courrier="{ value }">
-      <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
-        {{ value }}
-      </span>
-    </template>
-
-    <!-- ── Référence cliquable → ouvre via Blob ── -->
-    <template #cell-reference_courrier="{ value, item }">
-      <div class="w-full">
-        <button v-if="item._raw?.courrier_arrive?.document?.url && item._raw.courrier_arrive.document.url !== 'Inconnu'"
-          @click="handleViewDetails(item)"
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
-          :disabled="openingDocumentId === item.id" :title="`Ouvrir le document ${value}`">
-          <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
-          <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
-        </button>
-        <span v-else
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
-          :title="value">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
-          <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
-        </span>
-      </div>
-    </template>
-
-    <!-- ── Actions ── -->
-    <template #actions="{ item }">
-      <div class="flex gap-1.5 justify-end">
-
-        <!-- Voir les détails — toujours actif -->
-        <button @click="handleViewDetails(item)" title="Voir les détails"
-          class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
-          <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
-        </button>
-
-        <!-- Circuit d'affectation — survol + popup -->
-        <div class="relative" @mouseenter="openAffectationPreview($event, item)" @mouseleave="closeAffectationPreview">
-          <button @click="openAffectationCircuitDetails(item)" type="button"
-            title="Voir le circuit d'affectation"
-            class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-orange-700 border border-orange-100 rounded-md hover:bg-orange-100 transition-all group">
-            <Icon name="i-heroicons-users" class="w-4 h-4 group-hover:text-orange-900" />
-          </button>
-
-          <Teleport to="body">
-            <div v-if="hoveredAffectationItemId === item.id"
-              class="fixed z-[9999] w-[340px] bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 text-xs text-slate-700 pointer-events-none"
-              :style="tooltipStyle">
-              <div class="flex items-center justify-between gap-2 mb-3">
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Circuit d'affectation</div>
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-100 text-[10px]">
-                  <Icon name="i-heroicons-users" class="w-3 h-3" />
-                  {{ item.isAffected ? 'Affecté' : 'Vide' }}
-                </span>
-              </div>
-              <div class="space-y-2">
-                <template v-if="item.affectation_circuit?.length">
-                  <div v-for="(node, idx) in item.affectation_circuit" :key="idx"
-                    class="rounded-xl border border-slate-100 bg-slate-50 p-2.5 space-y-1.5">
-                    <div class="flex items-center justify-between gap-2">
-                      <div class="text-[11px] font-semibold text-slate-800">{{ node.emetteur }}</div>
-                      <span v-if="node.raw?.id"
-                        class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-bold rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100">
-                        #{{ node.raw.id }}
-                      </span>
-                    </div>
-                    <div class="pl-2 space-y-1 text-[11px] text-slate-600 border-l-2 border-slate-200">
-                      <div><strong>Destinataires :</strong> {{ node.destinataires.join(', ') || 'Aucun destinataire' }}</div>
-                      <div><strong>Priorité :</strong> {{ node.priority || '—' }}</div>
-                      <div><strong>Instruction :</strong> {{ node.instructions || 'Aucune instruction' }}</div>
-                    </div>
-                  </div>
-                </template>
-                <div v-else class="text-[11px] text-slate-500 py-1">Aucun circuit d'affectation trouvé.</div>
-              </div>
+      <!-- ── Filtres avancés ── -->
+      <template #advanced-filters>
+        <div class="space-y-4">
+          <div class="flex flex-wrap gap-3">
+            <div class="flex-1 min-w-[140px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Référence</label>
+              <input v-model="searchFilters.reference_courrier" placeholder="Filtrer..."
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
             </div>
-          </Teleport>
+            <div class="flex-1 min-w-[200px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Objet</label>
+              <input v-model="searchFilters.objet_courrier" placeholder="Filtrer..."
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+            </div>
+            <div class="flex-1 min-w-[160px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Émetteur</label>
+              <input v-model="searchFilters.emetteur" placeholder="Filtrer..."
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+            </div>
+            <div class="flex-1 min-w-[150px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date d'affectation</label>
+              <input v-model="searchFilters.date_affect" type="date"
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <div class="flex-1 min-w-[150px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de retour attendue</label>
+              <input v-model="searchFilters.delai_traitement" type="date"
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+            </div>
+            <div class="flex-1 min-w-[150px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date de clôture</label>
+              <input v-model="searchFilters.date_cloture" type="date"
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+            </div>
+            <div class="flex-1 min-w-[140px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Statut</label>
+              <select v-model="searchFilters.statut"
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
+                <option value="">Tous</option>
+                <option value="en cours">En cours</option>
+                <option value="cloture">Clôturé</option>
+              </select>
+            </div>
+            <div class="flex-1 min-w-[140px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Priorité</label>
+              <select v-model="searchFilters.priority"
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
+                <option value="">Toutes</option>
+                <option value="URGENT">Urgent</option>
+                <option value="IMPORTANT">Important</option>
+                <option value="STANDARD">Standard</option>
+              </select>
+            </div>
+            <div class="flex-1 min-w-[140px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Type</label>
+              <select v-model="searchFilters.type"
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
+                <option value="">Tous</option>
+                <option value="affectation">Affectation</option>
+                <option value="transfert">Transfert</option>
+              </select>
+            </div>
+          </div>
+          <div v-if="hasActiveFilters" class="flex justify-end">
+            <button @click="resetFilters"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-all">
+              <Icon name="i-heroicons-x-mark" class="w-3.5 h-3.5" />
+              Réinitialiser les filtres
+            </button>
+          </div>
         </div>
+      </template>
 
-        <!-- Bouton Affecter -->
-        <template v-if="isResponsable">
-          <button
+      <!-- ── Cellule statut ── -->
+      <template #cell-statut="{ value }">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
+          :class="getStatutClasses(value)">
+          <span class="w-2 h-2 rounded-full mr-1.5" :class="getStatutDotClass(value)"></span>
+          {{ value }}
+        </span>
+      </template>
+
+      <!-- ── Cellule priorité ── -->
+      <template #cell-priority="{ value }">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
+          :class="getPriorityClasses(value)">
+          <span class="w-2 h-2 rounded-full mr-1.5" :class="getPriorityDotClass(value)"></span>
+          {{ value }}
+        </span>
+      </template>
+
+      <!-- ── Cellule objet ── -->
+      <template #cell-objet_courrier="{ value }">
+        <span class="block text-xs text-slate-800 leading-relaxed whitespace-normal break-words min-w-[200px]" :title="value">
+          {{ value }}
+        </span>
+      </template>
+
+      <!-- ── Référence cliquable → ouvre via Blob ── -->
+      <template #cell-reference_courrier="{ value, item }">
+        <div class="w-full">
+          <button v-if="item._raw?.courrier_arrive?.document?.url && item._raw.courrier_arrive.document.url !== 'Inconnu'"
+            @click="handleViewDetails(item)"
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
+            :disabled="openingDocumentId === item.id" :title="`Ouvrir le document ${value}`">
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+            <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
+          </button>
+          <span v-else
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[180px]"
+            :title="value">
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 opacity-50" />
+            <span class="break-words whitespace-normal min-w-0">{{ value }}</span>
+          </span>
+        </div>
+      </template>
+
+      <!-- ── Actions ── -->
+      <template #actions="{ item }">
+        <div class="flex gap-1.5 justify-end">
+
+          <!-- Voir les détails — toujours actif -->
+          <button @click="handleViewDetails(item)" title="Voir les détails"
+            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
+            <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
+          </button>
+
+          <!-- Circuit d'affectation — survol + popup -->
+          <div class="relative" @mouseenter="openAffectationPreview($event, item)" @mouseleave="closeAffectationPreview">
+            <button @click="openAffectationCircuitDetails(item)" type="button"
+              title="Voir le circuit d'affectation"
+              class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-orange-700 border border-orange-100 rounded-md hover:bg-orange-100 transition-all group">
+              <Icon name="i-heroicons-users" class="w-4 h-4 group-hover:text-orange-900" />
+            </button>
+
+            <Teleport to="body">
+              <div v-if="hoveredAffectationItemId === item.id"
+                class="fixed z-[9999] w-[340px] bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 text-xs text-slate-700 pointer-events-none"
+                :style="tooltipStyle">
+                <div class="flex items-center justify-between gap-2 mb-3">
+                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Circuit d'affectation</div>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-100 text-[10px]">
+                    <Icon name="i-heroicons-users" class="w-3 h-3" />
+                    {{ item.isAffected ? 'Affecté' : 'Vide' }}
+                  </span>
+                </div>
+                <div class="space-y-2">
+                  <template v-if="item.affectation_circuit?.length">
+                    <div v-for="(node, idx) in item.affectation_circuit" :key="idx"
+                      class="rounded-xl border border-slate-100 bg-slate-50 p-2.5 space-y-1.5">
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="text-[11px] font-semibold text-slate-800">{{ node.emetteur }}</div>
+                        <span v-if="node.raw?.id"
+                          class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-bold rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100">
+                          #{{ node.raw.id }}
+                        </span>
+                      </div>
+                      <div class="pl-2 space-y-1 text-[11px] text-slate-600 border-l-2 border-slate-200">
+                        <div><strong>Destinataires :</strong> {{ node.destinataires.join(', ') || 'Aucun destinataire' }}</div>
+                        <div><strong>Priorité :</strong> {{ node.priority || '—' }}</div>
+                        <div><strong>Instruction :</strong> {{ node.instructions || 'Aucune instruction' }}</div>
+                      </div>
+                    </div>
+                  </template>
+                  <div v-else class="text-[11px] text-slate-500 py-1">Aucun circuit d'affectation trouvé.</div>
+                </div>
+              </div>
+            </Teleport>
+          </div>
+
+          <!-- Bouton Affecter -->
+          <template v-if="isResponsable">
+            <button
+              v-if="!isActionBlocked(item)"
+              @click="handleQuickAssign(item.courrier_id)"
+              :disabled="!item.courrier_id"
+              title="Affecter ce courrier"
+              class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
+              <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
+            </button>
+            <div
+              v-else
+              :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+              class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
+              <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
+            </div>
+          </template>
+
+          <!-- Bouton Transférer -->
+          <template v-if="isResponsable">
+            <button
+              v-if="!isActionBlocked(item)"
+              @click="handleQuickTransfer(item.courrier_id)"
+              :disabled="!item.courrier_id"
+              title="Transférer ce courrier"
+              class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
+              <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4 group-hover:text-green-600" />
+            </button>
+            <div
+              v-else
+              :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+              class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
+              <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4" />
+            </div>
+          </template>
+
+          <!-- Bouton Clôturer -->
+          <!-- <button
             v-if="!isActionBlocked(item)"
-            @click="handleQuickAssign(item.courrier_id)"
-            :disabled="!item.courrier_id"
-            title="Affecter ce courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
-            <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
+            @click="handleCloturer(item)"
+            :disabled="cloturingId === item.id"
+            title="Clôturer cette affectation"
+            class="inline-flex items-center justify-center w-8 h-8 bg-rose-50 text-rose-700 border border-rose-100 rounded-md hover:bg-rose-200 hover:text-rose-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
+            <div v-if="cloturingId === item.id" class="w-3.5 h-3.5 border-2 border-rose-200 border-t-rose-600 rounded-full animate-spin"></div>
+            <Icon v-else name="i-heroicons-lock-closed" class="w-4 h-4 group-hover:text-rose-600" />
           </button>
           <div
             v-else
-            :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+            :title="item.is_cloture ? 'Déjà clôturée' : 'Ce courrier a déjà une réponse'"
             class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
-            <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
-          </div>
-        </template>
+            <Icon name="i-heroicons-lock-closed" class="w-4 h-4" />
+          </div> -->
 
-        <!-- Bouton Transférer -->
-        <template v-if="isResponsable">
-          <button
-            v-if="!isActionBlocked(item)"
-            @click="handleQuickTransfer(item.courrier_id)"
-            :disabled="!item.courrier_id"
-            title="Transférer ce courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
-            <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4 group-hover:text-green-600" />
-          </button>
-          <div
-            v-else
-            :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
-            class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
-            <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4" />
-          </div>
-        </template>
+        </div>
+      </template>
 
-        <!-- Bouton Clôturer -->
-        <!-- <button
-          v-if="!isActionBlocked(item)"
-          @click="handleCloturer(item)"
-          :disabled="cloturingId === item.id"
-          title="Clôturer cette affectation"
-          class="inline-flex items-center justify-center w-8 h-8 bg-rose-50 text-rose-700 border border-rose-100 rounded-md hover:bg-rose-200 hover:text-rose-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
-          <div v-if="cloturingId === item.id" class="w-3.5 h-3.5 border-2 border-rose-200 border-t-rose-600 rounded-full animate-spin"></div>
-          <Icon v-else name="i-heroicons-lock-closed" class="w-4 h-4 group-hover:text-rose-600" />
-        </button>
-        <div
-          v-else
-          :title="item.is_cloture ? 'Déjà clôturée' : 'Ce courrier a déjà une réponse'"
-          class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
-          <Icon name="i-heroicons-lock-closed" class="w-4 h-4" />
-        </div> -->
-
-      </div>
-    </template>
-
-  </DataTablePaginate>
-
+    </DataTablePaginate>
+  </template>
   <UModal v-model="circuitModalOpen" :ui="{ width: 'sm:max-w-3xl' }">
     <div v-if="selectedCircuitAffectation" class="bg-white rounded-xl overflow-hidden">
       <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
@@ -741,6 +747,39 @@ const getAffectationEntityText = (entity) => {
   return [fullName, code, role].filter(Boolean).join(' • ') || 'Inconnu'
 }
 
+const getEntityId = (entity) => {
+  if (!entity) return null
+  if (typeof entity === 'number') return entity
+  if (typeof entity === 'string') {
+    const parsed = parseInt(entity, 10)
+    return Number.isNaN(parsed) ? null : parsed
+  }
+  return entity.id ?? entity.entite_user_id ?? entity.user?.id ?? entity.entite_user?.id ?? null
+}
+
+const getAffectationActorId = (affectation) => {
+  if (!affectation) return null
+  return getEntityId(affectation.emetteur || affectation.expediteur || affectation.user || affectation.created_by)
+}
+
+const getCurrentUserEffectiveId = () => {
+  if (!process.client) return null
+  const raw = localStorage.getItem('entite_user')
+  if (!raw) return null
+  const entiteUser = JSON.parse(raw)
+  if (!entiteUser?.id) return null
+
+  return isSecDir() ? (getDirecteurEntiteUserId() ?? entiteUser.id) : entiteUser.id
+}
+
+const computeIsAffectedFromCircuit = (circuit, currentUserId) => {
+  if (!Array.isArray(circuit) || !currentUserId) return false
+  return circuit.some((entry) => {
+    const actorId = getEntityId(entry.raw?.emetteur || entry.raw?.expediteur || entry.raw?.user || entry.raw?.created_by)
+    return actorId === currentUserId
+  })
+}
+
 const normalizeAffectationDestinataires = (destinataires) => {
   if (!destinataires) return []
   if (Array.isArray(destinataires)) return destinataires.map(getAffectationEntityText).filter(Boolean)
@@ -825,7 +864,7 @@ const openAffectationPreview = async (event, item) => {
   if (documentId && !item.affectation_circuit?.length) {
     const circuit = await fetchAffectationCircuit(documentId)
     item.affectation_circuit = circuit.circuit
-    item.isAffected = circuit.isAffected
+    item.isAffected = computeIsAffectedFromCircuit(circuit.circuit, getCurrentUserEffectiveId())
   }
 
   hoveredAffectationItemId.value = item?.id || null
@@ -842,7 +881,7 @@ const openAffectationCircuitDetails = async (item) => {
   if (documentId && !item.affectation_circuit?.length) {
     const circuit = await fetchAffectationCircuit(documentId)
     item.affectation_circuit = circuit.circuit
-    item.isAffected = circuit.isAffected
+    item.isAffected = computeIsAffectedFromCircuit(circuit.circuit, getCurrentUserEffectiveId())
   }
   circuitModalOpen.value = true
 }
@@ -966,66 +1005,164 @@ const loadReponseData = async (reponseId) => {
 const transformerDonneesAPI = (reponseAPI) => {
   if (!reponseAPI?.data) throw new Error('Format de réponse API invalide')
 
-  return reponseAPI.data.map(affectation => {
-    let emetteurFormate = ''
-    if (affectation?.emetteur?.user?.nom && affectation?.emetteur?.entite?.code) {
-      const nomComplet = `${affectation.emetteur.user.nom} ${affectation.emetteur.user.prenom || ''}`.trim()
-      const codeEntite = affectation.emetteur.entite.code
-      const isResp     = affectation.emetteur.is_responsable
-      emetteurFormate  = isResp ? `${nomComplet} (${codeEntite})` : `${nomComplet} - Agent / ${codeEntite}`
-    }
+  // ✅ Grouper par courrier_arrive_id
+  const groupedByCourrier = new Map()
 
+  reponseAPI.data.forEach(affectation => {
+    const courrierId = affectation.courrier_arrive_id
+    if (!courrierId) return
+
+    if (!groupedByCourrier.has(courrierId)) {
+      groupedByCourrier.set(courrierId, {
+        affectations: [],
+        courrier_arrive: affectation.courrier_arrive,
+        id_affectation: affectation.id,
+        emetteur_original: affectation.emetteur,
+        destinataire_original: affectation.destinataire
+      })
+    }
+    
+    groupedByCourrier.get(courrierId).affectations.push(affectation)
+  })
+
+  // Transformer chaque groupe en une seule ligne
+  const result = []
+  
+  for (const [courrierId, group] of groupedByCourrier) {
+    const affectations = group.affectations
+    
+    // Trouver l'affectation qui concerne l'utilisateur connecté (destinataire)
+    let currentUserAffectation = null
+    let lastAffectationForCurrentUser = null
+    
+    // Récupérer l'ID de l'utilisateur connecté et traiter les cas de secrétariat de direction
+    const currentUserId = getCurrentUserEffectiveId()
+    
+    // Parcourir toutes les affectations pour trouver celle de l'utilisateur courant
+    for (const aff of affectations) {
+      const destinataireId = getEntityId(aff.destinataire)
+      if (destinataireId && destinataireId === currentUserId) {
+        currentUserAffectation = aff
+        // La dernière affectation pour cet utilisateur (la plus récente)
+        if (!lastAffectationForCurrentUser || 
+            new Date(aff.created_at || 0) > new Date(lastAffectationForCurrentUser.created_at || 0)) {
+          lastAffectationForCurrentUser = aff
+        }
+      }
+    }
+    
+    // Si aucune affectation directe trouvée, prendre la dernière affectation du circuit
+    const finalAffectation = lastAffectationForCurrentUser || affectations[affectations.length - 1]
+    
+    // Formater l'émetteur
+    let emetteurFormate = ''
+    if (finalAffectation?.emetteur?.user?.nom && finalAffectation?.emetteur?.entite?.code) {
+      const nomComplet = `${finalAffectation.emetteur.user.nom} ${finalAffectation.emetteur.user.prenom || ''}`.trim()
+      const codeEntite = finalAffectation.emetteur.entite.code
+      const isResp = finalAffectation.emetteur.is_responsable
+      emetteurFormate = isResp ? `${nomComplet} (${codeEntite})` : `${nomComplet} - Agent / ${codeEntite}`
+    }
+    
+    // Formater le destinataire
     let destinataireFormate = ''
-    if (affectation?.destinataire?.user?.nom && affectation?.destinataire?.entite?.code) {
-      const nomComplet    = `${affectation.destinataire.user.nom} ${affectation.destinataire.user.prenom || ''}`.trim()
-      const codeEntite    = affectation.destinataire.entite.code
-      const isResp        = affectation.destinataire.is_responsable
+    if (finalAffectation?.destinataire?.user?.nom && finalAffectation?.destinataire?.entite?.code) {
+      const nomComplet = `${finalAffectation.destinataire.user.nom} ${finalAffectation.destinataire.user.prenom || ''}`.trim()
+      const codeEntite = finalAffectation.destinataire.entite.code
+      const isResp = finalAffectation.destinataire.is_responsable
       destinataireFormate = isResp ? `${nomComplet} (${codeEntite})` : `${nomComplet} - Agent / ${codeEntite}`
     }
-
-    const rawUrl = affectation?.courrier_arrive?.document?.url?.trim()
-
-    return {
-      id:                 affectation.id,
-      courrier_id:        affectation.courrier_arrive_id || null,
-      reference_courrier: affectation?.courrier_arrive?.document?.reference || '',
-      numero_enreg:       affectation?.courrier_arrive?.document?.numero_enreg || '',
-      objet_courrier:     affectation?.courrier_arrive?.document?.objet      || '',
-      doc_courrier:       (rawUrl && rawUrl !== 'Inconnu') ? rawUrl : '',
-      date_affect:        formatDate(affectation.date_affect),
-      instructions:       affectation.instructions || '',
-      structure:          affectation?.courrier_arrive?.structure || '',
-      statut:             affectation.statut   || '',
-      priority:           affectation.priority || '',
-      delai_traitement:   formatDate(affectation.delai_traitement),
-      date_cloture:       formatDate(affectation.date_cloture),
-      emetteur:           emetteurFormate,
-      destinataire:       destinataireFormate,
-      // ✅ Bloquant : courrier déjà répondu
-      a_reponse:  !!(affectation?.courrier_arrive?.document?.reponse),
-      // ✅ Bloquant : affectation clôturée
-      is_cloture: affectation.statut === 'cloture',
-      isAffected: false,
-      affectation_circuit: [],
-      _raw: affectation,
+    
+    const rawUrl = group.courrier_arrive?.document?.url?.trim()
+    
+    // Déterminer le statut global (si une affectation est en cours, le statut global est "en cours")
+    let globalStatut = 'en attente'
+    let isCloture = true
+    let hasReponse = false
+    
+    for (const aff of affectations) {
+      if (aff.statut === 'en cours') {
+        globalStatut = 'en cours'
+        isCloture = false
+      }
+      if (aff.statut !== 'cloture') {
+        isCloture = false
+      }
+      if (aff.courrier_arrive?.document?.reponse) {
+        hasReponse = true
+      }
     }
-  })
+    
+    // Utiliser le statut de l'affectation courante si trouvée
+    if (finalAffectation?.statut) {
+      globalStatut = finalAffectation.statut
+      isCloture = finalAffectation.statut === 'cloture'
+    }
+    
+    result.push({
+      id: courrierId, // Utiliser l'ID du courrier comme identifiant unique
+      courrier_id: courrierId,
+      reference_courrier: group.courrier_arrive?.document?.reference || '',
+      numero_enreg: group.courrier_arrive?.document?.numero_enreg || '',
+      objet_courrier: group.courrier_arrive?.document?.objet || '',
+      doc_courrier: (rawUrl && rawUrl !== 'Inconnu') ? rawUrl : '',
+      date_affect: finalAffectation?.date_affect ? formatDate(finalAffectation.date_affect) : '',
+      instructions: finalAffectation?.instructions || '', // ✅ Instruction de la dernière affectation pour cet utilisateur
+      structure: group.courrier_arrive?.structure || '',
+      statut: globalStatut,
+      priority: finalAffectation?.priority || 'STANDARD',
+      delai_traitement: finalAffectation?.delai_traitement ? formatDate(finalAffectation.delai_traitement) : '',
+      date_cloture: finalAffectation?.date_cloture ? formatDate(finalAffectation.date_cloture) : '',
+      emetteur: emetteurFormate,
+      destinataire: destinataireFormate,
+      a_reponse: hasReponse,
+      is_cloture: isCloture,
+      isAffected: currentUserId ? affectations.some((aff) => getAffectationActorId(aff) === currentUserId) : false,
+      affectation_circuit: [], // Sera rempli par loadAffectationCircuits
+      all_affectations: affectations, // Garder toutes les affectations pour référence
+      _raw: finalAffectation || affectations[0], // Utiliser l'affectation courante comme _raw
+    })
+  }
+  
+  return result
 }
 
-// ── Chargement ────────────────────────────────────────────────────────────────
+// Déplace la fonction loadAffectationCircuits AVANT refresh
+const loadAffectationCircuits = async (documents) => {
+  if (!Array.isArray(documents) || documents.length === 0) return
+  const currentUserId = getCurrentUserEffectiveId()
+  await Promise.all(documents.map(async (doc) => {
+    try {
+      const documentId = doc._raw?.courrier_arrive?.document?.id || null
+      if (!documentId) return
+      const circuit = await fetchAffectationCircuit(documentId)
+      doc.affectation_circuit = circuit.circuit
+      doc.isAffected = computeIsAffectedFromCircuit(circuit.circuit, currentUserId)
+    } catch (e) {
+      console.error('Erreur chargement circuit:', e)
+      // Ne pas propager l'erreur pour ne pas bloquer les autres
+    }
+  }))
+}
+
+// Ensuite, modifie le refresh pour gérer correctement les erreurs
 const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
   if (isFirst) { initialLoading.value = true } else { loading.value = true }
   error.value = null
 
   try {
-    const authToken     = localStorage.getItem('auth_token') || ''
-    let entite_user     = null
+    const authToken = localStorage.getItem('auth_token') || ''
+    let entite_user = null
     const savedFunction = localStorage.getItem('entite_user')
     if (savedFunction) {
-      entite_user         = JSON.parse(savedFunction)
+      entite_user = JSON.parse(savedFunction)
       isResponsable.value = entite_user.is_responsable || false
     }
-    if (!entite_user?.id) { error.value = 'Aucune fonction user sélectionnée'; return }
+    if (!entite_user?.id) { 
+      error.value = 'Aucune fonction user sélectionnée'
+      initialLoading.value = false
+      loading.value = false
+      return
+    }
 
     const destinataireId = isSecDir()
       ? (getDirecteurEntiteUserId() ?? entite_user.id)
@@ -1052,23 +1189,37 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
     if (!f.objet_courrier     && c.objet_courrier)     params.append('objet_courrier',     c.objet_courrier)
     if (!f.emetteur           && c.emetteur)           params.append('emetteur',           c.emetteur)
 
-    const base    = config.public.apiBase.replace(/\/$/, '')
+    const base = config.public.apiBase.replace(/\/$/, '')
     const reponse = await $fetch(
       `${base}/affectations/destinataire/${destinataireId}?${params.toString()}`,
       { method: 'GET', headers: { Authorization: `Bearer ${authToken}` } }
     )
 
-    affectationData.value = transformerDonneesAPI(reponse)
-    currentPage.value     = reponse.meta?.current_page ?? page
-    totalPages.value      = reponse.meta?.last_page    ?? 1
-    total.value           = reponse.meta?.total        ?? affectationData.value.length
+    // ✅ Préparer les données sans les afficher encore
+    const newData = transformerDonneesAPI(reponse)
+    currentPage.value = reponse.meta?.current_page ?? page
+    totalPages.value = reponse.meta?.last_page ?? 1
+    total.value = reponse.meta?.total ?? newData.length
+
+    // ✅ Charger TOUS les circuits d'affectation avant d'afficher
+    // Utiliser try-catch pour ne pas bloquer l'affichage si les circuits échouent
+    try { 
+      await loadAffectationCircuits(newData) 
+    } catch (circuitErr) { 
+      console.error('Erreur chargement circuits:', circuitErr)
+      // Continue l'exécution - les données s'affichent quand même
+    }
+
+    // ✅ Affectation unique — le tableau apparaît
+    affectationData.value = newData
 
   } catch (err) {
+    console.error('Erreur refresh:', err)
     error.value = err.message || 'Erreur lors du chargement des données'
     toast.add({ title: 'Erreur', description: 'Impossible de charger les affectations', color: 'red', timeout: 1500 })
   } finally {
     initialLoading.value = false
-    loading.value        = false
+    loading.value = false
   }
 }
 
@@ -1086,6 +1237,8 @@ const getStatutClasses  = (s) => ({ 'en attente': 'bg-gray-100 text-gray-800', '
 const getStatutDotClass = (s) => ({ 'en attente': 'bg-gray-500', 'en cours': 'bg-blue-500', 'traite': 'bg-green-500', 'cloture': 'bg-emerald-500', 'annule': 'bg-red-500' }[s] || 'bg-gray-500')
 const getPriorityClasses  = (p) => ({ URGENT: 'bg-red-100 text-red-800', IMPORTANT: 'bg-orange-100 text-orange-800', STANDARD: 'bg-blue-100 text-blue-800' }[p] || 'bg-gray-100 text-gray-800')
 const getPriorityDotClass = (p) => ({ URGENT: 'bg-red-500', IMPORTANT: 'bg-orange-500', STANDARD: 'bg-blue-500' }[p] || 'bg-gray-500')
+
+const rowClassByAffectation = (item) => item?.isAffected ? '!bg-orange-50 !hover:bg-orange-100' : ''
 
 // ── Handlers actions ──────────────────────────────────────────────────────────
 const handleViewDetails = async (item) => {
@@ -1216,8 +1369,10 @@ const handleQuickTransfer = (courrierId) => {
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
-onMounted(() => {
-  refresh(1, perPage.value, true)
+onMounted(async () => {
+  await Promise.all([
+    refresh(1, perPage.value, true),
+  ])
 })
 </script>
 
