@@ -340,6 +340,12 @@
       <!-- ── Filtres avancés ──────────────────────────────────────────── -->
       <template #advanced-filters>
         <div class="space-y-4">
+          <PeriodFilter
+            :field="searchFilters.date_field"
+            :from="searchFilters.date_from"
+            :to="searchFilters.date_to"
+            @change="onPeriodChange" />
+
           <div class="flex flex-wrap gap-3">
             <div class="flex-1 min-w-[120px]">
               <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">N° d'enreg.</label>
@@ -615,6 +621,14 @@ const props = defineProps({
   entiteId: { type: Number, default: null }
 })
 
+const onPeriodChange = ({ field, from, to }) => {
+  searchFilters.value.date_field = field
+  searchFilters.value.date_from  = from
+  searchFilters.value.date_to    = to
+  currentPage.value = 1
+  refresh(1, perPage.value, false)
+}
+
 const store          = useAffectationsStore()
 const courriersStore = useCourriersStore()
 const config         = useRuntimeConfig()
@@ -787,6 +801,9 @@ const defaultFilters = () => ({
   priority:         '',
   type_document_id: '',
   confidentiel:     '',
+  date_from:  '',
+  date_to:    '',
+  date_field: 'date_enreg',
 })
 
 const searchFilters = ref(defaultFilters())
@@ -1022,6 +1039,12 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
     if (!f.objet         && c.objet)         params.append('objet',         c.objet)
     if (!f.service_enreg && c.source)        params.append('service_enreg', c.source)
     if (!f.structure     && c.structure)     params.append('structure',     c.structure)
+
+    const isFullDate = (v) => /^\d{2}\/\d{2}\/\d{4}$/.test((v || '').trim())
+
+    if (f.date_from && isFullDate(f.date_from)) params.append('date_from',  f.date_from)
+    if (f.date_to   && isFullDate(f.date_to))   params.append('date_to',    f.date_to)
+    if ((f.date_from || f.date_to))              params.append('date_field', f.date_field || 'date_enreg')
 
     const response = await $fetch(`${base}/courriers-arrives?${params.toString()}`, {
       headers: { Authorization: `Bearer ${authToken}` },
