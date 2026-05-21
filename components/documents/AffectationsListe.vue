@@ -44,8 +44,17 @@
       :items-per-page-options="[10, 20, 50, 100]" :default-items-per-page="20"
       :left-aligned-columns="['objet_courrier', 'instructions', 'reference_courrier', 'emetteur', 'destinataire']"
       :external-pagination="true" :external-total="total" :external-page="currentPage" :external-last-page="totalPages"
-      :external-per-page="perPage" @search-change="onSearchChange" @page-change="onPageChange"
+      :external-per-page="perPage" :show-period-loading="periodLoading" @search-change="onSearchChange" @page-change="onPageChange"
       @per-page-change="onPerPageChange" @column-filter-change="onColumnFilterChange">
+
+      <template #toolbar-extra>
+        <PeriodFilter
+          :field="searchFilters.date_field"
+          :from="searchFilters.date_from"
+          :to="searchFilters.date_to"
+          :loading="loading"
+          @change="onPeriodChange" />
+      </template>
 
       <!-- ── Filtres avancés ── -->
       <template #advanced-filters>
@@ -656,6 +665,7 @@ const totalPages      = ref(1)
 const total           = ref(0)
 const perPage         = ref(20)
 const isResponsable   = ref(false)
+const periodLoading   = ref(false)
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 const detailsOpen                 = ref(false)
@@ -693,6 +703,9 @@ const defaultFilters = () => ({
   statut:             '',
   priority:           '',
   structure:          '',
+  date_from:          '',
+  date_to:            '',
+  date_field:         'date_enreg',
 })
 
 const searchFilters = ref(defaultFilters())
@@ -730,6 +743,15 @@ watch(searchFilters, () => {
     refresh(1, perPage.value, false)
   }, 400)
 }, { deep: true })
+
+const onPeriodChange = ({ field, from, to }) => {
+  searchFilters.value.date_field = field
+  searchFilters.value.date_from  = from
+  searchFilters.value.date_to    = to
+  currentPage.value = 1
+  periodLoading.value = true
+  refresh(1, perPage.value, false)
+}
 
 // ── Helper : actions bloquées si clôturé OU courrier déjà répondu ─────────────
 const isActionBlocked = (item) => {
@@ -1182,6 +1204,9 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
     if (f.statut)             params.append('statut',             f.statut)
     if (f.priority)           params.append('priority',           f.priority)
     if (f.structure)          params.append('structure',          f.structure)
+    if (f.date_from)          params.append('date_from',          f.date_from)
+    if (f.date_to)            params.append('date_to',            f.date_to)
+    if (f.date_from || f.date_to) params.append('date_field', f.date_field || 'date_enreg')
 
     const c = columnFilters.value
     if (!f.reference_courrier && c.reference_courrier) params.append('reference_courrier', c.reference_courrier)
@@ -1220,6 +1245,7 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
   } finally {
     initialLoading.value = false
     loading.value = false
+    periodLoading.value = false
   }
 }
 

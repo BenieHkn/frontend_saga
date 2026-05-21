@@ -322,6 +322,15 @@
       :column-filter-options="columnFilterOptions" @multi-filter-change="onMultiFilterChange"
       :row-class="rowClassByDocument">
 
+      <template #toolbar-extra>
+        <PeriodFilter
+          :field="searchFilters.date_field"
+          :from="searchFilters.date_from"
+          :to="searchFilters.date_to"
+          :loading="loading"
+          @change="onPeriodChange" />
+      </template>
+
       <template #advanced-filters>
         <div class="space-y-4">
           <div class="flex flex-wrap gap-3">
@@ -602,6 +611,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import DataTablePaginate from '~/components/DataTablePaginate.vue'
+import PeriodFilter from '~/components/PeriodFilter.vue'
 import SearchableSelect from '~/components/SearchableSelect.vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
 import { useAffectationsStore } from '~/stores/affectations'
@@ -649,6 +659,9 @@ const defaultFilters = () => ({
   date_enreg: '',
   date_courrier: '',
   type: '',
+  date_from: '',
+  date_to: '',
+  date_field: 'date_enreg',
 })
 
 const searchFilters = ref(defaultFilters())
@@ -682,6 +695,14 @@ const onColumnFilterChange = (val) => {
 
 const onMultiFilterChange = ({ all }) => {
   multiFilters.value = { ...all }
+  currentPage.value = 1
+  refresh(1, perPage.value, false)
+}
+
+const onPeriodChange = ({ field, from, to }) => {
+  searchFilters.value.date_field = field
+  searchFilters.value.date_from  = from
+  searchFilters.value.date_to    = to
   currentPage.value = 1
   refresh(1, perPage.value, false)
 }
@@ -1086,6 +1107,9 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
     if (f.objet) params.append('objet', f.objet)
     if (f.date_enreg && f.date_enreg.length === 10) params.append('date_enreg', f.date_enreg)
     if (f.date_courrier && f.date_courrier.length === 10) params.append('date_courrier', f.date_courrier)
+    if (f.date_from) params.append('date_from', f.date_from)
+    if (f.date_to) params.append('date_to', f.date_to)
+    if (f.date_from || f.date_to) params.append('date_field', f.date_field || 'date_enreg')
     if (f.type) params.append('type', f.type)
 
     const c = columnFilters.value

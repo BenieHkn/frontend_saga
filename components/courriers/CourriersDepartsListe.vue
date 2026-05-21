@@ -230,6 +230,15 @@
       :external-last-page="totalPages" :external-per-page="perPage" @search-change="onSearchChange"
       @page-change="onPageChange" @per-page-change="onPerPageChange" @column-filter-change="onColumnFilterChange">
 
+      <template #toolbar-extra>
+        <PeriodFilter
+          :field="searchFilters.date_field"
+          :from="searchFilters.date_from"
+          :to="searchFilters.date_to"
+          :loading="loading"
+          @change="onPeriodChange" />
+      </template>
+
       <template #advanced-filters>
         <div class="space-y-4">
           <div class="flex flex-wrap gap-3">
@@ -382,6 +391,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import DataTablePaginate from '~/components/DataTablePaginate.vue'
+import PeriodFilter from '~/components/PeriodFilter.vue'
 import SearchableSelect from '~/components/SearchableSelect.vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
 import { useAuth } from '~/composables/auth/useAuth'
@@ -402,7 +412,7 @@ const perPage = ref(20)
 
 const filterOptionsData = ref({ types_document: [], types_depart: [], services_emis: [], destinataires: [] })
 
-const defaultFilters = () => ({ search: '', numero_enreg: '', reference: '', objet: '', date_enreg: '', date_courrier: '', date_depart: '', type_document_id: '', service_emis: '', destinataire: '' })
+const defaultFilters = () => ({ search: '', numero_enreg: '', reference: '', objet: '', date_enreg: '', date_courrier: '', date_depart: '', type_document_id: '', service_emis: '', destinataire: '', date_from: '', date_to: '', date_field: 'date_enreg' })
 const searchFilters = ref(defaultFilters())
 const hasActiveFilters = computed(() => Object.values(searchFilters.value).some(v => v !== '') || Object.values(columnFilters.value).some(v => v !== ''))
 const resetFilters = () => { searchFilters.value = defaultFilters(); columnFilters.value = {}; currentPage.value = 1; refresh(1, perPage.value, false) }
@@ -632,6 +642,9 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
     if (f.date_enreg && f.date_enreg.length === 10) params.append('date_enreg', f.date_enreg)
     if (f.date_courrier && f.date_courrier.length === 10) params.append('date_courrier', f.date_courrier)
     if (f.date_depart && f.date_depart.length === 10) params.append('date_depart', f.date_depart)
+    if (f.date_from) params.append('date_from', f.date_from)
+    if (f.date_to) params.append('date_to', f.date_to)
+    if (f.date_from || f.date_to) params.append('date_field', f.date_field || 'date_enreg')
     if (f.type_document_id) params.append('type_document_id', f.type_document_id)
     if (f.service_emis) params.append('service_emis', f.service_emis)
     if (f.destinataire) params.append('destinataire', f.destinataire)
@@ -654,6 +667,14 @@ const onFiltersChange = () => {
   if ((!f.date_enreg || f.date_enreg.length === 10) && (!f.date_courrier || f.date_courrier.length === 10) && (!f.date_depart || f.date_depart.length === 10)) {
     clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { currentPage.value = 1; refresh(1, perPage.value, false) }, 400)
   }
+}
+
+const onPeriodChange = ({ field, from, to }) => {
+  searchFilters.value.date_field = field
+  searchFilters.value.date_from  = from
+  searchFilters.value.date_to    = to
+  currentPage.value = 1
+  refresh(1, perPage.value, false)
 }
 
 const onPageChange = (page) => refresh(page, perPage.value, false)

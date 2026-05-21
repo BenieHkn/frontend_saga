@@ -1,9 +1,7 @@
 <template>
   <div class="min-h-screen bg-slate-100 p-6 font-sans">
-
     <UModal v-model="detailsOpen" :ui="{ width: 'sm:max-w-5xl' }">
       <div v-if="selectedCourrier" class="flex flex-col max-h-[90vh] bg-white rounded-xl overflow-hidden">
-
         <!-- ── En-tête modal ── -->
         <div class="relative flex items-center justify-between px-6 py-4 shrink-0 overflow-hidden"
           style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%);">
@@ -28,10 +26,8 @@
 
         <!-- ── Corps ── -->
         <div class="overflow-y-auto flex-1 p-5 space-y-4 bg-slate-50/50">
-
           <!-- Section principale -->
           <section class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
-
             <!-- Header avec bouton document arrivé -->
             <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-slate-100">
               <div class="flex items-center gap-2">
@@ -156,7 +152,6 @@
           <!-- Section réponse -->
           <section v-if="selectedCourrier.document?.reponse"
             class="bg-white rounded-2xl border border-emerald-200/80 overflow-hidden shadow-sm">
-
             <!-- Header avec bouton document réponse -->
             <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
               <div class="flex items-center gap-2">
@@ -324,7 +319,7 @@
     </UModal>
 
     <PageHeader v-if="!isAdmin()" title="Courriers arrivés" subtitle="Gestion des courriers entrants" btnText="Nouveau" to="/courriers/form_courier_arrive"/>
-    <PageHeader title="Courriers arrivés" subtitle="Gestion des courriers entrants" v-else/>
+    <PageHeader v-else title="Courriers arrivés" subtitle="Gestion des courriers entrants"/>
 
     <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
       <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -349,127 +344,132 @@
       </button>
     </div>
 
-    <DataTable v-else :data="courriers" :columns="columns" :selectable="false" :default-sort-column="null"
-      :show-row-numbers="true" :left-aligned-columns="['reference', 'structure', 'numeroEnregistrement', 'objet']"
-      @edit="onEdit" @delete="onDelete" @open-document="onOpenDocument" @selection-change="onSelectionChange"
-      :hide-labels-when-input="true">
+    <div v-else>
+      <div class="flex items-center justify-end mb-3">
+        <PeriodFilter :field="searchFilters.date_field" :from="searchFilters.date_from" :to="searchFilters.date_to" :loading="loading" @change="onPeriodChange" />
+      </div>
 
-      <template #advanced-filters="{ filters, onFilter }">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div v-for="field in filterFields" :key="field.id">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-              {{ field.label }}
-            </label>
-            <input v-model="filters[field.id]" placeholder="Filtrer..."
-              class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-              @input="onFilter" />
+      <DataTable :data="courriers" :columns="columns" :selectable="false" :default-sort-column="null"
+        :show-row-numbers="true" :left-aligned-columns="['reference', 'structure', 'numeroEnregistrement', 'objet']"
+        @edit="onEdit" @delete="onDelete" @open-document="onOpenDocument" @selection-change="onSelectionChange"
+        :hide-labels-when-input="true">
+        <template #advanced-filters="{ filters, onFilter }">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div v-for="field in filterFields" :key="field.id">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                {{ field.label }}
+              </label>
+              <input v-model="filters[field.id]" placeholder="Filtrer..."
+                class="w-full px-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                @input="onFilter" />
+            </div>
           </div>
-        </div>
-      </template>
+        </template>
 
-      <template #actions="{ item }">
-        <div class="flex gap-1.5 justify-end">
-          <button @click="handleView(item)" title="Voir les détails"
-            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
-            <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
-          </button>
-          <button v-if="!isAdmin()" @click="handleQuickAssign(item.id)" title="Affecter ce courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
-            <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
-          </button>
-          <button v-if="!item._complete?.document?.reponse && !isAdmin()" @click="handleReply(item)"
-            title="Répondre au courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group">
-            <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
-          </button>
-          <div v-else-if="!isAdmin()" title="Ce courrier a déjà une réponse"
-            class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-500 border border-green-100 rounded-md cursor-default">
-            <Icon name="i-heroicons-check-circle" class="w-4 h-4" />
-          </div>
-          <div v-if="item.isAffected" class="relative" @mouseenter="openAffectationPreview($event, item)" @mouseleave="closeAffectationPreview">
-            <button @click="openAffectationDetails(item)" type="button"
-              title="Voir le circuit d'affectation"
-              class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-orange-700 border border-orange-100 rounded-md hover:bg-orange-100 transition-all group">
-              <Icon name="i-heroicons-users" class="w-4 h-4 group-hover:text-orange-900" />
+        <template #actions="{ item }">
+          <div class="flex gap-1.5 justify-end">
+            <button @click="handleView(item)" title="Voir les détails"
+              class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
+              <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
             </button>
+            <button v-if="!isAdmin()" @click="handleQuickAssign(item.id)" title="Affecter ce courrier"
+              class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
+              <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
+            </button>
+            <button v-if="!item._complete?.document?.reponse && !isAdmin()" @click="handleReply(item)"
+              title="Répondre au courrier"
+              class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group">
+              <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
+            </button>
+            <div v-else-if="!isAdmin()" title="Ce courrier a déjà une réponse"
+              class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-500 border border-green-100 rounded-md cursor-default">
+              <Icon name="i-heroicons-check-circle" class="w-4 h-4" />
+            </div>
+            <div v-if="item.isAffected" class="relative" @mouseenter="openAffectationPreview($event, item)" @mouseleave="closeAffectationPreview">
+              <button @click="openAffectationDetails(item)" type="button"
+                title="Voir le circuit d'affectation"
+                class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-orange-700 border border-orange-100 rounded-md hover:bg-orange-100 transition-all group">
+                <Icon name="i-heroicons-users" class="w-4 h-4 group-hover:text-orange-900" />
+              </button>
 
-            <Teleport to="body">
-              <div v-if="hoveredAffectationItemId === item.id"
-                class="fixed z-[9999] w-[340px] bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 text-xs text-slate-700 pointer-events-none"
-                :style="tooltipStyle">
-                <div class="flex items-center justify-between gap-2 mb-3">
-                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Circuit d'affectation</div>
-                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-100 text-[10px]">
-                    <Icon name="i-heroicons-users" class="w-3 h-3" />
-                    {{ item.isAffected ? 'Affecté' : 'Vide' }}
-                  </span>
-                </div>
-                <div class="space-y-2">
-                  <template v-if="item.affectation_circuit?.length">
-                    <div v-for="(node, idx) in item.affectation_circuit" :key="idx"
-                      class="rounded-xl border border-slate-100 bg-slate-50 p-2.5 space-y-1.5">
-                      <div class="flex items-center justify-between gap-2">
-                        <div class="text-[11px] font-semibold text-slate-800">{{ node.emetteur }}</div>
-                        <span v-if="node.raw?.id"
-                          class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-bold rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100">
-                          #{{ node.raw.id }}
-                        </span>
+              <Teleport to="body">
+                <div v-if="hoveredAffectationItemId === item.id"
+                  class="fixed z-[9999] w-[340px] bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 text-xs text-slate-700 pointer-events-none"
+                  :style="tooltipStyle">
+                  <div class="flex items-center justify-between gap-2 mb-3">
+                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Circuit d'affectation</div>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-100 text-[10px]">
+                      <Icon name="i-heroicons-users" class="w-3 h-3" />
+                      {{ item.isAffected ? 'Affecté' : 'Vide' }}
+                    </span>
+                  </div>
+                  <div class="space-y-2">
+                    <template v-if="item.affectation_circuit?.length">
+                      <div v-for="(node, idx) in item.affectation_circuit" :key="idx"
+                        class="rounded-xl border border-slate-100 bg-slate-50 p-2.5 space-y-1.5">
+                        <div class="flex items-center justify-between gap-2">
+                          <div class="text-[11px] font-semibold text-slate-800">{{ node.emetteur }}</div>
+                          <span v-if="node.raw?.id"
+                            class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-bold rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100">
+                            #{{ node.raw.id }}
+                          </span>
+                        </div>
+                        <div class="pl-2 space-y-1 text-[11px] text-slate-600 border-l-2 border-slate-200">
+                          <div><strong>Destinataires :</strong> {{ node.destinataires.join(', ') || 'Aucun destinataire' }}</div>
+                          <div><strong>Priorité :</strong> {{ node.priority || '—' }}</div>
+                          <div><strong>Instruction :</strong> {{ node.instructions || 'Aucune instruction' }}</div>
+                        </div>
                       </div>
-                      <div class="pl-2 space-y-1 text-[11px] text-slate-600 border-l-2 border-slate-200">
-                        <div><strong>Destinataires :</strong> {{ node.destinataires.join(', ') || 'Aucun destinataire' }}</div>
-                        <div><strong>Priorité :</strong> {{ node.priority || '—' }}</div>
-                        <div><strong>Instruction :</strong> {{ node.instructions || 'Aucune instruction' }}</div>
-                      </div>
-                    </div>
-                  </template>
-                  <div v-else class="text-[11px] text-slate-500 py-1">Aucun circuit d'affectation trouvé.</div>
+                    </template>
+                    <div v-else class="text-[11px] text-slate-500 py-1">Aucun circuit d'affectation trouvé.</div>
+                  </div>
                 </div>
-              </div>
-            </Teleport>
+              </Teleport>
+            </div>
+            <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier"
+              class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
+              <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
+            </button>
+            <button v-if="isAdmin()" @click="onDelete(item)" title="Supprimer ce courrier"
+              class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 hover:text-red-900 transition-all group">
+              <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
+            </button>
           </div>
-          <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
-            <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
+        </template>
+
+        <template #cell-source="{ value }">
+          <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+            {{ value }}
+          </span>
+        </template>
+
+        <!-- Référence cliquable → ouvre la modal (pas window.open) -->
+        <template #cell-reference="{ value, item }">
+          <button v-if="item._complete?.document?.url && item._complete.document.url !== 'Inconnu'"
+            @click="handleView(item)"
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[160px]"
+            :title="`Voir le document ${value}`">
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
+            <span class="truncate">{{ value }}</span>
+            <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
           </button>
-          <button v-if="isAdmin()" @click="onDelete(item)" title="Supprimer ce courrier"
-            class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 hover:text-red-900 transition-all group">
-            <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
-          </button>
-        </div>
-      </template>
+          <span v-else class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[160px]" :title="value">
+            <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 shrink-0 opacity-50" />
+            <span class="truncate">{{ value || '—' }}</span>
+          </span>
+        </template>
 
-      <template #cell-source="{ value }">
-        <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-          {{ value }}
-        </span>
-      </template>
-
-      <!-- Référence cliquable → ouvre la modal (pas window.open) -->
-      <template #cell-reference="{ value, item }">
-        <button v-if="item._complete?.document?.url && item._complete.document.url !== 'Inconnu'"
-          @click="handleView(item)"
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[160px]"
-          :title="`Voir le document ${value}`">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
-          <span class="truncate">{{ value }}</span>
-          <Icon name="i-heroicons-eye" class="w-3 h-3 shrink-0 opacity-60 group-hover:opacity-100" />
-        </button>
-        <span v-else class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md max-w-[160px]" :title="value">
-          <Icon name="i-heroicons-document-text" class="w-3.5 h-3.5 mr-1.5 shrink-0 opacity-50" />
-          <span class="truncate">{{ value || '—' }}</span>
-        </span>
-      </template>
-
-      <template #cell-priority="{ value }">
-        <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full border uppercase" :class="{
-          'bg-red-50 text-red-700 border-red-100': value?.toLowerCase() === 'urgent',
-          'bg-amber-50 text-amber-700 border-amber-100': value?.toLowerCase() === 'important',
-          'bg-sky-50 text-sky-700 border-sky-100': value?.toLowerCase() === 'standard',
-        }">
-          {{ value || 'STANDARD' }}
-        </span>
-      </template>
-    </DataTable>
+        <template #cell-priority="{ value }">
+          <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full border uppercase" :class="{
+            'bg-red-50 text-red-700 border-red-100': value?.toLowerCase() === 'urgent',
+            'bg-amber-50 text-amber-700 border-amber-100': value?.toLowerCase() === 'important',
+            'bg-sky-50 text-sky-700 border-sky-100': value?.toLowerCase() === 'standard',
+          }">
+            {{ value || 'STANDARD' }}
+          </span>
+        </template>
+      </DataTable>
+    </div>
   </div>
 </template>
 
@@ -477,6 +477,7 @@
 import { ref, onMounted } from 'vue'
 import DataTable from '~/components/DataTable.vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
+import PeriodFilter from '~/components/PeriodFilter.vue'
 import { useAffectationsStore } from '~/stores/affectations'
 import { useCourriersStore } from '~/stores/courriers'
 import { useAuth } from '~/composables/auth/useAuth'
@@ -497,6 +498,8 @@ const filterFields = [
   { id: 'objet',       label: 'Objet' },
   { id: 'type_arrivee',label: "Type d'arrivée" },
 ]
+
+const searchFilters = ref({ date_from: '', date_to: '', date_field: 'date_enreg' })
 
 // ── État table ────────────────────────────────────────────────────────────────
 const courriers = ref([])
@@ -637,7 +640,6 @@ const transformCourriers = (response) => {
     date_enregistrement:  formatDate(courrier.document?.date_enreg),
     objet:                courrier.document?.objet        || '',
     date_courrier:        formatDate(courrier.document?.date_courrier),
-    // Nom brut uniquement — l'URL signée est construite à la demande via blob
     url:                  (courrier.document?.url && courrier.document.url !== 'Inconnu')
                             ? courrier.document.url
                             : '',
@@ -656,7 +658,13 @@ const refresh = async () => {
   error.value   = null
   try {
     const authToken = localStorage.getItem('auth_token') || ''
-    const endpoint  = `${config.public.apiBase}/courriers-arrives/urgents-sans-reponse`
+    const params = new URLSearchParams()
+    if (searchFilters.value.date_from) params.append('date_from', searchFilters.value.date_from)
+    if (searchFilters.value.date_to) params.append('date_to', searchFilters.value.date_to)
+    if (searchFilters.value.date_from || searchFilters.value.date_to) params.append('date_field', searchFilters.value.date_field || 'date_enreg')
+
+    const endpointBase = `${config.public.apiBase}/courriers-arrives/urgents-sans-reponse`
+    const endpoint = params.toString() ? `${endpointBase}?${params.toString()}` : endpointBase
 
     const response  = await $fetch(endpoint, {
       headers: { Authorization: `Bearer ${authToken}` },
@@ -669,6 +677,13 @@ const refresh = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const onPeriodChange = ({ field, from, to }) => {
+  searchFilters.value.date_field = field
+  searchFilters.value.date_from  = from
+  searchFilters.value.date_to    = to
+  refresh()
 }
 
 // ── Modal détails ─────────────────────────────────────────────────────────────
@@ -725,7 +740,6 @@ const loadReponseData = async (documentId) => {
       date_depart:  doc?.date_depart         || null,
       type_depart:  doc?.type_depart         || null,
       service_emis: doc?.service_emis        || null,
-      // Noms bruts pour fetchFileAsBlob
       rawUrl:       (rawUrl && rawUrl !== 'Inconnu') ? rawUrl : null,
       rawDateEnreg: doc?.document?.date_enreg || null,
     }
@@ -898,11 +912,6 @@ const openAffectationDetails = async (item) => {
 const closeAffectationDetails = () => {
   affectationModalOpen.value = false
   selectedAffectationItem.value = null
-}
-
-const formatCircuitLabel = (node) => {
-  const destinatairesText = node.destinataires.length ? node.destinataires.join(', ') : 'Aucun destinataire'
-  return `De ${node.emetteur} à ${destinatairesText}`
 }
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
