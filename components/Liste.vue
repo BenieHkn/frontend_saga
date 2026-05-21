@@ -489,7 +489,7 @@ const props = defineProps({
 const store          = useAffectationsStore()
 const courriersStore = useCourriersStore()
 const config         = useRuntimeConfig()
-const { isAdmin, isSP, isSA } = useAuth()
+const { isAdmin, isSP, isSA, isSecDir, getDirecteurEntiteUserId } = useAuth()
 
 const filterFields = [
   { id: 'source',      label: 'Source' },
@@ -748,6 +748,39 @@ const getAffectationEntityText = (entity) => {
   return [fullName, code, role].filter(Boolean).join(' • ') || 'Inconnu'
 }
 
+const getEntityId = (entity) => {
+  if (!entity) return null
+  if (typeof entity === 'number') return entity
+  if (typeof entity === 'string') {
+    const parsed = parseInt(entity, 10)
+    return Number.isNaN(parsed) ? null : parsed
+  }
+  return entity.id ?? entity.entite_user_id ?? entity.user?.id ?? entity.entite_user?.id ?? null
+}
+
+const getAffectationActorId = (affectation) => {
+  if (!affectation) return null
+  return getEntityId(affectation.emetteur || affectation.expediteur || affectation.user || affectation.created_by)
+}
+
+const getCurrentUserEffectiveId = () => {
+  if (!process.client) return null
+  const raw = localStorage.getItem('entite_user')
+  if (!raw) return null
+  const entiteUser = JSON.parse(raw)
+  if (!entiteUser?.id) return null
+
+  return isSecDir() ? (getDirecteurEntiteUserId() ?? entiteUser.id) : entiteUser.id
+}
+
+const computeIsAffectedFromCircuit = (circuit, currentUserId) => {
+  if (!Array.isArray(circuit) || !currentUserId) return false
+  return circuit.some((entry) => {
+    const actorId = getEntityId(entry.raw?.emetteur || entry.raw?.expediteur || entry.raw?.user || entry.raw?.created_by)
+    return actorId === currentUserId
+  })
+}
+
 const normalizeAffectationDestinataires = (destinataires) => {
   if (!destinataires) return []
   if (Array.isArray(destinataires)) return destinataires.map(getAffectationEntityText).filter(Boolean)
@@ -809,10 +842,11 @@ const fetchAffectationCircuit = async (documentId) => {
 
 const loadAffectationCircuits = async (documents) => {
   if (!Array.isArray(documents) || documents.length === 0) return
+  const currentUserId = getCurrentUserEffectiveId()
   await Promise.all(documents.map(async (doc) => {
     const circuit = await fetchAffectationCircuit(doc.document_id)
-    doc.isAffected = circuit.isAffected
     doc.affectation_circuit = circuit.circuit
+    doc.isAffected = computeIsAffectedFromCircuit(circuit.circuit, currentUserId)
   }))
 }
 
@@ -840,7 +874,7 @@ const openAffectationPreview = async (event, item) => {
   if (!item.affectation_circuit?.length && item.isAffected) {
     const circuit = await fetchAffectationCircuit(item.document_id)
     item.affectation_circuit = circuit.circuit
-    item.isAffected = circuit.isAffected
+    item.isAffected = computeIsAffectedFromCircuit(circuit.circuit, getCurrentUserEffectiveId())
   }
 
   hoveredAffectationItemId.value = item?.id || null
@@ -856,7 +890,7 @@ const openAffectationDetails = async (item) => {
   if (!item.affectation_circuit?.length && item.isAffected) {
     const circuit = await fetchAffectationCircuit(item.document_id)
     item.affectation_circuit = circuit.circuit
-    item.isAffected = circuit.isAffected
+    item.isAffected = computeIsAffectedFromCircuit(circuit.circuit, getCurrentUserEffectiveId())
   }
   affectationModalOpen.value = true
 }

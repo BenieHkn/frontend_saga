@@ -315,6 +315,7 @@
     <DataTablePaginate
       v-else
       :loading="loading"
+      :show-period-loading="periodLoading"
       :data="courriers"
       :columns="columns"
       :selectable="false"
@@ -327,6 +328,7 @@
       :left-aligned-columns="['reference', 'structure', 'numero_enreg', 'objet']"
       :hide-labels-when-input="true"
       :external-pagination="true"
+      :hide-loading-on-column-filter="false"
       :external-total="total"
       :external-page="currentPage"
       :external-last-page="totalPages"
@@ -337,15 +339,19 @@
       @per-page-change="onPerPageChange"
       @column-filter-change="onColumnFilterChange">
 
+      <!-- ── Filtre période dans la toolbar ── -->
+      <template #toolbar-extra>
+        <PeriodFilter
+          :field="searchFilters.date_field"
+          :from="searchFilters.date_from"
+          :to="searchFilters.date_to"
+          :loading="loading"
+          @change="onPeriodChange" />
+      </template>
+
       <!-- ── Filtres avancés ──────────────────────────────────────────── -->
       <template #advanced-filters>
         <div class="space-y-4">
-          <PeriodFilter
-            :field="searchFilters.date_field"
-            :from="searchFilters.date_from"
-            :to="searchFilters.date_to"
-            @change="onPeriodChange" />
-
           <div class="flex flex-wrap gap-3">
             <div class="flex-1 min-w-[120px]">
               <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">N° d'enreg.</label>
@@ -608,7 +614,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import DataTablePaginate from '~/components/DataTablePaginate.vue'
 import SearchableSelect from '~/components/SearchableSelect.vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
@@ -621,12 +627,14 @@ const props = defineProps({
   entiteId: { type: Number, default: null }
 })
 
+const periodLoading = ref(false)
+
 const onPeriodChange = ({ field, from, to }) => {
   searchFilters.value.date_field = field
   searchFilters.value.date_from  = from
   searchFilters.value.date_to    = to
-  currentPage.value = 1
-  refresh(1, perPage.value, false)
+  currentPage.value = 1          // ← active l'overlay
+  refresh(1, perPage.value, false, true)
 }
 
 const store          = useAffectationsStore()
@@ -997,9 +1005,11 @@ const loadFilterOptions = async () => {
 }
 
 // ── Chargement données ────────────────────────────────────────────────────────
-const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
+const refresh = async (page = 1, per_page = perPage.value, isFirst = false, isPeriod = false) => {
   if (isFirst) {
     initialLoading.value = true
+  } else if (isPeriod) {
+    periodLoading.value = true   // ← activé ICI, dans refresh
   } else {
     loading.value = true
   }
@@ -1062,10 +1072,24 @@ const refresh = async (page = 1, per_page = perPage.value, isFirst = false) => {
   } finally {
     initialLoading.value = false
     loading.value        = false
+    // ← NE PAS éteindre periodLoading ici
+    // Il sera éteint par le watch ci-dessous
+    if (!isPeriod) {
+      periodLoading.value = false
+    } // ← éteint ICI, après double nextTick
   }
 }
 
 // ── Watch filtres avancés ─────────────────────────────────────────────────────
+// Éteint periodLoading seulement quand les données du tableau changent
+// c'est-à-dire quand DataTablePaginate a reçu et rendu les nouvelles données
+watch(courriers, async () => {
+  if (!periodLoading.value) return
+  await nextTick()
+  await nextTick()
+  periodLoading.value = false
+}, { flush: 'post' })
+
 let searchTimeout = null
 watch(searchFilters, (f) => {
   const dateEnregOk   = !f.date_enreg    || f.date_enreg.length    === 10

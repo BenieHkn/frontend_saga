@@ -19,6 +19,9 @@
           icon="i-heroicons-magnifying-glass" placeholder="Recherche globale..." size="sm" class="w-56"
           @input="onExternalSearchInput" />
 
+        <!-- ── Slot contenu toolbar supplémentaire (PeriodFilter etc.) ── -->
+        <slot name="toolbar-extra" />
+
         <!-- ── Filtre période ─────────────────────────────────────── -->
         <template v-if="showPeriodFilter">
           <!-- Sélecteur de champ -->
@@ -438,6 +441,7 @@ const props = defineProps({
   periodeDateFrom:   { type: String,  default: '' },
   periodeDateTo:     { type: String,  default: '' },
   showPeriodFilter:  { type: Boolean, default: false },
+  showPeriodLoading: { type: Boolean, default: false },
 })
 
 const emit = defineEmits([
@@ -656,12 +660,12 @@ const closeFilterMenu = () => {
 const getColumnLabel = (key) => props.columns.find(c => c.key === key)?.label ?? key
 
 // Recalculer position menu au scroll
-const onScrollResize = () => {
-  if (filterMenu.value.show) {
-    // Recalculer la position sans fermer
-    recalcFilterMenuPosition()
-  }
-}
+// const onScrollResize = () => {
+//   if (filterMenu.value.show) {
+//     // Recalculer la position sans fermer
+//     recalcFilterMenuPosition()
+//   }
+// }
 
 const recalcFilterMenuPosition = () => {
   // Retrouver le bouton de la colonne active via data-col
@@ -785,9 +789,11 @@ const onLocalPerPageChange = () => {
 }
 
 // ── Loading ───────────────────────────────────────────────────────────────
-const showLoading = computed(() =>
-  props.hideLoadingOnColumnFilter ? false : props.loading
-)
+const showLoading = computed(() => {
+  if (props.showPeriodLoading) return true          // période → toujours afficher
+  if (props.hideLoadingOnColumnFilter) return false // archives → jamais afficher
+  return props.loading
+})
 
 // ── Données filtrées (mode interne uniquement) ────────────────────────────
 const filteredData = computed(() => {
