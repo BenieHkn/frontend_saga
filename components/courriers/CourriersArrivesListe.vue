@@ -443,6 +443,15 @@
             value || 'N/A' }}</span>
       </template>
 
+      <!-- ── Numéro d'enregistrement avec badge ─────────────────────────── -->
+      <template #cell-numero_enreg="{ value, item }">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-mono text-slate-700">{{ value || '—' }}</span>
+          <span v-if="item.isArchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-700 border border-red-200">Archivé</span>
+          <span v-else-if="item.isPrearchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 border border-amber-200">Préarchivé</span>
+        </div>
+      </template>
+
       <!-- ── Référence cliquable → ouvre via Blob ────────────────────── -->
       <template #cell-reference="{ value, item }">
         <button v-if="item._raw?.document?.url && item._raw.document.url !== 'Inconnu'"
@@ -519,7 +528,7 @@
             </Teleport>
           </div>
           <button
-            v-if="!isAdmin() && !isDCCIQ() && !item._raw?.document?.reponse"
+            v-if="!isAdmin() && !isDCCIQ() && !item._raw?.document?.reponse && !item.isPrearchived && !item.isArchived"
             @click="handleQuickAssign(item.id)"
             title="Affecter ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
@@ -532,7 +541,7 @@
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
           </div>
           <button
-            v-if="!item._raw?.document?.reponse && !isAdmin() && !isDCCIQ() && !isDG()"
+            v-if="!item._raw?.document?.reponse && !isAdmin() && !isDCCIQ() && !isDG() && !item.isPrearchived && !item.isArchived"
             @click="handleReply(item)"
             title="Répondre au courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 transition-all group">
@@ -544,11 +553,11 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-500 border border-green-100 rounded-md cursor-default">
             <Icon name="i-heroicons-check-circle" class="w-4 h-4" />
           </div>
-          <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier"
+            <button v-if="isAdmin() && !item.isPrearchived && !item.isArchived" @click="onEdit(item)" title="Modifier ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
             <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
-          <button v-if="isAdmin()" @click="onDelete(item)" title="Supprimer ce courrier"
+            <button v-if="isAdmin() && !item.isPrearchived && !item.isArchived" @click="onDelete(item)" title="Supprimer ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 transition-all group">
             <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
           </button>
@@ -726,7 +735,25 @@ const loadAffectationCircuits = async (documents) => {
   }))
 }
 
-const rowClassByCourrierArrive = (item) => item?.isAffected ? '!bg-orange-50 !hover:bg-orange-100' : ''
+// Mark prearchived (>12 months) and archived (>3 years) visually
+const computeArchiveFlagsForItem = (dateStr) => {
+  if (!dateStr) return { isPrearchived: false, isArchived: false }
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return { isPrearchived: false, isArchived: false }
+  const now = new Date()
+  const ageDays = Math.floor((now - d) / 86400000)
+  const isPrearchived = ageDays > 365 && ageDays <= (365 * 3)
+  const isArchived = ageDays > (365 * 3)
+  return { isPrearchived, isArchived }
+}
+
+const rowClassByCourrierArrive = (item) => {
+  if (!item) return ''
+  if (item.isArchived) return '!bg-red-50 text-red-700 border-l-4 border-red-300 opacity-80 hover:!bg-red-100'
+  if (item.isPrearchived) return '!bg-amber-50 text-amber-700 border-l-4 border-amber-300 hover:!bg-amber-100'
+  if (item.isAffected) return '!bg-orange-50 !hover:bg-orange-100'
+  return ''
+}
 
 const openAffectationPreview = (event, item) => {
   const btn = event.currentTarget.querySelector('button')
@@ -969,6 +996,9 @@ const transformCourriers = (response) => {
   if (!response?.data) throw new Error('Format de réponse API invalide')
   return response.data.map((courrier) => {
     console.log('🔍 reponse pour', courrier.document?.reference, ':', JSON.stringify(courrier.document?.reponse))
+    const dateEnreg = courrier.document?.date_enreg || courrier.created_at || null
+    const flags = computeArchiveFlagsForItem(dateEnreg)
+
     return {
       id:                   courrier.id,
       source:               courrier.service_enreg || '',
@@ -985,6 +1015,8 @@ const transformCourriers = (response) => {
       document_id:          courrier.document?.id || null,
       affectation_circuit:  [],
       isAffected:           false,
+      isPrearchived:        flags.isPrearchived,
+      isArchived:           flags.isArchived,
       _raw:                 courrier,
     }
   })

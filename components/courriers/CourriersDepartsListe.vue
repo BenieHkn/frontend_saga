@@ -309,6 +309,15 @@
         </div>
       </template>
 
+      <!-- ── Numéro d'enregistrement avec badge ────────────────────────────── -->
+      <template #cell-numero_enreg="{ value, item }">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-mono text-slate-700">{{ value || '—' }}</span>
+          <span v-if="item.isArchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-700 border border-red-200">Archivé</span>
+          <span v-else-if="item.isPrearchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 border border-amber-200">Préarchivé</span>
+        </div>
+      </template>
+
       <template #cell-source="{ value }">
         <span
           class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">{{
@@ -370,11 +379,11 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 transition-all group">
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
-          <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier"
+          <button v-if="isAdmin() && !item.isPrearchived && !item.isArchived" @click="onEdit(item)" title="Modifier ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
             <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
-          <button v-if="isAdmin()" @click="handleDelete(item)" :disabled="deletingId === item.id"
+          <button v-if="isAdmin() && !item.isPrearchived && !item.isArchived" @click="handleDelete(item)" :disabled="deletingId === item.id"
             title="Supprimer ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 hover:text-red-900 transition-all group disabled:opacity-40 disabled:cursor-not-allowed">
             <div v-if="deletingId === item.id"
@@ -597,6 +606,25 @@ const closeDetails = () => {
   if (departBlobUrl.value) { URL.revokeObjectURL(departBlobUrl.value); departBlobUrl.value = '' }
 }
 
+const computeArchiveFlagsForItem = (dateStr) => {
+  if (!dateStr) return { isPrearchived: false, isArchived: false }
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return { isPrearchived: false, isArchived: false }
+  const now = new Date()
+  const ageDays = Math.floor((now - d) / 86400000)
+  const isPrearchived = ageDays > 365 && ageDays <= (365 * 3)
+  const isArchived = ageDays > (365 * 3)
+  return { isPrearchived, isArchived }
+}
+
+const rowClassByCourrierDepart = (item) => {
+  if (!item) return ''
+  if (item.isArchived) return '!bg-red-50 text-red-700 border-l-4 border-red-300 opacity-80 hover:!bg-red-100'
+  if (item.isPrearchived) return '!bg-amber-50 text-amber-700 border-l-4 border-amber-300 hover:!bg-amber-100'
+  if (item?.isAffected) return '!bg-orange-50 !hover:bg-orange-100'
+  return ''
+}
+
 const transformCourriers = (response) => {
   if (!response?.data) throw new Error('Format de réponse API invalide')
   return response.data.map((courrier) => {
@@ -605,6 +633,9 @@ const transformCourriers = (response) => {
       return `${nom} ${prenom}${code ? ` (${code})` : ''}`.trim()
     }).filter(Boolean)
     const rawUrl = courrier.document?.url?.trim()
+    const dateEnreg = courrier.document?.date_enreg || courrier.created_at || null
+    const flags = computeArchiveFlagsForItem(dateEnreg)
+
     return {
       id: courrier.id, source: courrier.service_emis || '',
       numero_enreg: courrier.document?.numero_enreg || '', reference: courrier.document?.reference || '',
@@ -615,6 +646,8 @@ const transformCourriers = (response) => {
       type_document: courrier.document?.type_document?.libelle || '',
       large_diffusion: courrier.document?.large_diffusion || false,
       confidentiel: courrier.confidentiel || false, initiateurs: initiateursList, _raw: courrier,
+      isPrearchived: flags.isPrearchived,
+      isArchived: flags.isArchived,
     }
   })
 }

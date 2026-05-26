@@ -395,6 +395,15 @@
         </span>
       </template>
 
+      <!-- ── Numéro d'enregistrement avec badge ────────────────────────────── -->
+      <template #cell-numero_enreg="{ value, item }">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-mono text-slate-700">{{ value || '—' }}</span>
+          <span v-if="item.isArchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-700 border border-red-200">Archivé</span>
+          <span v-else-if="item.isPrearchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 border border-amber-200">Préarchivé</span>
+        </div>
+      </template>
+
       <template #cell-reference="{ value, item }">
         <button v-if="item._raw?.url && item._raw.url !== 'Inconnu'" @click="handleView(item)"
           class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-all group max-w-[180px]"
@@ -489,7 +498,7 @@
           <!-- ══════════════════════════════════════════════════════════════ -->
           <template v-if="item.type === 'arrive'">
             <!-- Affecter — grisé si réponse déjà envoyée -->
-            <button v-if="!isAdmin() && !item.a_reponse && !isDCCIQ()"
+            <button v-if="!isAdmin() && !item.a_reponse && !isDCCIQ() && !item.isPrearchived && !item.isArchived"
               @click="handleQuickAssign(item.courrier_arrive_id)" title="Affecter ce courrier"
               class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
               <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
@@ -501,7 +510,7 @@
             </div>
 
             <!-- Répondre — grisé si réponse déjà envoyée -->
-            <button v-if="!item.a_reponse && !isAdmin() && !isDCCIQ() && !isDG()" @click="handleReply(item)"
+            <button v-if="!item.a_reponse && !isAdmin() && !isDCCIQ() && !isDG() && !item.isPrearchived && !item.isArchived" @click="handleReply(item)"
               title="Répondre au courrier"
               class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 transition-all group">
               <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
@@ -513,11 +522,11 @@
             </div>
 
             <!-- Actions admin pour courrier arrivé -->
-            <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier arrivé"
+            <button v-if="isAdmin() && !item.isPrearchived && !item.isArchived" @click="onEdit(item)" title="Modifier ce courrier arrivé"
               class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
               <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
             </button>
-            <button v-if="isAdmin()" @click="onDelete(item)" title="Supprimer ce courrier arrivé"
+            <button v-if="isAdmin() && !item.isPrearchived && !item.isArchived" @click="onDelete(item)" title="Supprimer ce courrier arrivé"
               class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 transition-all group">
               <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
             </button>
@@ -527,11 +536,11 @@
           <!-- ACTIONS COURRIER DÉPART (admin uniquement)                     -->
           <!-- ══════════════════════════════════════════════════════════════ -->
           <template v-else-if="item.type === 'depart' && isAdmin()">
-            <button @click="onEditDepart(item)" title="Modifier ce courrier départ"
+            <button v-if="!item.isPrearchived && !item.isArchived" @click="onEditDepart(item)" title="Modifier ce courrier départ"
               class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
               <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
             </button>
-            <button @click="onDeleteDepart(item)" title="Supprimer ce courrier départ"
+            <button v-if="!item.isPrearchived && !item.isArchived" @click="onDeleteDepart(item)" title="Supprimer ce courrier départ"
               class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 transition-all group">
               <Icon name="i-heroicons-trash" class="w-4 h-4 group-hover:text-red-600" />
             </button>
@@ -841,33 +850,50 @@ const revokeModalBlobs = () => {
 
 // ── Transform ─────────────────────────────────────────────────────────────────
 // ── Transform (VERSION CORRIGÉE AVEC LES BONS IDs) ────────────────────────
+const computeArchiveFlagsForItem = (dateStr) => {
+  if (!dateStr) return { isPrearchived: false, isArchived: false }
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return { isPrearchived: false, isArchived: false }
+  const now = new Date()
+  const ageDays = Math.floor((now - d) / 86400000)
+  const isPrearchived = ageDays > 365 && ageDays <= (365 * 3)
+  const isArchived = ageDays > (365 * 3)
+  return { isPrearchived, isArchived }
+}
+
 const transformCourriers = (response) => {
   if (!response?.data) throw new Error('Format de réponse API invalide')
-  return response.data.map((doc) => ({
-    id: doc.id, // ID du document (pour affichage)
-    
-    // ✅ IDs spécifiques pour les actions
-    courrier_arrive_id: doc.type === 'arrive' ? doc.specific_id : null,
-    courrier_depart_id: doc.type === 'depart' ? doc.specific_id : null,
-    
-    source: doc.details?.service_enreg || doc.details?.service_emis || '',
-    type: doc.type,
-    numero_enreg: doc.numero_enreg || '',
-    reference: doc.reference || '',
-    structure: doc.details?.structure || doc.details?.autre_structure || doc.details?.destinataire || '',
-    date_enregistrement: formatDate(doc.date_enreg),
-    date_enreg_raw: doc.date_enreg,
-    objet: doc.objet || '',
-    date_courrier: formatDate(doc.date_courrier),
-    url: (doc.url && doc.url !== 'Inconnu') ? doc.url : '',
-    type_arrivee: doc.details?.type_arrivee || '',
-    type_depart: doc.details?.type_depart || '',
-    priority: doc.details?.priority || '',
-    a_reponse: doc.type === 'arrive' ? !!doc.reponse : false,
-    affectation_circuit: [],
-    isAffected: false,
-    _raw: doc,
-  }))
+  return response.data.map((doc) => {
+    const dateEnreg = doc.date_enreg || doc.created_at || null
+    const flags = computeArchiveFlagsForItem(dateEnreg)
+    return {
+      id: doc.id, // ID du document (pour affichage)
+      
+      // ✅ IDs spécifiques pour les actions
+      courrier_arrive_id: doc.type === 'arrive' ? doc.specific_id : null,
+      courrier_depart_id: doc.type === 'depart' ? doc.specific_id : null,
+      
+      source: doc.details?.service_enreg || doc.details?.service_emis || '',
+      type: doc.type,
+      numero_enreg: doc.numero_enreg || '',
+      reference: doc.reference || '',
+      structure: doc.details?.structure || doc.details?.autre_structure || doc.details?.destinataire || '',
+      date_enregistrement: formatDate(doc.date_enreg),
+      date_enreg_raw: doc.date_enreg,
+      objet: doc.objet || '',
+      date_courrier: formatDate(doc.date_courrier),
+      url: (doc.url && doc.url !== 'Inconnu') ? doc.url : '',
+      type_arrivee: doc.details?.type_arrivee || '',
+      type_depart: doc.details?.type_depart || '',
+      priority: doc.details?.priority || '',
+      a_reponse: doc.type === 'arrive' ? !!doc.reponse : false,
+      affectation_circuit: [],
+      isAffected: false,
+      isPrearchived: flags.isPrearchived,
+      isArchived: flags.isArchived,
+      _raw: doc,
+    }
+  })
 }
 
 const getAffectationEntityText = (entity) => {
@@ -949,7 +975,13 @@ const loadAffectationCircuits = async (documents) => {
   }))
 }
 
-const rowClassByDocument = (item) => item?.isAffected ? '!bg-orange-50 !hover:bg-orange-100' : ''
+const rowClassByDocument = (item) => {
+  if (!item) return ''
+  if (item.isArchived) return '!bg-red-50 text-red-700 border-l-4 border-red-300 opacity-80 hover:!bg-red-100'
+  if (item.isPrearchived) return '!bg-amber-50 text-amber-700 border-l-4 border-amber-300 hover:!bg-amber-100'
+  if (item?.isAffected) return '!bg-orange-50 !hover:bg-orange-100'
+  return ''
+}
 
 const hoveredAffectationItemId = ref(null)
 const affectationModalOpen = ref(false)
