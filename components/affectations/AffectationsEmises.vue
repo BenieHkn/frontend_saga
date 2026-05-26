@@ -383,13 +383,17 @@
       </span>
     </template>
 
-    <template #cell-numero_enreg="{ value }">
-      <span
-        v-if="value"
-        class="inline-flex items-center px-2.5 py-0.5 text-xs font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 rounded-md">
-        {{ value }}
-      </span>
-      <span v-else class="text-xs text-slate-400 italic">—</span>
+    <template #cell-numero_enreg="{ value, item }">
+      <div class="flex items-center gap-2">
+        <span
+          v-if="value"
+          class="inline-flex items-center px-2.5 py-0.5 text-xs font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 rounded-md">
+          {{ value }}
+        </span>
+        <span v-else class="text-xs text-slate-400 italic">—</span>
+        <span v-if="item.isArchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-700 border border-red-200">Archivé</span>
+        <span v-else-if="item.isPrearchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 border border-amber-200">Préarchivé</span>
+      </div>
     </template>
 
     <!-- ── Actions ──────────────────────────────────────────────────────── -->
@@ -663,9 +667,9 @@ const filteredDestinataires = computed(() => {
   )
 })
 
-// ── Helper : actions bloquées si clôturé OU courrier déjà répondu ─────────────
+// ── Helper : actions bloquées si clôturé OU courrier déjà répondu OU archivé ────
 const isActionBlocked = (item) => {
-  return item.is_cloture || item.a_reponse
+  return item.is_cloture || item.a_reponse || item.isPrearchived || item.isArchived
 }
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
@@ -735,6 +739,18 @@ const loadDocFile = async () => {
 }
 
 // ── Transform ─────────────────────────────────────────────────────────────────
+// ── Archive flags helper ──────────────────────────────────────────────────────
+const computeArchiveFlagsForItem = (dateStr) => {
+  if (!dateStr) return { isPrearchived: false, isArchived: false }
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return { isPrearchived: false, isArchived: false }
+  const now = new Date()
+  const ageDays = Math.floor((now - d) / 86400000)
+  const isPrearchived = ageDays > 365 && ageDays <= (365 * 3)
+  const isArchived = ageDays > (365 * 3)
+  return { isPrearchived, isArchived }
+}
+
 const transformAffectation = (affectation) => {
   const emetteurNom      = affectation.emetteur?.user
     ? `${affectation.emetteur.user.nom} ${affectation.emetteur.user.prenom || ''}`.trim()
@@ -749,6 +765,10 @@ const transformAffectation = (affectation) => {
   const destinataireFonction = affectation.destinataire?.is_responsable ? affectation.destinataire.entite?.fonction || '' : 'Agent'
 
   const rawUrl = affectation.courrier_arrive?.document?.url?.trim()
+  
+  // Compute archive flags
+  const dateEnreg = affectation.courrier_arrive?.document?.date_enreg || null
+  const flags = computeArchiveFlagsForItem(dateEnreg)
 
   return {
     id:                 affectation.id,
@@ -768,6 +788,8 @@ const transformAffectation = (affectation) => {
     a_reponse:  !!(affectation.courrier_arrive?.document?.reponse),
     // ✅ Bloquant : affectation clôturée
     is_cloture: affectation.statut === 'cloture',
+    isPrearchived:      flags.isPrearchived,
+    isArchived:         flags.isArchived,
     destinataire: {
       nom:      destinataireNom,
       fonction: destinataireCode ? `${destinataireCode} - ${destinataireFonction}` : '',
