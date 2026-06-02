@@ -2,6 +2,7 @@
 import { useActivite } from '@/composables/activite/useActivite'
 import { useMembre } from '@/composables/membres/useMembres'
 import { formatDateFR } from '@/composables/codirs/useCodir'
+import { useAuth } from '@/composables/auth/useAuth'
 
 definePageMeta({ title: 'Détail activité' })
 
@@ -19,6 +20,9 @@ const currentDossier     = ref(null)
 const currentOrdreDuJour = ref(null)
 const currentCodir       = ref(null)
 const loading            = ref(true)
+
+//on appelle la permission qui permet de voir les boutons d'éditions et de suppressions
+const { peutGererCodir } = useAuth();
 
 onMounted(async () => {
   currentDossier.value     = JSON.parse(localStorage.getItem('currentDossier'))
@@ -66,7 +70,7 @@ const tacheModal = ref(false)
     </div>
 
     <!-- Introuvable -->
-    <div v-else-if="!activite" class="text-center py-20">
+    <div v-else-if="!activite && loading" class="text-center py-20">
       <UIcon name="i-heroicons-exclamation-triangle" class="w-12 h-12 mx-auto text-amber-400 mb-4" />
       <p class="text-gray-500 text-sm">Activité introuvable.</p>
       <UButton class="mt-4" color="gray" variant="ghost" @click="router.back()">Retour</UButton>
@@ -128,7 +132,7 @@ const tacheModal = ref(false)
             Tâches
             <UBadge color="blue" variant="soft" size="xs">{{ taches.length }}</UBadge>
           </h2>
-          <UButton icon="i-heroicons-plus" color="blue" variant="soft" size="sm" @click="tacheModal = true">
+          <UButton v-if="peutGererCodir()" icon="i-heroicons-plus" color="blue" variant="soft" size="sm" @click="tacheModal = true">
             Ajouter une tâche
           </UButton>
         </div>

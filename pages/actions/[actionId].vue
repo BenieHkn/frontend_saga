@@ -1,6 +1,7 @@
 <script setup>
 import { useAction } from "@/composables/actions/useAction";
 import { useActivite } from "@/composables/activite/useActivite";
+import { useAuth } from "~/composables/auth/useAuth";
 
 definePageMeta({ title: "Détail action" });
 
@@ -17,6 +18,9 @@ const currentDossier     = ref(null);
 const currentCodir       = ref(null);
 const currentOrdreDuJour = ref(null);
 const loading            = ref(true); // ✅ true dès le départ pour couvrir le montage
+
+//on appelle la permission qui permet de voir les boutons d'éditions et de suppressions
+const {peutGererCodir} = useAuth()
 
 // ── Montage ───────────────────────────────────────────────────────────────────
 onMounted(async () => {
@@ -160,7 +164,7 @@ const createActivite = async () => {
               <p class="text-xs text-gray-500 dark:text-gray-400">{{ activites.length }} activité(s) rattachée(s)</p>
             </div>
           </div>
-          <UButton icon="i-heroicons-plus" color="violet" variant="soft" size="sm" @click="activiteModal = true">
+          <UButton v-if="peutGererCodir()" icon="i-heroicons-plus" color="violet" variant="soft" size="sm" @click="activiteModal = true">
             Ajouter une activité
           </UButton>
         </div>
@@ -194,7 +198,7 @@ const createActivite = async () => {
               <p class="text-xs text-gray-500 dark:text-gray-400">{{ taches.length }} tâche(s) rattachée(s)</p>
             </div>
           </div>
-          <UButton icon="i-heroicons-plus" color="cyan" variant="soft" size="sm" @click="openTacheModal(null)">
+          <UButton v-if="peutGererCodir()" icon="i-heroicons-plus" color="cyan" variant="soft" size="sm" @click="openTacheModal(null)">
             Ajouter une tâche
           </UButton>
         </div>

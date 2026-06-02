@@ -125,7 +125,7 @@ const submit = async () => {
       <div class="p-2 flex flex-col gap-4 overflow-y-auto">
 
         <UFormGroup label="Intitulé" required>
-          <UInput
+          <UTextarea
             v-model="form.intitule"
             placeholder="Ex: Préparer le rapport"
             size="md"

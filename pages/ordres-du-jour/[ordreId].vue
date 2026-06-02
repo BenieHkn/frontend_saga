@@ -1,7 +1,10 @@
 <script setup>
 import { useOrdreDuJour } from '@/composables/ordres-du-jour/useOrdreDuJour'
 import { formatDateFR, useCodir } from '@/composables/codirs/useCodir'
-
+import { useCommentaire } from '@/composables/commentaire/useCommentaire'
+import CommentaireModal from '@/components/commentaire/CommentaireModal.vue'
+import CommentaireListeModal from '@/components/commentaire/CommentaireListeModal.vue'
+import { useAuth } from '~/composables/auth/useAuth'
 
 definePageMeta({ title: "Détail ordre du jour" })
 
@@ -12,25 +15,34 @@ const toast = useToast()
 const ordreDuJourApi = useOrdreDuJour()
 const codirApi = useCodir()
 
+const {
+  commentaires,
+  creerCommentaire,
+  fetchCommentaires,
+  openCommentaireModal,
+  openListeCommentairesModal,
+  loading: commentairesLoading,
+} = useCommentaire()
+
 const ordreId = Number(route.params.ordreId)
 const currentOrdreDuJour = ref(null)
 const currentCodir = ref(null)
+const currentDossier = ref(null)
 const loading = ref(true)
+const { peutGererCodir } = useAuth()
 
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 const fetchOrdreDuJour = async () => {
   try {
-    currentOrdreDuJour.value = localStorage.getItem("currentOrdreDuJour") ? JSON.parse(localStorage.getItem("currentOrdreDuJour")) : null
+    currentOrdreDuJour.value = await ordreDuJourApi.fetchOrdre(ordreId)
   } catch {
     console.warn("Impossible de rafraîchir l'ordre du jour, utilisation du cache")
   }
 }
 
-onMounted(async () => {
-  currentCodir.value = JSON.parse(localStorage.getItem("currentCodir"))
-  await fetchOrdreDuJour()
-  loading.value = false
-})
+const entiteUser = ref()
+
+
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 const dossiers = computed(() => currentOrdreDuJour.value?.dossiers ?? [])
@@ -55,8 +67,8 @@ const addDossier = async () => {
   try {
     await ordreDuJourApi.addDossier(ordreId, { libelle: dossierForm.libelle.trim() })
     currentCodir.value = await codirApi.fetchCodir(currentCodir.value.id)
-    await ordreDuJourApi.fetchOrdre(ordreId)
     currentOrdreDuJour.value = await ordreDuJourApi.fetchOrdre(ordreId)
+  
     toast.add({
       title: 'Dossier créé',
       description: `"${dossierForm.libelle}" a été ajouté à l'ordre du jour`,
@@ -94,6 +106,39 @@ const handleClick = (dossier) => {
     localStorage.setItem("currentDossier", JSON.stringify(dossier))
   navigateTo(`/dossiers/${dossier.id}`)
 }
+
+const openCommentairePourDossier = async (dossier) => {
+  currentDossier.value = dossier
+  if (process.client) {
+    openCommentaireModal.value = true
+  }
+}
+
+const openLectureCommentairesPourDossier = async (dossier) => {
+  currentDossier.value = dossier
+  await fetchCommentaires('dossier', dossier.id)
+  if (process.client) {
+    openListeCommentairesModal.value = true
+  }
+}
+
+const handleRecupererCommentaire = async (contenu) => {
+  if (!currentDossier.value) return;
+  await creerCommentaire({
+    commentable_id: currentDossier.value.id,
+    commentable_type: 'dossier',
+    contenu,
+  })
+
+  await fetchOrdreDuJour() // Rafraîchir l'ordre du jour pour mettre à jour le nombre de commentaires
+}
+
+onMounted(async () => {
+  currentCodir.value = JSON.parse(localStorage.getItem("currentCodir"))
+  await fetchOrdreDuJour()
+  entiteUser.value = JSON.parse(localStorage.getItem("entite_user"))
+  loading.value = false
+})
 </script>
 
 <template>
@@ -161,7 +206,7 @@ const handleClick = (dossier) => {
           <UIcon name="i-heroicons-folder-open" class="text-violet-500" />
           Dossiers rattachés
           <UBadge color="violet" variant="soft" size="xs">{{ dossiers.length }}</UBadge>
-          <UButton icon="i-heroicons-plus" color="blue" variant="soft" @click="dossierModal = true">
+          <UButton v-if="peutGererCodir()" icon="i-heroicons-plus" color="blue" variant="soft" @click="dossierModal = true">
             Ajouter
           </UButton>
         </h2>
@@ -173,8 +218,16 @@ const handleClick = (dossier) => {
 
         <div v-else class="flex flex-col gap-2">
           <!-- ✅ Empêcher la propagation du clic depuis le bouton supprimer -->
-          <DossierCard v-for="dossier in dossiers" :key="dossier.id" :dossier="dossier" @click="handleClick(dossier)"
-            @deleted="handleRemoveDossier(dossier.id)" />
+          <DossierCard
+            v-for="dossier in dossiers"
+            :key="dossier.id"
+            :dossier="dossier"
+            @peutGererCodir="peutGererCodir()"
+            @click="handleClick(dossier)"
+            @deleted="handleRemoveDossier(dossier.id)"
+            @commenter="openCommentairePourDossier(dossier)"
+            @lire-commentaires="openLectureCommentairesPourDossier(dossier)"
+          />
         </div>
       </section>
 
@@ -185,6 +238,18 @@ const handleClick = (dossier) => {
 
   </div>
 
+  <CommentaireModal
+    v-model:openCommentaireModal="openCommentaireModal"
+    :loading="commentairesLoading"
+    @commenter="handleRecupererCommentaire"
+  />
+
+  <CommentaireListeModal
+    v-model:openListeCommentairesModal="openListeCommentairesModal"
+    :commentaires="commentaires"
+    :entiteUser="entiteUser"
+  />
+
   <!-- ── Modale ajout dossier ───────────────────────────────────────────────── -->
   <UModal v-model="dossierModal">
     <UCard class="rounded-2xl">
@@ -193,7 +258,7 @@ const handleClick = (dossier) => {
       </template>
       <div class="p-2 flex flex-col gap-4">
         <UFormGroup label="Libellé">
-          <UInput v-model="dossierForm.libelle" placeholder="Ex: Budget annuel" size="md" />
+          <UTextarea v-model="dossierForm.libelle" placeholder="Ex: Budget annuel" size="md" />
         </UFormGroup>
       </div>
       <template #footer>
