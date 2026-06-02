@@ -426,7 +426,7 @@
                 </div>
               </Teleport>
             </div>
-            <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier"
+            <button v-if="isAdmin() || isSP() || isSA()" @click="onEdit(item)" title="Modifier ce courrier"
               class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
               <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
             </button>

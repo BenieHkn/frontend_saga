@@ -553,7 +553,7 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-500 border border-green-100 rounded-md cursor-default">
             <Icon name="i-heroicons-check-circle" class="w-4 h-4" />
           </div>
-            <button v-if="isAdmin() && !item.isPrearchived && !item.isArchived" @click="onEdit(item)" title="Modifier ce courrier"
+            <button v-if="(isAdmin() || isSP() || isSA()) && !item.isPrearchived && !item.isArchived" @click="onEdit(item)" title="Modifier ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
             <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
@@ -649,7 +649,7 @@ const onPeriodChange = ({ field, from, to }) => {
 const store          = useAffectationsStore()
 const courriersStore = useCourriersStore()
 const config         = useRuntimeConfig()
-const { isAdmin, isDCCIQ, isDG } = useAuth()
+const { isAdmin, isDCCIQ, isDG, isSP, isSA } = useAuth()
 
 const tooltipStyle = ref({})
 const hoveredAffectationItemId = ref(null)

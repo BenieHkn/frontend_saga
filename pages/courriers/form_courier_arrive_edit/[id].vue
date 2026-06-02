@@ -18,7 +18,7 @@
             <form v-else @submit.prevent="handleSubmit" class="space-y-4">
               <!-- Type d'arrivée -->
               <div v-if="isRestrictedEditor" class="mb-4 p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
-              En tant que secrétaire SP/SA, vous pouvez modifier uniquement la référence et l'objet du courrier. Le remplacement de fichier est réservé aux administrateurs.
+              Vous pouvez modifier uniquement la référence et l'objet du courrier. La modification des autres informations est réservé aux administrateurs.
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -257,6 +257,12 @@ const filePreviewUrl = computed(() => {
 })
 
 const isFormValid = computed(() => {
+  if (isRestrictedEditor.value) {
+    return (
+      (sansReference.value || form.value.reference !== '') &&
+      form.value.objet !== ''
+    )
+  }
   return (
     form.value.numero_enreg !== '' &&
     form.value.date_enreg !== '' &&
@@ -264,7 +270,8 @@ const isFormValid = computed(() => {
     form.value.objet !== '' &&
     form.value.type_document_id !== null &&
     form.value.type_arrivee !== '' &&
-    form.value.priorite !== ''
+    form.value.priorite !== '' &&
+    (sansReference.value || form.value.reference !== '')
     // fichier non obligatoire en édition (on garde l'existant)
   )
 })
@@ -356,6 +363,13 @@ const loadDocumentTypes = async () => {
 // ── Validation ────────────────────────────────────────────────────────────────
 const validateForm = () => {
   const newErrors = []
+  if (isRestrictedEditor.value) {
+    if (!sansReference.value && !form.value.reference) newErrors.push("La référence est obligatoire.")
+    if (!form.value.objet) newErrors.push("L'objet est obligatoire.")
+    errors.value = newErrors
+    return newErrors.length === 0
+  }
+
   if (!form.value.numero_enreg)    newErrors.push("Le numéro d'enregistrement est obligatoire.")
   if (!form.value.date_enreg)      newErrors.push("La date d'enregistrement est obligatoire.")
   if (!form.value.date_courier)    newErrors.push("La date du courrier est obligatoire.")
@@ -363,6 +377,7 @@ const validateForm = () => {
   if (!form.value.type_document_id) newErrors.push("Le type de document est obligatoire.")
   if (!form.value.type_arrivee)    newErrors.push("Le type d'arrivée est obligatoire.")
   if (!form.value.priorite)        newErrors.push("La priorité est obligatoire.")
+  if (!sansReference.value && !form.value.reference) newErrors.push("La référence est obligatoire.")
   errors.value = newErrors
   return newErrors.length === 0
 }
@@ -407,37 +422,42 @@ const handleSubmit = async () => {
     const formData = new FormData()
     formData.append('_method', 'PUT') // Laravel method spoofing pour FormData
 
-    formData.append('numero_enreg',    form.value.numero_enreg)
-    formData.append('date_enreg',      form.value.date_enreg)
-    formData.append('reference',       sansReference.value ? 'sans reference' : (form.value.reference || 'sans reference'))
-    formData.append('date_courrier',   form.value.date_courier)
-    formData.append('objet',           form.value.objet)
-    formData.append('large_diffusion', form.value.large_diffusion ? '1' : '0')
-    formData.append('type_document_id', String(form.value.type_document_id))
-    formData.append('type_arrivee',    form.value.type_arrivee)
-    formData.append('confidentiel',    form.value.confidentiel ? '1' : '0')
-    formData.append('service_enreg',   form.value.service_enreg)
-    formData.append('priority',        form.value.priorite)
-    formData.append('statut',          form.value.statut)
+    if (isRestrictedEditor.value) {
+      formData.append('reference', sansReference.value ? 'sans reference' : (form.value.reference || 'sans reference'))
+      formData.append('objet', form.value.objet)
+    } else {
+      formData.append('numero_enreg',    form.value.numero_enreg)
+      formData.append('date_enreg',      form.value.date_enreg)
+      formData.append('reference',       sansReference.value ? 'sans reference' : (form.value.reference || 'sans reference'))
+      formData.append('date_courrier',   form.value.date_courier)
+      formData.append('objet',           form.value.objet)
+      formData.append('large_diffusion', form.value.large_diffusion ? '1' : '0')
+      formData.append('type_document_id', String(form.value.type_document_id))
+      formData.append('type_arrivee',    form.value.type_arrivee)
+      formData.append('confidentiel',    form.value.confidentiel ? '1' : '0')
+      formData.append('service_enreg',   form.value.service_enreg)
+      formData.append('priority',        form.value.priorite)
+      formData.append('statut',          form.value.statut)
 
-    // Fichier uniquement si un nouveau est sélectionné
-    if (selectedFile.value) {
-      formData.append('fichier', selectedFile.value)
-    }
+      // Fichier uniquement si un nouveau est sélectionné
+      if (selectedFile.value) {
+        formData.append('fichier', selectedFile.value)
+      }
 
-    if (form.value.type_arrivee !== 'autre' && form.value.structure) {
-      formData.append('structure', form.value.structure)
-    }
-    if (form.value.type_arrivee === 'autre' && form.value.autre_structure) {
-      formData.append('autre_structure', form.value.autre_structure)
-    }
-    if (form.value.type_arrivee === 'cab') {
-      if (form.value.num_cab)  formData.append('num_cab', form.value.num_cab)
-      if (form.value.date_cab) formData.append('date_cab', form.value.date_cab)
-    }
-    if (form.value.type_arrivee === 'cab' || form.value.type_arrivee === 'sgm') {
-      if (form.value.num_sgm)  formData.append('num_sgm', form.value.num_sgm)
-      if (form.value.date_sgm) formData.append('date_sgm', form.value.date_sgm)
+      if (form.value.type_arrivee !== 'autre' && form.value.structure) {
+        formData.append('structure', form.value.structure)
+      }
+      if (form.value.type_arrivee === 'autre' && form.value.autre_structure) {
+        formData.append('autre_structure', form.value.autre_structure)
+      }
+      if (form.value.type_arrivee === 'cab') {
+        if (form.value.num_cab)  formData.append('num_cab', form.value.num_cab)
+        if (form.value.date_cab) formData.append('date_cab', form.value.date_cab)
+      }
+      if (form.value.type_arrivee === 'cab' || form.value.type_arrivee === 'sgm') {
+        if (form.value.num_sgm)  formData.append('num_sgm', form.value.num_sgm)
+        if (form.value.date_sgm) formData.append('date_sgm', form.value.date_sgm)
+      }
     }
 
     const response = await $fetch(`${config.public.apiBase}/courriers-arrives/${courrierId}`, {

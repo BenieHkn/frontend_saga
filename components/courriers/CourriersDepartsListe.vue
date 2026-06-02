@@ -379,7 +379,7 @@
             class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 transition-all group">
             <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
           </button>
-          <button v-if="isAdmin() && !item.isPrearchived && !item.isArchived" @click="onEdit(item)" title="Modifier ce courrier"
+          <button v-if="(isAdmin() || isSP() || isSA()) && !item.isPrearchived && !item.isArchived" @click="onEdit(item)" title="Modifier ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
             <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
@@ -408,7 +408,7 @@ import Swal from 'sweetalert2'
 
 const props = defineProps({ entiteId: { type: Number, default: null } })
 const config = useRuntimeConfig()
-const { isAdmin } = useAuth()
+const { isAdmin, isSP, isSA } = useAuth()
 
 const courriers = ref([])
 const loading = ref(false)

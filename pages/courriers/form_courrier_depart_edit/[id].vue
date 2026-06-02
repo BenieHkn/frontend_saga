@@ -43,7 +43,7 @@
                 </div>
               </div>
               <div v-if="isRestrictedEditor" class="rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
-                En tant que SP/SA, vous pouvez modifier uniquement la référence et l'objet du courrier. Le remplacement de fichier est réservé aux administrateurs.
+                Vous pouvez modifier uniquement la référence et l'objet du courrier. La modification des autres informations est réservé aux administrateurs.
               </div>
             </div>
 
@@ -379,21 +379,33 @@ onUnmounted(() => {
 })
 
 // ── Validation ────────────────────────────────────────────────────────────────
-const isFormValid = computed(() =>
-  form.value.numero_enreg     !== '' &&
-  form.value.date_enreg       !== '' &&
-  form.value.reference        !== '' &&
-  form.value.date_courier     !== '' &&
-  form.value.objet            !== '' &&
-  form.value.type_document_id !== null &&
-  form.value.type_depart      !== '' &&
-  form.value.date_depart      !== '' &&
-  form.value.destinataire     !== '' &&
-  selectedInitiateurs.value.length > 0
-)
+const isFormValid = computed(() => {
+  if (isRestrictedEditor.value) {
+    return form.value.reference !== '' && form.value.objet !== ''
+  }
+  return (
+    form.value.numero_enreg     !== '' &&
+    form.value.date_enreg       !== '' &&
+    form.value.reference        !== '' &&
+    form.value.date_courier     !== '' &&
+    form.value.objet            !== '' &&
+    form.value.type_document_id !== null &&
+    form.value.type_depart      !== '' &&
+    form.value.date_depart      !== '' &&
+    form.value.destinataire     !== '' &&
+    selectedInitiateurs.value.length > 0
+  )
+})
 
 const validateForm = () => {
   const newErrors = []
+  if (isRestrictedEditor.value) {
+    if (!form.value.reference) newErrors.push('La référence est obligatoire.')
+    if (!form.value.objet) newErrors.push("L'objet est obligatoire.")
+    errors.value = newErrors
+    return newErrors.length === 0
+  }
+
   if (!form.value.numero_enreg)     newErrors.push("Le numéro d'enregistrement est obligatoire.")
   if (!form.value.date_enreg)       newErrors.push("La date d'enregistrement est obligatoire.")
   if (!form.value.reference)        newErrors.push('La référence est obligatoire.')
@@ -577,6 +589,13 @@ const cancelFileReplacement = () => {
 const buildFormData = () => {
   const fd = new FormData()
   fd.append('_method',          'PUT')           // pour les serveurs qui ne supportent pas PUT natif
+
+  if (isRestrictedEditor.value) {
+    fd.append('reference', form.value.reference)
+    fd.append('objet', form.value.objet)
+    return fd
+  }
+
   fd.append('numero_enreg',     form.value.numero_enreg)
   fd.append('date_enreg',       form.value.date_enreg)
   fd.append('reference',        form.value.reference)

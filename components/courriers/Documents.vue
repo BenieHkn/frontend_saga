@@ -522,7 +522,7 @@
             </div>
 
             <!-- Actions admin pour courrier arrivé -->
-            <button v-if="isAdmin() && !item.isPrearchived && !item.isArchived" @click="onEdit(item)" title="Modifier ce courrier arrivé"
+            <button v-if="(isAdmin() || isSP() || isSA()) && !item.isPrearchived && !item.isArchived" @click="onEdit(item)" title="Modifier ce courrier arrivé"
               class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
               <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
             </button>
@@ -535,7 +535,7 @@
           <!-- ══════════════════════════════════════════════════════════════ -->
           <!-- ACTIONS COURRIER DÉPART (admin uniquement)                     -->
           <!-- ══════════════════════════════════════════════════════════════ -->
-          <template v-else-if="item.type === 'depart' && isAdmin()">
+          <template v-else-if="item.type === 'depart' && (isAdmin() || isSP() || isSA())">
             <button v-if="!item.isPrearchived && !item.isArchived" @click="onEditDepart(item)" title="Modifier ce courrier départ"
               class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
               <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
@@ -636,7 +636,7 @@ const props = defineProps({
 const store = useAffectationsStore()
 const courriersStore = useCourriersStore()
 const config = useRuntimeConfig()
-const { isAdmin, isDCCIQ, isDG } = useAuth()
+const { isAdmin, isDCCIQ, isDG, isSP, isSA } = useAuth()
 
 // ── État table ────────────────────────────────────────────────────────────────
 const courriers = ref([])
