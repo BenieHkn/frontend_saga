@@ -4,6 +4,7 @@ import { useCodirSteps } from '~/composables/codirs/useCodirSteps'
 
 const props = defineProps({
   codirId: { type: Number, required: true },
+  peutGererCodir: { type: Boolean, default: false },
 })
 
 const { steps, currentStep, goNext, goPrev, finish, restoreStep } = useCodirSteps(props.codirId)

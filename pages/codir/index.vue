@@ -22,6 +22,7 @@ const fetchCodirs = async () => {
   try {
     const data = await getCodirs()
     codirs.value = data
+    console.log("les codirs", codirs.value);
     if (process.client)
       localStorage.setItem('codirs', JSON.stringify(data))
   } catch {

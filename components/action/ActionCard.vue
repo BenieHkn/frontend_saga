@@ -4,9 +4,10 @@ import { useAction } from '~/composables/actions/useAction'
 const props = defineProps({
   action: { type: Object, required: true },
   numero: { type: Number, default: null },
+  peutGererCodir: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['deleted', 'add-tache', 'add-activite'])
+const emit = defineEmits(['deleted', 'add-tache', 'add-activite', 'lire-commentaires', 'commenter'])
 
 const toast       = useToast()
 const router      = useRouter()
@@ -71,7 +72,42 @@ const confirmDelete = async () => {
                 {{ action.libelle }}
               </p>
               <div class="flex items-center gap-2 shrink-0">
+                <div class="flex items-center gap-2">
+                  <div class="relative inline-block">
+                    <UButton
+                      icon="i-heroicons-chat-bubble-bottom-center-text"
+                      color="gray"
+                      variant="ghost"
+                      size="xs"
+                      title="Lire les commentaires"
+                      @click.stop="emit('lire-commentaires', action)"
+                    >
+  
+                    <span
+                      v-if="(action.commentaires?.length ?? 0) > 0"
+                      class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-4 px-1 flex items-center justify-center pointer-events-none border border-white dark:border-slate-800"
+                    >
+                      {{action.commentaires?.length ?? 0 }}
+                    </span>
+                    </UButton>
+                  </div>
+
+                  <div class="relative inline-block">
+                    <UButton
+                      icon="i-heroicons-chat-bubble-left-right"
+                      color="blue"
+                      variant="ghost"
+                      size="xs"
+                      title="Ajouter un commentaire"
+                      @click.stop="emit('commenter', action)"
+                    />
+                    <div class="absolute -bottom-0.5 -right-0.5 bg-blue-500 rounded-full p-0.5 flex items-center justify-center border border-white dark:border-slate-800 pointer-events-none">
+                      <UIcon name="i-heroicons-plus" class="w-2 h-2 text-white" />
+                    </div>
+                  </div>
+                </div>
                 <UButton
+                  v-if="peutGererCodir"
                   icon="i-heroicons-plus"
                   color="blue"
                   variant="soft"
@@ -81,6 +117,7 @@ const confirmDelete = async () => {
                   Tâche
                 </UButton>
                 <UButton
+                  v-if="peutGererCodir"
                   icon="i-heroicons-plus-circle"
                   color="violet"
                   variant="soft"
@@ -90,6 +127,7 @@ const confirmDelete = async () => {
                   Activité
                 </UButton>
                 <UButton
+                  v-if="peutGererCodir"
                   icon="i-heroicons-trash"
                   color="red"
                   variant="ghost"
