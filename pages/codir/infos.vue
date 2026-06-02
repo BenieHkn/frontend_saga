@@ -14,22 +14,12 @@ definePageMeta({ title: 'Informations générales – CODIR' })
 const router = useRouter()
 const store = useCodirsStore()
 const toast = useNuxtApp().$toast ?? useToast()
-const { savePresences, getPresences, loading: presenceLoading } = useCodir()
+const { savePresences, getPresences, loading: presenceLoading, getCodir } = useCodir()
 
 // ── Chargement du CODIR depuis localStorage ───────────────────────────────────
 const codir = ref(null)
 const codirId = ref(null)
 const membres = ref([])
-
-onMounted(() => {
-  if (!process.client) return
-  const raw = localStorage.getItem('currentCodir')
-  if (raw) {
-    codir.value = JSON.parse(raw)
-    codirId.value = codir.value?.id
-    membres.value = JSON.parse(localStorage.getItem('membres'))
-  }
-})
 
 // ── Step courant ──────────────────────────────────────────────────────────────
 const steps = [
@@ -181,6 +171,23 @@ const savePresencesToDb = async () => {
     })
   }
 }
+
+const rafraichir= async()=>{
+  if(process.client) return
+  codir.value = await getCodir(codir.value.id)
+  localStorage.setItem('currentCodir', JSON.stringify(codir.value))
+}
+
+onMounted(() => {
+  if (!process.client) return
+  const raw = localStorage.getItem('currentCodir')
+  if (raw) {
+    rafraichir()
+    codir.value = JSON.parse(raw)
+    codirId.value = codir.value?.id
+    membres.value = JSON.parse(localStorage.getItem('membres'))
+  }
+})
 </script>
 
 <template>

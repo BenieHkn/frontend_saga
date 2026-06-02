@@ -10,8 +10,8 @@ const router = useRouter()
 const toast  = useNuxtApp().$toast ?? useToast() // ✅ FIX — toast manquant
 const { loading, error, getCodirs, createCodir, downloadPdf, deleteCodir } = useCodir()
 const createModal = ref(false)
-const createForm  = reactive({ heure_debut: '', heure_fin: '' })
-const resetCreate = () => Object.assign(createForm, { heure_debut: '', heure_fin: '' })
+const createForm  = reactive({ heure_debut: '', heure_fin: '', date: '' })
+const resetCreate = () => Object.assign(createForm, { heure_debut: '', heure_fin: '', date: '' })
 const { peutVoirCodir, peutGererCodir } = useAuth()
 
 
@@ -127,7 +127,7 @@ const handleCreate = async () => {
 
   try {
     const payload = {
-      date:        today,
+      date:        createForm.date,
       heure_debut: createForm.heure_debut,
       heure_fin:   null,
       statut:      'soumis',
@@ -302,22 +302,20 @@ const handleDelete = async () => {
           </div>
           <div>
             <h3 class="font-semibold">Nouveau CODIR</h3>
-            <p class="text-xs text-gray-400">{{ formatDateFR(today) }}</p>
           </div>
         </div>
       </template>
 
       <div class="p-2 flex flex-col gap-4">
 
-        <!-- Date auto — affichage uniquement -->
-        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg px-4 py-3 flex items-center gap-3">
-          <UIcon name="i-heroicons-calendar" class="w-4 h-4 text-gray-400" />
-          <div>
-            <p class="text-xs text-gray-400">Date</p>
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ formatDateFR(today) }}</p>
-          </div>
-          <UBadge label="Aujourd'hui" color="blue" variant="soft" size="xs" class="ml-auto" />
-        </div>
+
+        <UFormGroup label="Date" required>
+          <UInput
+            v-model="createForm.date"
+            type="date"
+            size="md"
+          />
+        </UFormGroup>
 
         <!-- Heure de début -->
         <UFormGroup label="Heure de début" required>
