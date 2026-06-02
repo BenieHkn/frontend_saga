@@ -286,9 +286,9 @@
     </UModal>
 
     <PageHeader v-if="!isAdmin()" title="Tous les documents"
-      subtitle="Gestion et suivi des documents — 12 derniers mois" btnText="Nouveau"
+      subtitle="Gestion et suivi des documents" btnText="Nouveau"
       to="/courriers/form_courier_arrive" />
-    <PageHeader v-else title="Tous les documents" subtitle="Gestion et suivi des documents — 12 derniers mois" />
+    <PageHeader v-else title="Tous les documents" subtitle="Gestion et suivi des documents" />
 
     <div v-if="initialLoading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
       <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>

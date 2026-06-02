@@ -41,16 +41,30 @@
               <Icon name="i-heroicons-inbox-arrow-down" class="h-6 w-6 text-blue-600" />
               Courrier Arrivée
             </label>
-            <div class="mb-4">
-              <UInput v-model="searchArrivee" placeholder="Rechercher par référence ou objet..."
-                icon="i-heroicons-magnifying-glass" size="lg" class="w-full" />
+            <div class="mb-4 relative">
+              <UInput
+                v-model="searchArrivee"
+                placeholder="Référence, N° enreg, objet, structure..."
+                icon="i-heroicons-magnifying-glass"
+                size="lg"
+                class="w-full"
+                :loading="loadingArrivee"
+              />
             </div>
+            <!-- Hint fenêtre temporelle -->
+            <p class="text-xs text-gray-400 mb-2 italic">
+              {{ searchArrivee ? "Recherche sur douze(12) mois" : "Affichage d'il a y un(1) mois — recherchez pour voir plus" }}
+            </p>
+
             <div class="border border-gray-200 rounded-lg max-h-96 overflow-y-auto bg-gray-50">
               <div v-for="courrier in filteredCourriersArrivee" :key="courrier.id"
                 @click="selectCourrierArrivee(courrier)" :class="['p-4 cursor-pointer transition-all border-b border-gray-200 last:border-b-0', selectedArrivee?.id === courrier.id ? 'bg-blue-100 border-l-4 border-l-blue-600' : 'hover:bg-white hover:shadow-sm']">
                 <div class="flex items-start justify-between">
                   <div class="flex-1">
                     <p class="font-bold text-blue-900 text-base">{{ courrier.reference }}</p>
+                    <p v-if="courrier.numero_enreg" class="text-xs text-gray-400 font-mono mt-0.5">
+                      N° {{ courrier.numero_enreg }}
+                    </p>
                     <p class="text-sm text-gray-700 mt-1 line-clamp-2">{{ courrier.objet }}</p>
                     <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
                       <span class="flex items-center gap-1">
@@ -92,16 +106,30 @@
               <Icon name="i-heroicons-paper-airplane" class="h-6 w-6 text-green-600" />
               Courrier Départ (Réponse)
             </label>
-            <div class="mb-4">
-              <UInput v-model="searchDepart" placeholder="Rechercher par référence ou objet..."
-                icon="i-heroicons-magnifying-glass" size="lg" class="w-full" />
+            <div class="mb-4 relative">
+              <UInput
+                v-model="searchDepart"
+                placeholder="Référence, N° enreg, objet, structure..."
+                icon="i-heroicons-magnifying-glass"
+                size="lg"
+                class="w-full"
+                :loading="loadingDepart"
+              />
             </div>
+
+            <!-- Hint fenêtre temporelle -->
+            <p class="text-xs text-gray-400 mb-2 italic">
+              {{ searchDepart ? "Recherche sur douze(12) mois" : "Affichage d'il a y un(1) mois — recherchez pour voir plus" }}
+            </p>
             <div class="border border-gray-200 rounded-lg max-h-96 overflow-y-auto bg-gray-50">
               <div v-for="courrier in filteredCourriersDepart" :key="courrier.id"
                 @click="selectCourrierDepart(courrier)" :class="['p-4 cursor-pointer transition-all border-b border-gray-200 last:border-b-0', selectedDepart?.id === courrier.id ? 'bg-green-100 border-l-4 border-l-green-600' : 'hover:bg-white hover:shadow-sm']">
                 <div class="flex items-start justify-between">
                   <div class="flex-1">
                     <p class="font-bold text-green-900 text-base">{{ courrier.reference }}</p>
+                    <p v-if="courrier.numero_enreg" class="text-xs text-gray-400 font-mono mt-0.5">
+                      N° {{ courrier.numero_enreg }}
+                    </p>
                     <p class="text-sm text-gray-700 mt-1 line-clamp-2">{{ courrier.objet }}</p>
                     <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
                       <span class="flex items-center gap-1">
@@ -366,6 +394,8 @@ const selectedDepart  = ref(null)
 // Données
 const courriersArrivee = ref([])
 const courriersDepart  = ref([])
+const loadingArrivee = ref(false)
+const loadingDepart = ref(false)
 
 // ── États blob pour l'étape 2 ─────────────────────────────────────────────────
 const previewLoading     = ref(false)
@@ -415,25 +445,9 @@ const revokePreviews = () => {
 }
 
 // ── Filtres ───────────────────────────────────────────────────────────────────
-const filteredCourriersArrivee = computed(() => {
-  if (!searchArrivee.value) return courriersArrivee.value
-  const q = searchArrivee.value.toLowerCase()
-  return courriersArrivee.value.filter(c =>
-    c.reference.toLowerCase().includes(q) ||
-    c.objet.toLowerCase().includes(q) ||
-    c.structure.toLowerCase().includes(q)
-  )
-})
-
-const filteredCourriersDepart = computed(() => {
-  if (!searchDepart.value) return courriersDepart.value
-  const q = searchDepart.value.toLowerCase()
-  return courriersDepart.value.filter(c =>
-    c.reference.toLowerCase().includes(q) ||
-    c.objet.toLowerCase().includes(q) ||
-    c.destinataire.toLowerCase().includes(q)
-  )
-})
+// Dans filteredCourriersArrivee
+const filteredCourriersArrivee = computed(() => courriersArrivee.value)
+const filteredCourriersDepart  = computed(() => courriersDepart.value)
 
 // ── Sélection ─────────────────────────────────────────────────────────────────
 const selectCourrierArrivee = (courrier) => { selectedArrivee.value = courrier }
@@ -532,47 +546,64 @@ const handleCancel = () => {
 }
 
 // ── Chargement des données ────────────────────────────────────────────────────
-const loadCourriersArrivee = async () => {
-  try {
-    const response = await $fetch(`${config.public.apiBase}/courriers-arrives/sans-reponses`, {
-      method: "GET", headers: { Authorization: `Bearer ${authToken.value}` },
-    })
-    courriersArrivee.value = response.data.map(courrier => ({
-      id:            courrier.document.id,
-      reference:     courrier.document?.reference     || '',
-      objet:         courrier.document?.objet         || '',
-      structure:     courrier.structure_emettrice      || '',
-      date_courrier: courrier.document?.date_courrier  || '',
-      // Noms bruts pour la construction blob
-      _rawUrl:       courrier.document?.url?.trim()   || '',
-      _dateEnreg:    courrier.document?.date_enreg    || '',
-    }))
-  } catch (error) {
-    console.error("Erreur lors du chargement des courriers arrivée:", error)
-    toast.add({ title: "Erreur", description: "Impossible de charger les courriers arrivée", color: "red", timeout: 1500 })
-  }
+// loadCourriersArrivee
+const loadCourriersArrivee = async (search = '') => {
+    loadingArrivee.value = true
+    try {
+        const params = new URLSearchParams()
+        if (search.trim()) params.append('search', search.trim())
+
+        const response = await $fetch(
+            `${config.public.apiBase}/courriers-arrives/sans-reponses${params.toString() ? '?' + params : ''}`,
+            { method: 'GET', headers: { Authorization: `Bearer ${authToken.value}` } }
+        )
+        courriersArrivee.value = (response.data || []).map(courrier => ({
+            id:            courrier.document.id,
+            reference:     courrier.document?.reference     || '',
+            objet:         courrier.document?.objet         || '',
+            numero_enreg:  courrier.document?.numero_enreg  || '',
+            structure:     courrier.structure_emettrice      || '',
+            date_courrier: courrier.document?.date_courrier  || '',
+            _rawUrl:       courrier.document?.url?.trim()   || '',
+            _dateEnreg:    courrier.document?.date_enreg    || '',
+        }))
+    } catch (error) {
+        toast.add({ title: 'Erreur', description: 'Impossible de charger les courriers arrivée', color: 'red', timeout: 1500 })
+    } finally {
+        loadingArrivee.value = false
+    }
 }
 
-const loadCourriersDepart = async () => {
-  try {
-    const response = await $fetch(`${config.public.apiBase}/courriers-departs/non-reponses`, {
-      method: "GET", headers: { Authorization: `Bearer ${authToken.value}` },
-    })
-    courriersDepart.value = response.data.map(courrier => ({
-      id:           courrier.document.id,
-      reference:    courrier.document?.reference   || '',
-      objet:        courrier.document?.objet       || '',
-      destinataire: courrier.destinataire          || '',
-      date_depart:  courrier.date_depart           || '',
-      // Noms bruts pour la construction blob
-      _rawUrl:      courrier.document?.url?.trim() || '',
-      _dateEnreg:   courrier.document?.date_enreg || '',
-    }))
-  } catch (error) {
-    console.error("Erreur lors du chargement des courriers départ:", error)
-    toast.add({ title: "Erreur", description: "Impossible de charger les courriers départ", color: "red", timeout: 1500 })
-  }
+// loadCourriersDepart
+const loadCourriersDepart = async (search = '') => {
+    loadingDepart.value = true
+    try {
+        const params = new URLSearchParams()
+        if (search.trim()) params.append('search', search.trim())
+
+        const response = await $fetch(
+            `${config.public.apiBase}/courriers-departs/non-reponses${params.toString() ? '?' + params : ''}`,
+            { method: 'GET', headers: { Authorization: `Bearer ${authToken.value}` } }
+        )
+        courriersDepart.value = (response.data || []).map(courrier => ({
+            id:           courrier.document.id,
+            reference:    courrier.document?.reference    || '',
+            objet:        courrier.document?.objet        || '',
+            numero_enreg: courrier.document?.numero_enreg || '',
+            destinataire: courrier.destinataire           || '',
+            date_depart:  courrier.date_depart            || '',
+            _rawUrl:      courrier.document?.url?.trim()  || '',
+            _dateEnreg:   courrier.document?.date_enreg   || '',
+        }))
+    } catch (error) {
+        toast.add({ title: 'Erreur', description: 'Impossible de charger les courriers départ', color: 'red', timeout: 1500 })
+    } finally {
+        loadingDepart.value = false
+    }
 }
+
+watch(searchArrivee, (val) => loadCourriersArrivee(val))
+watch(searchDepart,  (val) => loadCourriersDepart(val))
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {

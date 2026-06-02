@@ -278,13 +278,13 @@
     <PageHeader
       v-if="!isAdmin()"
       title="Courriers arrivés"
-      subtitle="Gestion des courriers entrants — 12 derniers mois"
+      subtitle="Gestion des courriers entrants"
       btnText="Nouveau"
       to="/courriers/form_courier_arrive" />
     <PageHeader
       v-else
       title="Courriers arrivés"
-      subtitle="Gestion des courriers entrants — 12 derniers mois" />
+      subtitle="Gestion des courriers entrants" />
 
     <!-- Loader premier chargement -->
     <div v-if="initialLoading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">

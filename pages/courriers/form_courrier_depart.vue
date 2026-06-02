@@ -286,7 +286,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useCourriersStore } from '~/stores/courriers'
 
 useHead({
@@ -682,6 +682,7 @@ const handleCancel = () => {
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
+// APRÈS (corrigé)
 onMounted(async () => {
   if (process.client) {
     authToken.value = localStorage.getItem('auth_token') || ''
@@ -692,14 +693,20 @@ onMounted(async () => {
     form.value.destinataire = c.autre_structure || c.structure || ''
     form.value.objet = c.document?.objet || c.objet || ''
 
-    // Initialiser TOUS les affectés comme initiateurs par défaut
-    initiateurIds.value = (courrierToReply.value.affectations || [])
-      .map(a => a.destinataire_id)
+    // Attendre que Vue ait calculé affectesOptionsEnrichis
+    await nextTick()
+
+    // ✅ Utiliser le computed plutôt que les données brutes
+    if (affectesOptionsEnrichis.value.length > 0) {
+      initiateurIds.value = affectesOptionsEnrichis.value.map(a => a.id)
+    } else if (c.affectations && Array.isArray(c.affectations)) {
+      // Fallback robuste si le computed est encore vide
+      initiateurIds.value = c.affectations
+        .map(a => a.destinataire_id ?? a.destinataire?.id ?? a.id)
+        .filter(Boolean)
+    }
   }
 
-  await Promise.all([
-    loadDocumentTypes(),
-    loadUtilisateurs(),
-  ])
+  await Promise.all([loadDocumentTypes(), loadUtilisateurs()])
 })
 </script>

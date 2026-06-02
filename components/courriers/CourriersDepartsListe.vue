@@ -197,10 +197,10 @@
     </UModal>
 
     <PageHeader v-if="!isAdmin()" title="Courriers Départs"
-      subtitle="Gestion et suivi des courriers sortants — 12 derniers mois" btnText="Nouveau"
+      subtitle="Gestion et suivi des courriers sortants" btnText="Nouveau"
       to="/courriers/form_courrier_depart" />
     <PageHeader v-else title="Courriers Départs"
-      subtitle="Gestion et suivi des courriers sortants — 12 derniers mois" />
+      subtitle="Gestion et suivi des courriers sortants" />
 
     <div v-if="initialLoading" class="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
       <div class="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
