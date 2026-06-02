@@ -53,7 +53,7 @@
             </div>
             <!-- Hint fenêtre temporelle -->
             <p class="text-xs text-gray-400 mb-2 italic">
-              {{ searchArrivee ? "Recherche sur douze(12) mois" : "Affichage d'il a y un(1) mois — recherchez pour voir plus" }}
+              {{ searchArrivee ? "Recherche sur les 12 derniers mois" : "Affichage des 30 derniers jours — recherchez pour voir plus" }}
             </p>
 
             <div class="border border-gray-200 rounded-lg max-h-96 overflow-y-auto bg-gray-50">
@@ -119,7 +119,7 @@
 
             <!-- Hint fenêtre temporelle -->
             <p class="text-xs text-gray-400 mb-2 italic">
-              {{ searchDepart ? "Recherche sur douze(12) mois" : "Affichage d'il a y un(1) mois — recherchez pour voir plus" }}
+              {{ searchDepart ? "Recherche sur les 12 derniers mois" : "Affichage des 30 derniers jours — recherchez pour voir plus" }}
             </p>
             <div class="border border-gray-200 rounded-lg max-h-96 overflow-y-auto bg-gray-50">
               <div v-for="courrier in filteredCourriersDepart" :key="courrier.id"
