@@ -42,6 +42,9 @@
                   </p>
                 </div>
               </div>
+              <div v-if="isRestrictedEditor" class="rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+                En tant que SP/SA, vous pouvez modifier uniquement la référence et l'objet du courrier. Le remplacement de fichier est réservé aux administrateurs.
+              </div>
             </div>
 
             <form @submit.prevent="handleSubmit" class="space-y-4">
@@ -54,55 +57,55 @@
                 <USelect v-model="form.type_depart" :options="[
                   { label: 'Interne', value: 'interne' },
                   { label: 'Externe', value: 'externe' },
-                ]" class="w-full h-12" />
+                  ]" class="w-full h-12" :disabled="isRestrictedEditor" />
               </div>
 
-              <!-- Pièce jointe -->
-              <div class="grid grid-cols-1 gap-4 pt-4 border-t border-gray-100">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Pièce jointe</label>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Pièce jointe</label>
 
-                  <!-- Fichier existant -->
-                  <div v-if="existingFilename && !selectedFile"
-                    class="mb-2 flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
-                    <Icon name="i-heroicons-document-check" class="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span class="text-xs text-emerald-700 font-medium truncate flex-1">{{ existingFilename }}</span>
-                    <button type="button" @click="triggerFileInput"
-                      class="text-xs text-emerald-700 underline hover:no-underline shrink-0">Remplacer</button>
-                  </div>
-
-                  <!-- Sélecteur fichier -->
-                  <div class="flex gap-2">
-                    <input ref="fileInput" type="file" @change="handleFileChange"
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden" />
-                    <UButton @click="triggerFileInput" type="button" color="yellow" variant="outline"
-                      icon="heroicons:arrow-up-tray" class="flex-shrink-0" />
-                    <div
-                      class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-600 truncate flex items-center">
-                      {{ selectedFile ? selectedFile.name : (existingFilename ? 'Cliquer pour remplacer le fichier' : 'Aucun fichier sélectionné') }}
-                    </div>
-                    <!-- Annuler remplacement -->
-                    <button v-if="selectedFile" type="button" @click="cancelFileReplacement"
-                      class="w-9 h-9 flex items-center justify-center rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-500 transition-colors"
-                      title="Annuler le remplacement">
-                      <Icon name="i-heroicons-x-mark" class="w-4 h-4" />
-                    </button>
-                  </div>
-                  <p class="text-[11px] text-gray-400 mt-1">
-                    Laissez vide pour conserver le fichier actuel. Formats : pdf, doc, docx, jpg, jpeg, png
-                  </p>
+                <!-- Fichier existant -->
+                <div v-if="existingFilename && !selectedFile"
+                  class="mb-2 flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <Icon name="i-heroicons-document-check" class="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span class="text-xs text-emerald-700 font-medium truncate flex-1">{{ existingFilename }}</span>
+                  <button type="button" @click="triggerFileInput"
+                    class="text-xs text-emerald-700 underline hover:no-underline shrink-0"
+                    :class="isRestrictedEditor ? 'opacity-50 cursor-not-allowed' : ''">Remplacer</button>
                 </div>
 
-                <!-- Type de document -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Type de document <span class="text-red-600">*</span>
-                  </label>
-                  <USelectMenu v-model="selectedDocumentType" :options="filteredDocumentTypes"
-                    option-attribute="libelle" placeholder="Rechercher un type…" searchable
-                    searchable-placeholder="Rechercher…" class="w-full" :ui="{ height: 'h-[42px]' }"
-                    :loading="loadingTypes" @search="searchQuery = $event" />
+                <!-- Sélecteur fichier -->
+                <div class="flex gap-2">
+                  <input ref="fileInput" type="file" @change="handleFileChange"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden" />
+                  <UButton @click="triggerFileInput" type="button" color="yellow" variant="outline"
+                    icon="heroicons:arrow-up-tray" class="flex-shrink-0"
+                    :class="isRestrictedEditor ? 'opacity-50 cursor-not-allowed' : ''" />
+                  <div
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-600 truncate flex items-center">
+                    {{ selectedFile ? selectedFile.name : (existingFilename ? 'Cliquer pour remplacer le fichier' : 'Aucun fichier sélectionné') }}
+                  </div>
+                  <!-- Annuler remplacement -->
+                  <button v-if="selectedFile" type="button" @click="cancelFileReplacement"
+                    class="w-9 h-9 flex items-center justify-center rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-500 transition-colors"
+                    title="Annuler le remplacement">
+                    <Icon name="i-heroicons-x-mark" class="w-4 h-4" />
+                  </button>
                 </div>
+                <p class="text-[11px] text-gray-400 mt-1">
+                  Laissez vide pour conserver le fichier actuel. Formats : pdf, doc, docx, jpg, jpeg, png
+                </p>
+                <p v-if="isRestrictedEditor" class="text-[11px] text-yellow-700 mt-1">Le remplacement de fichier est réservé aux administrateurs.</p>
+              </div>
+
+              <!-- Type de document -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Type de document <span class="text-red-600">*</span>
+                </label>
+                <USelectMenu v-model="selectedDocumentType" :options="filteredDocumentTypes"
+                  option-attribute="libelle" placeholder="Rechercher un type…" searchable
+                  searchable-placeholder="Rechercher…" class="w-full" :ui="{ height: 'h-[42px]' }"
+                  :loading="loadingTypes" @search="searchQuery = $event" :disabled="isRestrictedEditor" />
               </div>
 
               <!-- Destinataire + Date départ -->
@@ -110,12 +113,12 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Destinataire <span
                       class="text-red-600">*</span></label>
-                  <UInput v-model="form.destinataire" placeholder="Nom du destinataire" class="w-full h-12" />
+                  <UInput v-model="form.destinataire" placeholder="Nom du destinataire" class="w-full h-12" :disabled="isRestrictedEditor" />
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Date de départ <span
                       class="text-red-600">*</span></label>
-                  <UInput v-model="form.date_depart" type="date" class="w-full h-12" />
+                  <UInput v-model="form.date_depart" type="date" class="w-full h-12" :disabled="isRestrictedEditor" />
                 </div>
               </div>
 
@@ -125,12 +128,12 @@
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Numéro d'enregistrement <span
                         class="text-red-600">*</span></label>
-                    <UInput v-model="form.numero_enreg" placeholder="Numéro d'enregistrement" class="w-full h-12" />
+                    <UInput v-model="form.numero_enreg" placeholder="Numéro d'enregistrement" class="w-full h-12" :disabled="isRestrictedEditor" />
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Date d'enregistrement <span
                         class="text-red-600">*</span></label>
-                    <UInput v-model="form.date_enreg" type="date" class="w-full h-12" />
+                    <UInput v-model="form.date_enreg" type="date" class="w-full h-12" :disabled="isRestrictedEditor" />
                   </div>
                 </div>
 
@@ -143,14 +146,14 @@
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Date du courrier <span
                         class="text-red-600">*</span></label>
-                    <UInput v-model="form.date_courier" type="date" class="w-full h-12" />
+                    <UInput v-model="form.date_courier" type="date" class="w-full h-12" :disabled="isRestrictedEditor" />
                   </div>
                 </div>
 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Objet <span
                       class="text-red-600">*</span></label>
-                  <UTextarea :rows="3" size="lg" v-model="form.objet" placeholder="Objet du courrier" />
+                  <UTextarea :rows="3" size="lg" v-model="form.objet" placeholder="Objet du courrier" :disabled="false" />
                 </div>
 
                 <!-- Initiateurs -->
@@ -160,13 +163,13 @@
                   <USelectMenu v-model="selectedInitiateurs" :options="utilisateurs" option-attribute="display_name"
                     placeholder="Rechercher un initiateur…" class="w-full" multiple searchable
                     searchable-placeholder="Nom, prénom ou entité…" :loading="loadingUsers"
-                    :ui="{ height: 'h-[42px]' }" />
+                    :ui="{ height: 'h-[42px]' }" :disabled="isRestrictedEditor" />
                   <!-- Tags initiateurs sélectionnés -->
                   <div v-if="selectedInitiateurs.length > 0" class="flex flex-wrap gap-1.5 mt-2">
                     <span v-for="init in selectedInitiateurs" :key="init.id"
                       class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full">
                       {{ init.display_name }}
-                      <button type="button"
+                      <button v-if="!isRestrictedEditor" type="button"
                         @click="selectedInitiateurs = selectedInitiateurs.filter(i => i.id !== init.id)">
                         <Icon name="i-heroicons-x-mark" class="w-3 h-3 hover:text-indigo-900" />
                       </button>
@@ -287,6 +290,8 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import Swal from 'sweetalert2'
+import { useAuth } from '~/composables/auth/useAuth'
 import DocumentPreview from '~/components/DocumentPreview.vue'
 import DocumentRpreview from '~/components/DocumentRpreview.vue'
 
@@ -308,6 +313,8 @@ const authToken      = ref('')
 const errors         = ref([])
 const errorRequest   = ref(null)
 const originalData   = ref(null)
+const { isAdmin, isSP, isSA } = useAuth()
+const isRestrictedEditor = computed(() => !isAdmin() && (isSP() || isSA()))
 
 // ── Fichier ───────────────────────────────────────────────────────────────────
 const fileInput      = ref(null)
@@ -543,7 +550,18 @@ const loadUtilisateurs = async () => {
 }
 
 // ── Handlers fichier ──────────────────────────────────────────────────────────
-const triggerFileInput = () => fileInput.value?.click()
+const triggerFileInput = () => {
+  if (isRestrictedEditor.value) {
+    Swal.fire({
+      title: 'Modification réservée',
+      text: 'Le remplacement du fichier est réservé aux administrateurs. Contactez l’administrateur système.',
+      icon: 'warning',
+      confirmButtonText: 'OK',
+    })
+    return
+  }
+  fileInput.value?.click()
+}
 
 const handleFileChange = (event) => {
   const file = event.target.files[0]

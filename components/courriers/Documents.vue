@@ -497,14 +497,14 @@
           <!-- ACTIONS COURRIER ARRIVÉ                                        -->
           <!-- ══════════════════════════════════════════════════════════════ -->
           <template v-if="item.type === 'arrive'">
-            <!-- Affecter — grisé si réponse déjà envoyée -->
-            <button v-if="!isAdmin() && !item.a_reponse && !isDCCIQ() && !item.isPrearchived && !item.isArchived"
+            <!-- Affecter — disponible même si le courrier a déjà une réponse -->
+            <button v-if="!isAdmin() && !isDCCIQ() && !item.isPrearchived && !item.isArchived"
               @click="handleQuickAssign(item.courrier_arrive_id)" title="Affecter ce courrier"
               class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
               <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
             </button>
-            <div v-else-if="!isAdmin() && item.a_reponse && !isDCCIQ()"
-              title="Ce courrier a déjà une réponse — affectation non disponible"
+            <div v-else-if="!isAdmin() && !isDCCIQ()"
+              title="Affectation non disponible"
               class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-md cursor-not-allowed">
               <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
             </div>

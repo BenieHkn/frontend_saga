@@ -528,15 +528,15 @@
             </Teleport>
           </div>
           <button
-            v-if="!isAdmin() && !isDCCIQ() && !item._raw?.document?.reponse && !item.isPrearchived && !item.isArchived"
+            v-if="!isAdmin() && !isDCCIQ() && !item.isPrearchived && !item.isArchived"
             @click="handleQuickAssign(item.id)"
             title="Affecter ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
           <div
-            v-else-if="!isAdmin() && !isDCCIQ() && item._raw?.document?.reponse"
-            title="Ce courrier a déjà une réponse — affectation non disponible"
+            v-else-if="!isAdmin() && !isDCCIQ()"
+            title="Affectation non disponible"
             class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-md cursor-not-allowed">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
           </div>

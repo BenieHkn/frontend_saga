@@ -249,7 +249,7 @@
             </button>
             <div
               v-else
-              :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+              :title="item.is_cloture ? 'Affectation clôturée' : 'Action non disponible'"
               class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
               <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
             </div>
@@ -267,7 +267,7 @@
             </button>
             <div
               v-else
-              :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+              :title="item.is_cloture ? 'Action clôturée' : 'Action non disponible'"
               class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
               <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4" />
             </div>
@@ -285,7 +285,7 @@
           </button>
           <div
             v-else
-            :title="item.is_cloture ? 'Déjà clôturée' : 'Ce courrier a déjà une réponse'"
+            :title="item.is_cloture ? 'Déjà clôturée' : 'Action non disponible'"
             class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
             <Icon name="i-heroicons-lock-closed" class="w-4 h-4" />
           </div> -->
@@ -762,9 +762,9 @@ const onPeriodChange = ({ field, from, to }) => {
   refresh(1, perPage.value, false)
 }
 
-// ── Helper : actions bloquées si clôturé OU courrier déjà répondu ─────────────
+// ── Helper : actions bloquées si clôturé OU archivé ─────────────
 const isActionBlocked = (item) => {
-  return item.is_cloture || item.a_reponse || item.isPrearchived || item.isArchived
+  return item.is_cloture || item.isPrearchived || item.isArchived
 }
 
 const getAffectationEntityText = (entity) => {

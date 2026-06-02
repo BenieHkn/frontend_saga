@@ -17,7 +17,10 @@
 
             <form v-else @submit.prevent="handleSubmit" class="space-y-4">
               <!-- Type d'arrivée -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div v-if="isRestrictedEditor" class="mb-4 p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+              En tant que secrétaire SP/SA, vous pouvez modifier uniquement la référence et l'objet du courrier. Le remplacement de fichier est réservé aux administrateurs.
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Type d'arrivée *</label>
                   <USelect v-model="form.type_arrivee" :options="[
@@ -25,16 +28,16 @@
                     { label: 'Par CAB', value: 'cab' },
                     { label: 'Par SGM', value: 'sgm' },
                     { label: 'Par Autres', value: 'autre' },
-                  ]" class="w-full h-12" />
+                  ]" class="w-full h-12" :disabled="isRestrictedEditor" />
                 </div>
 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Priorité *</label>
                   <USelect v-model="form.priorite" :options="[
-                    { label: 'STANDARD', value: 'STANDARD' },
-                    { label: 'STANDARD', value: 'URGENT' },
+                    { label: 'URGENT', value: 'URGENT' },
                     { label: 'IMPORTANT', value: 'IMPORTANT' },
-                  ]" class="w-full h-12" />
+                    { label: 'STANDARD', value: 'STANDARD' },
+                  ]" class="w-full h-12" :disabled="isRestrictedEditor" />
                 </div>
               </div>
 
@@ -48,13 +51,15 @@
                     <input ref="fileInput" type="file" @change="handleFileChange"
                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden" />
                     <div class="flex gap-2">
-                      <UButton @click="$refs.fileInput.click()" type="button" color="yellow" variant="outline"
-                        icon="heroicons:arrow-up-tray" class="flex-shrink-0" />
+                      <UButton @click="handleFileUploadClick" type="button" color="yellow" variant="outline"
+                        icon="heroicons:arrow-up-tray" class="flex-shrink-0"
+                        :class="isRestrictedEditor ? 'opacity-50 cursor-not-allowed' : ''" />
                       <div
                         class="flex-1 text-xs px-3 py-1 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-600 truncate flex items-center">
                         {{ selectedFile ? selectedFile.name : fichierActuel ? '📎 Fichier existant' : 'Aucun fichier' }}
                       </div>
                     </div>
+                    <p v-if="isRestrictedEditor" class="mt-2 text-xs text-yellow-700">Le remplacement du fichier est réservé aux administrateurs.</p>
                   </div>
                 </div>
 
@@ -69,6 +74,7 @@
                     class="w-full"
                     :ui="{ height: 'h-[42px]' }"
                     :loading="loadingTypes"
+                    :disabled="isRestrictedEditor"
                   />
                 </div>
               </div>
@@ -76,23 +82,21 @@
               <!-- Structure conditionnelle -->
               <div v-if="form.type_arrivee !== 'autre'">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Structure</label>
-                <UInput v-model="form.structure" placeholder="Nom de la structure" class="w-full h-12" />
+                <UInput v-model="form.structure" placeholder="Nom de la structure" class="w-full h-12" :disabled="isRestrictedEditor" />
               </div>
-
               <div v-if="form.type_arrivee === 'autre'">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Autre Structure</label>
-                <UInput v-model="form.autre_structure" placeholder="Précisez la structure" class="w-full h-12" />
+                <UInput v-model="form.autre_structure" placeholder="Précisez la structure" class="w-full h-12" :disabled="isRestrictedEditor" />
               </div>
-
               <!-- Champs CAB -->
               <div v-if="form.type_arrivee === 'cab'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Numéro CAB</label>
-                  <UInput v-model="form.num_cab" class="w-full h-12" />
+                  <UInput v-model="form.num_cab" class="w-full h-12" :disabled="isRestrictedEditor" />
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Date CAB</label>
-                  <UInput v-model="form.date_cab" type="date" class="w-full h-12" />
+                  <UInput v-model="form.date_cab" type="date" class="w-full h-12" :disabled="isRestrictedEditor" />
                 </div>
               </div>
 
@@ -101,11 +105,11 @@
                 class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Numéro d'Enregistrement SGM</label>
-                  <UInput v-model="form.num_sgm" class="w-full h-12" />
+                  <UInput v-model="form.num_sgm" class="w-full h-12" :disabled="isRestrictedEditor" />
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Date SGM</label>
-                  <UInput v-model="form.date_sgm" type="date" class="w-full h-12" />
+                  <UInput v-model="form.date_sgm" type="date" class="w-full h-12" :disabled="isRestrictedEditor" />
                 </div>
               </div>
 
@@ -114,11 +118,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">N° d'enregistrement *</label>
-                    <UInput v-model="form.numero_enreg" placeholder="Numéro d'enregistrement" class="w-full h-12" />
+                    <UInput v-model="form.numero_enreg" placeholder="Numéro d'enregistrement" class="w-full h-12" :disabled="isRestrictedEditor" />
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Date d'enregistrement *</label>
-                    <UInput v-model="form.date_enreg" type="date" class="w-full h-12" />
+                    <UInput v-model="form.date_enreg" type="date" class="w-full h-12" :disabled="isRestrictedEditor" />
                   </div>
                 </div>
 
@@ -134,7 +138,7 @@
 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Date du courrier *</label>
-                  <UInput v-model="form.date_courier" type="date" class="w-full h-12" />
+                  <UInput v-model="form.date_courier" type="date" class="w-full h-12" :disabled="isRestrictedEditor" />
                 </div>
 
                 <div>
@@ -143,7 +147,7 @@
                 </div>
 
                 <div class="flex items-center space-x-2">
-                  <UCheckbox v-model="form.large_diffusion" label="Large diffusion" />
+                  <UCheckbox v-model="form.large_diffusion" label="Large diffusion" :disabled="isRestrictedEditor" />
                 </div>
               </div>
 
@@ -196,6 +200,8 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+import Swal from 'sweetalert2'
+import { useAuth } from '~/composables/auth/useAuth'
 
 useHead({ title: 'Modifier un Courrier Arrivé - SAGA' })
 
@@ -217,6 +223,8 @@ const sansReference = ref(false)
 const documentTypes = ref([])
 const errors = ref([])
 const fichierActuel = ref(null) // URL du fichier existant
+const { isAdmin, isSP, isSA } = useAuth()
+const isRestrictedEditor = computed(() => !isAdmin() && (isSP() || isSA()))
 
 // ── Formulaire ────────────────────────────────────────────────────────────────
 const form = ref({
@@ -360,6 +368,19 @@ const validateForm = () => {
 }
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
+const handleFileUploadClick = () => {
+  if (isRestrictedEditor.value) {
+    Swal.fire({
+      title: 'Modification réservée',
+      text: 'Le remplacement du fichier est réservé aux administrateurs. Contactez l’administrateur système.',
+      icon: 'warning',
+      confirmButtonText: 'OK',
+    })
+    return
+  }
+  fileInput.value?.click()
+}
+
 const handleFileChange = (event) => {
   const file = event.target.files[0]
   if (file) {
