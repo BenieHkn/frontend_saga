@@ -372,11 +372,11 @@
               class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
               <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
             </button>
-            <button v-if="!isAdmin()" @click="handleQuickAssign(item.id)" title="Affecter ce courrier"
+            <button v-if="!isAdmin() && !item.isPrearchived && !item.isArchived" @click="handleQuickAssign(item.id)" title="Affecter ce courrier"
               class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
               <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
             </button>
-            <button v-if="!item._complete?.document?.reponse && !isAdmin()" @click="handleReply(item)"
+            <button v-if="!item._complete?.document?.reponse && !isAdmin() && !item.isPrearchived && !item.isArchived" @click="handleReply(item)"
               title="Répondre au courrier"
               class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group">
               <Icon name="i-heroicons-arrow-uturn-right" class="w-4 h-4 group-hover:text-green-600" />
@@ -426,7 +426,7 @@
                 </div>
               </Teleport>
             </div>
-            <button v-if="isAdmin()" @click="onEdit(item)" title="Modifier ce courrier"
+            <button v-if="isAdmin() || isSP() || isSA()" @click="onEdit(item)" title="Modifier ce courrier"
               class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 hover:text-sky-900 transition-all group">
               <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-blue-600" />
             </button>
@@ -444,6 +444,15 @@
         </template>
 
         <!-- Référence cliquable → ouvre la modal (pas window.open) -->
+        <!-- ── Numéro d'enregistrement avec badge ────────────────────────────── -->
+        <template #cell-numeroEnregistrement="{ value, item }">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono text-slate-700">{{ value || '—' }}</span>
+            <span v-if="item.isArchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-700 border border-red-200">Archivé</span>
+            <span v-else-if="item.isPrearchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 border border-amber-200">Préarchivé</span>
+          </div>
+        </template>
+
         <template #cell-reference="{ value, item }">
           <button v-if="item._complete?.document?.url && item._complete.document.url !== 'Inconnu'"
             @click="handleView(item)"
@@ -628,28 +637,46 @@ const loadReponseFile = async () => {
   }
 }
 
+// ── Archive flags helper ──────────────────────────────────────────────────────
+const computeArchiveFlagsForItem = (dateStr) => {
+  if (!dateStr) return { isPrearchived: false, isArchived: false }
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return { isPrearchived: false, isArchived: false }
+  const now = new Date()
+  const ageDays = Math.floor((now - d) / 86400000)
+  const isPrearchived = ageDays > 365 && ageDays <= (365 * 3)
+  const isArchived = ageDays > (365 * 3)
+  return { isPrearchived, isArchived }
+}
+
 // ── Transform — on garde uniquement le nom brut dans url ─────────────────────
 const transformCourriers = (response) => {
   if (!response?.data) throw new Error('Format de réponse API invalide')
-  return response.data.map((courrier) => ({
-    id:                   courrier.id,
-    source:               courrier.service_enreg || '',
-    numeroEnregistrement: courrier.document?.numero_enreg || '',
-    reference:            courrier.document?.reference    || '',
-    structure:            courrier.structure || courrier.autre_structure || '',
-    date_enregistrement:  formatDate(courrier.document?.date_enreg),
-    objet:                courrier.document?.objet        || '',
-    date_courrier:        formatDate(courrier.document?.date_courrier),
-    url:                  (courrier.document?.url && courrier.document.url !== 'Inconnu')
-                            ? courrier.document.url
-                            : '',
-    type_arrivee:         courrier.type_arrivee || '',
-    priority:             courrier.priority     || '',
-    document_id:          courrier.document?.id || null,
-    affectation_circuit:  [],
-    isAffected:           false,
-    _complete:            courrier,
-  }))
+  return response.data.map((courrier) => {
+    const dateEnreg = courrier.document?.date_enreg || courrier.created_at || null
+    const flags = computeArchiveFlagsForItem(dateEnreg)
+    return {
+      id:                   courrier.id,
+      source:               courrier.service_enreg || '',
+      numeroEnregistrement: courrier.document?.numero_enreg || '',
+      reference:            courrier.document?.reference    || '',
+      structure:            courrier.structure || courrier.autre_structure || '',
+      date_enregistrement:  formatDate(courrier.document?.date_enreg),
+      objet:                courrier.document?.objet        || '',
+      date_courrier:        formatDate(courrier.document?.date_courrier),
+      url:                  (courrier.document?.url && courrier.document.url !== 'Inconnu')
+                              ? courrier.document.url
+                              : '',
+      type_arrivee:         courrier.type_arrivee || '',
+      priority:             courrier.priority     || '',
+      document_id:          courrier.document?.id || null,
+      affectation_circuit:  [],
+      isAffected:           false,
+      isPrearchived:        flags.isPrearchived,
+      isArchived:           flags.isArchived,
+      _complete:            courrier,
+    }
+  })
 }
 
 // ── Chargement ────────────────────────────────────────────────────────────────

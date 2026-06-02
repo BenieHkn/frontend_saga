@@ -8,9 +8,9 @@
         <Icon name="i-heroicons-arrow-path" class="w-4 h-4" />
         Actualiser
       </button>
-      <UBadge color="blue" v-if="!isAdmin" variant="soft" size="lg" class="ml-auto">
+      <UBadge color="blue" v-if="!isAdmin" variant="subtle" size="lg" class="ml-auto">
         <Icon name="i-heroicons-plus" class="h-4 w-4 mr-1" />
-        <UButton to="/affectations/create" variant="text" size="sm" class="p-0 m-0 text-blue-600">Nouveau</UButton>
+        <NuxtLink to="/affectations/create" class="text-sm font-semibold text-blue-600">Nouveau</NuxtLink>
       </UBadge>
     </div>
   </div>
@@ -383,13 +383,17 @@
       </span>
     </template>
 
-    <template #cell-numero_enreg="{ value }">
-      <span
-        v-if="value"
-        class="inline-flex items-center px-2.5 py-0.5 text-xs font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 rounded-md">
-        {{ value }}
-      </span>
-      <span v-else class="text-xs text-slate-400 italic">—</span>
+    <template #cell-numero_enreg="{ value, item }">
+      <div class="flex items-center gap-2">
+        <span
+          v-if="value"
+          class="inline-flex items-center px-2.5 py-0.5 text-xs font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 rounded-md">
+          {{ value }}
+        </span>
+        <span v-else class="text-xs text-slate-400 italic">—</span>
+        <span v-if="item.isArchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-700 border border-red-200">Archivé</span>
+        <span v-else-if="item.isPrearchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 border border-amber-200">Préarchivé</span>
+      </div>
     </template>
 
     <!-- ── Actions ──────────────────────────────────────────────────────── -->
@@ -398,7 +402,8 @@
 
         <!-- Voir les détails — toujours actif -->
         <button
-          @click="handleView(item)"
+          type="button"
+          @click.stop="handleView(item)"
           title="Voir les détails"
           class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 transition-all group">
           <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
@@ -407,15 +412,16 @@
         <!-- Bouton Affecter -->
         <template v-if="!isAdmin">
           <button
+            type="button"
             v-if="!isActionBlocked(item)"
-            @click="handleQuickAssign(item.courrier_id)"
+            @click.stop="handleQuickAssign(item.courrier_id)"
             title="Affecter ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-sky-50 text-sky-700 border border-sky-100 rounded-md hover:bg-sky-200 transition-all group">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4 group-hover:text-blue-600" />
           </button>
           <div
             v-else
-            :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+            :title="item.is_cloture ? 'Affectation clôturée' : 'Action non disponible'"
             class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
             <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
           </div>
@@ -424,17 +430,36 @@
         <!-- Bouton Modifier destinataire -->
         <template v-if="!isAdmin">
           <button
+            type="button"
             v-if="!isActionBlocked(item)"
-            @click="handleEdit(item)"
-            title="Modifier le destinataire"
+            @click.stop="handleEdit(item)"
+            title="Modifier ce courrier"
             class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 transition-all group">
             <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-green-600" />
           </button>
           <div
             v-else
-            :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+            :title="item.is_cloture ? 'Affectation clôturée' : 'Action non disponible'"
             class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
             <Icon name="i-heroicons-pencil" class="w-4 h-4" />
+          </div>
+        </template>
+
+        <!-- Bouton Annuler affectation -->
+        <template v-if="!isAdmin">
+          <button
+            type="button"
+            v-if="!isActionBlocked(item) && !item.annule"
+            @click.stop="handleCancel(item)"
+            title="Annuler cette affectation"
+            class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-200 transition-all group">
+            <Icon name="i-heroicons-x-mark" class="w-4 h-4 group-hover:text-red-600" />
+          </button>
+          <div
+            v-else
+            :title="item.is_cloture ? 'Affectation clôturée' : item.annule ? 'Déjà annulée' : 'Action non disponible'"
+            class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
+            <Icon name="i-heroicons-x-mark" class="w-4 h-4" />
           </div>
         </template>
 
@@ -449,7 +474,7 @@
           </button>
           <div
             v-else
-            :title="item.is_cloture ? 'Déjà clôturée' : 'Ce courrier a déjà une réponse'"
+            :title="item.is_cloture ? 'Déjà clôturée' : 'Action non disponible'"
             class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
             <Icon name="i-heroicons-lock-closed" class="w-4 h-4" />
           </div>
@@ -463,12 +488,12 @@
   <!-- ══════════════════════════════════════════════════════════════════ -->
   <!-- MODAL MODIFICATION DESTINATAIRE                                    -->
   <!-- ══════════════════════════════════════════════════════════════════ -->
-  <UModal v-model="showEditModal" :ui="{ width: 'sm:max-w-2xl' }">
+  <UModal v-model="showEditModal" :ui="{ width: 'sm:max-w-lg' }">
     <div class="p-6">
       <div class="flex items-center justify-between mb-6">
         <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <Icon name="i-heroicons-users" class="h-6 w-6 text-blue-600" />
-          Modifier le destinataire
+          <Icon name="i-heroicons-pencil-square" class="h-6 w-6 text-blue-600" />
+          Édition rapide
         </h3>
         <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark" @click="showEditModal = false" square />
       </div>
@@ -480,62 +505,91 @@
         <p class="text-xs text-gray-600">{{ selectedAffectation.objet_courrier }}</p>
         <div class="mt-3 pt-3 border-t border-blue-200">
           <p class="text-sm text-gray-700">
-            <strong>Destinataire actuel :</strong>
+            <strong>Destinataire :</strong>
             <span class="text-blue-700 font-semibold">{{ selectedAffectation.destinataire.nom }}</span>
             <span class="text-xs text-gray-500 ml-2">({{ selectedAffectation.destinataire.fonction }})</span>
           </p>
         </div>
       </div>
 
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Rechercher un destinataire</label>
-        <input v-model="searchDestinataire" type="text" placeholder="Rechercher par nom, prénom ou fonction..."
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-      </div>
-
-      <div v-if="loadingDestinataires" class="flex justify-center py-8">
-        <div class="w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
-      </div>
-
-      <div v-else class="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
-        <div v-for="dest in filteredDestinataires" :key="dest.id" @click="selectNewDestinataire(dest)" :class="[
-          'p-4 cursor-pointer transition-all border-b border-gray-200 last:border-b-0',
-          selectedNewDestinataire?.id === dest.id ? 'bg-blue-100 border-l-4 border-l-blue-600' : 'hover:bg-gray-50',
-        ]">
-          <div class="flex items-center justify-between">
-            <div class="flex-1">
-              <p class="font-semibold text-gray-900">{{ dest.user?.nom }} {{ dest.user?.prenom }}</p>
-              <p class="text-sm text-gray-600 mt-1">
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 mr-2">{{ dest.entite?.code }}</span>
-                <span v-if="dest.is_responsable" class="text-gray-700">{{ dest.entite?.fonction }}</span>
-                <span v-else class="text-gray-500">Agent</span>
-              </p>
-              <p class="text-xs text-gray-500 mt-1">{{ dest.entite?.libelle }}</p>
-            </div>
-            <Icon v-if="selectedNewDestinataire?.id === dest.id" name="i-heroicons-check-circle-solid" class="h-6 w-6 text-blue-600" />
+      <div class="space-y-4">
+        <!-- Date de retour attendue -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Date de retour attendue</label>
+            <input v-model="editData.delai_traitement" type="date"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          </div>
+          
+          <!-- Délai en jours (calculé) -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Délai (en jours)</label>
+            <input 
+              :value="calculatedDelayInModal"
+              type="text" 
+              disabled
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+            />
           </div>
         </div>
-        <div v-if="filteredDestinataires.length === 0" class="p-8 text-center text-gray-500">
-          <Icon name="i-heroicons-user-group" class="h-12 w-12 mx-auto mb-2 text-gray-400" />
-          <p class="text-sm">Aucun destinataire trouvé</p>
+
+        <!-- Instructions -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Instructions / Annotations</label>
+          <textarea v-model="editData.instructions" rows="3"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Modifier les annotations ou consignes..."></textarea>
+        </div>
+
+        <!-- Priorité -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Priorité</label>
+          <USelectMenu 
+            v-model="editData.priority"
+            :options="priorityOptions" 
+            size="lg"
+            placeholder="Sélectionner"
+            value-attribute="value"
+            option-attribute="label"
+            nullable
+          >
+            <template #label>
+              <span v-if="editData.priority" class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full" :class="getPriorityColor(editData.priority).dot"></span>
+                {{ getPriorityLabel(editData.priority) }}
+              </span>
+              <span v-else class="text-gray-500">— Inchangée —</span>
+            </template>
+            <template #option="{ option }">
+              <span class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full" :class="getPriorityColor(option.value).dot"></span>
+                {{ option.label }}
+              </span>
+            </template>
+          </USelectMenu>
         </div>
       </div>
 
-      <div class="flex justify-end gap-3 mt-6">
-        <UButton @click="showEditModal = false" color="gray" variant="outline" size="lg">Annuler</UButton>
-        <UButton @click="confirmChangeDestinataire"
-          :disabled="!selectedNewDestinataire || selectedNewDestinataire.id === selectedAffectation?._raw.destinataire_id"
-          :loading="submitting" size="lg" icon="i-heroicons-check"
-          class="bg-gradient-to-br from-emerald-800 to-blue-800 text-white dark:text-white">
-          {{ submitting ? 'Modification en cours...' : 'Confirmer le changement' }}
-        </UButton>
+      <div class="flex justify-between gap-3 mt-6">
+        <!-- <UButton :to="`/affectations/edit/${selectedAffectation._raw?.id}`" color="blue" variant="outline" size="lg" icon="i-heroicons-pencil-square">
+          Édition complète
+        </UButton> -->
+        <div class="flex gap-3 ml-auto">
+          <UButton @click="showEditModal = false" color="gray" variant="outline" size="lg">Annuler</UButton>
+          <UButton @click="confirmChangeDestinataire"
+            :disabled="editSubmitDisabled || submitting"
+            :loading="submitting" size="lg" icon="i-heroicons-check"
+            class="bg-gradient-to-br from-emerald-800 to-blue-800 text-white dark:text-white">
+            {{ submitting ? 'En cours...' : 'Appliquer' }}
+          </UButton>
+        </div>
       </div>
     </div>
   </UModal>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, reactive } from 'vue'
 import { useAuth } from '~/composables/auth/useAuth'
 import DataTablePaginate from '~/components/DataTablePaginate.vue'
 import SearchableSelect from '~/components/SearchableSelect.vue'
@@ -642,6 +696,34 @@ const searchDestinataire      = ref('')
 const destinataires           = ref([])
 const loadingDestinataires    = ref(false)
 const submitting              = ref(false)
+const editData                = reactive({ instructions: '', delai_traitement: '', priority: '' })
+const editSubmitDisabled      = computed(() => {
+  if (!selectedAffectation.value) return true
+  const noInstructionsChange = editData.instructions === selectedAffectation.value._raw?.instructions
+  const noDateChange = editData.delai_traitement === selectedAffectation.value._raw?.delai_traitement
+  const noPriorityChange = editData.priority === selectedAffectation.value._raw?.priority || (!editData.priority && !selectedAffectation.value._raw?.priority)
+  return noInstructionsChange && noDateChange && noPriorityChange
+})
+
+const priorityOptions = [
+  { label: 'URGENT', value: 'URGENT' },
+  { label: 'IMPORTANT', value: 'IMPORTANT' },
+  { label: 'STANDARD', value: 'STANDARD' },
+]
+
+const calculatedDelayInModal = computed(() => {
+  const dateAffect = selectedAffectation.value?._raw?.date_affect
+  const dateRetour = editData.delai_traitement
+
+  if (!dateAffect || !dateRetour) return ''
+
+  const start = new Date(dateAffect)
+  const end = new Date(dateRetour)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return ''
+
+  const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  return diffDays < 0 ? '0' : String(diffDays)
+})
 
 // État fichier document dans la modal
 const docFileLoaded  = ref(false)
@@ -663,15 +745,21 @@ const filteredDestinataires = computed(() => {
   )
 })
 
-// ── Helper : actions bloquées si clôturé OU courrier déjà répondu ─────────────
+// ── Helper : actions bloquées si clôturé OU archivé ────
 const isActionBlocked = (item) => {
-  return item.is_cloture || item.a_reponse
+  return item.is_cloture || item.isPrearchived || item.isArchived
 }
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
 const formatDate = (date) => {
   if (!date) return ''
   return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+}
+
+const normalizeDateInputValue = (value) => {
+  if (!value) return ''
+  if (typeof value !== 'string') return ''
+  return value.includes('T') ? value.split('T')[0] : value
 }
 
 const guessMimeType = (filename) => {
@@ -686,6 +774,7 @@ const getStatutDotClass = (s) => ({ 'en attente': 'bg-gray-500', 'en cours': 'bg
 const getPriorityLabel   = (p) => p || ''
 const getPriorityClasses = (p) => ({ 'URGENT': 'bg-red-100 text-red-800', 'IMPORTANT': 'bg-orange-100 text-orange-800', 'STANDARD': 'bg-blue-100 text-blue-800' }[p] || 'bg-gray-100 text-gray-800')
 const getPriorityDotClass= (p) => ({ 'URGENT': 'bg-red-500', 'IMPORTANT': 'bg-orange-500', 'STANDARD': 'bg-blue-500' }[p] || 'bg-gray-500')
+const getPriorityColor   = (p) => ({ dot: getPriorityDotClass(p) })
 
 // ── Construction URL API fichier ──────────────────────────────────────────────
 const buildDocumentUrl = (rawUrl, dateEnreg) => {
@@ -735,6 +824,18 @@ const loadDocFile = async () => {
 }
 
 // ── Transform ─────────────────────────────────────────────────────────────────
+// ── Archive flags helper ──────────────────────────────────────────────────────
+const computeArchiveFlagsForItem = (dateStr) => {
+  if (!dateStr) return { isPrearchived: false, isArchived: false }
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return { isPrearchived: false, isArchived: false }
+  const now = new Date()
+  const ageDays = Math.floor((now - d) / 86400000)
+  const isPrearchived = ageDays > 365 && ageDays <= (365 * 3)
+  const isArchived = ageDays > (365 * 3)
+  return { isPrearchived, isArchived }
+}
+
 const transformAffectation = (affectation) => {
   const emetteurNom      = affectation.emetteur?.user
     ? `${affectation.emetteur.user.nom} ${affectation.emetteur.user.prenom || ''}`.trim()
@@ -749,6 +850,10 @@ const transformAffectation = (affectation) => {
   const destinataireFonction = affectation.destinataire?.is_responsable ? affectation.destinataire.entite?.fonction || '' : 'Agent'
 
   const rawUrl = affectation.courrier_arrive?.document?.url?.trim()
+  
+  // Compute archive flags
+  const dateEnreg = affectation.courrier_arrive?.document?.date_enreg || null
+  const flags = computeArchiveFlagsForItem(dateEnreg)
 
   return {
     id:                 affectation.id,
@@ -768,6 +873,8 @@ const transformAffectation = (affectation) => {
     a_reponse:  !!(affectation.courrier_arrive?.document?.reponse),
     // ✅ Bloquant : affectation clôturée
     is_cloture: affectation.statut === 'cloture',
+    isPrearchived:      flags.isPrearchived,
+    isArchived:         flags.isArchived,
     destinataire: {
       nom:      destinataireNom,
       fonction: destinataireCode ? `${destinataireCode} - ${destinataireFonction}` : '',
@@ -908,26 +1015,31 @@ const closeDetails = () => {
 
 const handleEdit = async (item) => {
   selectedAffectation.value     = item
-  selectedNewDestinataire.value = null
   searchDestinataire.value      = ''
-  if (destinataires.value.length === 0) await fetchDestinataires()
+  editData.instructions         = item._raw?.instructions || ''
+  editData.delai_traitement     = normalizeDateInputValue(item._raw?.delai_traitement) || ''
+  editData.priority             = item._raw?.priority || ''
   showEditModal.value = true
 }
 
 const selectNewDestinataire = (dest) => { selectedNewDestinataire.value = dest }
 
 const confirmChangeDestinataire = async () => {
-  if (!selectedNewDestinataire.value || !selectedAffectation.value) return
+  if (!selectedAffectation.value) return
   submitting.value = true
   try {
     const authToken = localStorage.getItem('auth_token')
     await $fetch(`${config.public.apiBase}/affectations/${selectedAffectation.value.id}`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
-      body: { destinataire_id: selectedNewDestinataire.value.id },
+      body: {
+        date_retour_attendue: editData.delai_traitement,
+        instructions: editData.instructions,
+        priority: editData.priority,
+      },
     })
     showEditModal.value = false
-    toast.add({ title: 'Succès', description: 'Le destinataire a été modifié avec succès', color: 'green', timeout: 1500 })
+    toast.add({ title: 'Succès', description: 'L\'affectation a été mise à jour avec succès', color: 'green', timeout: 1500 })
     await fetchAffectations(currentPage.value, perPage.value, false)
   } catch (err) {
     const errorResponse = err.data || err.response?._data || {}
@@ -976,6 +1088,73 @@ const handleCloture = async (item) => {
     const errorResponse = err.data || err.response?._data || {}
     toast.add({ title: 'Erreur', description: errorResponse.message || 'Impossible de clôturer l\'affectation', color: 'red', timeout: 3000 })
   }
+}
+
+// ── Annuler une affectation ───────────────────────────────────────────────────
+const handleCancel = async (item) => {
+  const result = await Swal.fire({
+    title: 'Annuler cette affectation ?',
+    html: `
+      <div style="text-align:left;padding:8px">
+        <p style="margin-bottom:12px;color:#374151">Cette action marquera l'affectation comme annulée.</p>
+        <div style="background:#f9fafb;border-radius:8px;padding:16px;border:1px solid #e5e7eb">
+          <p style="font-weight:700;color:#1e40af;margin-bottom:8px">Affectation #${item.id}</p>
+          <p style="font-size:14px;color:#374151">
+            <strong>Courrier :</strong> ${item.reference_courrier}<br>
+            <strong>Destinataire :</strong> ${item.destinataire.nom}
+          </p>
+        </div>
+      </div>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Oui, annuler',
+    cancelButtonText: 'Non, conserver',
+    reverseButtons: true,
+  })
+
+  if (!result.isConfirmed) return
+
+  // Afficher le loading
+  await Swal.fire({
+    title: 'Annulation en cours...',
+    icon: 'info',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: async () => {
+      Swal.showLoading()
+
+      try {
+        const authToken = localStorage.getItem('auth_token')
+        await $fetch(`${config.public.apiBase}/affectations/${item.id}/cancel`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+        })
+
+        // Succès
+        await Swal.fire({
+          title: 'Annulée !',
+          text: 'L\'affectation a été annulée avec succès',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+
+        // Rafraîchir la liste
+        await fetchAffectations(currentPage.value, perPage.value, false)
+      } catch (err) {
+        const errorResponse = err.data || err.response?._data || {}
+        await Swal.fire({
+          title: 'Erreur',
+          text: errorResponse.message || 'Impossible d\'annuler l\'affectation',
+          icon: 'error',
+          confirmButtonColor: '#dc2626',
+        })
+      }
+    },
+  })
 }
 
 const handleDelete = async (item) => {
