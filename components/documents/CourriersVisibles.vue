@@ -228,7 +228,20 @@
         :left-aligned-columns="['objet', 'destinataire', 'service_emis']" :external-pagination="true"
         :external-total="total" :external-page="currentPage" :external-last-page="totalPages"
         :external-per-page="perPage" @search-change="onSearchChange" @page-change="onPageChange"
-        @per-page-change="onPerPageChange" @column-filter-change="onColumnFilterChange">
+            @per-page-change="onPerPageChange" @column-filter-change="onColumnFilterChange">
+
+            <template #toolbar-extra>
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] text-slate-400 font-medium whitespace-nowrap">Du</span>
+                    <input v-model="searchFilters.date_depart_from" type="date" @change="onPeriodChange"
+                        class="h-8 w-36 px-2 text-xs text-slate-700 bg-white border border-slate-300 rounded-lg" />
+                    <span class="text-[11px] text-slate-400 font-medium whitespace-nowrap">au</span>
+                    <input v-model="searchFilters.date_depart_to" type="date" @change="onPeriodChange"
+                        class="h-8 w-36 px-2 text-xs text-slate-700 bg-white border border-slate-300 rounded-lg" />
+                    <button v-if="searchFilters.date_depart_from || searchFilters.date_depart_to" @click="clearPeriod"
+                        class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-500">✕</button>
+                </div>
+            </template>
 
         <!-- ── Filtres avancés ── -->
         <template #advanced-filters>
@@ -456,6 +469,18 @@ watch(searchFilters, () => {
         refresh(1, perPage.value, false)
     }, 400)
 }, { deep: true })
+
+const onPeriodChange = () => {
+    currentPage.value = 1
+    refresh(1, perPage.value, false)
+}
+
+const clearPeriod = () => {
+    searchFilters.value.date_depart_from = ''
+    searchFilters.value.date_depart_to = ''
+    currentPage.value = 1
+    refresh(1, perPage.value, false)
+}
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
 const formatDate = (date) => {
