@@ -12,6 +12,17 @@ const actionApi   = useAction();
 const route       = useRoute();
 const actionId    = Number(route.params.actionId);
 
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+    localStorage.removeItem('currentAction')
+  } catch (e) {}
+}
+const handleReturn = () => {
+  clearCurrents()
+  router.back()
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 const action             = ref(null);
 const currentDossier     = ref(null);
@@ -98,7 +109,7 @@ const createActivite = async () => {
 
     <!-- Retour -->
     <div class="mb-6 flex items-center gap-3">
-      <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" @click="router.back()" />
+      <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" @click="handleReturn()" />
       <span class="text-gray-400 text-sm">Retour au dossier</span>
     </div>
 
@@ -111,7 +122,7 @@ const createActivite = async () => {
     <div v-else-if="!action" class="text-center py-20">
       <UIcon name="i-heroicons-exclamation-triangle" class="w-12 h-12 mx-auto text-amber-400 mb-4" />
       <p class="text-gray-500 text-sm">Action introuvable.</p>
-      <UButton class="mt-4" color="gray" variant="ghost" @click="router.back()">Retour</UButton>
+      <UButton class="mt-4" color="gray" variant="ghost" @click="handleReturn()">Retour</UButton>
     </div>
 
     <template v-else>

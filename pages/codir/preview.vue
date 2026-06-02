@@ -6,6 +6,22 @@ definePageMeta({ title: 'Aperçu CODIR' })
 const router = useRouter()
 const toast = useNuxtApp().$toast ?? useToast()
 
+// Clear localStorage keys used as "current*" when returning
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+    localStorage.removeItem('currentCodir')
+    localStorage.removeItem('currentOrdreDuJour')
+    localStorage.removeItem('currentDossier')
+    localStorage.removeItem('currentTache')
+    localStorage.removeItem('currentActivite')
+  } catch (e) { }
+}
+const handleReturn = () => {
+  clearCurrents()
+  router.back()
+}
+
 // ── Données depuis localStorage ───────────────────────────────────────────────
 const codir = ref(null)
 
@@ -17,6 +33,8 @@ onMounted(() => {
 // ── Composable ────────────────────────────────────────────────────────────────
 const { cloturerCodir, generatePdf, downloadPdf } = useCodir()
 
+const isPdfReady = computed(() => Boolean(codir.value?.url))
+
 // ── Clôture ───────────────────────────────────────────────────────────────────
 const showCloture = ref(false)
 const cloturePending = ref(false)
@@ -26,8 +44,19 @@ const confirmerCloture = async () => {
   cloturePending.value = true
   try {
     await cloturerCodir(codir.value.id)
-    codir.value = { ...codir.value, statut: 'clos' }
-    localStorage.setItem('currentCodir', JSON.stringify(codir.value))
+    // Nettoyage des clés locales liées au CODIR clôturé
+    try {
+      const id = codir.value.id
+      localStorage.removeItem('currentCodir')
+      localStorage.removeItem('currentOrdreDuJour')
+      localStorage.removeItem('currentDossier')
+      localStorage.removeItem('currentTache')
+      localStorage.removeItem(`presence-${id}`)
+      localStorage.removeItem(`codir_step_${id}`)
+    } catch (err) {
+      // ignore
+    }
+
     toast.add({ title: 'CODIR clôturé', description: 'Le CODIR a été clôturé avec succès.', color: 'green', icon: 'i-heroicons-check-circle' })
     showCloture.value = false
     navigateTo('/codir')
@@ -70,6 +99,10 @@ const handleGeneratePdf = async () => {
 const pdfDownloading = ref(false)
 
 const handleDownloadPdf = async (item) => {
+  if (!isPdfReady.value) {
+    toast.add({ title: 'PDF requis', description: 'Générez le PDF avant de le télécharger.', color: 'orange', icon: 'i-heroicons-exclamation-triangle' })
+    return
+  }
   const id = item?.id ?? codir.value?.id
   if (!id) return console.error('ID du CODIR introuvable')
   try {
@@ -108,7 +141,7 @@ const statutTacheLabel = (s) => ({
     <div
       class="sticky top-20 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between gap-4 shadow-sm">
       <div class="flex items-center gap-3">
-        <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" size="sm" @click="router.back()">
+        <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" size="sm" @click="handleReturn()">
           Retour
         </UButton>
         <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Aperçu du CODIR</span>
@@ -122,15 +155,15 @@ const statutTacheLabel = (s) => ({
           {{ pdfGenerating ? 'Génération…' : 'Générer PDF' }}
         </UButton>
 
-        <!-- Télécharger PDF (visible uniquement si url présente) -->
-        <UButton v-if="codir?.url !== null" icon="i-heroicons-arrow-down-tray" color="emerald" variant="soft" size="sm"
-          :loading="pdfDownloading" :disabled="pdfDownloading" @click="handleDownloadPdf(codir)">
+        <!-- Télécharger PDF -->
+        <UButton v-if="codir" icon="i-heroicons-arrow-down-tray" color="emerald" variant="soft" size="sm"
+          :loading="pdfDownloading" :disabled="!isPdfReady || pdfDownloading" @click="handleDownloadPdf(codir)">
           {{ pdfDownloading ? 'Téléchargement…' : 'Télécharger PDF' }}
         </UButton>
 
         <!-- Clôturer -->
-        <UButton v-if="codir?.url !== null && codir?.statut !== 'clos'" icon="i-heroicons-lock-closed" color="red"
-          variant="soft" size="sm" :disabled="codir?.url === null" @click="showCloture = true">
+        <UButton v-if="codir && codir?.statut !== 'clos'" icon="i-heroicons-lock-closed" color="red"
+          variant="soft" size="sm" :disabled="!isPdfReady || cloturePending" @click="showCloture = true">
           Clôturer
         </UButton>
         <span v-else-if="codir && codir?.statut === 'clos'"
@@ -139,6 +172,12 @@ const statutTacheLabel = (s) => ({
           Clôturé
         </span>
 
+      </div>
+    </div>
+
+    <div v-if="!isPdfReady" class="mt-4 px-6">
+      <div class="rounded-xl bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 text-orange-700 dark:text-orange-200 px-4 py-3 text-sm">
+        Générez le PDF avant de télécharger ou de clôturer ce CODIR.
       </div>
     </div>
 
@@ -416,7 +455,7 @@ const statutTacheLabel = (s) => ({
     <div v-else class="flex flex-col items-center justify-center py-32 text-gray-400">
       <span class="text-5xl mb-4">📄</span>
       <p class="text-sm">Aucun CODIR chargé. Retournez sur la page de détail.</p>
-      <UButton class="mt-4" color="gray" variant="ghost" @click="router.back()">Retour</UButton>
+      <UButton class="mt-4" color="gray" variant="ghost" @click="handleReturn()">Retour</UButton>
     </div>
 
   </div>

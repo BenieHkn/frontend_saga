@@ -3,7 +3,10 @@
 import Sortable from "sortablejs";
 import { useCommentaire } from "~/composables/commentaire/useCommentaire";
 import { useCommentaireService } from "~/service/commentaireService";
+import { useAuth } from "~/composables/auth/useAuth";
 const toast = useToast()
+
+const {peutGererCodir, peutVoirCodir} = useAuth()
 
 const props = defineProps({
   ordres: { type: Array, default: () => [] },
@@ -139,6 +142,11 @@ const voirLesCommentaires = async (ordre) => {
   }
 }
 
+const detachOrdre = async (ordre) =>{
+
+  emit('detach', ordre.id);
+}
+
 </script>
 
 <template>
@@ -146,10 +154,10 @@ const voirLesCommentaires = async (ordre) => {
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-base font-semibold flex items-center gap-2">
         <UIcon name="i-heroicons-clipboard-document-list" class="text-blue-500" />
-        Ordres du jour
+        Points à l'ordre du jour
         <UBadge color="blue" variant="soft" size="xs">{{ ordresLocaux.length }}</UBadge>
       </h2>
-      <UButton v-if="peutSupprimer" icon="i-heroicons-plus" color="blue" variant="soft" size="xs" @click="emit('attach')">
+      <UButton v-if="peutGererCodir()" icon="i-heroicons-plus" color="blue" variant="soft" size="xs" @click="emit('attach')">
         Ajouter
       </UButton>
     </div>
@@ -167,10 +175,12 @@ const voirLesCommentaires = async (ordre) => {
         v-for="(ordre, index) in ordresLocaux"
         :key="ordre.id"
         :ordre="ordre"
-        :peut-supprimer="peutSupprimer"
+        :index="index"
+        :peutGererCodir="peutGererCodir()"
         @voir-detail-ordre="goTo(ordre)"
         @commenter="handleAfficherModalPourCommenter(ordre)"
         @voir-commentaires="voirLesCommentaires(ordre)"
+        @detach="detachOrdre(ordre)"
       />
     </div>
 

@@ -44,7 +44,7 @@ const STATUT_OPTIONS = [
   { label: 'En attente', value: 'en_attente' },
   { label: 'En cours',   value: 'en_cours'   },
   { label: 'Terminée',   value: 'terminee'   },
-  { label: 'Bloquée',    value: 'bloquer'    },
+  { label: 'Suspendue',    value: 'suspendue'    },
   { label: 'Reportée',   value: 'reportee'   },
 ]
 
@@ -52,7 +52,7 @@ const statutColor = computed(() => ({
   en_attente: 'gray',
   en_cours:   'blue',
   terminee:   'green',
-  bloquer:    'red',
+  suspendue:    'red',
   reportee:   'amber',
 }[pivot.value?.statut] ?? 'gray'))
 

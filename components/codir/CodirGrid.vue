@@ -5,7 +5,7 @@ const props = defineProps({
   codir: { type: Object, required: true }
 })
 
-const emit = defineEmits(['download', 'view'])
+const emit = defineEmits(['download', 'view', 'deleteCodir'])
 
 const GRADIENT = {
   clos:      'from-green-900 to-blue-900',
@@ -37,11 +37,15 @@ const gradient = (s) => GRADIENT[s] ?? 'from-slate-600 to-gray-700'
         <span class="text-white/90 text-[10px] font-semibold px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm capitalize">
           {{ getStatutConfig(codir.statut).label }}
         </span>
-        <UButton
+        <div class="flex justify-center items-start">
+            <UButton
           color="white" variant="solid" :icon="codir.statut!=='clos' ? 'i-heroicons-eye' : 'i-heroicons-arrow-down-tray'" size="xs"
           class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white/20"
           @click="handleClick"
         />
+         <UButton @click.stop="emit('deleteCodir', codir)" color="blue" variant="ghost" icon="i-heroicons-trash" size="xs" class="rounded-lg" />
+        </div>
+        
       </div>
 
       <!-- Date principale -->

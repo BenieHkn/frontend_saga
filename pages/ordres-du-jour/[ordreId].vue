@@ -12,6 +12,17 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+    localStorage.removeItem('currentOrdreDuJour')
+  } catch (e) {}
+}
+const handleReturn = () => {
+  clearCurrents()
+  router.back()
+}
+
 const ordreDuJourApi = useOrdreDuJour()
 const codirApi = useCodir()
 
@@ -146,7 +157,7 @@ onMounted(async () => {
 
     <!-- Retour -->
     <div class="mb-6 flex items-center gap-3">
-      <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" @click="router.back()" />
+      <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" @click="handleReturn()" />
       <span class="text-gray-400 text-sm">Retour</span>
     </div>
 
@@ -159,7 +170,7 @@ onMounted(async () => {
     <div v-else-if="!currentOrdreDuJour" class="text-center py-20">
       <UIcon name="i-heroicons-exclamation-triangle" class="w-12 h-12 mx-auto text-amber-400 mb-4" />
       <p class="text-gray-500 text-sm">Ordre du jour introuvable ou non chargé.</p>
-      <UButton class="mt-4" color="gray" variant="ghost" @click="router.back()">Retour</UButton>
+      <UButton class="mt-4" color="gray" variant="ghost" @click="handleReturn()">Retour</UButton>
     </div>
 
     <template v-else>
@@ -219,9 +230,10 @@ onMounted(async () => {
         <div v-else class="flex flex-col gap-2">
           <!-- ✅ Empêcher la propagation du clic depuis le bouton supprimer -->
           <DossierCard
-            v-for="dossier in dossiers"
+            v-for="(dossier, index) in dossiers"
             :key="dossier.id"
             :dossier="dossier"
+            :index="index"
             @peutGererCodir="peutGererCodir()"
             @click="handleClick(dossier)"
             @deleted="handleRemoveDossier(dossier.id)"

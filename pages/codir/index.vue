@@ -8,7 +8,7 @@ useHead({ title: "CODIR - SAGA" })
 
 const router = useRouter()
 const toast  = useNuxtApp().$toast ?? useToast() // ✅ FIX — toast manquant
-const { loading, error, getCodirs, createCodir, downloadPdf } = useCodir()
+const { loading, error, getCodirs, createCodir, downloadPdf, deleteCodir } = useCodir()
 const createModal = ref(false)
 const createForm  = reactive({ heure_debut: '', heure_fin: '' })
 const resetCreate = () => Object.assign(createForm, { heure_debut: '', heure_fin: '' })
@@ -157,6 +157,39 @@ const handleCreate = async () => {
     })
   }
 }
+const codirASupprimer = ref(null)
+const deleteModal = ref(false)
+
+const confirmerDelete = async(item) =>{
+  codirASupprimer.value = item;
+    deleteModal.value = true;
+}
+
+const handleDelete = async () => {
+  try {
+    await deleteCodir(codirASupprimer.value.id)
+    codirs.value = codirs.value.filter(c => c.id !== codirASupprimer.value.id)
+    localStorage.setItem('codirs', JSON.stringify(codirs.value))
+
+    toast.add({
+      title: 'CODIR supprimé',
+      description: `Le CODIR du ${formatDateFR(codirASupprimer.value.date)} a été supprimé`,
+      color: 'green',
+      icon: 'i-heroicons-check-circle',
+    })
+    deleteModal.value = false
+    codirASupprimer.value = null
+
+  } catch (e) {
+    toast.add({
+      title: 'Erreur',
+      description: 'Impossible de supprimer le CODIR',
+      color: 'red',
+      icon: 'i-heroicons-exclamation-circle',
+    })
+    console.error('Erreur suppression :', e)
+  }
+}
 </script>
 
 <template>
@@ -228,6 +261,7 @@ const handleCreate = async () => {
           <template #actions="{ item }">
             <UButton v-if="item.statut === 'soumis'" @click="handleView(item)" color="blue" variant="ghost" icon="i-heroicons-eye" size="xs" class="rounded-lg" />
             <UButton v-else @click="handleDownload(item)" color="blue" variant="ghost" icon="i-heroicons-arrow-down-tray" size="xs" class="rounded-lg" />
+            <UButton @click="confirmerDelete(item)" color="blue" variant="ghost" icon="i-heroicons-trash" size="xs" class="rounded-lg" />
           </template>
         </DataTable>
       </div>
@@ -240,6 +274,7 @@ const handleCreate = async () => {
           :codir="codir"
           @view="handleView({ ...codir, _raw: codir })"
           @download="handleDownload(codir)"
+          @deleteCodir="confirmerDelete(codir)"
         />
       </div>
 
@@ -302,6 +337,59 @@ const handleCreate = async () => {
       </template>
     </UCard>
   </UModal>
+
+<UModal v-model="deleteModal">
+  <UCard class="rounded-2xl max-w-md">
+    <template #header>
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/40 flex items-center justify-center">
+          <UIcon
+            name="i-heroicons-trash"
+            class="w-5 h-5 text-red-600"
+          />
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-lg">
+            Confirmation de suppression
+          </h3>
+        </div>
+      </div>
+    </template>
+
+    <div class="py-4">
+      <p class="text-sm text-gray-600 dark:text-gray-300">
+        Êtes-vous sûr de vouloir supprimer cet élément ?
+      </p>
+
+      <p class="text-sm text-red-600 mt-2 font-medium">
+        Cette action est irréversible.
+      </p>
+    </div>
+
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <UButton
+          color="gray"
+          variant="ghost"
+          @click="deleteModal = false"
+        >
+          Annuler
+        </UButton>
+
+        <UButton
+          color="red"
+          icon="i-heroicons-trash"
+          :loading="loading"
+          @click="handleDelete"
+        >
+          Supprimer
+        </UButton>
+      </div>
+    </template>
+  </UCard>
+</UModal>
+
 </template>
 
 <style scoped>

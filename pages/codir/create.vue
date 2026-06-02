@@ -6,6 +6,21 @@ definePageMeta({ title: 'Créer un CODIR' })
 const store = useCodirsStore()
 const router = useRouter()
 
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+    localStorage.removeItem('currentCodir')
+    localStorage.removeItem('currentOrdreDuJour')
+    localStorage.removeItem('currentDossier')
+    localStorage.removeItem('currentTache')
+    localStorage.removeItem('currentActivite')
+  } catch (e) { }
+}
+const handleReturn = () => {
+  clearCurrents()
+  router.back()
+}
+
 const form = reactive({
   date: '',
   heure_debut: '',
@@ -45,7 +60,7 @@ const handleSubmit = async () => {
         color="blue" 
         variant="soft" 
         class="mt-1 rounded-full w-10 h-10 flex items-center justify-center transition-transform hover:-translate-x-1" 
-        @click="router.back()" 
+        @click="handleReturn()" 
       />
       <PageHeader 
         title="Nouveau CODIR" 
@@ -92,7 +107,7 @@ const handleSubmit = async () => {
             icon="i-heroicons-x-mark"
             btnText="Annuler" 
             :modal="true"
-            @click="router.back()"
+            @click="handleReturn()"
           />
 
           <CustomButton 

@@ -2,7 +2,8 @@
 const props = defineProps({
   dossier: { type: Object, required: true },
   peutGererCodir: { type: Boolean, default: false },
-  entiteUser: { type: Object, default: null }
+  entiteUser: { type: Object, default: null },
+  index: { type: Number, default: 0 },
 })
 
 const emit = defineEmits(['deleted', 'click', 'commenter', 'lire-commentaires'])
@@ -31,8 +32,8 @@ const confirmDelete = () => {
     class="flex items-center gap-3 bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-colors"
     @click="clickDossier">
     
-    <div class="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center shrink-0">
-      <UIcon name="i-heroicons-folder" class="w-4 h-4 text-violet-600 dark:text-violet-400" />
+    <div class="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
+      <span class="text-xs font-bold text-violet-600 dark:text-violet-300">{{ index + 1 }}</span>
     </div>
     
     <div class="min-w-0 flex-1">

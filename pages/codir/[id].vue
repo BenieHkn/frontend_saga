@@ -12,6 +12,7 @@ import {
 import { useMembre } from '@/composables/membres/useMembres'
 import { useAuth } from '~/composables/auth/useAuth'
 import { useOrdreDuJour } from '~/composables/ordres-du-jour/useOrdreDuJour'
+import ConfirmationSuppressionModal from '~/components/ConfirmationSuppressionModal.vue'
 
 definePageMeta({ title: 'Détail CODIR' })
 
@@ -19,6 +20,17 @@ const route = useRoute()
 const router = useRouter()
 const id = Number(route.params.id)
 const toast = useNuxtApp().$toast ?? useToast()
+
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+    localStorage.removeItem('currentCodir')
+  } catch (e) {}
+}
+const handleReturn = () => {
+  clearCurrents()
+  router.push('/codir')
+}
 
 const {
   loading,
@@ -110,6 +122,28 @@ const ordreModal = ref(false)
 const ordreForm = reactive({ libelle: '', statut: 'actif', codir_id: id })
 const resetOrdreForm = () => Object.assign(ordreForm, { libelle: '', statut: 'actif' })
 
+const detachModal = ref(false)
+const ordreToDetachId = ref(null)
+const ordreToDetachLibelle = computed(() => {
+  return codir.value?.ordres_du_jour?.find((ordre) => ordre.id === ordreToDetachId.value)?.libelle ?? ''
+})
+
+const openDetachModal = (ordreId) => {
+  ordreToDetachId.value = ordreId
+  detachModal.value = true
+}
+
+const cancelDetachOrdre = () => {
+  detachModal.value = false
+  ordreToDetachId.value = null
+}
+
+const confirmDetachOrdre = async () => {
+  if (!ordreToDetachId.value) return
+  await handleDetachOrdre(ordreToDetachId.value)
+  detachModal.value = false
+  ordreToDetachId.value = null
+}
 
 const addOrdre = async () => {
   if (!ordreForm.libelle) return
@@ -172,8 +206,8 @@ onMounted(async () => {
 
     <!-- Retour -->
     <div class="mb-6 flex items-center gap-3">
-      <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" @click="router.push('/codir')" />
-      <span class="text-gray-400 text-sm">Retour au listing</span>
+      <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" @click="handleReturn()" />
+      <span class="text-gray-400 text-sm">Retour</span>
     </div>
 
     <div v-if="loading && !codir" class="flex justify-center py-20">
@@ -240,7 +274,7 @@ onMounted(async () => {
         <!-- ── Contenu step 1 ──────────────────────────────────────────── -->
         <div class="flex flex-col gap-8">
           <CodirOrdreDuJour :ordres="codir.ordres_du_jour ?? []" :loading="loading" :peutSupprimer="peutGererCodir()"
-            @attach="ordreModal = true" @detach="handleDetachOrdre($event)" />
+            @attach="ordreModal = true" @detach="openDetachModal($event)" />
         </div>
       </CodirStepper>
 
@@ -262,13 +296,6 @@ onMounted(async () => {
           <UFormGroup label="Libellé">
             <UTextarea v-model="ordreForm.libelle" placeholder="Ex: Bilan trimestriel" size="md" />
           </UFormGroup>
-          <UFormGroup label="Statut">
-            <USelect v-model="ordreForm.statut" :options="[
-              { label: 'Actif', value: 'actif' },
-              { label: 'Inactif', value: 'inactif' },
-              { label: 'Archivé', value: 'archivé' },
-            ]" size="md" />
-          </UFormGroup>
         </div>
         <template #footer>
           <div class="flex justify-end gap-2">
@@ -278,6 +305,18 @@ onMounted(async () => {
         </template>
       </UCard>
     </UModal>
+
+    <ConfirmationSuppressionModal
+      v-model:openConfirmationModal="detachModal"
+      titre="Confirmer le détachement"
+      message="Voulez-vous vraiment retirer cet ordre du jour du CODIR ?"
+      :details="ordreToDetachLibelle ? `Ordre du jour : ${ordreToDetachLibelle}` : ''"
+      confirmLabel="Retirer"
+      cancelLabel="Annuler"
+      :loading="loading"
+      @confirm="confirmDetachOrdre"
+      @cancel="cancelDetachOrdre"
+    />
   </div>
 </template>
 

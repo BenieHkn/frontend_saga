@@ -93,6 +93,7 @@ const confirmSkipAndNext = () => {
 // ── Formulaire heure de fin ───────────────────────────────────────────────────
 const heureFin = ref('')
 const saving = ref(false)
+const heureFinSaved = computed(() => !!codir.value?.heure_fin)
 
 watchEffect(() => {
   if (codir.value?.heure_fin) heureFin.value = extractTimeInput(codir.value.heure_fin)
@@ -139,7 +140,7 @@ const onPresenceChange = ({ key, status, reason }) => {
 // Statistiques de présence
 const stats = computed(() => {
   const presents = membres.value.filter(m =>
-    !presenceState.value[m.key] || presenceState.value[m.key].status === 'present'
+    !presenceState.value[m.id] || presenceState.value[m.id].status === 'present'
   ).length
   const absents = membres.value.length - presents
   return { presents, absents, total: membres.value.length }
@@ -151,7 +152,7 @@ const savePresencesToDb = async () => {
 
   try {
     const presences = membres.value.map(membre => {
-      const presence = presenceState.value[membre.key] || { status: 'present', reason: '' }
+      const presence = presenceState.value[membre.id] || { status: 'present', reason: '' }
       return {
         membre_id: membre.id,
         is_present: presence.status === 'present',
@@ -322,14 +323,25 @@ const savePresencesToDb = async () => {
           <CodirListePresence
             v-for="membre in membres"
             :key="membre.id"
-            :name="membre.name"
+            :name="membre.entite_user.user.prenom + ' ' + membre.entite_user.user.nom"
             :role="membre.role"
-            :initials="getInitials(membre.entite_user.user.nom + ' ' + membre.entite_user.user.prenom)"
-            :initial-status="presenceState[membre.key]?.status ?? 'present'"
-            :initial-reason="presenceState[membre.key]?.reason ?? ''"
-            @change="onPresenceChange({ key: membre.key, ...$event })"
+            :initials="getInitials(membre.entite_user.user.prenom + ' ' + membre.entite_user.user.nom)"
+            :initial-status="presenceState[membre.id]?.status ?? 'present'"
+            :initial-reason="presenceState[membre.id]?.reason ?? ''"
+            @change="onPresenceChange({ key: membre.id, ...$event })"
           />
         </div>
+      </div>
+
+      <div>
+        <div v-if="!heureFinSaved" class="mb-4 flex items-center gap-2 text-xs text-amber-500">
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4" />
+          Enregistrez l'heure de fin avant de continuer
+        </div>
+         <span v-if="!presencesSaved" class="text-xs text-amber-500 flex items-center gap-1">
+            <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4" />
+            Sauvegardez les présences avant de continuer
+          </span>
       </div>
 
       <!-- ── Navigation stepper ─────────────────────────────────────────────── -->
@@ -340,9 +352,17 @@ const savePresencesToDb = async () => {
 
         <span class="text-sm text-gray-400">Étape {{ currentStep }} sur {{ steps.length }}</span>
 
-        <UButton trailing-icon="i-heroicons-arrow-right" color="blue" @click="goNext">
-          Suivant
-        </UButton>
+        <div class="flex flex-col items-end gap-2">
+
+          <UButton
+            trailing-icon="i-heroicons-arrow-right"
+            color="blue"
+            :disabled="!presencesSaved || !heureFinSaved || presenceLoading"
+            @click="goNext"
+          >
+            Suivant
+          </UButton>
+        </div>
       </div>
     </template>
   </div>
