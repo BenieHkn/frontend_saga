@@ -2,6 +2,7 @@
 defineProps({
   ordre: { type: Object, default: () => {} },
   peutGererCodir: { type: Boolean, default: false },
+  index: { type: Number, default: 1 },
 })
 
 const emit = defineEmits(['attach', 'detach', 'commenter', 'voir-commentaires', 'voir-detail-ordre'])
@@ -25,8 +26,8 @@ const statutClass = (statut) => {
         @click="emit('voir-detail-ordre', ordre)"
       >
         <div class="flex items-center gap-3 min-w-0">
-          <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
-            <UIcon name="i-heroicons-document-text" class="w-3.5 h-3.5 text-blue-500" />
+          <div class="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+            <span class="text-xs font-bold text-blue-600 dark:text-blue-300">{{ index + 1 }}</span>
           </div>
           <div class="min-w-0">
             <p class="text-sm font-medium truncate">{{ ordre.libelle }}</p>

@@ -22,6 +22,21 @@ const activiteApi = useActivite();
 const membreApi = useMembre();
 const actionApi = useAction();
 
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+    localStorage.removeItem('currentDossier')
+  } catch (e) {}
+}
+const handleReturn = () => {
+  clearCurrents()
+  router.back()
+}
+const handleReturnToCodir = () => {
+  clearCurrents()
+  router.push('/codir')
+}
+
 const { peutGererCodir, peutVoirCodir } = useAuth();
 const entiteUser = ref(null);
 const {
@@ -379,7 +394,7 @@ const handleRecupererCommentaire = async (contenu) => {
         icon="i-heroicons-arrow-left"
         color="gray"
         variant="ghost"
-        @click="router.back()"
+        @click="handleReturn()"
       />
       <span class="text-gray-400 text-sm">Retour à l'ordre du jour</span>
     </div>
@@ -399,7 +414,7 @@ const handleRecupererCommentaire = async (contenu) => {
         class="w-12 h-12 mx-auto text-amber-400 mb-4"
       />
       <p class="text-gray-500 text-sm">Dossier introuvable.</p>
-      <UButton class="mt-4" color="gray" variant="ghost" @click="router.back()"
+      <UButton class="mt-4" color="gray" variant="ghost" @click="handleReturn()"
         >Retour</UButton
       >
     </div>
@@ -408,7 +423,7 @@ const handleRecupererCommentaire = async (contenu) => {
     <div v-else-if="!peutVoirCodir()" class="text-center py-20">
       <UIcon name="i-heroicons-lock-closed" class="w-12 h-12 mx-auto text-red-500 mb-4" />
       <p class="text-gray-500 text-sm">Vous n'avez pas les droits nécessaires pour consulter ce dossier.</p>
-      <UButton class="mt-4" color="gray" variant="ghost" @click="router.push('/codir')">Retour aux CODIR</UButton>
+      <UButton class="mt-4" color="gray" variant="ghost" @click="handleReturnToCodir()">Retour aux CODIR</UButton>
     </div>
 
     <template v-else>
