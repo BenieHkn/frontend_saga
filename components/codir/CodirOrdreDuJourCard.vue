@@ -1,10 +1,11 @@
 <script setup>
 defineProps({
-  ordres: { type: Array, default: () => [] },
-  loading: { type: Boolean, default: false },
+  ordre: { type: Object, default: () => {} },
+  peutGererCodir: { type: Boolean, default: false },
+  index: { type: Number, default: 1 },
 })
 
-const emit = defineEmits(['attach', 'detach'])
+const emit = defineEmits(['attach', 'detach', 'commenter', 'voir-commentaires', 'voir-detail-ordre'])
 
 const router = useRouter()
 
@@ -19,33 +20,14 @@ const statutClass = (statut) => {
 </script>
 
 <template>
-  <section>
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="text-base font-semibold flex items-center gap-2">
-        <UIcon name="i-heroicons-clipboard-document-list" class="text-blue-500" />
-        Ordres du jour
-        <UBadge color="blue" variant="soft" size="xs">{{ ordres.length }}</UBadge>
-      </h2>
-      <UButton icon="i-heroicons-plus" color="blue" variant="soft" size="xs" @click="emit('attach')">
-        Ajouter
-      </UButton>
-    </div>
-
-    <div v-if="!ordres.length"
-      class="text-center py-6 text-gray-400 text-sm bg-gray-50 dark:bg-slate-800/50 rounded-xl">
-      Aucun ordre du jour
-    </div>
-
-    <div v-else class="flex flex-col gap-2">
+    <div  class="flex flex-col gap-2">
       <div
-        v-for="ordre in ordres"
-        :key="ordre.id"
         class="group flex items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-3 shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-900 transition-all cursor-pointer"
-        @click="router.push(`/ordres-du-jour/${ordre.id}`)"
+        @click="emit('voir-detail-ordre', ordre)"
       >
         <div class="flex items-center gap-3 min-w-0">
-          <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
-            <UIcon name="i-heroicons-document-text" class="w-3.5 h-3.5 text-blue-500" />
+          <div class="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+            <span class="text-xs font-bold text-blue-600 dark:text-blue-300">{{ index + 1 }}</span>
           </div>
           <div class="min-w-0">
             <p class="text-sm font-medium truncate">{{ ordre.libelle }}</p>
@@ -63,10 +45,40 @@ const statutClass = (statut) => {
             color="red"
             variant="ghost"
             size="xs"
-            @click.stop="emit('detach', ordre.id)"
+            @click.stop="emit('detach', ordre.id)" 
+            v-if="peutGererCodir"
           />
+
+          <!-- Pour les commentaires -->
+          <div class="relative">
+            <UButton
+              icon="i-heroicons-chat-bubble-left-right"
+              color="blue"
+              variant="ghost"
+              size="xs"
+              @click.stop="emit('commenter', ordre)"
+            >
+            <div class="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-0.5 flex items-center justify-center">
+              <UIcon name="i-heroicons-plus" class="w-2.5 h-2.5 text-white" />
+            </div>
+            </UButton>
+          </div>
+
+          <!-- Bouton pour voir la liste des commentaires -->
+          <div class="relative">
+            <UButton
+              icon="i-heroicons-chat-bubble-bottom-center-text"
+              color="gray"
+              variant="ghost"
+              size="xs"
+              @click.stop="emit('voir-commentaires', ordre)"
+            >
+            <span v-if="ordre.commentaires?.length ?? 0> 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {{ ordre.commentaires.length }}
+            </span>
+            </UButton>
+          </div>
         </div>
       </div>
     </div>
-  </section>
 </template>

@@ -1,13 +1,33 @@
 <!-- components/OrdreDuJourList.vue -->
 <script setup>
 import Sortable from "sortablejs";
+import { useCommentaire } from "~/composables/commentaire/useCommentaire";
+import { useCommentaireService } from "~/service/commentaireService";
+import { useAuth } from "~/composables/auth/useAuth";
+const toast = useToast()
+
+const {peutGererCodir, peutVoirCodir} = useAuth()
 
 const props = defineProps({
   ordres: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
+  peutSupprimer: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["attach", "detach"]);
+const currentOrdre = ref(null)
+
+const emit = defineEmits(["attach", "detach", "commenterListe"]);
+const commentaireService = useCommentaireService()
+
+const {creerCommentaire, openCommentaireModal, fetchCommentaires, commentaires, openListeCommentairesModal} = useCommentaire()
+const loading = ref(false)
+
+const entiteUser = ref()
+
+onMounted(() => {
+  entiteUser.value = JSON.parse(localStorage.getItem("entite_user"));
+  console.log(entiteUser.value);
+})
 
 // ── Ordre local (géré en interne) ─────────────────────────────────────────────
 const STORAGE_KEY = computed(() => `ordres-positions-${props.ordres[0]?.codir_id ?? "default"}`);
@@ -63,7 +83,7 @@ const goTo = (ordre) => {
   if (process.client) {
     localStorage.setItem("currentOrdreDuJour", JSON.stringify(ordre));
   }
-  navigateTo(`/ordres_du_jour/${ordre.id}`);
+  navigateTo(`/ordres-du-jour/${ordre.id}`);
 };
 
 // ── Statut ────────────────────────────────────────────────────────────────────
@@ -75,6 +95,58 @@ const statutClass = (statut) => {
   };
   return map[statut] ?? "text-gray-500 bg-gray-100";
 };
+
+
+const handleAfficherModalPourCommenter = async (ordre) => {
+  currentOrdre.value = ordre
+  openCommentaireModal.value = true
+  console.log("Commenter ordre", ordre)
+}
+
+const handleRecupererCommentaire = async (contenu) => {
+  if (!currentOrdre.value) return;
+  console.log("Contenu reçu pour commentaire :", contenu);
+  loading.value = true
+
+  try {
+    await creerCommentaire({
+         commentable_id: currentOrdre.value.id,
+         commentable_type: 'ordre_du_jour',
+         contenu: contenu,
+       })
+    openCommentaireModal.value = false
+    await fetchCommentaires('ordre_du_jour', currentOrdre.value.id)   
+    currentOrdre.value.commentaires = commentaires.value// Rafraîchir la liste des commentaires après création
+  } catch (error) {
+    console.error("Erreur lors de la création du commentaire", error)
+  }finally{
+    loading.value = false
+  }
+}
+
+const voirLesCommentaires = async (ordre) => {
+  currentOrdre.value = ordre;
+  console.log("Voir les commentaires pour ordre", ordre)
+  console.log("Id de l'ordre du jour: ", ordre.id)
+  try {
+    await fetchCommentaires('ordre_du_jour', ordre.id)
+    console.log("Commentaires récupérés :", commentaires.value)
+    openListeCommentairesModal.value = true
+  } catch (error) {
+    console.error("Erreur lors de la récupération des commentaires", error)
+    toast.add({
+        title: "Erreur lors du chargement des commentaires",
+        color: "error",
+        icon: "i-heroicons-exclamation-circle"
+      })
+  }
+}
+
+const detachOrdre = async (ordre) =>{
+
+  emit('detach', ordre.id);
+}
+
 </script>
 
 <template>
@@ -82,10 +154,10 @@ const statutClass = (statut) => {
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-base font-semibold flex items-center gap-2">
         <UIcon name="i-heroicons-clipboard-document-list" class="text-blue-500" />
-        Ordres du jour
+        Points à l'ordre du jour
         <UBadge color="blue" variant="soft" size="xs">{{ ordresLocaux.length }}</UBadge>
       </h2>
-      <UButton icon="i-heroicons-plus" color="blue" variant="soft" size="xs" @click="emit('attach')">
+      <UButton v-if="peutGererCodir()" icon="i-heroicons-plus" color="blue" variant="soft" size="xs" @click="emit('attach')">
         Ajouter
       </UButton>
     </div>
@@ -99,50 +171,30 @@ const statutClass = (statut) => {
 
     <!-- Liste sortable -->
     <div v-else ref="listRef" class="flex flex-col gap-2">
-      <div
+      <CodirOrdreDuJourCard
         v-for="(ordre, index) in ordresLocaux"
         :key="ordre.id"
-        class="group flex items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-3 shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-900 transition-all cursor-pointer"
-        @click="goTo(ordre)"
-      >
-        <div class="flex items-center gap-3 min-w-0">
-          <!-- Handle drag -->
-          <div
-            class="drag-handle shrink-0 cursor-grab active:cursor-grabbing text-gray-300 hover:text-blue-400 transition-colors"
-            @click.stop
-          >
-            <UIcon name="i-heroicons-bars-3" class="w-4 h-4" />
-          </div>
-
-          <!-- Numéro -->
-          <div class="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-            <span class="text-xs font-bold text-blue-600 dark:text-blue-300">{{ index + 1 }}</span>
-          </div>
-
-          <!-- Libellé + statut -->
-          <div class="min-w-0">
-            <p class="text-sm font-medium truncate">{{ ordre.libelle }}</p>
-            <span :class="`text-[10px] font-semibold capitalize ${statutClass(ordre.statut)}`">
-              {{ ordre.statut }}
-            </span>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2 shrink-0">
-          <UIcon
-            name="i-heroicons-chevron-right"
-            class="w-4 h-4 text-gray-300 group-hover:text-blue-400 transition-colors"
-          />
-          <UButton
-            icon="i-heroicons-trash"
-            color="red"
-            variant="ghost"
-            size="xs"
-            @click.stop="emit('detach', ordre.id)"
-          />
-        </div>
-      </div>
+        :ordre="ordre"
+        :index="index"
+        :peutGererCodir="peutGererCodir()"
+        @voir-detail-ordre="goTo(ordre)"
+        @commenter="handleAfficherModalPourCommenter(ordre)"
+        @voir-commentaires="voirLesCommentaires(ordre)"
+        @detach="detachOrdre(ordre)"
+      />
     </div>
+
+    <CommentaireModal
+      v-model:openCommentaireModal="openCommentaireModal"
+      @commenter="(contenu) => handleRecupererCommentaire(contenu)"
+      :loading="loading"
+    />
+
+    <CommentaireListeModal
+      v-model:openListeCommentairesModal="openListeCommentairesModal"
+      :commentaires="commentaires"
+      :entiteUser="entiteUser"
+    />
   </section>
 </template>
 

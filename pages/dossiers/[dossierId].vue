@@ -5,6 +5,11 @@ import { useTache } from "@/composables/taches/useTaches";
 import { useActivite } from "@/composables/activite/useActivite";
 import { useMembre } from "@/composables/membres/useMembres";
 import { useAction } from "@/composables/actions/useAction";
+import { useAuth } from "~/composables/auth/useAuth";
+import { useCommentaire } from "@/composables/commentaire/useCommentaire";
+import CommentaireCard from "@/components/commentaire/CommentaireCard.vue";
+import CommentaireModal from "@/components/commentaire/CommentaireModal.vue";
+import CommentaireListeModal from "@/components/commentaire/CommentaireListeModal.vue";
 
 definePageMeta({ title: "Détail dossier" });
 
@@ -17,6 +22,34 @@ const activiteApi = useActivite();
 const membreApi = useMembre();
 const actionApi = useAction();
 
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+    localStorage.removeItem('currentDossier')
+  } catch (e) {}
+}
+const handleReturn = () => {
+  clearCurrents()
+  router.back()
+}
+const handleReturnToCodir = () => {
+  clearCurrents()
+  router.push('/codir')
+}
+
+const { peutGererCodir, peutVoirCodir } = useAuth();
+const entiteUser = ref(null);
+const {
+  commentaires: commentairesList,
+  creerCommentaire,
+  modifierCommentaire,
+  supprimerCommentaire,
+  openCommentaireModal,
+  openListeCommentairesModal,
+  fetchCommentaires,
+  loading: commentairesLoading,
+} = useCommentaire();
+
 const dossierId = route.params.dossierId;
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -24,6 +57,7 @@ const dossier = ref(null);
 const currentOrdreDuJour = ref(null);
 const currentCodir = ref(null);
 const membres = ref([]);
+const commentableTarget = ref({ id: null, type: 'dossier' });
 const loading = ref(true);
 
 onMounted(async () => {
@@ -35,11 +69,17 @@ onMounted(async () => {
     // ✅ Toujours appeler l'API — données fraîches avec pivot codirs
     dossier.value = await dossierApi.getDossier(dossierId)
     localStorage.setItem("currentDossier", JSON.stringify(dossier.value))
+    console.log("Dossier chargé depuis l'API :", dossier.value);
   } catch {
     // Fallback localStorage si l'API échoue
     dossier.value = JSON.parse(localStorage.getItem("currentDossier"))
   } finally {
     loading.value = false
+  }
+
+  if (process.client) {
+    entiteUser.value = JSON.parse(localStorage.getItem("entite_user"))
+    await fetchCommentaires('dossier', dossierId)
   }
 })
 
@@ -48,11 +88,16 @@ const tabs = [
   { id: "actions", label: "Actions" },
   { id: "activites", label: "Activités" },
   { id: "taches", label: "Tâches" },
+  { id: "commentaires", label: "Commentaires" },
 ];
 
-const actions = computed(() => dossier.value?.actions ?? []);
+const actions = computed(() => {
+  console.log("Actions du dossier :", dossier.value?.actions);
+  return dossier.value?.actions ?? []
+});
 const activites = computed(() => dossier.value?.activites ?? []);
 const taches = computed(() => dossier.value?.taches ?? []);
+const commentaires = commentairesList
 
 // ── Options membres ───────────────────────────────────────────────────────────
 const membreOptions = computed(() =>
@@ -72,19 +117,19 @@ const PRIORITE_OPTIONS = [
 ];
 
 // ── Ouverture modales depuis une action / activité ─────────────────────────────
-const openTacheForAction = (action) => {
-  tacheForm.action_id = action.id;
+const openTacheForAction = (actionItem) => {
+  tacheForm.action_id = actionItem.id;
   tacheModal.value = true;
 };
 
-const openActiviteForAction = (action) => {
-  activiteForm.action_id = action.id;
+const openActiviteForAction = (actionItem) => {
+  activiteForm.action_id = actionItem.id;
   activiteModal.value = true;
 };
 
-const openTacheForActivite = (activite) => {
-  tacheForm.action_id = activite.action?.id ?? null;
-  tacheForm.activite_id = activite.id;
+const openTacheForActivite = (activiteItem) => {
+  tacheForm.action_id = activiteItem.action?.id ?? null;
+  tacheForm.activite_id = activiteItem.id;
   tacheModal.value = true;
 };
 
@@ -98,10 +143,9 @@ const actionOptions = computed(() =>
 
 // ── Refresh ───────────────────────────────────────────────────────────────────
 const refreshDossier = async () => {
-  loading.value = true;
+  // On ne met plus loading.value = true pour éviter de démonter les onglets
   dossier.value = await dossierApi.getDossier(dossier.value.id);
   localStorage.setItem("currentDossier", JSON.stringify(dossier.value));
-  loading.value = false;
 };
 
 // ── Création d'action ─────────────────────────────────────────────────────────
@@ -109,8 +153,8 @@ const actionModal = ref(false);
 const actionForm = reactive({ libelle: "" });
 const resetActionForm = () => Object.assign(actionForm, { libelle: "" });
 
-const createAction = async () => {
-  if (!actionForm.libelle.trim()) {
+const createAction = async (libelle) => {
+  if (!libelle.trim()) {
     toast.add({
       title: "Champs requis manquants",
       color: "orange",
@@ -120,13 +164,13 @@ const createAction = async () => {
   }
   try {
     await actionApi.createAction({
-      libelle: actionForm.libelle.trim(),
+      libelle: libelle.trim(),
       dossier_id: dossier.value.id,
     });
     actionModal.value = false;
     toast.add({
       title: "Action créée",
-      description: `"${actionForm.libelle}" a été créée avec succès`,
+      description: `"${libelle}" a été créée avec succès`,
       color: "green",
       icon: "i-heroicons-check-circle",
     });
@@ -260,6 +304,86 @@ const goToRattachementActivite = () => {
   );
   router.push("/activites/rattachement");
 };
+
+// ── Gestion des commentaires ───────────────────────────────────────────────────
+const deleteCommentaireModal = ref(false);
+const commentaireToDeleteId = ref(null);
+const isDeletingCommentaire = ref(false);
+
+const deleteCommentaire = (id) => {
+  commentaireToDeleteId.value = id;
+  deleteCommentaireModal.value = true;
+};
+
+const confirmDeleteCommentaireAction = async () => {
+  if (!commentaireToDeleteId.value) return;
+  isDeletingCommentaire.value = true;
+  try {
+    await supprimerCommentaire(commentaireToDeleteId.value);
+    deleteCommentaireModal.value = false;
+    commentaireToDeleteId.value = null;
+    await fetchCommentaires('dossier', dossier.value.id);
+  } catch {
+    toast.add({ title: "Erreur", description: "Impossible de supprimer le commentaire", color: "red" });
+  } finally {
+    isDeletingCommentaire.value = false;
+  }
+};
+
+const editCommentaireModal = ref(false);
+const editCommentaireForm = reactive({ id: null, contenu: '' });
+
+const openEditCommentaire = (commentaire) => {
+  editCommentaireForm.id = commentaire.id;
+  editCommentaireForm.contenu = commentaire.contenu;
+  editCommentaireModal.value = true;
+};
+
+const updateCommentaire = async () => {
+  if (!editCommentaireForm.contenu.trim()) return;
+  try {
+    await modifierCommentaire(editCommentaireForm.id, { contenu: editCommentaireForm.contenu });
+    editCommentaireModal.value = false;
+    await fetchCommentaires('dossier', dossier.value.id);
+  } catch {
+    toast.add({ title: "Erreur", description: "Impossible de modifier le commentaire", color: "red" });
+  }
+};
+
+const openCommentaireCreation = (target = null, type = 'action') => {
+  if (target) {
+    commentableTarget.value = { id: target.id, type };
+  } else {
+    commentableTarget.value = { id: dossier.value.id, type: 'dossier' };
+  }
+  openCommentaireModal.value = true;
+};
+
+const openCommentaireListe = async (target = null, type = 'action') => {
+  if (target) {
+    commentableTarget.value = { id: target.id, type };
+    await fetchCommentaires(type, target.id);
+  } else {
+    if (!dossier.value) return;
+    commentableTarget.value = { id: dossier.value.id, type: 'dossier' };
+    await fetchCommentaires('dossier', dossier.value.id);
+  }
+  openListeCommentairesModal.value = true;
+};
+
+const handleRecupererCommentaire = async (contenu) => {
+  try {
+    await creerCommentaire({
+      commentable_id: commentableTarget.value.id,
+      commentable_type: commentableTarget.value.type,
+      contenu,
+    });
+    await fetchCommentaires(commentableTarget.value.type, commentableTarget.value.id);
+    await refreshDossier();
+  } catch {
+    // laisser la gestion du toast au composable
+  }
+};
 </script>
 
 <template>
@@ -270,7 +394,7 @@ const goToRattachementActivite = () => {
         icon="i-heroicons-arrow-left"
         color="gray"
         variant="ghost"
-        @click="router.back()"
+        @click="handleReturn()"
       />
       <span class="text-gray-400 text-sm">Retour à l'ordre du jour</span>
     </div>
@@ -290,9 +414,16 @@ const goToRattachementActivite = () => {
         class="w-12 h-12 mx-auto text-amber-400 mb-4"
       />
       <p class="text-gray-500 text-sm">Dossier introuvable.</p>
-      <UButton class="mt-4" color="gray" variant="ghost" @click="router.back()"
+      <UButton class="mt-4" color="gray" variant="ghost" @click="handleReturn()"
         >Retour</UButton
       >
+    </div>
+
+    <!-- Accès refusé -->
+    <div v-else-if="!peutVoirCodir()" class="text-center py-20">
+      <UIcon name="i-heroicons-lock-closed" class="w-12 h-12 mx-auto text-red-500 mb-4" />
+      <p class="text-gray-500 text-sm">Vous n'avez pas les droits nécessaires pour consulter ce dossier.</p>
+      <UButton class="mt-4" color="gray" variant="ghost" @click="handleReturnToCodir()">Retour aux CODIR</UButton>
     </div>
 
     <template v-else>
@@ -363,7 +494,7 @@ const goToRattachementActivite = () => {
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
               {{ actions.length }} action(s)
             </span>
-            <div class="flex items-center gap-2">
+            <div v-if="peutGererCodir()" class="flex items-center gap-2">
               <UButton
                 icon="i-heroicons-link"
                 color="gray"
@@ -396,6 +527,9 @@ const goToRattachementActivite = () => {
               :key="action.id"
               :action="action"
               :numero="index + 1"
+              @commenter="openCommentaireCreation(action)"
+              @lire-commentaires="openCommentaireListe(action)"
+              :peutGererCodir="peutGererCodir()"
               @add-tache="openTacheForAction(action)"
               @add-activite="openActiviteForAction(action)"
               @deleted="refreshDossier"
@@ -409,7 +543,7 @@ const goToRattachementActivite = () => {
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
               {{ activites.length }} activité(s)
             </span>
-            <div class="flex items-center gap-2">
+            <div v-if="peutGererCodir()" class="flex items-center gap-2">
               <UButton
                 icon="i-heroicons-link"
                 color="gray"
@@ -442,8 +576,11 @@ const goToRattachementActivite = () => {
               :key="activite.id"
               :activite="activite"
               :numero="index + 1"
+              :peut-gerer="peutGererCodir()"
               @add-tache="openTacheForActivite(activite)"
               @updated="refreshDossier"
+              @commenter="openCommentaireCreation(activite, 'activite')"
+              @lire-commentaires="openCommentaireListe(activite, 'activite')"
             />
           </div>
         </template>
@@ -455,6 +592,7 @@ const goToRattachementActivite = () => {
               {{ taches.length }} tâche(s)
             </span>
             <UButton
+              v-if="peutGererCodir()"
               icon="i-heroicons-plus"
               color="blue"
               variant="soft"
@@ -488,10 +626,55 @@ const goToRattachementActivite = () => {
                 <TacheCard
                   :tache="tache"
                   :codirId="currentCodir?.id"
+                  :peut-gerer="peutGererCodir()"
                   @updated="refreshDossier"
+                  @commenter="openCommentaireCreation(tache, 'tache')"
+                  @lire-commentaires="openCommentaireListe(tache, 'tache')"
                 />
               </div>
             </div>
+          </div>
+        </template>
+
+        <!-- Commentaires -->
+        <template #commentaires>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ commentaires.length }} commentaire(s)
+            </span>
+            <div class="flex items-center gap-2">
+              <UButton
+                icon="i-heroicons-chat-bubble-left-right"
+                size="sm"
+                color="gray"
+                variant="soft"
+                @click="openCommentaireListe"
+                v-if="commentaires.length"
+              >Voir la liste</UButton>
+              <UButton
+                icon="i-heroicons-plus"
+                size="sm"
+                color="blue"
+                variant="soft"
+                @click="openCommentaireCreation"
+              >Ajouter un commentaire</UButton>
+            </div>
+          </div>
+          <div
+            v-if="!commentaires.length"
+            class="text-center py-8 text-gray-400 text-sm bg-gray-50 dark:bg-slate-800/50 rounded-xl"
+          >
+            Aucun commentaire pour ce dossier
+          </div>
+          <div v-else class="flex flex-col gap-3">
+            <CommentaireCard
+              v-for="commentaire in commentaires"
+              :key="commentaire.id"
+              :commentaire="commentaire"
+              :entite-user="entiteUser"
+              @edit="openEditCommentaire"
+              @delete="deleteCommentaire"
+            />
           </div>
         </template>
       </AppTabs>
@@ -499,14 +682,14 @@ const goToRattachementActivite = () => {
   </div>
 
   <!-- ── Modale création action ─────────────────────────────────────────────── -->
-  <UModal v-model="actionModal">
+  <!-- <UModal v-model="actionModal">
     <UCard class="rounded-2xl max-h-[80vh] flex flex-col">
       <template #header>
         <h3 class="font-semibold">Nouvelle action</h3>
       </template>
       <div class="p-2 flex flex-col gap-4 overflow-y-auto">
         <UFormGroup label="Libellé" required>
-          <UInput
+          <UTextarea
             v-model="actionForm.libelle"
             placeholder="Ex: Formation du personnel"
             size="md"
@@ -527,7 +710,13 @@ const goToRattachementActivite = () => {
         </div>
       </template>
     </UCard>
-  </UModal>
+  </UModal> -->
+
+  <ActionFormModal
+    v-model:openActionModal="actionModal"
+    :loading="actionApi.loading.value"
+    @createAction="createAction"
+  />
 
   <!-- ── Modale création activité ───────────────────────────────────────────── -->
   <UModal v-model="activiteModal">
@@ -537,7 +726,7 @@ const goToRattachementActivite = () => {
       </template>
       <div class="p-2 flex flex-col gap-4 overflow-y-auto">
         <UFormGroup label="Libellé" required>
-          <UInput
+          <UTextarea
             v-model="activiteForm.libelle"
             placeholder="Ex: Réaliser l'audit"
             size="md"
@@ -576,7 +765,7 @@ const goToRattachementActivite = () => {
       </template>
       <div class="p-2 flex flex-col gap-4 overflow-y-auto">
         <UFormGroup label="Intitulé" required>
-          <UInput
+          <UTextarea
             v-model="tacheForm.intitule"
             placeholder="Ex: Préparer le rapport"
             size="md"
@@ -616,6 +805,65 @@ const goToRattachementActivite = () => {
             @click="createTache"
             >Créer</UButton
           >
+        </div>
+      </template>
+    </UCard>
+  </UModal>
+
+  <!-- ── Modale création / consultation des commentaires ─────────────────────── -->
+  <CommentaireModal
+    v-model:openCommentaireModal="openCommentaireModal"
+    :loading="commentairesLoading"
+    @commenter="handleRecupererCommentaire"
+  />
+
+  <CommentaireListeModal
+    v-model:openListeCommentairesModal="openListeCommentairesModal"
+    :commentaires="commentaires"
+    :entiteUser="entiteUser"
+  />
+
+  <!-- ── Modale édition commentaire ─────────────────────────────────────────── -->
+  <UModal v-model="editCommentaireModal">
+    <UCard class="rounded-2xl max-h-[80vh] flex flex-col">
+      <template #header>
+        <h3 class="font-semibold">Modifier le commentaire</h3>
+      </template>
+      <div class="p-2 flex flex-col gap-4 overflow-y-auto">
+        <UFormGroup label="Contenu" required>
+          <UTextarea
+            v-model="editCommentaireForm.contenu"
+            placeholder="Écrivez votre commentaire..."
+            autoresize
+            size="md"
+          />
+        </UFormGroup>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton color="gray" variant="ghost" @click="editCommentaireModal = false">Annuler</UButton>
+          <UButton color="blue" @click="updateCommentaire">Mettre à jour</UButton>
+        </div>
+      </template>
+    </UCard>
+  </UModal>
+
+  <!-- ── Modale suppression commentaire ─────────────────────────────────────── -->
+  <UModal v-model="deleteCommentaireModal">
+    <UCard class="rounded-2xl max-h-[80vh] flex flex-col">
+      <template #header>
+        <h3 class="font-semibold text-red-600 flex items-center gap-2">
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5" />
+          Confirmer la suppression
+        </h3>
+      </template>
+      <div class="p-4 flex flex-col gap-4 overflow-y-auto">
+        <p class="text-sm text-gray-700">Voulez-vous vraiment supprimer ce commentaire ? Cette action est irréversible.</p>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton color="gray" variant="ghost" @click="deleteCommentaireModal = false">Annuler</UButton>
+          <UButton color="red" @click="confirmDeleteCommentaireAction" :loading="isDeletingCommentaire">Supprimer</UButton>
         </div>
       </template>
     </UCard>

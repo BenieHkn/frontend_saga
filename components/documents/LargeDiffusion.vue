@@ -415,6 +415,15 @@
         </span>
       </template>
 
+      <!-- ── Numéro d'enregistrement avec badge ────────────────────────────── -->
+      <template #cell-numero_enreg="{ value, item }">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-mono text-slate-700">{{ value || '—' }}</span>
+          <span v-if="item.isArchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-700 border border-red-200">Archivé</span>
+          <span v-else-if="item.isPrearchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 border border-amber-200">Préarchivé</span>
+        </div>
+      </template>
+
       <!-- ── Priorité ─────────────────────────────────────────────────── -->
       <template #cell-priority="{ value }">
         <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-full border uppercase" :class="{
@@ -648,25 +657,43 @@ const revokeModalBlobs = () => {
   if (reponseBlobUrl.value) { URL.revokeObjectURL(reponseBlobUrl.value); reponseBlobUrl.value = '' }
 }
 
+// ── Archive flags helper ──────────────────────────────────────────────────────
+const computeArchiveFlagsForItem = (dateStr) => {
+  if (!dateStr) return { isPrearchived: false, isArchived: false }
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return { isPrearchived: false, isArchived: false }
+  const now = new Date()
+  const ageDays = Math.floor((now - d) / 86400000)
+  const isPrearchived = ageDays > 365 && ageDays <= (365 * 3)
+  const isArchived = ageDays > (365 * 3)
+  return { isPrearchived, isArchived }
+}
+
 // ── Transform (on garde le nom brut, pas d'URL construite) ───────────────────
 const transformCourriers = (response) => {
   if (!response?.data) throw new Error('Format de réponse API invalide')
-  return response.data.map((courrier) => ({
-    id:                   courrier.id,
-    source:               courrier.service_enreg || '',
-    numero_enreg:         courrier.document?.numero_enreg || '',
-    reference:            courrier.document?.reference    || '',
-    structure:            courrier.structure || courrier.autre_structure || '',
-    date_enregistrement:  formatDate(courrier.document?.date_enreg),
-    objet:                courrier.document?.objet        || '',
-    date_courrier:        formatDate(courrier.document?.date_courrier),
-    // On ne construit plus d'URL directe — le nom brut suffit pour fetchFileAsBlob
-    url:                  (courrier.document?.url && courrier.document.url !== 'Inconnu') ? courrier.document.url : '',
-    type_arrivee:         courrier.type_arrivee || '',
-    type_document:        courrier.document?.type_document?.libelle,
-    priority:             courrier.priority     || '',
-    _raw:                 courrier,
-  }))
+  return response.data.map((courrier) => {
+    const dateEnreg = courrier.document?.date_enreg || courrier.created_at || null
+    const flags = computeArchiveFlagsForItem(dateEnreg)
+    return {
+      id:                   courrier.id,
+      source:               courrier.service_enreg || '',
+      numero_enreg:         courrier.document?.numero_enreg || '',
+      reference:            courrier.document?.reference    || '',
+      structure:            courrier.structure || courrier.autre_structure || '',
+      date_enregistrement:  formatDate(courrier.document?.date_enreg),
+      objet:                courrier.document?.objet        || '',
+      date_courrier:        formatDate(courrier.document?.date_courrier),
+      // On ne construit plus d'URL directe — le nom brut suffit pour fetchFileAsBlob
+      url:                  (courrier.document?.url && courrier.document.url !== 'Inconnu') ? courrier.document.url : '',
+      type_arrivee:         courrier.type_arrivee || '',
+      type_document:        courrier.document?.type_document?.libelle,
+      priority:             courrier.priority     || '',
+      isPrearchived:        flags.isPrearchived,
+      isArchived:           flags.isArchived,
+      _raw:                 courrier,
+    }
+  })
 }
 
 // ── Chargement options filtres ────────────────────────────────────────────────

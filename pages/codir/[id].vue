@@ -9,15 +9,28 @@ import {
   useCodir,
 } from '@/composables/codirs/useCodir'
 
-import {useMembre} from '@/composables/membres/useMembres'
+import { useMembre } from '@/composables/membres/useMembres'
+import { useAuth } from '~/composables/auth/useAuth'
 import { useOrdreDuJour } from '~/composables/ordres-du-jour/useOrdreDuJour'
+import ConfirmationSuppressionModal from '~/components/ConfirmationSuppressionModal.vue'
 
 definePageMeta({ title: 'Détail CODIR' })
 
-const route  = useRoute()
+const route = useRoute()
 const router = useRouter()
-const id     = Number(route.params.id)
-const toast  = useNuxtApp().$toast ?? useToast()
+const id = Number(route.params.id)
+const toast = useNuxtApp().$toast ?? useToast()
+
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+    localStorage.removeItem('currentCodir')
+  } catch (e) {}
+}
+const handleReturn = () => {
+  clearCurrents()
+  router.push('/codir')
+}
 
 const {
   loading,
@@ -31,6 +44,8 @@ const ordreDuJourApi = useOrdreDuJour()
 
 const membreApi = useMembre()
 
+const { peutGererCodir, peutVoirCodir } = useAuth()
+
 // ── Data ──────────────────────────────────────────────────────────────────────
 const codir = ref(null)
 const membres = ref([])
@@ -38,9 +53,10 @@ const membres = ref([])
 const fetchCodir = async () => {
   const data = await getCodir(id)
   codir.value = data
-  if(process.client)
+  if (process.client)
     localStorage.setItem('currentCodir', JSON.stringify(data))
 }
+
 
 // Sync localStorage automatique
 watch(codir, (c) => {
@@ -78,20 +94,20 @@ const progressionGlobale = computed(() => {
 })
 
 // ── Edition ───────────────────────────────────────────────────────────────────
-const editing  = ref(false)
+const editing = ref(false)
 const editForm = reactive({ date: '', heure_debut: '', heure_fin: '', statut: '' })
 
 watch(codir, (c) => {
   if (!c) return
-  editForm.date        = extractDateInput(c.date)
+  editForm.date = extractDateInput(c.date)
   editForm.heure_debut = extractTimeInput(c.heure_debut)
-  editForm.heure_fin   = extractTimeInput(c.heure_fin)
-  editForm.statut      = c.statut
+  editForm.heure_fin = extractTimeInput(c.heure_fin)
+  editForm.statut = c.statut
 }, { immediate: true })
 
 const saveCodir = async () => {
   const updated = await updateCodir(id, editForm)
-  codir.value   = updated
+  codir.value = updated
   toast.add({
     title: 'CODIR mis à jour',
     description: 'Les informations ont été mises à jour avec succès.',
@@ -103,9 +119,31 @@ const saveCodir = async () => {
 
 // ── Ordres du jour ────────────────────────────────────────────────────────────
 const ordreModal = ref(false)
-const ordreForm  = reactive({ libelle: '', statut: 'actif', codir_id: id })
+const ordreForm = reactive({ libelle: '', statut: 'actif', codir_id: id })
 const resetOrdreForm = () => Object.assign(ordreForm, { libelle: '', statut: 'actif' })
 
+const detachModal = ref(false)
+const ordreToDetachId = ref(null)
+const ordreToDetachLibelle = computed(() => {
+  return codir.value?.ordres_du_jour?.find((ordre) => ordre.id === ordreToDetachId.value)?.libelle ?? ''
+})
+
+const openDetachModal = (ordreId) => {
+  ordreToDetachId.value = ordreId
+  detachModal.value = true
+}
+
+const cancelDetachOrdre = () => {
+  detachModal.value = false
+  ordreToDetachId.value = null
+}
+
+const confirmDetachOrdre = async () => {
+  if (!ordreToDetachId.value) return
+  await handleDetachOrdre(ordreToDetachId.value)
+  detachModal.value = false
+  ordreToDetachId.value = null
+}
 
 const addOrdre = async () => {
   if (!ordreForm.libelle) return
@@ -148,12 +186,17 @@ const handleDetachOrdre = async (ordreId) => {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 onMounted(async () => {
-  codir.value = localStorage.getItem('currentCodir') ? JSON.parse(localStorage.getItem('currentCodir')) : null
+  codir.value = getCodir(id) // Essayer de récupérer depuis le store d'abord pour une expérience plus rapide
   membres.value = localStorage.getItem("membres") ? JSON.parse(localStorage.getItem("membres")) : []
   if (process.client) {
-    if(membres.value.length === 0) await getMembres()
+    if (membres.value.length === 0) await getMembres()
     const saved = localStorage.getItem(STEP_KEY)
     if (saved) currentStep.value = Number(saved)
+  }
+  try {
+    await fetchCodir()
+  } catch (e) {
+    console.error("Erreur lors de la récupération du CODIR:", e)
   }
 })
 </script>
@@ -163,81 +206,82 @@ onMounted(async () => {
 
     <!-- Retour -->
     <div class="mb-6 flex items-center gap-3">
-      <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" @click="router.push('/codir')" />
-      <span class="text-gray-400 text-sm">Retour au listing</span>
+      <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" @click="handleReturn()" />
+      <span class="text-gray-400 text-sm">Retour</span>
     </div>
 
     <div v-if="loading && !codir" class="flex justify-center py-20">
       <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-blue-500" />
     </div>
 
-    <template v-else-if="codir">
+    <template v-else-if="codir && peutGererCodir()">
       <CodirStepper :codirId="id">
 
-      <!-- ── En-tête ─────────────────────────────────────────────────── -->
-      <UCard class="rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 mb-6">
-        <div class="p-2">
-          <div class="flex items-start justify-between gap-4 mb-3">
-            <div>
-              <div class="flex items-center gap-3 flex-wrap mb-1">
-                <h1 class="text-2xl font-bold">{{ formatDateFR(codir.date) }}</h1>
-                <span :class="`text-xs font-semibold px-3 py-1 rounded-full ${getStatutConfig(codir.statut).badgeClass}`">
-                  {{ getStatutConfig(codir.statut).label }}
-                </span>
+        <!-- ── En-tête ─────────────────────────────────────────────────── -->
+        <UCard class="rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 mb-6">
+          <div class="p-2">
+            <div class="flex items-start justify-between gap-4 mb-3">
+              <div>
+                <div class="flex items-center gap-3 flex-wrap mb-1">
+                  <h1 class="text-2xl font-bold">{{ formatDateFR(codir.date) }}</h1>
+                  <span
+                    :class="`text-xs font-semibold px-3 py-1 rounded-full ${getStatutConfig(codir.statut).badgeClass}`">
+                    {{ getStatutConfig(codir.statut).label }}
+                  </span>
+                </div>
+                <p class="text-gray-400 text-sm flex items-center gap-1.5">
+                  <UIcon name="i-heroicons-clock" />
+                  {{ extractTime(codir.heure_debut) }} – {{ extractTime(codir.heure_fin) }}
+                </p>
               </div>
-              <p class="text-gray-400 text-sm flex items-center gap-1.5">
-                <UIcon name="i-heroicons-clock" />
-                {{ extractTime(codir.heure_debut) }} – {{ extractTime(codir.heure_fin) }}
-              </p>
+              <UButton v-if="!editing && peutGererCodir()" icon="i-heroicons-pencil-square" color="blue" variant="ghost"
+                size="sm" @click="editing = true">
+                Modifier
+              </UButton>
             </div>
-            <UButton v-if="!editing" icon="i-heroicons-pencil-square" color="blue" variant="ghost" size="sm"
-              @click="editing = true">
-              Modifier
-            </UButton>
-          </div>
 
-          <div class="flex items-center gap-3 mt-4">
-            <UProgress :value="progressionGlobale" color="green" size="sm" class="flex-1" />
-            <span class="text-xs font-mono text-gray-400 w-16 text-right">{{ progressionGlobale }}% moy.</span>
-          </div>
-
-          <Transition name="slide">
-            <div v-if="editing" class="border-t dark:border-gray-700 mt-5 pt-5">
-              <div class="grid grid-cols-2 gap-4 mb-4">
-                <UFormGroup label="Date">
-                  <UInput v-model="editForm.date" type="date" size="sm" />
-                </UFormGroup>
-                <UFormGroup label="Statut">
-                  <USelect v-model="editForm.statut" :options="STATUT_OPTIONS" size="sm" />
-                </UFormGroup>
-                <UFormGroup label="Heure de début">
-                  <UInput v-model="editForm.heure_debut" type="time" size="sm" />
-                </UFormGroup>
-                <UFormGroup label="Heure de fin">
-                  <UInput v-model="editForm.heure_fin" type="time" size="sm" />
-                </UFormGroup>
-              </div>
-              <div class="flex justify-end gap-2">
-                <UButton color="gray" variant="ghost" size="sm" @click="editing = false">Annuler</UButton>
-                <UButton color="blue" size="sm" :loading="loading" @click="saveCodir">Enregistrer</UButton>
-              </div>
+            <div class="flex items-center gap-3 mt-4">
+              <UProgress :value="progressionGlobale" color="green" size="sm" class="flex-1" />
+              <span class="text-xs font-mono text-gray-400 w-16 text-right">{{ progressionGlobale }}% moy.</span>
             </div>
-          </Transition>
-        </div>
-      </UCard>
 
-      
+            <Transition name="slide">
+              <div v-if="editing" class="border-t dark:border-gray-700 mt-5 pt-5">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                  <UFormGroup label="Date">
+                    <UInput v-model="editForm.date" type="date" size="sm" />
+                  </UFormGroup>
+                  <UFormGroup label="Statut">
+                    <USelect v-model="editForm.statut" :options="STATUT_OPTIONS" size="sm" />
+                  </UFormGroup>
+                  <UFormGroup label="Heure de début">
+                    <UInput v-model="editForm.heure_debut" type="time" size="sm" />
+                  </UFormGroup>
+                  <UFormGroup label="Heure de fin">
+                    <UInput v-model="editForm.heure_fin" type="time" size="sm" />
+                  </UFormGroup>
+                </div>
+                <div class="flex justify-end gap-2">
+                  <UButton color="gray" variant="ghost" size="sm" @click="editing = false">Annuler</UButton>
+                  <UButton color="blue" size="sm" :loading="loading" @click="saveCodir">Enregistrer</UButton>
+                </div>
+              </div>
+            </Transition>
+          </div>
+        </UCard>
+
+
         <!-- ── Contenu step 1 ──────────────────────────────────────────── -->
-      <div class="flex flex-col gap-8">
-        <CodirOrdreDuJour
-          :ordres="codir.ordres_du_jour ?? []"
-          :loading="loading"
-          @attach="ordreModal = true"
-          @detach="handleDetachOrdre($event)"
-        />
-      </div>
+        <div class="flex flex-col gap-8">
+          <CodirOrdreDuJour :ordres="codir.ordres_du_jour ?? []" :loading="loading" :peutSupprimer="peutGererCodir()"
+            @attach="ordreModal = true" @detach="openDetachModal($event)" />
+        </div>
       </CodirStepper>
 
+    </template>
+
+    <template v-else-if="codir ">
+      <CodirOrdreDuJour :ordres="codir.ordres_du_jour ?? []" :loading="loading" :peutSupprimer="false"/>
     </template>
 
     <UAlert v-if="error" color="red" icon="i-heroicons-exclamation-circle" :title="error" class="mt-4" />
@@ -246,18 +290,11 @@ onMounted(async () => {
     <UModal v-model="ordreModal">
       <UCard class="rounded-2xl">
         <template #header>
-          <h3 class="font-semibold">Créer un ordre du jour</h3>
+          <h3 class="font-semibold">Ajouter un point à l'ordre du jour</h3>
         </template>
         <div class="p-2 flex flex-col gap-4">
           <UFormGroup label="Libellé">
-            <UInput v-model="ordreForm.libelle" placeholder="Ex: Bilan trimestriel" size="md" />
-          </UFormGroup>
-          <UFormGroup label="Statut">
-            <USelect v-model="ordreForm.statut" :options="[
-              { label: 'Actif', value: 'actif' },
-              { label: 'Inactif', value: 'inactif' },
-              { label: 'Archivé', value: 'archivé' },
-            ]" size="md" />
+            <UTextarea v-model="ordreForm.libelle" placeholder="Ex: Bilan trimestriel" size="md" />
           </UFormGroup>
         </div>
         <template #footer>
@@ -269,6 +306,17 @@ onMounted(async () => {
       </UCard>
     </UModal>
 
+    <ConfirmationSuppressionModal
+      v-model:openConfirmationModal="detachModal"
+      titre="Confirmer le détachement"
+      message="Voulez-vous vraiment retirer cet ordre du jour du CODIR ?"
+      :details="ordreToDetachLibelle ? `Ordre du jour : ${ordreToDetachLibelle}` : ''"
+      confirmLabel="Retirer"
+      cancelLabel="Annuler"
+      :loading="loading"
+      @confirm="confirmDetachOrdre"
+      @cancel="cancelDetachOrdre"
+    />
   </div>
 </template>
 
@@ -277,6 +325,7 @@ onMounted(async () => {
 .slide-leave-active {
   transition: all 0.25s ease;
 }
+
 .slide-enter-from,
 .slide-leave-to {
   opacity: 0;

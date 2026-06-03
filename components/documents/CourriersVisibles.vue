@@ -324,6 +324,15 @@
             </span>
         </template>
 
+        <!-- ── Numéro d'enregistrement avec badge ────────────────────── -->
+        <template #cell-numero_enreg="{ value, item }">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-mono text-slate-700">{{ value || '—' }}</span>
+                <span v-if="item.isArchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-700 border border-red-200">Archivé</span>
+                <span v-else-if="item.isPrearchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 border border-amber-200">Préarchivé</span>
+            </div>
+        </template>
+
         <!-- ── Référence cliquable → ouvre via Blob ── -->
         <template #cell-reference="{ value, item }">
             <div class="w-full">
@@ -363,7 +372,8 @@
         <template #actions="{ item }">
             <div class="flex gap-1.5 justify-end">
                 <button @click="handleViewDetails(item)" title="Voir les détails"
-                    class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
+                    class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group"
+                    :class="{ 'opacity-50 cursor-not-allowed': item.isPrearchived || item.isArchived }">
                     <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
                 </button>
             </div>
@@ -543,6 +553,18 @@ const loadDocFile = async () => {
 }
 
 // ── Transform ─────────────────────────────────────────────────────────────────
+// ── Archive flags helper ──────────────────────────────────────────────────────
+const computeArchiveFlagsForItem = (dateStr) => {
+  if (!dateStr) return { isPrearchived: false, isArchived: false }
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return { isPrearchived: false, isArchived: false }
+  const now = new Date()
+  const ageDays = Math.floor((now - d) / 86400000)
+  const isPrearchived = ageDays > 365 && ageDays <= (365 * 3)
+  const isArchived = ageDays > (365 * 3)
+  return { isPrearchived, isArchived }
+}
+
 const transformerDonnees = (reponseAPI) => {
     if (!reponseAPI?.data) throw new Error('Format de réponse API invalide')
 
@@ -555,6 +577,10 @@ const transformerDonnees = (reponseAPI) => {
 
         // Nom brut uniquement — jamais d'URL construite
         const rawUrl = courrier.document?.url?.trim()
+        
+        // Compute archive flags
+        const dateEnreg = courrier.document?.date_enreg || courrier.date_depart || null
+        const flags = computeArchiveFlagsForItem(dateEnreg)
 
         return {
             id: courrier.id,
@@ -570,6 +596,8 @@ const transformerDonnees = (reponseAPI) => {
             type_depart: courrier.type_depart || '',
             confidentiel: courrier.confidentiel || false,
             initiateurs: initiateurFormate,
+            isPrearchived: flags.isPrearchived,
+            isArchived: flags.isArchived,
             _raw: courrier,  // anciennement _complete
         }
     })

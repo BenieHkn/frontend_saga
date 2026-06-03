@@ -1,6 +1,7 @@
 <script setup>
 import { useAction } from "@/composables/actions/useAction";
 import { useActivite } from "@/composables/activite/useActivite";
+import { useAuth } from "~/composables/auth/useAuth";
 
 definePageMeta({ title: "Détail action" });
 
@@ -11,12 +12,26 @@ const actionApi   = useAction();
 const route       = useRoute();
 const actionId    = Number(route.params.actionId);
 
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+    localStorage.removeItem('currentAction')
+  } catch (e) {}
+}
+const handleReturn = () => {
+  clearCurrents()
+  router.back()
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 const action             = ref(null);
 const currentDossier     = ref(null);
 const currentCodir       = ref(null);
 const currentOrdreDuJour = ref(null);
 const loading            = ref(true); // ✅ true dès le départ pour couvrir le montage
+
+//on appelle la permission qui permet de voir les boutons d'éditions et de suppressions
+const {peutGererCodir} = useAuth()
 
 // ── Montage ───────────────────────────────────────────────────────────────────
 onMounted(async () => {
@@ -94,7 +109,7 @@ const createActivite = async () => {
 
     <!-- Retour -->
     <div class="mb-6 flex items-center gap-3">
-      <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" @click="router.back()" />
+      <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" @click="handleReturn()" />
       <span class="text-gray-400 text-sm">Retour au dossier</span>
     </div>
 
@@ -107,7 +122,7 @@ const createActivite = async () => {
     <div v-else-if="!action" class="text-center py-20">
       <UIcon name="i-heroicons-exclamation-triangle" class="w-12 h-12 mx-auto text-amber-400 mb-4" />
       <p class="text-gray-500 text-sm">Action introuvable.</p>
-      <UButton class="mt-4" color="gray" variant="ghost" @click="router.back()">Retour</UButton>
+      <UButton class="mt-4" color="gray" variant="ghost" @click="handleReturn()">Retour</UButton>
     </div>
 
     <template v-else>
@@ -160,7 +175,7 @@ const createActivite = async () => {
               <p class="text-xs text-gray-500 dark:text-gray-400">{{ activites.length }} activité(s) rattachée(s)</p>
             </div>
           </div>
-          <UButton icon="i-heroicons-plus" color="violet" variant="soft" size="sm" @click="activiteModal = true">
+          <UButton v-if="peutGererCodir()" icon="i-heroicons-plus" color="violet" variant="soft" size="sm" @click="activiteModal = true">
             Ajouter une activité
           </UButton>
         </div>
@@ -194,7 +209,7 @@ const createActivite = async () => {
               <p class="text-xs text-gray-500 dark:text-gray-400">{{ taches.length }} tâche(s) rattachée(s)</p>
             </div>
           </div>
-          <UButton icon="i-heroicons-plus" color="cyan" variant="soft" size="sm" @click="openTacheModal(null)">
+          <UButton v-if="peutGererCodir()" icon="i-heroicons-plus" color="cyan" variant="soft" size="sm" @click="openTacheModal(null)">
             Ajouter une tâche
           </UButton>
         </div>

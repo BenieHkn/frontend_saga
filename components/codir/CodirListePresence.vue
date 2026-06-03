@@ -58,8 +58,8 @@ const roleColor = computed(() => ({
         </div>
 
         <!-- Nom + rôle -->
-        <div class="min-w-0">
-          <p class="text-sm font-semibold truncate">{{ name }}</p>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">{{ name }}</p>
           <span :class="`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${roleColor}`">
             {{ role }}
           </span>
@@ -70,7 +70,7 @@ const roleColor = computed(() => ({
       <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded-full p-1 shrink-0">
         <UButton
           size="xs"
-          :variant="status === 'present' ? 'white' : 'ghost'"
+          :variant="status === 'present' ? 'soft' : 'ghost'"
           :class="[
             'rounded-full px-3 transition-all',
             status === 'present' ? 'text-green-600 shadow-sm' : 'text-gray-400',

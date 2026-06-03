@@ -175,6 +175,15 @@
         </div>
       </template>
 
+      <!-- ── Numéro d'enregistrement avec badge ────────────────────────────── -->
+      <template #cell-numero_enreg="{ value, item }">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-mono text-slate-700">{{ value || '—' }}</span>
+          <span v-if="item.isArchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-700 border border-red-200">Archivé</span>
+          <span v-else-if="item.isPrearchived" class="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 border border-amber-200">Préarchivé</span>
+        </div>
+      </template>
+
       <!-- ── Actions ── -->
       <template #actions="{ item }">
         <div class="flex gap-1.5 justify-end">
@@ -240,7 +249,7 @@
             </button>
             <div
               v-else
-              :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+              :title="item.is_cloture ? 'Affectation clôturée' : 'Action non disponible'"
               class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
               <Icon name="i-heroicons-paper-airplane" class="w-4 h-4" />
             </div>
@@ -258,7 +267,7 @@
             </button>
             <div
               v-else
-              :title="item.is_cloture ? 'Affectation clôturée' : 'Ce courrier a déjà une réponse'"
+              :title="item.is_cloture ? 'Action clôturée' : 'Action non disponible'"
               class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
               <Icon name="i-heroicons-arrow-path-rounded-square" class="w-4 h-4" />
             </div>
@@ -276,7 +285,7 @@
           </button>
           <div
             v-else
-            :title="item.is_cloture ? 'Déjà clôturée' : 'Ce courrier a déjà une réponse'"
+            :title="item.is_cloture ? 'Déjà clôturée' : 'Action non disponible'"
             class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 text-slate-300 border border-slate-200 rounded-md cursor-not-allowed">
             <Icon name="i-heroicons-lock-closed" class="w-4 h-4" />
           </div> -->
@@ -753,9 +762,9 @@ const onPeriodChange = ({ field, from, to }) => {
   refresh(1, perPage.value, false)
 }
 
-// ── Helper : actions bloquées si clôturé OU courrier déjà répondu ─────────────
+// ── Helper : actions bloquées si clôturé OU archivé ─────────────
 const isActionBlocked = (item) => {
-  return item.is_cloture || item.a_reponse
+  return item.is_cloture || item.isPrearchived || item.isArchived
 }
 
 const getAffectationEntityText = (entity) => {
@@ -1120,6 +1129,20 @@ const transformerDonneesAPI = (reponseAPI) => {
       isCloture = finalAffectation.statut === 'cloture'
     }
     
+    const computeArchiveFlagsForItem = (dateStr) => {
+  if (!dateStr) return { isPrearchived: false, isArchived: false }
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return { isPrearchived: false, isArchived: false }
+  const now = new Date()
+  const ageDays = Math.floor((now - d) / 86400000)
+  const isPrearchived = ageDays > 365 && ageDays <= (365 * 3)
+  const isArchived = ageDays > (365 * 3)
+  return { isPrearchived, isArchived }
+}
+
+    const dateEnregForGroup = group.courrier_arrive?.document?.date_enreg || group.courrier_arrive?.created_at || null
+    const flags = computeArchiveFlagsForItem(dateEnregForGroup)
+
     result.push({
       id: courrierId, // Utiliser l'ID du courrier comme identifiant unique
       courrier_id: courrierId,
@@ -1142,6 +1165,8 @@ const transformerDonneesAPI = (reponseAPI) => {
       affectation_circuit: [], // Sera rempli par loadAffectationCircuits
       all_affectations: affectations, // Garder toutes les affectations pour référence
       _raw: finalAffectation || affectations[0], // Utiliser l'affectation courante comme _raw
+      isPrearchived: flags.isPrearchived,
+      isArchived: flags.isArchived,
     })
   }
   
@@ -1264,7 +1289,13 @@ const getStatutDotClass = (s) => ({ 'en attente': 'bg-gray-500', 'en cours': 'bg
 const getPriorityClasses  = (p) => ({ URGENT: 'bg-red-100 text-red-800', IMPORTANT: 'bg-orange-100 text-orange-800', STANDARD: 'bg-blue-100 text-blue-800' }[p] || 'bg-gray-100 text-gray-800')
 const getPriorityDotClass = (p) => ({ URGENT: 'bg-red-500', IMPORTANT: 'bg-orange-500', STANDARD: 'bg-blue-500' }[p] || 'bg-gray-500')
 
-const rowClassByAffectation = (item) => item?.isAffected ? '!bg-orange-50 !hover:bg-orange-100' : ''
+const rowClassByAffectation = (item) => {
+  if (!item) return ''
+  if (item.isArchived) return '!bg-red-50 text-red-700 border-l-4 border-red-300 opacity-80 hover:!bg-red-100'
+  if (item.isPrearchived) return '!bg-amber-50 text-amber-700 border-l-4 border-amber-300 hover:!bg-amber-100'
+  if (item?.isAffected) return '!bg-orange-50 !hover:bg-orange-100'
+  return ''
+}
 
 // ── Handlers actions ──────────────────────────────────────────────────────────
 const handleViewDetails = async (item) => {

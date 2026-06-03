@@ -6,16 +6,30 @@ definePageMeta({ title: 'Aperçu CODIR' })
 const router = useRouter()
 const toast = useNuxtApp().$toast ?? useToast()
 
+// Clear localStorage keys used as "current*" when returning
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+      localStorage.removeItem('currentCodir')
+      localStorage.removeItem('currentOrdreDuJour')
+      localStorage.removeItem('currentDossier')
+      localStorage.removeItem('currentTache')
+      localStorage.removeItem(`presence-${id}`)
+      localStorage.removeItem(`codir_step_${id}`)
+  } catch (e) { }
+}
+const handleReturn = () => {
+  localStorage.setItem(`codir_step_${codir.value.id}`, '2')
+  router.back()
+}
+
 // ── Données depuis localStorage ───────────────────────────────────────────────
 const codir = ref(null)
 
-onMounted(() => {
-  const raw = localStorage.getItem('currentCodir')
-  if (raw) codir.value = JSON.parse(raw)
-})
+
 
 // ── Composable ────────────────────────────────────────────────────────────────
-const { cloturerCodir, generatePdf, downloadPdf } = useCodir()
+const { cloturerCodir, generatePdf, downloadPdf, getCodir } = useCodir()
 
 // ── Clôture ───────────────────────────────────────────────────────────────────
 const showCloture = ref(false)
@@ -26,8 +40,14 @@ const confirmerCloture = async () => {
   cloturePending.value = true
   try {
     await cloturerCodir(codir.value.id)
-    codir.value = { ...codir.value, statut: 'clos' }
-    localStorage.setItem('currentCodir', JSON.stringify(codir.value))
+    // Nettoyage des clés locales liées au CODIR clôturé
+    try {
+      const id = codir.value.id
+      clearCurrents()
+    } catch (err) {
+      // ignore
+    }
+
     toast.add({ title: 'CODIR clôturé', description: 'Le CODIR a été clôturé avec succès.', color: 'green', icon: 'i-heroicons-check-circle' })
     showCloture.value = false
     navigateTo('/codir')
@@ -99,6 +119,20 @@ const statutTacheLabel = (s) => ({
   terminée: 'Terminée', terminee: 'Terminée',
   realise: 'Réalisé', suspendu: 'Suspendu',
 }[s] ?? s ?? '')
+
+const rafraichir = async () => {
+  if (!codir.value) return
+  codir.value = await getCodir(codir.value.id)
+  localStorage.setItem('currentCodir', JSON.stringify(codir.value))
+}
+
+onMounted(() => {
+  const raw = localStorage.getItem('currentCodir')
+  if (raw){
+     codir.value = JSON.parse(raw)
+    rafraichir()
+  }
+})
 </script>
 
 <template>
@@ -108,7 +142,7 @@ const statutTacheLabel = (s) => ({
     <div
       class="sticky top-20 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between gap-4 shadow-sm">
       <div class="flex items-center gap-3">
-        <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" size="sm" @click="router.back()">
+        <UButton icon="i-heroicons-arrow-left" color="gray" variant="ghost" size="sm" @click="handleReturn()">
           Retour
         </UButton>
         <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Aperçu du CODIR</span>

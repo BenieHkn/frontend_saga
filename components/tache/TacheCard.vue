@@ -3,13 +3,14 @@ import { useTache } from '@/composables/taches/useTaches'
 import { formatDateFR, useCodir } from '@/composables/codirs/useCodir'
 
 const props = defineProps({
-  tache:   { type: Object, required: true },
-  codirId: { type: Number, required: true },
+  tache:     { type: Object,  required: true },
+  codirId:   { type: Number,  required: true },
+  peutGerer: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['updated'])
+const emit = defineEmits(['updated', 'commenter', 'lire-commentaires'])
 
-const toast = useToast()
+const toast    = useToast()
 const tacheApi = useTache()
 const codirApi = useCodir()
 
@@ -28,31 +29,32 @@ const progressionForm = reactive({
   est_reprise: false,
 })
 
-watch(pivot, (p) => {
-  progressionForm.progression = p?.progression ?? 0
-  progressionForm.statut      = p?.statut      ?? 'en_attente'
-  progressionForm.commentaire = p?.commentaire ?? ''
-  progressionForm.est_reprise = p?.est_reprise ?? false
-}, { immediate: true, deep: true })
+watch(
+  pivot,
+  (p) => {
+    progressionForm.progression = p?.progression ?? 0
+    progressionForm.statut      = p?.statut      ?? 'en_attente'
+    progressionForm.commentaire = p?.commentaire ?? ''
+    progressionForm.est_reprise = p?.est_reprise ?? false
+  },
+  { immediate: true, deep: true }
+)
 
 const STATUT_OPTIONS = [
   { label: 'En attente', value: 'en_attente' },
-  { label: 'En cours',   value: 'en_cours' },
-  { label: 'Terminée',   value: 'terminee' },
-  { label: 'Bloquée',    value: 'bloquer' },
-  { label: 'Reportée',   value: 'reportee' },
+  { label: 'En cours',   value: 'en_cours'   },
+  { label: 'Terminée',   value: 'terminee'   },
+  { label: 'Suspendue',    value: 'suspendue'    },
+  { label: 'Reportée',   value: 'reportee'   },
 ]
 
-const statutColor = computed(() => {
-  const map = {
-    en_attente: 'gray',
-    en_cours:   'blue',
-    terminee:   'green',
-    bloquer:    'red',
-    reportee:   'amber',
-  }
-  return map[pivot.value?.statut] ?? 'gray'
-})
+const statutColor = computed(() => ({
+  en_attente: 'gray',
+  en_cours:   'blue',
+  terminee:   'green',
+  suspendue:    'red',
+  reportee:   'amber',
+}[pivot.value?.statut] ?? 'gray'))
 
 const progressionColor = computed(() => {
   const p = pivot.value?.progression ?? 0
@@ -63,21 +65,12 @@ const progressionColor = computed(() => {
 })
 
 // ── Responsables ──────────────────────────────────────────────────────────────
-const responsables = computed(() => {
-  // On remonte les utilisateurs liés via tache.membres.entite_user.user
-  return (props.tache.membres ?? [])
-    .map((m) => m.entite_user?.user)
-    .filter((u) => !!u)
-})
+const responsables = computed(() =>
+  (props.tache.membres ?? []).map(m => m.entite_user?.user).filter(Boolean)
+)
 
-const getInitials = (name) => {
-  if (!name) return '?'
-  return name
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase())
-    .join('')
-    .slice(0, 2)
-}
+const getInitials = (name) =>
+  (name || '?').split(' ').map(w => w[0]?.toUpperCase()).join('').slice(0, 2)
 
 // ── Mise à jour progression ───────────────────────────────────────────────────
 const updateProgression = async () => {
@@ -102,7 +95,7 @@ const updateProgression = async () => {
 }
 
 // ── Suppression ───────────────────────────────────────────────────────────────
-const deleteTache = async () => {
+const confirmDelete = async () => {
   try {
     await codirApi.detachTache(props.codirId, props.tache.id)
     toast.add({
@@ -126,34 +119,85 @@ const deleteTache = async () => {
 
 <template>
   <div
-    class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4 cursor-pointer hover:border-blue-200 dark:hover:border-blue-800 transition-colors"
+    class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4 transition-all"
+    :class="peutGerer
+      ? 'cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
+      : 'cursor-default opacity-95'"
     @click="progressionModal = true"
   >
-    <!-- En-tête -->
+    <!-- En-tête : titre + badges + boutons -->
     <div class="flex items-start justify-between gap-2 mb-3">
-      <p class="font-medium text-gray-900 dark:text-white text-sm">{{ tache.intitule }}</p>
+      <p class="font-medium text-gray-900 dark:text-white text-sm">
+        {{ tache.intitule }}
+      </p>
+
       <div class="flex items-center gap-2 shrink-0">
+        <!-- Badges statut / priorité -->
         <UBadge
           :color="tache.priorite === 'Haute' ? 'red' : tache.priorite === 'Moyenne' ? 'amber' : 'green'"
           variant="soft" size="xs"
         >
           {{ tache.priorite ?? 'Normale' }}
         </UBadge>
+
         <UBadge :color="statutColor" variant="soft" size="xs">
           {{ STATUT_OPTIONS.find(s => s.value === pivot?.statut)?.label ?? 'En attente' }}
         </UBadge>
+
+        <!-- Lire commentaires avec compteur -->
+        <div class="relative inline-block">
+          <UButton
+            icon="i-heroicons-chat-bubble-bottom-center-text"
+            color="gray"
+            variant="ghost"
+            size="xs"
+            title="Lire les commentaires"
+            @click.stop="emit('lire-commentaires', tache)"
+          >
+            <span
+              v-if="(tache.commentaires?.length ?? 0) > 0"
+              class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-4 px-1 flex items-center justify-center pointer-events-none border border-white dark:border-slate-800"
+            >
+              {{ tache.commentaires?.length ?? 0 }}
+            </span>
+          </UButton>
+        </div>
+
+        <!-- Ajouter commentaire -->
+        <div class="relative inline-block">
+          <UButton
+            icon="i-heroicons-chat-bubble-left-right"
+            color="blue"
+            variant="ghost"
+            size="xs"
+            title="Ajouter un commentaire"
+            @click.stop="emit('commenter', tache)"
+          />
+          <div class="absolute -bottom-0.5 -right-0.5 bg-blue-500 rounded-full p-0.5 flex items-center justify-center border border-white dark:border-slate-800 pointer-events-none">
+            <UIcon name="i-heroicons-plus" class="w-2 h-2 text-white" />
+          </div>
+        </div>
+
+        <!-- Suppression -->
+        <UButton
+          v-if="peutGerer"
+          icon="i-heroicons-trash"
+          color="red"
+          variant="ghost"
+          size="xs"
+          @click.stop="deleteModal = true"
+        />
       </div>
     </div>
 
     <!-- Responsables -->
     <div v-if="responsables.length" class="flex items-center -space-x-2 mb-3">
       <div
-        v-for="responsable in responsables"
-        :key="responsable.id"
-        class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-xs"
-        :title="`${responsable.nom ?? ''} ${responsable.prenom ?? ''}`.trim() || 'Responsable'"
+        v-for="r in responsables" :key="r.id"
+        class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-xs ring-2 ring-white dark:ring-gray-900"
+        :title="`${r.nom ?? ''} ${r.prenom ?? ''}`.trim()"
       >
-        {{ getInitials(`${responsable.nom ?? ''} ${responsable.prenom ?? ''}`.trim() || 'R') }}
+        {{ getInitials(`${r.nom ?? ''} ${r.prenom ?? ''}`.trim() || 'R') }}
       </div>
     </div>
 
@@ -181,7 +225,7 @@ const deleteTache = async () => {
       </span>
     </div>
 
-    <!-- Commentaire -->
+    <!-- Commentaire pivot -->
     <p v-if="pivot?.commentaire" class="text-xs text-gray-500 mt-2 italic">
       {{ pivot.commentaire }}
     </p>
@@ -196,20 +240,22 @@ const deleteTache = async () => {
             <UIcon name="i-heroicons-chart-bar" class="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h3 class="font-semibold text-gray-900 dark:text-white">Mettre à jour la progression</h3>
+            <h3 class="font-semibold text-gray-900 dark:text-white">
+              {{ peutGerer ? 'Mettre à jour la progression' : 'Consultation de la tâche' }}
+            </h3>
             <p class="text-xs text-gray-400">{{ tache.intitule }}</p>
           </div>
         </div>
       </template>
 
       <div class="p-2 flex flex-col gap-4">
-
         <UFormGroup label="Progression (%)">
           <div class="flex items-center gap-4">
             <input
               v-model="progressionForm.progression"
               type="range" min="0" max="100" step="5"
               class="flex-1 accent-blue-500"
+              :disabled="!peutGerer"
             />
             <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 w-10 text-right">
               {{ progressionForm.progression }}%
@@ -219,15 +265,15 @@ const deleteTache = async () => {
         </UFormGroup>
 
         <UFormGroup label="Statut">
-          <USelect v-model="progressionForm.statut" :options="STATUT_OPTIONS" size="md" />
+          <USelect v-model="progressionForm.statut" :options="STATUT_OPTIONS" size="md" :disabled="!peutGerer" />
         </UFormGroup>
 
         <UFormGroup label="Commentaire">
           <UTextarea
             v-model="progressionForm.commentaire"
             placeholder="Ajouter un commentaire..."
-            size="md"
-            :rows="3"
+            size="md" :rows="3"
+            :disabled="!peutGerer"
           />
         </UFormGroup>
 
@@ -235,13 +281,19 @@ const deleteTache = async () => {
           v-model="progressionForm.est_reprise"
           label="Tâche reprise du CODIR précédent"
           color="blue"
+          :disabled="!peutGerer"
         />
       </div>
 
       <template #footer>
         <div class="flex justify-end gap-2">
-          <UButton color="gray" variant="ghost" @click="progressionModal = false">Annuler</UButton>
-          <UButton color="blue" :loading="tacheApi.loading.value" @click="updateProgression">
+          <UButton color="gray" variant="ghost" @click="progressionModal = false">Fermer</UButton>
+          <UButton
+            v-if="peutGerer"
+            color="blue"
+            :loading="tacheApi.loading.value"
+            @click="updateProgression"
+          >
             Enregistrer
           </UButton>
         </div>
@@ -249,7 +301,7 @@ const deleteTache = async () => {
     </UCard>
   </UModal>
 
-  <!-- ── Modale suppression ───────────────────────────────────────────────────
+  <!-- ── Modale suppression ─────────────────────────────────────────────────── -->
   <UModal v-model="deleteModal">
     <UCard class="rounded-2xl">
       <template #header>
@@ -262,24 +314,22 @@ const deleteTache = async () => {
             <p class="text-sm text-gray-500 dark:text-gray-400">Cette action est irréversible</p>
           </div>
         </div>
-      </template> -->
-
-      <!-- <div class="p-2">
+      </template>
+      <div class="p-2">
         <p class="text-gray-700 dark:text-gray-300">
-          Êtes-vous sûr de vouloir supprimer la tâche
+          Êtes-vous sûr de vouloir retirer la tâche
           <span class="font-semibold text-red-600 dark:text-red-400">"{{ tache.intitule }}"</span> ?
         </p>
-      </div> -->
-
-      <!-- <template #footer>
+      </div>
+      <template #footer>
         <div class="flex justify-end gap-2">
           <UButton color="gray" variant="ghost" @click="deleteModal = false">Annuler</UButton>
-          <UButton color="red" :loading="tacheApi.loading.value" @click="deleteTache">
+          <UButton color="red" :loading="tacheApi.loading.value" @click="confirmDelete">
             <UIcon name="i-heroicons-trash" class="w-4 h-4 mr-1" />
             Supprimer
           </UButton>
         </div>
-      </template> -->
-    <!-- </UCard>
-  </UModal> -->
+      </template>
+    </UCard>
+  </UModal>
 </template>

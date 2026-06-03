@@ -355,11 +355,11 @@
     <!-- ── Actions ── -->
     <template #actions="{ item }">
       <div class="flex gap-1.5 justify-end">
-        <button @click="handleView(item)" title="Voir les détails"
+        <button type="button" @click.stop="handleView(item)" title="Voir les détails"
           class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-100 rounded-md hover:bg-amber-200 hover:text-amber-900 transition-all group">
           <Icon name="i-heroicons-eye" class="w-4 h-4 group-hover:text-yellow-600" />
         </button>
-        <button v-if="peutTransferer() && !isAdmin()" @click="handleEdit(item)"
+        <button type="button" v-if="peutTransferer() && !isAdmin()" @click.stop="handleEdit(item)"
           class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md hover:bg-emerald-200 hover:text-emerald-900 transition-all group"
           title="Modifier">
           <Icon name="i-heroicons-pencil" class="w-4 h-4 group-hover:text-green-600" />

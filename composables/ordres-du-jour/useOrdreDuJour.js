@@ -29,5 +29,6 @@ export function useOrdreDuJour() {
 
       return currentOrdreDuJour
     },
+    getOrdreDuJourByCodir: (codirId) => call(`/codirs/${codirId}/ordres-du-jour`),
   }
 }
