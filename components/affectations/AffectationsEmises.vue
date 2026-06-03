@@ -80,7 +80,7 @@
 
             <!-- Bouton document -->
             <div v-if="selectedAffectation._raw?.courrier_arrive?.document?.url &&
-                       selectedAffectation._raw.courrier_arrive.document.url !== 'Inconnu'">
+              selectedAffectation._raw.courrier_arrive.document.url !== 'Inconnu'">
               <button
                 v-if="!docFileLoaded && !docFileLoading && !docFileError"
                 @click="loadDocFile"
@@ -484,48 +484,48 @@
             <span class="text-blue-700 font-semibold">{{ selectedAffectation.destinataire.nom }}</span>
             <span class="text-xs text-gray-500 ml-2">({{ selectedAffectation.destinataire.fonction }})</span>
           </p>
+          </div>
         </div>
-      </div>
 
       <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700 mb-2">Rechercher un destinataire</label>
         <input v-model="searchDestinataire" type="text" placeholder="Rechercher par nom, prénom ou fonction..."
           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-      </div>
+        </div>
 
       <div v-if="loadingDestinataires" class="flex justify-center py-8">
         <div class="w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
-      </div>
+        </div>
 
-      <div v-else class="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+        <div v-else class="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
         <div v-for="dest in filteredDestinataires" :key="dest.id" @click="selectNewDestinataire(dest)" :class="[
-          'p-4 cursor-pointer transition-all border-b border-gray-200 last:border-b-0',
+                'p-4 cursor-pointer transition-all border-b border-gray-200 last:border-b-0',
           selectedNewDestinataire?.id === dest.id ? 'bg-blue-100 border-l-4 border-l-blue-600' : 'hover:bg-gray-50',
-        ]">
-          <div class="flex items-center justify-between">
-            <div class="flex-1">
+              ]">
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
               <p class="font-semibold text-gray-900">{{ dest.user?.nom }} {{ dest.user?.prenom }}</p>
-              <p class="text-sm text-gray-600 mt-1">
+                <p class="text-sm text-gray-600 mt-1">
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 mr-2">{{ dest.entite?.code }}</span>
-                <span v-if="dest.is_responsable" class="text-gray-700">{{ dest.entite?.fonction }}</span>
+                  <span v-if="dest.is_responsable" class="text-gray-700">{{ dest.entite?.fonction }}</span>
                 <span v-else class="text-gray-500">Agent</span>
               </p>
               <p class="text-xs text-gray-500 mt-1">{{ dest.entite?.libelle }}</p>
-            </div>
+              </div>
             <Icon v-if="selectedNewDestinataire?.id === dest.id" name="i-heroicons-check-circle-solid" class="h-6 w-6 text-blue-600" />
-          </div>
-        </div>
-        <div v-if="filteredDestinataires.length === 0" class="p-8 text-center text-gray-500">
+            </div>
+                        </div>
+<div v-if="filteredDestinataires.length === 0" class="p-8 text-center text-gray-500">
           <Icon name="i-heroicons-user-group" class="h-12 w-12 mx-auto mb-2 text-gray-400" />
           <p class="text-sm">Aucun destinataire trouvé</p>
+          </div>
         </div>
-      </div>
 
-      <div class="flex justify-end gap-3 mt-6">
+            <div class="flex justify-end gap-3 mt-6">
         <UButton @click="showEditModal = false" color="gray" variant="outline" size="lg">Annuler</UButton>
         <UButton @click="confirmChangeDestinataire"
           :disabled="!selectedNewDestinataire || selectedNewDestinataire.id === selectedAffectation?._raw.destinataire_id"
-          :loading="submitting" size="lg" icon="i-heroicons-check"
+:loading="submitting" size="lg" icon="i-heroicons-check"
           class="bg-gradient-to-br from-emerald-800 to-blue-800 text-white dark:text-white">
           {{ submitting ? 'Modification en cours...' : 'Confirmer le changement' }}
         </UButton>
@@ -920,7 +920,7 @@ const confirmChangeDestinataire = async () => {
   if (!selectedNewDestinataire.value || !selectedAffectation.value) return
   submitting.value = true
   try {
-    const authToken = localStorage.getItem('auth_token')
+        const authToken = localStorage.getItem('auth_token')
     await $fetch(`${config.public.apiBase}/affectations/${selectedAffectation.value.id}`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
