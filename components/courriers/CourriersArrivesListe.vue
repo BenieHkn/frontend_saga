@@ -1219,14 +1219,51 @@ const handleQuickAssign = (courrierId) => {
   navigateTo('/affectations/create')
 }
 
-const handleReply = (item) => {
-  const courrier = item._raw || item
-  if (courrier.document?.reponse) {
-    Swal.fire({ title: 'Déjà répondu', text: 'Ce courrier a déjà reçu une réponse.', icon: 'info', confirmButtonColor: '#2563eb' })
+const handleReply = async (item) => {
+  const doc = item._raw || item
+
+  if (doc.document?.reponse) {
+    Swal.fire({
+      title: 'Déjà répondu',
+      text: 'Ce courrier a déjà reçu une réponse.',
+      icon: 'info',
+      confirmButtonColor: '#2563eb'
+    })
     return
   }
-  courriersStore.setCourrierToReply(courrier)
-  navigateTo('/courriers/form_courrier_depart')
+
+  const courrierArriveId = doc.id
+  if (!courrierArriveId) {
+    Swal.fire({
+      title: 'Erreur',
+      text: "Impossible d'identifier le courrier arrivé.",
+      icon: 'error',
+      confirmButtonColor: '#2563eb'
+    })
+    return
+  }
+
+  try {
+    const authToken = localStorage.getItem('auth_token') || ''
+    const response = await $fetch(
+      `${config.public.apiBase}/courriers-arrives/${courrierArriveId}`,
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    )
+
+    const courrierArrive = response?.data || response
+    if (!courrierArrive) throw new Error('Courrier arrivé introuvable')
+
+    courriersStore.setCourrierToReply(courrierArrive)
+    navigateTo('/courriers/form_courrier_depart')
+  } catch (e) {
+    console.error('❌ Erreur chargement courrier arrivé:', e)
+    Swal.fire({
+      title: 'Erreur',
+      text: 'Impossible de charger les données du courrier. Réessayez.',
+      icon: 'error',
+      confirmButtonColor: '#2563eb'
+    })
+  }
 }
 
 const onEdit = (item) => navigateTo(`/courriers/form_courier_arrive_edit/${item.id}`)
