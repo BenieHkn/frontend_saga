@@ -62,7 +62,9 @@ const statutClass = (statut) => {
   return map[statut] ?? 'text-gray-500 bg-gray-100'
 }
 
-const emit = defineEmits(['dossierSelected'])
+const { peutGererCodir } = useAuth()
+
+const emit = defineEmits(['dossierSelected', 'deleteDossier'])
 </script>
 
 <template>
@@ -150,9 +152,9 @@ const emit = defineEmits(['dossierSelected'])
               v-for="dossier in dossiers"
               :key="dossier.id"
               :dossier="dossier"
+              :peut-gerer-codir="peutGererCodir()"
               @click="emit('dossierSelected', (dossier))"
-              @deleted="(id) => console.log('Dossier supprimé:', id)"
-
+              @delete="emit('deleteDossier', dossier)"
             />
           </div>
         </div>

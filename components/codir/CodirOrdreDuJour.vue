@@ -10,7 +10,6 @@ const {peutGererCodir, peutVoirCodir} = useAuth()
 
 const props = defineProps({
   ordres: { type: Array, default: () => [] },
-  loading: { type: Boolean, default: false },
   peutSupprimer: { type: Boolean, default: false },
 });
 
@@ -143,9 +142,10 @@ const voirLesCommentaires = async (ordre) => {
 }
 
 const detachOrdre = async (ordre) =>{
-
   emit('detach', ordre.id);
 }
+
+
 
 </script>
 
@@ -162,8 +162,14 @@ const detachOrdre = async (ordre) =>{
       </UButton>
     </div>
 
+    <div v-if="loading" class="flex flex-col gap-2">
+      <USkeleton class="h-16 w-full rounded-2xl" />
+      <USkeleton class="h-16 w-full rounded-2xl" />
+      <USkeleton class="h-16 w-full rounded-2xl" />
+    </div>
+
     <div
-      v-if="!ordresLocaux.length"
+      v-else-if="!ordresLocaux.length"
       class="text-center py-6 text-gray-400 text-sm bg-gray-50 dark:bg-slate-800/50 rounded-xl"
     >
       Aucun ordre du jour

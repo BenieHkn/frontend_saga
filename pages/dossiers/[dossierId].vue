@@ -112,6 +112,23 @@ onMounted(async () => {
   }
 });
 
+const dossierFormModalOpen = ref(false);
+
+const openDossierEdit = () => {
+  dossierFormModalOpen.value = true;
+};
+
+const handleDossierUpdated = async (form) => {
+  try {
+    await dossierApi.updateDossier(dossier.value.id, form);
+    dossierFormModalOpen.value = false;
+    await refreshDossier();
+    toast.add({ title: "Dossier modifié", color: "green", icon: "i-heroicons-check-circle" });
+  } catch {
+    toast.add({ title: "Erreur", description: "Impossible de modifier le dossier", color: "red" });
+  }
+};
+
 // ── Onglets ────────────────────────────────────────────────────────────────────
 const tabs = [
   { id: "actions",      label: "Actions" },
@@ -343,9 +360,9 @@ const confirmDeleteCommentaireAction = async () => {
     <template v-else>
       <!-- En-tête -->
       <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 mb-6">
-        <div class="p-6 border-b border-gray-100 dark:border-gray-800">
+        <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between gap-4">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center">
+            <div class="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center shrink-0">
               <UIcon name="i-heroicons-folder" class="w-6 h-6 text-violet-600 dark:text-violet-400" />
             </div>
             <div>
@@ -353,6 +370,14 @@ const confirmDeleteCommentaireAction = async () => {
               <p class="text-sm text-gray-500 dark:text-gray-400">Dossier #{{ dossier.id }}</p>
             </div>
           </div>
+          <UButton
+            v-if="peutGererCodir()"
+            icon="i-heroicons-pencil-square"
+            color="gray"
+            variant="ghost"
+            title="Modifier le dossier"
+            @click="openDossierEdit"
+          />
         </div>
         <div class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -578,25 +603,14 @@ const confirmDeleteCommentaireAction = async () => {
   </UModal>
 
   <!-- Modale suppression commentaire -->
-  <UModal v-model="deleteCommentaireModal">
-    <UCard class="rounded-2xl max-h-[80vh] flex flex-col">
-      <template #header>
-        <h3 class="font-semibold text-red-600 flex items-center gap-2">
-          <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5" />
-          Confirmer la suppression
-        </h3>
-      </template>
-      <div class="p-4">
-        <p class="text-sm text-gray-700">Voulez-vous vraiment supprimer ce commentaire ? Cette action est irréversible.</p>
-      </div>
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <UButton color="gray" variant="ghost" @click="deleteCommentaireModal = false">Annuler</UButton>
-          <UButton color="red" :loading="isDeletingCommentaire" @click="confirmDeleteCommentaireAction">Supprimer</UButton>
-        </div>
-      </template>
-    </UCard>
-  </UModal>
+  <ConfirmationSuppressionModal
+    v-model:openConfirmationModal="deleteCommentaireModal"
+    titre="Confirmer la suppression"
+    message="Voulez-vous vraiment supprimer ce commentaire ? Cette action est irréversible."
+    :loading="isDeletingCommentaire"
+    @confirm="confirmDeleteCommentaireAction"
+    @cancel="deleteCommentaireModal = false"
+  />
 
   <!-- ── Modales Tâches ─────────────────────────────────────────────────────── -->
 
@@ -621,7 +635,6 @@ const confirmDeleteCommentaireAction = async () => {
     @updated="handleTacheUpdated"
   />
 
-  <!-- ✅ v-if sur selectedTache car on affiche son intitulé dans le message -->
   <ConfirmationSuppressionModal
     v-if="selectedTache"
     v-model:openConfirmationModal="tacheDeleteModal"
@@ -632,5 +645,13 @@ const confirmDeleteCommentaireAction = async () => {
     :loading="isDeletingTache"
     @confirm="confirmDeleteTacheAction"
     @cancel="tacheDeleteModal = false"
+  />
+
+  <!-- Modale d'édition du dossier -->
+  <DossierFormModal
+    v-model:open="dossierFormModalOpen"
+    :dossier="dossier"
+    :ordreId="currentOrdreDuJour?.id"
+    @updated="handleDossierUpdated"
   />
 </template>

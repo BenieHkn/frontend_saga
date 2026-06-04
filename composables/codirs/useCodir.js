@@ -33,14 +33,26 @@ export const STATUT_OPTIONS = [
 ]
 
 export const TACHE_STATUT_OPTIONS = [
-  { label: 'En attente', value: 'en_attente' },
+  { label: 'Reconduite', value: 'reconduite' },
+  { label: 'En cours', value: 'en_cours' },
+  { label: 'Réalisée', value: 'realisee' },
+  { label: 'Supprimée', value: 'supprimee'},
+]
+
+export const DOSSIER_STATUT_OPTIONS = [
   { label: 'En cours', value: 'en_cours' },
   { label: 'Réalisé', value: 'realisee' },
+  { label: 'Non réalisé', value: 'non_realisee' },
+  { label: 'Reconduit', value: 'reconduit' },
+  { label: 'Supprimé', value: 'supprimee' },
 ]
 
 export const COLOR_TACHE_STATUT = {
   en_cours: 'blue',
   realisee: 'green',
+  reconduit: 'yellow',
+  supprimee: 'red',
+
 }
 
 export const PRIORITE_CONFIG = {

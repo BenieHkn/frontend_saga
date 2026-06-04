@@ -108,16 +108,13 @@ const isOpen = computed({
         <!-- Responsables -->
         <div v-if="responsables.length">
           <h5 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Responsables</h5>
-          <div class="flex flex-col gap-2">
+          <div class="flex flex-wrap gap-3">
             <div
               v-for="r in responsables" :key="r"
-              class="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-2 rounded-lg"
+              class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm ring-2 ring-white dark:ring-gray-900"
+              :title="r"
             >
-              <div
-                class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm"
-              >
-                {{ r }}
-              </div>
+              {{ r }}
             </div>
           </div>
         </div>

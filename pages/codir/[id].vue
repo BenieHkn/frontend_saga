@@ -273,7 +273,7 @@ onMounted(async () => {
 
         <!-- ── Contenu step 1 ──────────────────────────────────────────── -->
         <div class="flex flex-col gap-8">
-          <CodirOrdreDuJour :ordres="codir.ordres_du_jour ?? []" :loading="loading" :peutSupprimer="peutGererCodir()"
+          <CodirOrdreDuJour :ordres="codir.ordres_du_jour ?? []"  :peutSupprimer="peutGererCodir()"
             @attach="ordreModal = true" @detach="openDetachModal($event)" />
         </div>
       </CodirStepper>
@@ -281,7 +281,7 @@ onMounted(async () => {
     </template>
 
     <template v-else-if="codir ">
-      <CodirOrdreDuJour :ordres="codir.ordres_du_jour ?? []" :loading="loading" :peutSupprimer="false"/>
+      <CodirOrdreDuJour :ordres="codir.ordres_du_jour ?? []"  :peutSupprimer="false"/>
     </template>
 
     <UAlert v-if="error" color="red" icon="i-heroicons-exclamation-circle" :title="error" class="mt-4" />

@@ -98,6 +98,18 @@ const submit = async () => {
     loading.value = false
   }
 }
+
+const responsablesOptions = computed(() => {
+  return props.membresOptions.filter(m => {
+      const code = m?.label?.toLowerCase()
+      return code && code !== 'dgml'
+    }).map(membre => {
+    return {
+      label: membre.label,
+      value: membre.value,
+    }
+  })
+})
 </script>
 
 <template>
@@ -165,10 +177,10 @@ const submit = async () => {
             <USelect v-model="form.priorite" placeholder="Définir une priorité pour la tâche" :options="PRIORITE_OPTIONS" size="md" />
           </UFormGroup>
 
-          <UFormGroup label="Membres assignés">
+          <UFormGroup label="Responsables">
             <USelectMenu
               v-model="form.membre_ids"
-              :options="membresOptions"
+              :options="responsablesOptions"
               multiple
               option-attribute="label"
               value-attribute="value"
@@ -208,10 +220,10 @@ const submit = async () => {
             <USelect v-model="form.statut" :options="TACHE_STATUT_OPTIONS" size="md" />
           </UFormGroup>
 
-          <UFormGroup label="Commentaire de progression">
+          <UFormGroup label="Indicateur de réalisation / Outfit">
             <UTextarea
               v-model="form.commentaire"
-              placeholder="Ajouter un commentaire..."
+              placeholder="Définir un indicateur de réalisation/Outfit..."
               size="md"
               :rows="2"
             />

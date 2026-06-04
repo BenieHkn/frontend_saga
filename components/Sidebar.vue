@@ -151,8 +151,27 @@ const auditMenuOpen    = ref(false)
 const emit = defineEmits(['sidebar-toggle'])
 
 // ── Item actif ────────────────────────────────────────────────────────────────
-const isItemActive = (item) =>
-  route.path === item.path || route.path.startsWith(item.path + '/')
+const codirRoutes = [
+  '/codir/',
+  '/ordres-du-jour/',
+  '/dossiers/',
+  '/activites/',
+  '/actions/'
+]
+
+const isItemActive = (item) => {
+  if (item.path === '/codir') {
+    return (
+      route.path === '/codir' ||
+      codirRoutes.some(prefix => route.path.startsWith(prefix))
+    )
+  }
+
+  return (
+    route.path === item.path ||
+    route.path.startsWith(item.path + '/')
+  )
+}
 
 // ── Routes Audit ──────────────────────────────────────────────────────────────
 const auditRoutes = ['/stats', '/audit/courriers']

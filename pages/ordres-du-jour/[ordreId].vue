@@ -1,5 +1,6 @@
 <script setup>
 import { useOrdreDuJour } from '@/composables/ordres-du-jour/useOrdreDuJour'
+import { useDossier } from '@/composables/dossier/useDossier'
 import { formatDateFR, useCodir } from '@/composables/codirs/useCodir'
 import { useCommentaire } from '@/composables/commentaire/useCommentaire'
 import CommentaireModal from '@/components/commentaire/CommentaireModal.vue'
@@ -24,6 +25,7 @@ const handleReturn = () => {
 }
 
 const ordreDuJourApi = useOrdreDuJour()
+const dossierApi = useDossier()
 const codirApi = useCodir()
 
 const {
@@ -68,26 +70,33 @@ const statutClass = (statut) => {
   return map[statut] ?? 'text-gray-500 bg-gray-100'
 }
 
-// ── Ajout dossier ─────────────────────────────────────────────────────────────
+// ── Ajout / Modif dossier ─────────────────────────────────────────────────────────────
 const dossierModal = ref(false)
-const dossierForm = reactive({ libelle: '' })
-const resetDossierForm = () => Object.assign(dossierForm, { libelle: '' })
+const selectedDossier = ref(null)
 
-const addDossier = async () => {
-  if (!dossierForm.libelle.trim()) return
+const openCreateDossier = () => {
+  selectedDossier.value = null
+  dossierModal.value = true
+}
+
+const openEditDossier = (dossier) => {
+  selectedDossier.value = dossier
+  dossierModal.value = true
+}
+
+const handleAddDossier = async (form) => {
   try {
-    await ordreDuJourApi.addDossier(ordreId, { libelle: dossierForm.libelle.trim() })
+    await ordreDuJourApi.addDossier(ordreId, form)
     currentCodir.value = await codirApi.fetchCodir(currentCodir.value.id)
     currentOrdreDuJour.value = await ordreDuJourApi.fetchOrdre(ordreId)
   
     toast.add({
       title: 'Dossier créé',
-      description: `"${dossierForm.libelle}" a été ajouté à l'ordre du jour`,
+      description: `"${form.libelle}" a été ajouté à l'ordre du jour`,
       color: 'green',
       icon: 'i-heroicons-check-circle',
     })
     dossierModal.value = false
-    resetDossierForm()
   } catch {
     toast.add({
       title: 'Erreur',
@@ -98,16 +107,41 @@ const addDossier = async () => {
   }
 }
 
-// ── Suppression dossier ───────────────────────────────────────────────────────
-const handleRemoveDossier = async (dossierId) => {
+const handleUpdateDossier = async (form) => {
   try {
-    await ordreDuJourApi.removeDossier(ordreId, dossierId)
+    await dossierApi.updateDossier(selectedDossier.value.id, form)
     currentCodir.value = await codirApi.fetchCodir(currentCodir.value.id)
-    // ✅ fetchOrdre retourne l'ODJ, on l'assigne au ref
+    currentOrdreDuJour.value = await ordreDuJourApi.fetchOrdre(ordreId)
+    toast.add({ title: 'Dossier modifié', color: 'green', icon: 'i-heroicons-check-circle' })
+  } catch {
+    toast.add({ title: 'Erreur', description: 'Impossible de modifier le dossier', color: 'red' })
+  }
+}
+
+// ── Suppression dossier ───────────────────────────────────────────────────────
+const dossierDeleteModal = ref(false)
+const dossierToDeleteId = ref(null)
+const isDeletingDossier = ref(false)
+
+const openDeleteDossier = (dossier) => {
+  dossierToDeleteId.value = dossier.id
+  dossierDeleteModal.value = true
+}
+
+const confirmDeleteDossierAction = async () => {
+  if (!dossierToDeleteId.value) return
+  isDeletingDossier.value = true
+  try {
+    await ordreDuJourApi.removeDossier(ordreId, dossierToDeleteId.value)
+    currentCodir.value = await codirApi.fetchCodir(currentCodir.value.id)
     currentOrdreDuJour.value = await ordreDuJourApi.fetchOrdre(ordreId)
     toast.add({ title: 'Dossier retiré', color: 'green', icon: 'i-heroicons-check-circle' })
+    dossierDeleteModal.value = false
+    dossierToDeleteId.value = null
   } catch {
     toast.add({ title: 'Erreur', description: 'Impossible de retirer le dossier', color: 'red', icon: 'i-heroicons-exclamation-circle' })
+  } finally {
+    isDeletingDossier.value = false
   }
 }
 
@@ -217,7 +251,7 @@ onMounted(async () => {
           <UIcon name="i-heroicons-folder-open" class="text-violet-500" />
           Dossiers rattachés
           <UBadge color="violet" variant="soft" size="xs">{{ dossiers.length }}</UBadge>
-          <UButton v-if="peutGererCodir()" icon="i-heroicons-plus" color="blue" variant="soft" @click="dossierModal = true">
+          <UButton v-if="peutGererCodir()" icon="i-heroicons-plus" color="blue" variant="soft" @click="openCreateDossier">
             Ajouter
           </UButton>
         </h2>
@@ -234,11 +268,12 @@ onMounted(async () => {
             :key="dossier.id"
             :dossier="dossier"
             :index="index"
-            @peutGererCodir="peutGererCodir()"
+            :peut-gerer-codir="peutGererCodir()"
             @click="handleClick(dossier)"
-            @deleted="handleRemoveDossier(dossier.id)"
+            @delete="openDeleteDossier(dossier)"
             @commenter="openCommentairePourDossier(dossier)"
             @lire-commentaires="openLectureCommentairesPourDossier(dossier)"
+            @edit="openEditDossier(dossier)"
           />
         </div>
       </section>
@@ -262,23 +297,22 @@ onMounted(async () => {
     :entiteUser="entiteUser"
   />
 
-  <!-- ── Modale ajout dossier ───────────────────────────────────────────────── -->
-  <UModal v-model="dossierModal">
-    <UCard class="rounded-2xl">
-      <template #header>
-        <h3 class="font-semibold">Ajouter un dossier</h3>
-      </template>
-      <div class="p-2 flex flex-col gap-4">
-        <UFormGroup label="Libellé">
-          <UTextarea v-model="dossierForm.libelle" placeholder="Ex: Budget annuel" size="md" />
-        </UFormGroup>
-      </div>
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <UButton color="gray" variant="ghost" @click="dossierModal = false">Annuler</UButton>
-          <UButton color="blue" :loading="ordreDuJourApi.loading.value" @click="addDossier">Ajouter</UButton>
-        </div>
-      </template>
-    </UCard>
-  </UModal>
+  <!-- ── Modale dossier (Ajout / Modif) ───────────────────────────────────────────────── -->
+  <DossierFormModal
+    v-model:open="dossierModal"
+    :dossier="selectedDossier"
+    :ordreId="ordreId"
+    @created="handleAddDossier"
+    @updated="handleUpdateDossier"
+  />
+
+  <!-- ── Modale suppression dossier ───────────────────────────────────────────────── -->
+  <ConfirmationSuppressionModal
+    v-model:openConfirmationModal="dossierDeleteModal"
+    titre="Confirmer la suppression"
+    message="Voulez-vous vraiment retirer ce dossier de l'ordre du jour ?"
+    :loading="isDeletingDossier"
+    @confirm="confirmDeleteDossierAction"
+    @cancel="dossierDeleteModal = false"
+  />
 </template>
