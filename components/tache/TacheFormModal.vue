@@ -1,37 +1,15 @@
 <script setup>
 import { PRIORITE_OPTIONS } from '@/composables/codirs/useCodir'
-import { useMembre } from '@/composables/membres/useMembres'
-import { useTache } from '~/composables/taches/useTaches'
 
 const props = defineProps({
-  modelValue: { type: Boolean, default: false }, // v-model ouverture
+  openFormCreateModal: { type: Boolean, default: false }, // v-model ouverture
   activiteId: { type: Number,  default: null },  // pré-rempli si ouvert depuis ActiviteCard
   actionId:   { type: Number,  default: null },  // requis pour la création
+  dossierId: {type: Number, default: null },
+  membres: {type: Array, default: () => []}
 })
 
-const emit = defineEmits(['update:modelValue', 'created'])
-
-const toast     = useNuxtApp().$toast ?? useToast()
-const tacheApi  = useTache()
-const membreApi = useMembre()
-const membres   = ref([])
-
-onMounted(async () => {
-  try {
-    const data = await membreApi.getMembres()
-    membres.value = data
-  } catch {
-    const cached = process.client ? localStorage.getItem('membres') : null
-    if (cached) membres.value = JSON.parse(cached)
-  }
-})
-
-const membreOptions = computed(() =>
-  membres.value.map(m => ({
-    label: `${m.entite_user?.user?.nom ?? ''} ${m.entite_user?.user?.prenom ?? ''}`.trim(),
-    value: m.id,
-  }))
-)
+const emit = defineEmits(['update:openFormCreateModal', 'created'])
 
 // ── Formulaire ────────────────────────────────────────────────────────────────
 const form = reactive({
@@ -42,77 +20,20 @@ const form = reactive({
   membre_ids: [],
 })
 
-const reset = () => Object.assign(form, {
-  intitule:   '',
-  date_debut: '',
-  date_fin:   '',
-  priorite:   'Moyenne',
-  membre_ids: [],
-})
-
-// Reset à chaque ouverture
-watch(() => props.modelValue, (val) => {
-  if (val) reset()
-})
-
 // ── Fermeture ─────────────────────────────────────────────────────────────────
 const close = () => {
-  reset()
-  emit('update:modelValue', false)
+  emit('update:openFormCreateModal', false)
 }
 
-// ── Soumission ────────────────────────────────────────────────────────────────
-const submit = async () => {
-  if (!form.intitule.trim()) {
-    toast.add({
-      title: 'Champ requis',
-      description: "L'intitulé est obligatoire",
-      color: 'orange',
-      icon: 'i-heroicons-exclamation-triangle',
-    })
-    return
-  }
+ const isOpen = computed({
+        get: () => props.openFormCreateModal,
+        set: (val) => emit('update:openFormCreateModal', val)
+ })
 
-  if (!form.date_debut || !form.date_fin) {
-    toast.add({
-      title: 'Dates requises',
-      description: 'Veuillez renseigner les dates de début et de fin',
-      color: 'orange',
-      icon: 'i-heroicons-exclamation-triangle',
-    })
-    return
-  }
-
-  try {
-    const created = await tacheApi.createTache({
-      ...form,
-      activite_id: props.activiteId ?? null,
-      action_id:   props.actionId   ?? null,
-    })
-
-    toast.add({
-      title: 'Tâche créée',
-      description: `"${form.intitule}" a été créée avec succès`,
-      color: 'green',
-      icon: 'i-heroicons-check-circle',
-    })
-
-    emit('created', created)
-    close()
-  } catch (e) {
-    const message = e?.data?.message ?? e?.message ?? 'Impossible de créer la tâche'
-    toast.add({
-      title: 'Erreur',
-      description: message,
-      color: 'red',
-      icon: 'i-heroicons-exclamation-circle',
-    })
-  }
-}
 </script>
 
 <template>
-  <UModal :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
+  <UModal v-model="isOpen">
     <UCard class="rounded-2xl max-h-[80vh] flex flex-col">
 
       <template #header>
@@ -146,7 +67,7 @@ const submit = async () => {
         </UFormGroup>
 
         <UFormGroup label="Membres assignés">
-          <AppSelectSearch
+          <USelectMenu
             v-model="form.membre_ids"
             :options="membreOptions"
             :multiple="true"

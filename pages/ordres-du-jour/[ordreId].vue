@@ -167,9 +167,9 @@ onMounted(async () => {
     </div>
 
     <!-- Introuvable -->
-    <div v-else-if="!currentOrdreDuJour" class="text-center py-20">
+    <div v-else-if="!currentOrdreDuJour && !loading" class="text-center py-20">
       <UIcon name="i-heroicons-exclamation-triangle" class="w-12 h-12 mx-auto text-amber-400 mb-4" />
-      <p class="text-gray-500 text-sm">Ordre du jour introuvable ou non chargé.</p>
+      <p class="text-gray-500 text-sm">Point introuvable ou non chargé.</p>
       <UButton class="mt-4" color="gray" variant="ghost" @click="handleReturn()">Retour</UButton>
     </div>
 

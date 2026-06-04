@@ -1,60 +1,30 @@
 <script setup>
-import { useTache } from '@/composables/taches/useTaches'
-import { formatDateFR, useCodir } from '@/composables/codirs/useCodir'
+import {
+  formatDateFR,
+  useCodir,
+  COLOR_TACHE_STATUT,
+  TACHE_STATUT_OPTIONS
+} from '@/composables/codirs/useCodir'
 
 const props = defineProps({
-  tache:     { type: Object,  required: true },
-  codirId:   { type: Number,  required: true },
-  peutGerer: { type: Boolean, default: false },
+  tache:      { type: Object,  required: true },
+  codirId:    { type: Number,  required: true },
+  peutGerer:  { type: Boolean, default: false },
+  peutVoir:   { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['updated', 'commenter', 'lire-commentaires'])
+const emit = defineEmits(['update', 'commenter', 'lire-commentaires', 'edit', 'delete', 'details'])
 
-const toast    = useToast()
-const tacheApi = useTache()
-const codirApi = useCodir()
-
-const progressionModal = ref(false)
-const deleteModal      = ref(false)
+const canView = computed(() => props.peutGerer || props.peutVoir)
 
 // ── Pivot du codir courant ────────────────────────────────────────────────────
 const pivot = computed(() =>
   props.tache.codirs?.find(c => c.id === props.codirId)?.pivot ?? null
 )
 
-const progressionForm = reactive({
-  progression: 0,
-  statut:      'en_attente',
-  commentaire: '',
-  est_reprise: false,
-})
-
-watch(
-  pivot,
-  (p) => {
-    progressionForm.progression = p?.progression ?? 0
-    progressionForm.statut      = p?.statut      ?? 'en_attente'
-    progressionForm.commentaire = p?.commentaire ?? ''
-    progressionForm.est_reprise = p?.est_reprise ?? false
-  },
-  { immediate: true, deep: true }
+const statutColor = computed(() =>
+  COLOR_TACHE_STATUT[pivot.value?.statut] ?? 'gray'
 )
-
-const STATUT_OPTIONS = [
-  { label: 'En attente', value: 'en_attente' },
-  { label: 'En cours',   value: 'en_cours'   },
-  { label: 'Terminée',   value: 'terminee'   },
-  { label: 'Suspendue',    value: 'suspendue'    },
-  { label: 'Reportée',   value: 'reportee'   },
-]
-
-const statutColor = computed(() => ({
-  en_attente: 'gray',
-  en_cours:   'blue',
-  terminee:   'green',
-  suspendue:    'red',
-  reportee:   'amber',
-}[pivot.value?.statut] ?? 'gray'))
 
 const progressionColor = computed(() => {
   const p = pivot.value?.progression ?? 0
@@ -66,64 +36,18 @@ const progressionColor = computed(() => {
 
 // ── Responsables ──────────────────────────────────────────────────────────────
 const responsables = computed(() =>
-  (props.tache.membres ?? []).map(m => m.entite_user?.user).filter(Boolean)
+  (props.tache.membres ?? []).map(m => m.entite_user?.entite.code)
 )
 
-const getInitials = (name) =>
-  (name || '?').split(' ').map(w => w[0]?.toUpperCase()).join('').slice(0, 2)
-
-// ── Mise à jour progression ───────────────────────────────────────────────────
-const updateProgression = async () => {
-  try {
-    await tacheApi.updateTacheProgression(props.tache.id, props.codirId, progressionForm)
-    toast.add({
-      title: 'Progression mise à jour',
-      description: `"${props.tache.intitule}" — ${progressionForm.progression}%`,
-      color: 'green',
-      icon: 'i-heroicons-check-circle',
-    })
-    progressionModal.value = false
-    emit('updated')
-  } catch {
-    toast.add({
-      title: 'Erreur',
-      description: 'Impossible de mettre à jour la progression',
-      color: 'red',
-      icon: 'i-heroicons-exclamation-circle',
-    })
-  }
-}
-
-// ── Suppression ───────────────────────────────────────────────────────────────
-const confirmDelete = async () => {
-  try {
-    await codirApi.detachTache(props.codirId, props.tache.id)
-    toast.add({
-      title: 'Tâche supprimée',
-      description: `"${props.tache.intitule}" a été supprimée`,
-      color: 'green',
-      icon: 'i-heroicons-check-circle',
-    })
-    deleteModal.value = false
-    emit('updated')
-  } catch {
-    toast.add({
-      title: 'Erreur',
-      description: 'Impossible de supprimer la tâche',
-      color: 'red',
-      icon: 'i-heroicons-exclamation-circle',
-    })
-  }
-}
 </script>
 
 <template>
   <div
     class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4 transition-all"
-    :class="peutGerer
+    :class="canView
       ? 'cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
       : 'cursor-default opacity-95'"
-    @click="progressionModal = true"
+    @click="canView && (peutGerer ? emit('edit', tache) : emit('details', tache))"
   >
     <!-- En-tête : titre + badges + boutons -->
     <div class="flex items-start justify-between gap-2 mb-3">
@@ -141,8 +65,30 @@ const confirmDelete = async () => {
         </UBadge>
 
         <UBadge :color="statutColor" variant="soft" size="xs">
-          {{ STATUT_OPTIONS.find(s => s.value === pivot?.statut)?.label ?? 'En attente' }}
+          {{ TACHE_STATUT_OPTIONS.find(s => s.value === pivot?.statut)?.label ?? 'En attente' }}
         </UBadge>
+
+        <!-- Voir les détails -->
+        <UButton
+          v-if="canView"
+          icon="i-heroicons-eye"
+          color="gray"
+          variant="ghost"
+          size="xs"
+          title="Voir les détails de la tâche"
+          @click.stop="emit('details', tache)"
+        />
+
+        <!-- Modifier la tâche -->
+        <UButton
+          v-if="peutGerer"
+          icon="i-heroicons-pencil-square"
+          color="blue"
+          variant="ghost"
+          size="xs"
+          title="Modifier la tâche"
+          @click.stop="emit('edit', tache)"
+        />
 
         <!-- Lire commentaires avec compteur -->
         <div class="relative inline-block">
@@ -178,14 +124,15 @@ const confirmDelete = async () => {
           </div>
         </div>
 
-        <!-- Suppression -->
+        <!-- Détachement -->
         <UButton
           v-if="peutGerer"
           icon="i-heroicons-trash"
           color="red"
           variant="ghost"
           size="xs"
-          @click.stop="deleteModal = true"
+          title="Détacher la tâche du CODIR"
+          @click.stop="emit('delete', tache)"
         />
       </div>
     </div>
@@ -193,11 +140,11 @@ const confirmDelete = async () => {
     <!-- Responsables -->
     <div v-if="responsables.length" class="flex items-center -space-x-2 mb-3">
       <div
-        v-for="r in responsables" :key="r.id"
-        class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-xs ring-2 ring-white dark:ring-gray-900"
-        :title="`${r.nom ?? ''} ${r.prenom ?? ''}`.trim()"
+        v-for="r in responsables" :key="r"
+        class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-xs ring-2 ring-white dark:ring-gray-900"
+        :title="r"
       >
-        {{ getInitials(`${r.nom ?? ''} ${r.prenom ?? ''}`.trim() || 'R') }}
+        {{ r }}
       </div>
     </div>
 
@@ -230,106 +177,4 @@ const confirmDelete = async () => {
       {{ pivot.commentaire }}
     </p>
   </div>
-
-  <!-- ── Modale progression ─────────────────────────────────────────────────── -->
-  <UModal v-model="progressionModal">
-    <UCard class="rounded-2xl">
-      <template #header>
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
-            <UIcon name="i-heroicons-chart-bar" class="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-900 dark:text-white">
-              {{ peutGerer ? 'Mettre à jour la progression' : 'Consultation de la tâche' }}
-            </h3>
-            <p class="text-xs text-gray-400">{{ tache.intitule }}</p>
-          </div>
-        </div>
-      </template>
-
-      <div class="p-2 flex flex-col gap-4">
-        <UFormGroup label="Progression (%)">
-          <div class="flex items-center gap-4">
-            <input
-              v-model="progressionForm.progression"
-              type="range" min="0" max="100" step="5"
-              class="flex-1 accent-blue-500"
-              :disabled="!peutGerer"
-            />
-            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 w-10 text-right">
-              {{ progressionForm.progression }}%
-            </span>
-          </div>
-          <UProgress :value="progressionForm.progression" :color="progressionColor" size="sm" class="mt-2" />
-        </UFormGroup>
-
-        <UFormGroup label="Statut">
-          <USelect v-model="progressionForm.statut" :options="STATUT_OPTIONS" size="md" :disabled="!peutGerer" />
-        </UFormGroup>
-
-        <UFormGroup label="Commentaire">
-          <UTextarea
-            v-model="progressionForm.commentaire"
-            placeholder="Ajouter un commentaire..."
-            size="md" :rows="3"
-            :disabled="!peutGerer"
-          />
-        </UFormGroup>
-
-        <UCheckbox
-          v-model="progressionForm.est_reprise"
-          label="Tâche reprise du CODIR précédent"
-          color="blue"
-          :disabled="!peutGerer"
-        />
-      </div>
-
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <UButton color="gray" variant="ghost" @click="progressionModal = false">Fermer</UButton>
-          <UButton
-            v-if="peutGerer"
-            color="blue"
-            :loading="tacheApi.loading.value"
-            @click="updateProgression"
-          >
-            Enregistrer
-          </UButton>
-        </div>
-      </template>
-    </UCard>
-  </UModal>
-
-  <!-- ── Modale suppression ─────────────────────────────────────────────────── -->
-  <UModal v-model="deleteModal">
-    <UCard class="rounded-2xl">
-      <template #header>
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/40 flex items-center justify-center">
-            <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-red-600 dark:text-red-400" />
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-900 dark:text-white">Confirmer la suppression</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Cette action est irréversible</p>
-          </div>
-        </div>
-      </template>
-      <div class="p-2">
-        <p class="text-gray-700 dark:text-gray-300">
-          Êtes-vous sûr de vouloir retirer la tâche
-          <span class="font-semibold text-red-600 dark:text-red-400">"{{ tache.intitule }}"</span> ?
-        </p>
-      </div>
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <UButton color="gray" variant="ghost" @click="deleteModal = false">Annuler</UButton>
-          <UButton color="red" :loading="tacheApi.loading.value" @click="confirmDelete">
-            <UIcon name="i-heroicons-trash" class="w-4 h-4 mr-1" />
-            Supprimer
-          </UButton>
-        </div>
-      </template>
-    </UCard>
-  </UModal>
 </template>

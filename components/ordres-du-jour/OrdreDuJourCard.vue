@@ -3,9 +3,10 @@ import { formatDateFR } from '@/composables/useCodir'
 
 defineProps({
   ordre: { type: Object, required: true },
+  peutGererCodir: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['click'])
+const emit = defineEmits(['click', 'edit', 'delete', 'view'])
 
 const statutClass = (statut) => {
   const map = {
@@ -33,12 +34,39 @@ const statutClass = (statut) => {
       </div>
     </div>
 
-    <!-- Statut + flèche -->
+    <!-- Statut + Actions/flèche -->
     <div class="flex items-center gap-3 shrink-0">
       <span :class="`text-[11px] font-semibold px-2.5 py-1 rounded-full capitalize ${statutClass(ordre.statut)}`">
         {{ ordre.statut }}
       </span>
-      <UIcon name="i-heroicons-chevron-right" class="w-4 h-4 text-gray-300 group-hover:text-blue-400 transition-colors" />
+      
+      <div v-if="peutGererCodir" class="flex items-center gap-1" @click.stop>
+        <UButton
+          icon="i-heroicons-eye"
+          color="gray"
+          variant="ghost"
+          size="xs"
+          title="Voir détail"
+          @click="emit('view', ordre)"
+        />
+        <UButton
+          icon="i-heroicons-pencil-square"
+          color="gray"
+          variant="ghost"
+          size="xs"
+          title="Modifier"
+          @click="emit('edit', ordre)"
+        />
+        <UButton
+          icon="i-heroicons-trash"
+          color="red"
+          variant="ghost"
+          size="xs"
+          title="Supprimer"
+          @click="emit('delete', ordre)"
+        />
+      </div>
+      <UIcon v-else name="i-heroicons-chevron-right" class="w-4 h-4 text-gray-300 group-hover:text-blue-400 transition-colors" />
     </div>
   </div>
 </template>

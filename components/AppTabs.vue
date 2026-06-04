@@ -4,10 +4,14 @@ const props = defineProps({
   tabs: {
     type: Array,
     default: () => []
+  },
+  defaultTab: {
+    type: String,
+    default: null,
   }
 })
 
-const activeTab = ref(props.tabs?.[0]?.id)
+const activeTab = ref(props.defaultTab ?? props.tabs?.[0]?.id)
 </script>
 
 <template>

@@ -14,6 +14,17 @@ const createForm  = reactive({ heure_debut: '', heure_fin: '', date: '' })
 const resetCreate = () => Object.assign(createForm, { heure_debut: '', heure_fin: '', date: '' })
 const { peutVoirCodir, peutGererCodir } = useAuth()
 
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+    localStorage.removeItem('currentCodir')
+    localStorage.removeItem('currentOrdreDuJour')
+    localStorage.removeItem('currentDossier')
+    localStorage.removeItem('currentTache')
+    localStorage.removeItem('currentActivite')
+  } catch (e) { }
+}
+
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const codirs = ref([])
@@ -34,6 +45,7 @@ const fetchCodirs = async () => {
 }
 
 onMounted(async () => {
+  clearCurrents()
   if (process.client) {
     const cached = localStorage.getItem('codirs')
     if (cached) codirs.value = JSON.parse(cached)
