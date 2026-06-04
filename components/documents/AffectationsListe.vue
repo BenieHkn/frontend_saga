@@ -764,7 +764,7 @@ const onPeriodChange = ({ field, from, to }) => {
 
 // ── Helper : actions bloquées si clôturé OU archivé ─────────────
 const isActionBlocked = (item) => {
-  return item.is_cloture || item.isPrearchived || item.isArchived
+  return item.isPrearchived || item.isArchived
 }
 
 const getAffectationEntityText = (entity) => {
