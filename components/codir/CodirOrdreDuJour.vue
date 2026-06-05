@@ -2,7 +2,6 @@
 <script setup>
 import Sortable from "sortablejs";
 import { useCommentaire } from "~/composables/commentaire/useCommentaire";
-import { useCommentaireService } from "~/service/commentaireService";
 import { useAuth } from "~/composables/auth/useAuth";
 const toast = useToast()
 
@@ -11,22 +10,19 @@ const {peutGererCodir, peutVoirCodir} = useAuth()
 const props = defineProps({
   ordres: { type: Array, default: () => [] },
   peutSupprimer: { type: Boolean, default: false },
+  loading: { type: Boolean, default: false }
 });
+
+const emit = defineEmits(["attach", "detach", "commenterListe"]);
 
 const currentOrdre = ref(null)
 
-const emit = defineEmits(["attach", "detach", "commenterListe"]);
-const commentaireService = useCommentaireService()
+
 
 const {creerCommentaire, openCommentaireModal, fetchCommentaires, commentaires, openListeCommentairesModal} = useCommentaire()
-const loading = ref(false)
+const internalLoading = ref(false)
 
 const entiteUser = ref()
-
-onMounted(() => {
-  entiteUser.value = JSON.parse(localStorage.getItem("entite_user"));
-  console.log(entiteUser.value);
-})
 
 // ── Ordre local (géré en interne) ─────────────────────────────────────────────
 const STORAGE_KEY = computed(() => `ordres-positions-${props.ordres[0]?.codir_id ?? "default"}`);
@@ -105,7 +101,7 @@ const handleAfficherModalPourCommenter = async (ordre) => {
 const handleRecupererCommentaire = async (contenu) => {
   if (!currentOrdre.value) return;
   console.log("Contenu reçu pour commentaire :", contenu);
-  loading.value = true
+  internalLoading.value = true
 
   try {
     await creerCommentaire({
@@ -119,7 +115,7 @@ const handleRecupererCommentaire = async (contenu) => {
   } catch (error) {
     console.error("Erreur lors de la création du commentaire", error)
   }finally{
-    loading.value = false
+    internalLoading.value = false
   }
 }
 
@@ -146,7 +142,10 @@ const detachOrdre = async (ordre) =>{
 }
 
 
-
+onMounted(() => {
+  entiteUser.value = JSON.parse(localStorage.getItem("entite_user"));
+  console.log(entiteUser.value);
+})
 </script>
 
 <template>
@@ -182,6 +181,7 @@ const detachOrdre = async (ordre) =>{
         :key="ordre.id"
         :ordre="ordre"
         :index="index"
+        
         :peutGererCodir="peutGererCodir()"
         @voir-detail-ordre="goTo(ordre)"
         @commenter="handleAfficherModalPourCommenter(ordre)"
@@ -193,7 +193,7 @@ const detachOrdre = async (ordre) =>{
     <CommentaireModal
       v-model:openCommentaireModal="openCommentaireModal"
       @commenter="(contenu) => handleRecupererCommentaire(contenu)"
-      :loading="loading"
+      :loading="internalLoading"
     />
 
     <CommentaireListeModal

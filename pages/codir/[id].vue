@@ -12,7 +12,7 @@ import {
 import { useMembre } from '@/composables/membres/useMembres'
 import { useAuth } from '~/composables/auth/useAuth'
 import { useOrdreDuJour } from '~/composables/ordres-du-jour/useOrdreDuJour'
-import ConfirmationSuppressionModal from '~/components/ConfirmationSuppressionModal.vue'
+import OrdreDuJourFormModal from '~/components/ordres-du-jour/OrdreDuJourFormModal.vue'
 
 definePageMeta({ title: 'Détail CODIR' })
 
@@ -20,21 +20,10 @@ const route = useRoute()
 const router = useRouter()
 const id = Number(route.params.id)
 const toast = useNuxtApp().$toast ?? useToast()
+const loading = ref(false)
 
-const clearCurrents = () => {
-  if (!process.client) return
-  try {
-    localStorage.removeItem('currentCodir')
-  } catch (e) {}
-}
-const handleReturn = () => {
-  clearCurrents()
-  router.push('/codir')
-}
 
 const {
-  loading,
-  error,
   getCodir,
   updateCodir,
   detachODJ,
@@ -44,11 +33,30 @@ const ordreDuJourApi = useOrdreDuJour()
 
 const membreApi = useMembre()
 
-const { peutGererCodir, peutVoirCodir } = useAuth()
+const { peutGererCodir } = useAuth()
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 const codir = ref(null)
 const membres = ref([])
+
+// ── Steps ─────────────────────────────────────────────────────────────────────
+const currentStep = ref(1)
+
+const STEP_KEY = `codir_step_${id}`
+
+// ── Edition ───────────────────────────────────────────────────────────────────
+const editing = ref(false)
+const editForm = reactive({ date: '', heure_debut: '', heure_fin: '', statut: '' })
+
+// ── Ordres du jour - gestion de modale
+const ordreModal = ref(false)
+const selectedOrdre = ref(null) // in case we want to edit later, though currently only add is implemented here
+const isSavingOrdre = ref(false)
+const detachModal = ref(false)
+const ordreToDetachId = ref(null)
+const ordreToDetachLibelle = computed(() => {
+  return codir.value?.ordres_du_jour?.find((ordre) => ordre.id === ordreToDetachId.value)?.libelle ?? ''
+})
 
 const fetchCodir = async () => {
   const data = await getCodir(id)
@@ -56,18 +64,6 @@ const fetchCodir = async () => {
   if (process.client)
     localStorage.setItem('currentCodir', JSON.stringify(data))
 }
-
-
-// Sync localStorage automatique
-watch(codir, (c) => {
-  if (c && process.client)
-    localStorage.setItem('currentCodir', JSON.stringify(c))
-})
-
-// ── Steps ─────────────────────────────────────────────────────────────────────
-const currentStep = ref(1)
-
-const STEP_KEY = `codir_step_${id}`
 
 const getMembres = async () => {
   try {
@@ -93,18 +89,7 @@ const progressionGlobale = computed(() => {
   )
 })
 
-// ── Edition ───────────────────────────────────────────────────────────────────
-const editing = ref(false)
-const editForm = reactive({ date: '', heure_debut: '', heure_fin: '', statut: '' })
-
-watch(codir, (c) => {
-  if (!c) return
-  editForm.date = extractDateInput(c.date)
-  editForm.heure_debut = extractTimeInput(c.heure_debut)
-  editForm.heure_fin = extractTimeInput(c.heure_fin)
-  editForm.statut = c.statut
-}, { immediate: true })
-
+//sauvegarder les modifications du CODIR
 const saveCodir = async () => {
   const updated = await updateCodir(id, editForm)
   codir.value = updated
@@ -117,27 +102,18 @@ const saveCodir = async () => {
   editing.value = false
 }
 
-// ── Ordres du jour ────────────────────────────────────────────────────────────
-const ordreModal = ref(false)
-const ordreForm = reactive({ libelle: '', statut: 'actif', codir_id: id })
-const resetOrdreForm = () => Object.assign(ordreForm, { libelle: '', statut: 'actif' })
-
-const detachModal = ref(false)
-const ordreToDetachId = ref(null)
-const ordreToDetachLibelle = computed(() => {
-  return codir.value?.ordres_du_jour?.find((ordre) => ordre.id === ordreToDetachId.value)?.libelle ?? ''
-})
-
+//pour ouvrir le modal de suppression
 const openDetachModal = (ordreId) => {
   ordreToDetachId.value = ordreId
   detachModal.value = true
 }
-
+//pour annuler la suppression du point de l'ordre du jour
 const cancelDetachOrdre = () => {
   detachModal.value = false
   ordreToDetachId.value = null
 }
 
+//confirmer la suppression du point de l'ordre du jour
 const confirmDetachOrdre = async () => {
   if (!ordreToDetachId.value) return
   await handleDetachOrdre(ordreToDetachId.value)
@@ -145,20 +121,20 @@ const confirmDetachOrdre = async () => {
   ordreToDetachId.value = null
 }
 
-const addOrdre = async () => {
-  if (!ordreForm.libelle) return
+//pour ajouter un point à l'ordre du  jour
+const addOrdreSubmit = async (form) => {
+  isSavingOrdre.value = true
   try {
-    await ordreDuJourApi.createOrdre(ordreForm)
+    const payload = { ...form, codir_id: id, statut: 'actif' }
+    await ordreDuJourApi.createOrdre(payload)
     await fetchCodir()
     toast.add({
       title: 'Ordre du jour créé',
-      description: `"${ordreForm.libelle}" a été ajouté`,
+      description: `"${form.libelle}" a été ajouté`,
       color: 'green',
       icon: 'i-heroicons-check-circle',
     })
     ordreModal.value = false
-    resetOrdreForm()
-    fetchCodir()  // refresh pour voir le nouvel ordre du jour
   } catch {
     toast.add({
       title: 'Erreur',
@@ -166,9 +142,12 @@ const addOrdre = async () => {
       color: 'red',
       icon: 'i-heroicons-exclamation-circle',
     })
+  } finally {
+    isSavingOrdre.value = false
   }
 }
 
+//supprimer un poiht de l'ordre du our
 const handleDetachOrdre = async (ordreId) => {
   try {
     await detachODJ(id, ordreId)
@@ -184,20 +163,45 @@ const handleDetachOrdre = async (ordreId) => {
   }
 }
 
+//surveriller les changements de codir
+watch(codir, (c) => {
+  if (!c) return
+  editForm.date = extractDateInput(c.date)
+  editForm.heure_debut = extractTimeInput(c.heure_debut)
+  editForm.heure_fin = extractTimeInput(c.heure_fin)
+  editForm.statut = c.statut
+}, { immediate: true })
+
+// Sync localStorage automatique
+watch(codir, (c) => {
+  if (c && process.client)
+    localStorage.setItem('currentCodir', JSON.stringify(c))
+})
+
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+    localStorage.removeItem('currentCodir')
+  } catch (e) {}
+}
+const handleReturn = () => {
+  clearCurrents()
+  router.push('/codir')
+}
+
+const loadData = async () =>{
+  loading.value = true
+  codir.value = await getCodir(id)
+  if(!process.client)
+    membres.value = localStorage.getItem("membres") ? JSON.parse(localStorage.getItem("membres")) : []
+  else 
+     getMembres()
+  loading.value = false
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 onMounted(async () => {
-  codir.value = getCodir(id) // Essayer de récupérer depuis le store d'abord pour une expérience plus rapide
-  membres.value = localStorage.getItem("membres") ? JSON.parse(localStorage.getItem("membres")) : []
-  if (process.client) {
-    if (membres.value.length === 0) await getMembres()
-    const saved = localStorage.getItem(STEP_KEY)
-    if (saved) currentStep.value = Number(saved)
-  }
-  try {
-    await fetchCodir()
-  } catch (e) {
-    console.error("Erreur lors de la récupération du CODIR:", e)
-  }
+    loadData()
 })
 </script>
 
@@ -273,38 +277,27 @@ onMounted(async () => {
 
         <!-- ── Contenu step 1 ──────────────────────────────────────────── -->
         <div class="flex flex-col gap-8">
-          <CodirOrdreDuJour :ordres="codir.ordres_du_jour ?? []"  :peutSupprimer="peutGererCodir()"
+          <CodirOrdreDuJour :loading="loading" :ordres="codir.ordres_du_jour"  :peutSupprimer="peutGererCodir()"
             @attach="ordreModal = true" @detach="openDetachModal($event)" />
         </div>
       </CodirStepper>
 
     </template>
 
-    <template v-else-if="codir ">
-      <CodirOrdreDuJour :ordres="codir.ordres_du_jour ?? []"  :peutSupprimer="false"/>
+    <template v-else-if="codir">
+      <CodirOrdreDuJour :loading="loading" :ordres="codir.ordres_du_jour"  :peutSupprimer="false"/>
     </template>
 
-    <UAlert v-if="error" color="red" icon="i-heroicons-exclamation-circle" :title="error" class="mt-4" />
+    <!-- <UAlert v-if="error" color="red" icon="i-heroicons-exclamation-circle" :title="error" class="mt-4" /> -->
 
     <!-- ── Modale ordre du jour ─────────────────────────────────────── -->
-    <UModal v-model="ordreModal">
-      <UCard class="rounded-2xl">
-        <template #header>
-          <h3 class="font-semibold">Ajouter un point à l'ordre du jour</h3>
-        </template>
-        <div class="p-2 flex flex-col gap-4">
-          <UFormGroup label="Libellé">
-            <UTextarea v-model="ordreForm.libelle" placeholder="Ex: Bilan trimestriel" size="md" />
-          </UFormGroup>
-        </div>
-        <template #footer>
-          <div class="flex justify-end gap-2">
-            <UButton color="gray" variant="ghost" @click="ordreModal = false">Annuler</UButton>
-            <UButton color="blue" :loading="loading" @click="addOrdre">Créer</UButton>
-          </div>
-        </template>
-      </UCard>
-    </UModal>
+    <OrdreDuJourFormModal
+      v-model:open="ordreModal"
+      :ordre="selectedOrdre"
+      :loading="isSavingOrdre"
+      @createOrdre="addOrdreSubmit"
+      @updateOrdre="addOrdreSubmit"
+    />
 
     <ConfirmationSuppressionModal
       v-model:openConfirmationModal="detachModal"

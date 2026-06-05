@@ -1,19 +1,18 @@
 <script setup>
-import { useToast } from '@/composables/useToast'
-import { DOSSIER_STATUT_OPTIONS } from '@/composables/codirs/useCodir'
+import { useDossier } from '~/composables/dossier/useDossier'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
   dossier: { type: Object, default: null },
   ordreId: { type: [Number, String], default: null },
+  loading: { type: Boolean, default: false },
+  documents: { type: Array, default: () => [] },
 })
 
-const emit = defineEmits(['update:open', 'created', 'updated'])
-
+const emit = defineEmits(['update:open', 'createDossier', 'updateDossier'])
 const toast = useToast()
-const loading = ref(false)
-
 const isEditMode = computed(() => !!props.dossier)
+const {DOSSIER_STATUT_OPTIONS} = useDossier()
 
 const defaultForm = () => ({
   libelle: '',
@@ -35,6 +34,7 @@ watch(
         description: props.dossier.description ?? '',
         statut: props.dossier.statut ?? '',
         ordre_du_jour_id: props.dossier.ordre_du_jour_id ?? props.ordreId,
+        documents_id: props.dossier.documents?.map(d => d.id) ?? [],
       })
     } else {
       Object.assign(form, defaultForm())
@@ -49,7 +49,7 @@ const isOpen = computed({
 
 const close = () => emit('update:open', false)
 
-const submit = async () => {
+const submit = () => {
   if (!form.libelle?.trim() || !form.statut) {
     toast.add({
       title: 'Champs requis',
@@ -60,18 +60,22 @@ const submit = async () => {
     return
   }
 
-  loading.value = true
-  try {
-    if (isEditMode.value) {
-      emit('updated', { ...form })
-    } else {
-      emit('created', { ...form })
-    }
-    close()
-  } finally {
-    loading.value = false
+  console.log('Submitting dossier form', form)
+  if (isEditMode.value) {
+    emit('updateDossier', { ...form })
+  } else {
+    emit('createDossier', { ...form })
   }
 }
+
+const documentsOptions = computed(() => {
+  return props.documents.map(document => {
+    return {
+      label: document.libelle,
+      value: document.id,
+    }
+  })
+})
 </script>
 
 <template>
@@ -105,7 +109,7 @@ const submit = async () => {
             </h3>
             <p class="text-xs text-gray-400 mt-0.5">
               <template v-if="isEditMode">Mettre à jour les informations du dossier</template>
-              <template v-else>Créer un nouveau dossier pour l'ordre du jour</template>
+              <template v-else>Créer un nouveau dossier pour le point à l'ordre du jour</template>
             </p>
           </div>
         </div>
@@ -130,13 +134,31 @@ const submit = async () => {
             />
           </UFormGroup>
 
-          <UFormGroup label="Description">
+          <!-- <UFormGroup label="Description">
             <UTextarea
               v-model="form.description"
               placeholder="Ajouter une description pour le dossier"
               size="md"
               :rows="4"
             />
+          </UFormGroup> -->
+
+          <UFormGroup label="Documents">
+            <USelectMenu
+              v-model="form.documents_id"
+              :options="documentsOptions"
+              option-attribute="label"
+              value-attribute="id"
+              searchable
+              placeholder="Sélectionner des documents"
+            >
+              <template #option="{ option }">
+                <div class="flex items-center gap-2">
+                  <UIcon name="i-heroicons-document" class="w-4 h-4" />
+                  <span>{{ option.label }}</span>
+                </div>
+              </template>
+            </USelectMenu>
           </UFormGroup>
         </div>
       </div>
@@ -146,7 +168,8 @@ const submit = async () => {
           <UButton color="gray" variant="ghost" @click="close">Annuler</UButton>
           <UButton
             :color="isEditMode ? 'blue' : 'green'"
-            :loading="loading"
+            variant="soft"
+            :loading="props.loading"
             @click="submit"
           >
             {{ isEditMode ? 'Enregistrer' : 'Créer' }}

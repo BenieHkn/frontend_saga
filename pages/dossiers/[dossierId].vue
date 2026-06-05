@@ -1,5 +1,5 @@
 <script setup>
-import { formatDateFR, useCodir } from "@/composables/codirs/useCodir";
+import { formatDateFR, useCodir, DOSSIER_STATUT_OPTIONS } from "@/composables/codirs/useCodir";
 import { useDossier } from "@/composables/dossier/useDossier";
 import { useTache } from "@/composables/taches/useTaches";
 import { useActivite } from "@/composables/activite/useActivite";
@@ -18,7 +18,7 @@ const toast  = useToast();
 // ── Auth ───────────────────────────────────────────────────────────────────────
 const { peutGererCodir, peutVoirCodir } = useAuth();
 
-// ── APIs / Composables ─────────────────────────────────────────────────────────
+// ── Composables ────────────────────────────────────────────────────────────────
 const dossierApi  = useDossier();
 const tacheApi    = useTache();
 const activiteApi = useActivite();
@@ -39,18 +39,68 @@ const {
 
 // ── State global ───────────────────────────────────────────────────────────────
 const dossierId          = route.params.dossierId;
-const loading            = ref(true);
+const loading            = ref(false);
 const dossier            = ref(null);
 const currentOrdreDuJour = ref(null);
 const currentCodir       = ref(null);
 const entiteUser         = ref(null);
 const membresForSelect   = ref([]);
 
+// ── State onglets ──────────────────────────────────────────────────────────────
+const tabs = [
+  { id: "actions",      label: "Actions" },
+  { id: "activites",    label: "Activités" },
+  { id: "taches",       label: "Tâches" },
+  { id: "commentaires", label: "Commentaires" },
+];
+
+// ── State dossier ──────────────────────────────────────────────────────────────
+const dossierFormModalOpen = ref(false);
+
+// ── State tâches ───────────────────────────────────────────────────────────────
+const selectedTache      = ref(null);
+const tacheFormModalOpen = ref(false);
+const tacheDetailsModal  = ref(false);
+const tacheDeleteModal   = ref(false);
+const isDeletingTache    = ref(false);
+
+// ── State actions ──────────────────────────────────────────────────────────────
+const actionModal = ref(false);
+
+// ── State activités ────────────────────────────────────────────────────────────
+const activiteModal = ref(false);
+const activiteForm  = reactive({ libelle: "", action_id: null, dossier_id: null });
+
+// ── State commentaires ─────────────────────────────────────────────────────────
+const commentaires           = commentairesList;
+const commentableTarget      = ref({ id: null, type: 'dossier' });
+const deleteCommentaireModal = ref(false);
+const commentaireToDeleteId  = ref(null);
+const isDeletingCommentaire  = ref(false);
+const editCommentaireModal   = ref(false);
+const editCommentaireForm    = reactive({ id: null, contenu: '' });
+
 // ── Données dérivées ───────────────────────────────────────────────────────────
-const actions      = computed(() => dossier.value?.actions   ?? []);
-const activites    = computed(() => dossier.value?.activites ?? []);
-const taches       = computed(() => dossier.value?.taches    ?? []);
-const commentaires = commentairesList;
+const actions   = computed(() => dossier.value?.actions   ?? []);
+const activites = computed(() => dossier.value?.activites ?? []);
+const taches    = computed(() => dossier.value?.taches    ?? []);
+
+const dossierStatutLabel = computed(() => {
+  if (!dossier.value?.statut) return "Non défini";
+  const option = DOSSIER_STATUT_OPTIONS.find(o => o.value === dossier.value.statut);
+  return option?.label ?? dossier.value.statut;
+});
+
+const dossierStatutColor = computed(() => {
+  const map = {
+    'en_cours':     'blue',
+    'realisee':     'green',
+    'non_realisee': 'red',
+    'reconduit':    'yellow',
+    'supprimee':    'gray',
+  };
+  return map[dossier.value?.statut] ?? 'gray';
+});
 
 const actionOptions = computed(() =>
   actions.value.map((a) => ({ label: a.libelle, value: a.id }))
@@ -63,11 +113,12 @@ const membresOptions = computed(() =>
   }))
 );
 
-// ── Navigation ─────────────────────────────────────────────────────────────────
+// ── Fonctions navigation ───────────────────────────────────────────────────────
 const clearCurrents = () => {
   if (!process.client) return;
   try { localStorage.removeItem('currentDossier') } catch {}
 };
+
 const handleReturn        = () => { clearCurrents(); router.back(); };
 const handleReturnToCodir = () => { clearCurrents(); router.push('/codir'); };
 
@@ -76,13 +127,14 @@ const goToRattachement = () => {
   localStorage.setItem("rattachement_actions", JSON.stringify(actions.value));
   router.push("/actions/rattachement");
 };
+
 const goToRattachementActivite = () => {
   localStorage.setItem("currentDossier",         JSON.stringify(dossier.value));
   localStorage.setItem("rattachement_activites", JSON.stringify(activites.value));
   router.push("/activites/rattachement");
 };
 
-// ── Chargement ─────────────────────────────────────────────────────────────────
+// ── Fonctions chargement ───────────────────────────────────────────────────────
 const fetchMembres = async () => {
   membresForSelect.value = await membreApi.getMembres();
 };
@@ -92,28 +144,7 @@ const refreshDossier = async () => {
   localStorage.setItem("currentDossier", JSON.stringify(dossier.value));
 };
 
-onMounted(async () => {
-  currentOrdreDuJour.value = JSON.parse(localStorage.getItem("currentOrdreDuJour"));
-  currentCodir.value       = JSON.parse(localStorage.getItem("currentCodir"));
-  fetchMembres();
-
-  try {
-    dossier.value = await dossierApi.getDossier(dossierId);
-    localStorage.setItem("currentDossier", JSON.stringify(dossier.value));
-  } catch {
-    dossier.value = JSON.parse(localStorage.getItem("currentDossier"));
-  } finally {
-    loading.value = false;
-  }
-
-  if (process.client) {
-    entiteUser.value = JSON.parse(localStorage.getItem("entite_user"));
-    await fetchCommentaires('dossier', dossierId);
-  }
-});
-
-const dossierFormModalOpen = ref(false);
-
+// ── Fonctions dossier ──────────────────────────────────────────────────────────
 const openDossierEdit = () => {
   dossierFormModalOpen.value = true;
 };
@@ -129,33 +160,17 @@ const handleDossierUpdated = async (form) => {
   }
 };
 
-// ── Onglets ────────────────────────────────────────────────────────────────────
-const tabs = [
-  { id: "actions",      label: "Actions" },
-  { id: "activites",    label: "Activités" },
-  { id: "taches",       label: "Tâches" },
-  { id: "commentaires", label: "Commentaires" },
-];
-
-// ── Tâches ─────────────────────────────────────────────────────────────────────
-const selectedTache      = ref(null);
-const tacheFormModalOpen = ref(false);
-const tacheDetailsModal  = ref(false);
-const tacheDeleteModal   = ref(false);
-const isDeletingTache    = ref(false);
-
+// ── Fonctions tâches ───────────────────────────────────────────────────────────
 const openTacheDetails = (tache) => {
   selectedTache.value     = tache;
   tacheDetailsModal.value = true;
 };
 
-// ✅ Création : selectedTache = null avant d'ouvrir
 const openTacheCreate = () => {
   selectedTache.value      = null;
   tacheFormModalOpen.value = true;
 };
 
-// ✅ Édition : selectedTache = tache avant d'ouvrir
 const openTacheEdit = (tache) => {
   selectedTache.value      = tache;
   tacheFormModalOpen.value = true;
@@ -166,18 +181,20 @@ const openTacheDelete = (tache) => {
   tacheDeleteModal.value = true;
 };
 
-// Ouverture depuis ActionCard / ActiviteCard → mode création simple
 const openTacheForAction   = () => openTacheCreate();
 const openTacheForActivite = () => openTacheCreate();
 
 const handleTacheCreated = async (form) => {
+  loading.value = true;
   try {
     await tacheApi.createTache({ ...form, dossier_id: dossier.value.id });
-    tacheFormModalOpen.value = false;
     await refreshDossier();
     toast.add({ title: "Tâche créée", color: "green", icon: "i-heroicons-check-circle" });
   } catch {
     toast.add({ title: "Erreur", description: "Impossible de créer la tâche", color: "red" });
+  } finally {
+    loading.value            = false;
+    tacheFormModalOpen.value = false;
   }
 };
 
@@ -197,10 +214,10 @@ const confirmDeleteTacheAction = async () => {
   isDeletingTache.value = true;
   try {
     await codirApi.detachTache(currentCodir.value.id, selectedTache.value.id, "dossier");
-    toast.add({ title: 'Tâche détachée', color: 'green', icon: 'i-heroicons-check-circle' });
     tacheDeleteModal.value = false;
     selectedTache.value    = null;
     await refreshDossier();
+    toast.add({ title: 'Tâche détachée', color: 'green', icon: 'i-heroicons-check-circle' });
   } catch {
     toast.add({ title: 'Erreur', description: 'Impossible de détacher la tâche', color: 'red' });
   } finally {
@@ -208,27 +225,22 @@ const confirmDeleteTacheAction = async () => {
   }
 };
 
-// ── Actions ────────────────────────────────────────────────────────────────────
-const actionModal = ref(false);
-
-const createAction = async (libelle) => {
-  if (!libelle.trim()) {
-    toast.add({ title: "Champs requis manquants", color: "orange", icon: "i-heroicons-exclamation-triangle" });
-    return;
-  }
+// ── Fonctions actions ──────────────────────────────────────────────────────────
+const createAction = async (form) => {
+  loading.value = true;
   try {
-    await actionApi.createAction({ libelle: libelle.trim(), dossier_id: dossier.value.id });
-    actionModal.value = false;
-    toast.add({ title: "Action créée", description: `"${libelle}" a été créée avec succès`, color: "green", icon: "i-heroicons-check-circle" });
+    await actionApi.createAction({ ...form, dossier_id: dossier.value.id });
     await refreshDossier();
+    toast.add({ title: "Action créée", description: `"${form.libelle}" a été créée avec succès`, color: "green", icon: "i-heroicons-check-circle" });
   } catch {
     toast.add({ title: "Erreur", description: "Impossible de créer l'action", color: "red", icon: "i-heroicons-exclamation-circle" });
+  } finally {
+    actionModal.value = false;
+    loading.value     = false;
   }
 };
 
-// ── Activités ──────────────────────────────────────────────────────────────────
-const activiteModal = ref(false);
-const activiteForm  = reactive({ libelle: "", action_id: null, dossier_id: null });
+// ── Fonctions activités ────────────────────────────────────────────────────────
 const resetActiviteForm = () => Object.assign(activiteForm, { libelle: "", action_id: null });
 
 const openActiviteForAction = (action) => {
@@ -237,30 +249,22 @@ const openActiviteForAction = (action) => {
 };
 
 const createActivite = async () => {
+  loading.value           = true;
   activiteForm.dossier_id = dossier.value.id;
-  if (!activiteForm.libelle.trim()) {
-    toast.add({ title: "Champs requis manquants", color: "orange", icon: "i-heroicons-exclamation-triangle" });
-    return;
-  }
   try {
     await activiteApi.createActivite({ ...activiteForm });
-    toast.add({ title: "Activité créée", description: `"${activiteForm.libelle}" a été créée avec succès`, color: "green", icon: "i-heroicons-check-circle" });
     activiteModal.value = false;
     await refreshDossier();
     resetActiviteForm();
+    toast.add({ title: "Activité créée", description: `"${activiteForm.libelle}" a été créée avec succès`, color: "green", icon: "i-heroicons-check-circle" });
   } catch {
     toast.add({ title: "Erreur", description: "Impossible de créer l'activité", color: "red", icon: "i-heroicons-exclamation-circle" });
+  } finally {
+    loading.value = false;
   }
 };
 
-// ── Commentaires ───────────────────────────────────────────────────────────────
-const commentableTarget      = ref({ id: null, type: 'dossier' });
-const deleteCommentaireModal = ref(false);
-const commentaireToDeleteId  = ref(null);
-const isDeletingCommentaire  = ref(false);
-const editCommentaireModal   = ref(false);
-const editCommentaireForm    = reactive({ id: null, contenu: '' });
-
+// ── Fonctions commentaires ─────────────────────────────────────────────────────
 const openCommentaireCreation = (target = null, type = 'action') => {
   commentableTarget.value = target
     ? { id: target.id, type }
@@ -328,6 +332,28 @@ const confirmDeleteCommentaireAction = async () => {
     isDeletingCommentaire.value = false;
   }
 };
+
+// ── Lifecycle ──────────────────────────────────────────────────────────────────
+onMounted(async () => {
+  loading.value            = true;
+  currentOrdreDuJour.value = JSON.parse(localStorage.getItem("currentOrdreDuJour"));
+  currentCodir.value       = JSON.parse(localStorage.getItem("currentCodir"));
+  fetchMembres();
+
+  try {
+    dossier.value = await dossierApi.getDossier(dossierId);
+    localStorage.setItem("currentDossier", JSON.stringify(dossier.value));
+  } catch {
+    dossier.value = JSON.parse(localStorage.getItem("currentDossier"));
+  } finally {
+    loading.value = false;
+  }
+
+  if (process.client) {
+    entiteUser.value = JSON.parse(localStorage.getItem("entite_user"));
+    await fetchCommentaires('dossier', dossierId);
+  }
+});
 </script>
 
 <template>
@@ -366,7 +392,10 @@ const confirmDeleteCommentaireAction = async () => {
               <UIcon name="i-heroicons-folder" class="w-6 h-6 text-violet-600 dark:text-violet-400" />
             </div>
             <div>
-              <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ dossier.libelle }}</h1>
+              <div class="flex items-center gap-3">
+                <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ dossier.libelle }}</h1>
+                <UBadge :color="dossierStatutColor" variant="subtle" size="xs">{{ dossierStatutLabel }}</UBadge>
+              </div>
               <p class="text-sm text-gray-500 dark:text-gray-400">Dossier #{{ dossier.id }}</p>
             </div>
           </div>
@@ -532,17 +561,17 @@ const confirmDeleteCommentaireAction = async () => {
 
       </AppTabs>
     </template>
-  </div>
 
+    
   <!-- Modale création action -->
   <ActionFormModal
-    v-model:openActionModal="actionModal"
-    :loading="actionApi.loading.value"
-    @createAction="createAction"
+    v-model:open="actionModal"
+    :loadingCreateOrUpdate="loading"
+    @create="createAction"
   />
 
   <!-- Modale création activité -->
-  <UModal v-model="activiteModal">
+  <!-- <UModal v-model="activiteModal">
     <UCard class="rounded-2xl max-h-[80vh] flex flex-col">
       <template #header>
         <h3 class="font-semibold">Nouvelle activité</h3>
@@ -563,12 +592,17 @@ const confirmDeleteCommentaireAction = async () => {
       <template #footer>
         <div class="flex justify-end gap-2">
           <UButton color="gray" variant="ghost" @click="activiteModal = false">Annuler</UButton>
-          <UButton color="violet" :loading="activiteApi.loading.value" @click="createActivite">Créer</UButton>
+          <UButton color="violet" variant="soft" :loading="activiteApi.loading.value" @click="createActivite">Créer</UButton>
         </div>
       </template>
     </UCard>
-  </UModal>
+  </UModal> -->
 
+  <ActiviteFormModal
+    v-model:open="activiteModal"
+    :loading-create-or-update="loading.value"
+    @create="createActivite"
+  />
   <!-- Modales commentaires -->
   <CommentaireModal
     v-model:openCommentaireModal="openCommentaireModal"
@@ -596,7 +630,7 @@ const confirmDeleteCommentaireAction = async () => {
       <template #footer>
         <div class="flex justify-end gap-2">
           <UButton color="gray" variant="ghost" @click="editCommentaireModal = false">Annuler</UButton>
-          <UButton color="blue" @click="updateCommentaire">Mettre à jour</UButton>
+          <UButton color="blue" variant="soft" @click="updateCommentaire">Mettre à jour</UButton>
         </div>
       </template>
     </UCard>
@@ -626,13 +660,14 @@ const confirmDeleteCommentaireAction = async () => {
   />
 
   <!-- ✅ Pas de v-if : doit exister en DOM même en mode création (selectedTache = null) -->
-  <TacheFormModalF
+  <TacheFormModal
     v-model:open="tacheFormModalOpen"
     :tache="selectedTache"
     :codirId="currentCodir?.id"
     :membres-options="membresOptions"
     @created="handleTacheCreated"
     @updated="handleTacheUpdated"
+    :loading-create-or-update="loading"
   />
 
   <ConfirmationSuppressionModal
@@ -641,7 +676,7 @@ const confirmDeleteCommentaireAction = async () => {
     titre="Détacher la tâche"
     message="La tâche ne sera plus liée à ce CODIR."
     :details="`Êtes-vous sûr de vouloir détacher la tâche &quot;${selectedTache.intitule}&quot; ?`"
-    confirmLabel="Détacher"
+    confirmLabel="Supprimer"
     :loading="isDeletingTache"
     @confirm="confirmDeleteTacheAction"
     @cancel="tacheDeleteModal = false"
@@ -654,4 +689,5 @@ const confirmDeleteCommentaireAction = async () => {
     :ordreId="currentOrdreDuJour?.id"
     @updated="handleDossierUpdated"
   />
+  </div>
 </template>

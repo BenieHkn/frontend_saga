@@ -1,4 +1,6 @@
 <script setup>
+import { useStatutUI } from '~/composables/useStatutUI'
+
 const props = defineProps({
   dossier: { type: Object, required: true },
   peutGererCodir: { type: Boolean, default: false },
@@ -6,21 +8,19 @@ const props = defineProps({
   index: { type: Number, default: 0 },
 })
 
-const emit = defineEmits(['delete', 'click', 'commenter', 'lire-commentaires', 'edit', 'detail'])
+const { couleurStatut, statutLabelFR } = useStatutUI()
 
-const removeDossier = () => {
-  emit('delete', props.dossier)
-}
+const emit = defineEmits(['delete', 'click', 'commenter', 'lire-commentaires', 'edit', 'detail', 'add-tache', 'add-activite', 'add-action'])
 
-const editDossier = () => emit('edit', props.dossier)
-const viewDetail = () => emit('detail', props.dossier)
-
-const clickDossier = () => emit('click', props.dossier)
+const removeDossier = () => emit('delete', props.dossier)
+const editDossier   = () => emit('edit', props.dossier)
+const viewDetail    = () => emit('detail', props.dossier)
+const clickDossier  = () => emit('click', props.dossier)
 </script>
 
 <template>
   <div
-    class="flex items-center gap-3 bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-colors"
+    class="flex items-center gap-3 bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
     @click="clickDossier">
     
     <div class="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
@@ -30,9 +30,11 @@ const clickDossier = () => emit('click', props.dossier)
     <div class="min-w-0 flex-1">
       <p class="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{{ dossier.libelle }}</p>
       <p class="text-xs text-gray-400 mt-0.5">#{{ dossier.id }}</p>
+      <UBadge :label="statutLabelFR(dossier.statut)" :color="couleurStatut(dossier.statut)" />
     </div>
     
-    <div class="flex items-center gap-2 shrink-0">
+    <div class="flex items-center gap-1 shrink-0">
+      <!-- Vue détail -->
       <UButton 
         icon="i-heroicons-eye" 
         color="gray" 
@@ -42,6 +44,7 @@ const clickDossier = () => emit('click', props.dossier)
         @click.stop="viewDetail" 
       />
 
+      <!-- Modifier -->
       <UButton
         v-if="peutGererCodir"
         icon="i-heroicons-pencil" 
@@ -52,6 +55,43 @@ const clickDossier = () => emit('click', props.dossier)
         @click.stop="editDossier" 
       />
 
+      <!-- Ajouter tâche -->
+      <UButton
+        v-if="peutGererCodir"
+        icon="i-heroicons-clipboard-document-check"
+        color="cyan"
+        variant="ghost"
+        size="xs"
+        title="Ajouter une tâche"
+        label="Tâche"
+        @click.stop="emit('add-tache', dossier)"
+      />
+
+      <!-- Ajouter activité -->
+      <UButton
+        v-if="peutGererCodir"
+        icon="i-heroicons-bolt"
+        color="violet"
+        variant="ghost"
+        size="xs"
+        title="Ajouter une activité"
+        label="Activité"
+        @click.stop="emit('add-activite', dossier)"
+      />
+
+      <!-- Ajouter action -->
+      <UButton
+        v-if="peutGererCodir"
+        icon="i-heroicons-rocket-launch"
+        color="orange"
+        variant="ghost"
+        size="xs"
+        title="Ajouter une action"
+        label="Action"
+        @click.stop="emit('add-action', dossier)"
+      />
+
+      <!-- Lire commentaires -->
       <div class="relative inline-block">
         <UButton 
           icon="i-heroicons-chat-bubble-bottom-center-text" 
@@ -69,6 +109,7 @@ const clickDossier = () => emit('click', props.dossier)
         </span>
       </div>
 
+      <!-- Ajouter commentaire -->
       <div class="relative inline-block">
         <UButton 
           icon="i-heroicons-chat-bubble-left-right" 
@@ -83,6 +124,7 @@ const clickDossier = () => emit('click', props.dossier)
         </div>
       </div>
 
+      <!-- Supprimer -->
       <UButton 
         v-if="peutGererCodir" 
         icon="i-heroicons-trash" 

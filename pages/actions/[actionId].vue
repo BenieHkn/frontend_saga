@@ -232,10 +232,9 @@ const createActivite = async () => {
       </div>
 
     </template>
-  </div>
 
-  <!-- ── Modale création activité ───────────────────────────────────────────── -->
-  <UModal v-model="activiteModal">
+      <!-- ── Modale création activité ───────────────────────────────────────────── -->
+  <!-- <UModal v-model="activiteModal">
     <UCard class="rounded-2xl">
       <template #header>
         <h3 class="font-semibold">Nouvelle activité</h3>
@@ -252,7 +251,13 @@ const createActivite = async () => {
         </div>
       </template>
     </UCard>
-  </UModal>
+  </UModal> -->
+
+  <ActiviteFormModal
+    v-model="activiteModal"
+    :action-id="action?.id"
+    @created="refreshAction"
+  />
 
   <!-- ── Modale création tâche — composant autonome ─────────────────────────── -->
   <TacheFormModal
@@ -261,4 +266,5 @@ const createActivite = async () => {
     :action-id="action?.id"
     @created="refreshAction"
   />
+  </div>
 </template>
