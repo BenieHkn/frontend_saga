@@ -5,7 +5,7 @@ defineProps({
   index: { type: Number, default: 1 },
 })
 
-const emit = defineEmits(['attach', 'detach', 'commenter', 'voir-commentaires', 'voir-detail-ordre'])
+const emit = defineEmits(['attach', 'detach', 'commenter', 'voir-commentaires', 'voir-detail-ordre', 'edit'])
 
 const router = useRouter()
 
@@ -47,6 +47,15 @@ const statutClass = (statut) => {
             variant="ghost"
             size="xs"
             @click.stop="emit('detach', ordre.id)" 
+            v-if="peutGererCodir"
+          />
+
+          <UButton
+            icon="i-heroicons-pencil"
+            color="red"
+            variant="ghost"
+            size="xs"
+            @click.stop="emit('edit', ordre)" 
             v-if="peutGererCodir"
           />
 

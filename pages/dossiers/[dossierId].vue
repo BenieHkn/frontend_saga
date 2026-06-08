@@ -125,7 +125,7 @@ onMounted(async () => {
 
   if (process.client) {
     entiteUser.value = JSON.parse(localStorage.getItem("entite_user"));
-    await fetchCommentaires('dossier', dossierId);
+    await fetchCommentaires('dossier', dossierId, currentCodir.value.id);
   }
 
   pageLoading.value = false;
@@ -338,11 +338,11 @@ const openCommentaireCreation = (target = null, type = 'action') => {
 const openCommentaireListe = async (target = null, type = 'action') => {
   if (target) {
     commentableTarget.value = { id: target.id, type };
-    await fetchCommentaires(type, target.id);
+    await fetchCommentaires(type, target.id, currentCodir.value.id);
   } else {
     if (!dossier.value) return;
     commentableTarget.value = { id: dossier.value.id, type: 'dossier' };
-    await fetchCommentaires('dossier', dossier.value.id);
+    await fetchCommentaires('dossier', dossier.value.id, currentCodir.value.id);
   }
   openListeCommentairesModal.value = true;
 };
@@ -355,7 +355,7 @@ const handleRecupererCommentaire = async (contenu) => {
       contenu,
       codir_id:         currentCodir.value?.id,
     });
-    await fetchCommentaires(commentableTarget.value.type, commentableTarget.value.id);
+    await fetchCommentaires(commentableTarget.value.type, commentableTarget.value.id, currentCodir.value.id);
     await refreshDossier();
   } catch {}
 };
@@ -390,7 +390,7 @@ const confirmDeleteCommentaireAction = async () => {
     await supprimerCommentaire(commentaireToDeleteId.value);
     deleteCommentaireModal.value = false;
     commentaireToDeleteId.value  = null;
-    await fetchCommentaires('dossier', dossier.value.id);
+    await fetchCommentaires('dossier', dossier.value.id, currentCodir.value.id);
   } catch {
     toast.add({ title: "Erreur", description: "Impossible de supprimer le commentaire", color: "red" });
   } finally {

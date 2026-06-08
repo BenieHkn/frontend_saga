@@ -3,7 +3,7 @@
 import Sortable from "sortablejs";
 import { useCommentaire } from "~/composables/commentaire/useCommentaire";
 import { useAuth } from "~/composables/auth/useAuth";
-import OrdreDuJourCard from "~/components/ordres-du-jour/OrdreDuJourCard.vue";
+import { useOrdreDuJour } from "~/composables/ordres-du-jour/useOrdreDuJour";
 const toast = useToast()
 
 const {peutGererCodir, peutVoirCodir} = useAuth()
@@ -14,9 +14,12 @@ const props = defineProps({
   loading: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(["attach", "detach", "commenterListe"]);
+const emit = defineEmits(["attach", "detach", "commenterListe", "ordre-created", "ordre-updated"]);
 
 const currentOrdre = ref(null)
+const loading = ref(false)
+
+const {updateOrdre, createOrdre} = useOrdreDuJour()
 
 
 
@@ -82,16 +85,6 @@ const goTo = (ordre) => {
   navigateTo(`/ordres-du-jour/${ordre.id}`);
 };
 
-// ── Statut ────────────────────────────────────────────────────────────────────
-const statutClass = (statut) => {
-  const map = {
-    actif: "text-green-600 bg-green-50 dark:bg-green-950/40",
-    inactif: "text-gray-500 bg-gray-100 dark:bg-gray-800/60",
-    archivé: "text-amber-600 bg-amber-50 dark:bg-amber-950/40",
-  };
-  return map[statut] ?? "text-gray-500 bg-gray-100";
-};
-
 
 const handleAfficherModalPourCommenter = async (ordre) => {
   currentOrdre.value = ordre
@@ -141,6 +134,58 @@ const detachOrdre = async (ordre) =>{
   emit('detach', ordre.id);
 }
 
+const ordreModal = ref(false)
+const selectedOrdre = ref(null)
+
+const handleEditOrdre = async (ordre) => {
+  selectedOrdre.value = ordre;
+  console.log("l'ordre sélectionné", selectedOrdre.value)
+  ordreModal.value = true;
+}
+
+
+
+const handleUpdateOrdre = async (form) => {
+  internalLoading.value = true
+  try{
+    await updateOrdre(selectedOrdre.value.id, form)
+    toast.add({
+      title: 'Ordre du jour mis à jour',
+      description: `"${form.libelle}" a été mis à jour`,
+      color: 'green',
+      icon: 'i-heroicons-check-circle'
+    })
+    ordreModal.value = false
+    selectedOrdre.value = null
+    emit('ordre-updated')
+  } catch {
+    toast.add({
+      title: 'Erreur',
+      description: "Impossible de mettre à jour l'ordre du jour",
+      color: 'red',
+      icon: 'i-heroicons-exclamation-circle',
+    })
+  }finally{
+    internalLoading.value = false
+  }
+}
+
+const handleCreateOrdre = async (form) => {
+  try{
+    await createOrdre(form)
+    toast.add({
+      title: 'Ordre du jour créé',
+      description: `"${form.libelle}" a été ajouté`,
+      color: 'green',
+      icon: 'i-heroicons-check-circle'
+    })
+    ordreModal.value = false
+    emit('ordre-created')
+  } catch {
+    
+  }
+
+}
 
 onMounted(() => {
   entiteUser.value = JSON.parse(localStorage.getItem("entite_user"));
@@ -186,6 +231,7 @@ onMounted(() => {
         @commenter="handleAfficherModalPourCommenter(ordre)"
         @voir-commentaires="voirLesCommentaires(ordre)"
         @detach="detachOrdre(ordre)"
+        @edit="handleEditOrdre"
       />
     </div>
 
@@ -200,6 +246,14 @@ onMounted(() => {
       :commentaires="commentaires"
       :entiteUser="entiteUser"
     />
+
+    <OrdreDuJourFormModal
+      v-model:open="ordreModal"
+      :ordre="selectedOrdre"
+      :loading="internalLoading"
+      @createOrdre="handleCreateOrdre"
+      @updateOrdre="handleUpdateOrdre"
+    />  
   </section>
 </template>
 

@@ -14,7 +14,6 @@ import { useAuth } from '~/composables/auth/useAuth'
 import { useOrdreDuJour } from '~/composables/ordres-du-jour/useOrdreDuJour'
 import { useCommentaire } from '~/composables/commentaire/useCommentaire'
 import { usePresence } from '~/composables/presence/usePresence'
-import OrdreDuJourFormModal from '~/components/ordres-du-jour/OrdreDuJourFormModal.vue'
 
 definePageMeta({ title: 'Détail CODIR' })
 
@@ -156,6 +155,32 @@ const addOrdreSubmit = async (form) => {
     toast.add({
       title: 'Erreur',
       description: "Impossible de créer l'ordre du jour",
+      color: 'red',
+      icon: 'i-heroicons-exclamation-circle',
+    })
+  } finally {
+    isSavingOrdre.value = false
+  }
+}
+
+const handleOrdreUpdate = async (form) => {
+  isSavingOrdre.value = true
+  try {
+    const payload = { ...form, codir_id: id }
+    await ordreDuJourApi.updateOrdre(form.id, payload)
+    await fetchCodir()
+    toast.add({
+      title: 'Ordre du jour mis à jour',
+      description: `"${form.libelle}" a été mis à jour`,
+      color: 'green',
+      icon: 'i-heroicons-check-circle',
+    })
+    ordreModal.value = false
+    selectedOrdre.value = null
+  } catch {
+    toast.add({
+      title: 'Erreur',
+      description: "Impossible de mettre à jour l'ordre du jour",
       color: 'red',
       icon: 'i-heroicons-exclamation-circle',
     })
@@ -364,6 +389,16 @@ const handleValider = async () => {
   }
 }
 
+const handleOrdreCreated = async () => {
+  await loadData()
+}
+
+const handleOrdreUpdated = async () => {
+  await loadData()
+}
+
+
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 onMounted(async () => {
     loadData()
@@ -444,7 +479,7 @@ onMounted(async () => {
         <!-- ── Contenu step 1 ──────────────────────────────────────────── -->
         <div class="flex flex-col gap-8">
           <OrdreDuJourListe :loading="loading" :ordres="codir.ordres_du_jour"  :peutSupprimer="peutGererCodir()"
-            @attach="ordreModal = true" @detach="openDetachModal($event)" />
+            @attach="ordreModal = true" @detach="openDetachModal($event)" @ordre-created="handleOrdreCreated" @ordre-updated="handleOrdreUpdated"/>
         </div>
       </CodirStepper>
 
@@ -458,7 +493,7 @@ onMounted(async () => {
            v-model:current-tab="currentTab"
           >
             <template #navigation>
-              <CodirOrdreDuJour :loading="loading" :ordres="codir.ordres_du_jour"  :peutSupprimer="false"/>
+              <OrdreDuJourListe :loading="loading" :ordres="codir.ordres_du_jour"  :peutSupprimer="false"/>
             </template>
             <template #point>
                 <CodirPointGlobal
@@ -488,10 +523,8 @@ onMounted(async () => {
     <!-- ── Modale ordre du jour ─────────────────────────────────────── -->
     <OrdreDuJourFormModal
       v-model:open="ordreModal"
-      :ordre="selectedOrdre"
       :loading="isSavingOrdre"
       @createOrdre="addOrdreSubmit"
-      @updateOrdre="addOrdreSubmit"
     />
 
     <ConfirmationSuppressionModal

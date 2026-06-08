@@ -328,7 +328,7 @@ onMounted(() => {
           </span>
         </div>
         <div v-if="codir.url" class="mt-4">
-          <a :href="codir.url" target="_blank"
+          <a :href="`/${codir.url}`" target="_blank"
             class="inline-flex items-center gap-1.5 text-xs text-blue-200 hover:text-white underline underline-offset-2 transition-colors">
             <UIcon name="i-heroicons-document-arrow-down" class="w-3.5 h-3.5" />
             Voir le PDF enregistré

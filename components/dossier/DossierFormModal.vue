@@ -123,7 +123,7 @@ const documentsOptions = computed(() => {
           </h4>
 
           <UFormGroup label="Libellé" required>
-            <UInput v-model="form.libelle" placeholder="Ex: Dossier de suivi" size="md" />
+            <UTextarea v-model="form.libelle" placeholder="Ex: Dossier de suivi" size="md" />
           </UFormGroup>
 
           <UFormGroup label="Statut" required>
