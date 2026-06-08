@@ -12,6 +12,8 @@ import {
 import { useMembre } from '@/composables/membres/useMembres'
 import { useAuth } from '~/composables/auth/useAuth'
 import { useOrdreDuJour } from '~/composables/ordres-du-jour/useOrdreDuJour'
+import { useCommentaire } from '~/composables/commentaire/useCommentaire'
+import { usePresence } from '~/composables/presence/usePresence'
 import OrdreDuJourFormModal from '~/components/ordres-du-jour/OrdreDuJourFormModal.vue'
 
 definePageMeta({ title: 'Détail CODIR' })
@@ -27,6 +29,8 @@ const {
   getCodir,
   updateCodir,
   detachODJ,
+  savePresences,
+  getPresences,
 } = useCodir()
 
 const ordreDuJourApi = useOrdreDuJour()
@@ -34,6 +38,17 @@ const ordreDuJourApi = useOrdreDuJour()
 const membreApi = useMembre()
 
 const { peutGererCodir } = useAuth()
+
+const {
+  commentaires,
+  creerCommentaire,
+  fetchCommentaires,
+  openCommentaireModal,
+  openListeCommentairesModal,
+  loading: commentairesLoading,
+} = useCommentaire()
+
+const commentableTarget = ref(null)
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 const codir = ref(null)
@@ -69,7 +84,7 @@ const getMembres = async () => {
   try {
     const data = await membreApi.getMembres();
     membres.value = data;
-    console.log(membres.value)
+    console.log("les membres dans codir", membres.value)
     if (process.client) localStorage.setItem("membres", JSON.stringify(data));
   } catch {
     // Fallback cache
@@ -115,8 +130,10 @@ const cancelDetachOrdre = () => {
 
 //confirmer la suppression du point de l'ordre du jour
 const confirmDetachOrdre = async () => {
+  loading.value = true
   if (!ordreToDetachId.value) return
   await handleDetachOrdre(ordreToDetachId.value)
+  loading.value = false
   detachModal.value = false
   ordreToDetachId.value = null
 }
@@ -192,17 +209,166 @@ const handleReturn = () => {
 const loadData = async () =>{
   loading.value = true
   codir.value = await getCodir(id)
-  if(!process.client)
-    membres.value = localStorage.getItem("membres") ? JSON.parse(localStorage.getItem("membres")) : []
-  else 
-     getMembres()
+  await getMembres()
+  await verifierPresence()
   loading.value = false
+}
+ 
+const tabs = ref([
+  {
+    label: 'Point Global',
+    id: 'point',
+  },
+  {
+    label: 'Navigation',
+    id: 'navigation',
+  },
+  
+])
+const currentTab = ref('point');
+
+const openCommentaireCreation = async (payload) => {
+  commentableTarget.value = payload
+  openCommentaireModal.value = true
+}
+
+
+const openCommentaireListe = async (payload) => {
+  commentableTarget.value = payload
+  console.log("Voir les commentaires pour", payload)
+  await fetchCommentaires(payload.commentable_type, payload.commentable_id, codir.value?.id)
+  openListeCommentairesModal.value = true
+}
+
+const handleRecupererCommentaire = async (contenu) => {
+  loading.value = true
+  if (!commentableTarget.value) return
+  try {
+    await creerCommentaire({
+      commentable_id:   commentableTarget.value.commentable_id,
+      commentable_type: commentableTarget.value.commentable_type,
+      contenu,
+      codir_id:         id,
+    })
+    await fetchCodir()
+  } catch {}finally {
+    loading.value = false
+  }
+}
+
+const getCurrentEntiteUserId = () => {
+  if (!process.client) return null
+
+  const raw = localStorage.getItem('entite_user')
+  if (!raw) return null
+
+  try {
+    const entiteUser = JSON.parse(raw)
+    return entiteUser?.entite_user_id ?? entiteUser?.id ?? null
+  } catch {
+    return null
+  }
+}
+
+const findCurrentMembre = () => {
+  const entiteUserId = getCurrentEntiteUserId()
+  if (!entiteUserId) return null
+
+  return membres.value.find((membre) => {
+    const membreEntiteUserId =
+      membre?.entite_user_id ??
+      membre?.entite_user?.id ??
+      membre?.entiteUser?.id
+
+    return Number(membreEntiteUserId) === Number(entiteUserId)
+  }) ?? null
+}
+
+const {updatePresence, checkPresence} = usePresence()
+const presenceMembre = ref({
+  id: null,
+  motivation_absence: null,
+  codir_id: id,
+  membre_id: null,
+  has_validate: false,
+  is_present: false
+})
+const canValidate = ref(false)
+
+const verifierPresence = async () => {
+  const currentMembre = findCurrentMembre()
+  if (!currentMembre) {
+    canValidate.value = false
+    return
+  }
+
+  try {
+    const response = await checkPresence(id, currentMembre.id)
+    canValidate.value = response.canValidate
+    presenceMembre.value = response.presence
+    console.log("Vérification de la présence:", response)
+  } catch (error) {
+    console.error("Erreur lors de la vérification de la présence:", error)
+    canValidate.value = false
+  }
+}
+
+
+const normalizePresenceValidation = (presence) =>
+  presence?.hasValidate ?? presence?.has_validate ?? false
+
+
+
+const handleValider = async () => {
+  const currentMembre = findCurrentMembre()
+
+  if (!currentMembre) {
+    toast.add({
+      title: 'Validation impossible',
+      description: "Votre profil n'est pas associé à la liste de présence de ce CODIR.",
+      color: 'red',
+      icon: 'i-heroicons-exclamation-circle',
+    })
+    return
+  }
+
+  loading.value = true
+
+  try {
+
+    const presences = ref({
+      codir_id: id,
+      membre_id: currentMembre.id,
+      has_validate: true
+    })
+    
+    await updatePresence(presenceMembre.value.id)
+    await fetchCodir()
+
+    toast.add({
+      title: 'CODIR validé',
+      description: 'Votre validation a été enregistrée.',
+      color: 'green',
+      icon: 'i-heroicons-check-circle',
+    })
+  } catch (error) {
+    console.error('Erreur lors de la validation du CODIR:', error)
+    toast.add({
+      title: 'Erreur',
+      description: 'Impossible de valider le CODIR.',
+      color: 'red',
+      icon: 'i-heroicons-exclamation-circle',
+    })
+  } finally {
+    loading.value = false
+  }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 onMounted(async () => {
     loadData()
 })
+
 </script>
 
 <template>
@@ -277,7 +443,7 @@ onMounted(async () => {
 
         <!-- ── Contenu step 1 ──────────────────────────────────────────── -->
         <div class="flex flex-col gap-8">
-          <CodirOrdreDuJour :loading="loading" :ordres="codir.ordres_du_jour"  :peutSupprimer="peutGererCodir()"
+          <OrdreDuJourListe :loading="loading" :ordres="codir.ordres_du_jour"  :peutSupprimer="peutGererCodir()"
             @attach="ordreModal = true" @detach="openDetachModal($event)" />
         </div>
       </CodirStepper>
@@ -285,9 +451,38 @@ onMounted(async () => {
     </template>
 
     <template v-else-if="codir">
-      <CodirOrdreDuJour :loading="loading" :ordres="codir.ordres_du_jour"  :peutSupprimer="false"/>
+      <!-- <CodirOrdreDuJour :loading="loading" :ordres="codir.ordres_du_jour"  :peutSupprimer="false"/> -->
+       <div>
+          <AppTabs
+            :tabs="tabs"
+           v-model:current-tab="currentTab"
+          >
+            <template #navigation>
+              <CodirOrdreDuJour :loading="loading" :ordres="codir.ordres_du_jour"  :peutSupprimer="false"/>
+            </template>
+            <template #point>
+                <CodirPointGlobal
+                  :codirData="codir"
+                  @commenter="openCommentaireCreation"
+                  @lire-commentaires="openCommentaireListe"
+                />
+            </template>
+          </AppTabs>
+       </div>
+      
+      <div class="flex justify-end mt-8">
+        <UButton
+            :disabled="!canValidate"
+            color="green"
+            variant="soft"
+            @click="handleValider"
+            :loading="loading"
+          >
+            Valider le CODIR
+          </UButton>
+      </div>
+   
     </template>
-
     <!-- <UAlert v-if="error" color="red" icon="i-heroicons-exclamation-circle" :title="error" class="mt-4" /> -->
 
     <!-- ── Modale ordre du jour ─────────────────────────────────────── -->
@@ -309,6 +504,17 @@ onMounted(async () => {
       :loading="loading"
       @confirm="confirmDetachOrdre"
       @cancel="cancelDetachOrdre"
+    />
+
+    <CommentaireFormModal
+      v-model:open="openCommentaireModal"
+      :loading="loading"
+      @create="handleRecupererCommentaire($event.contenu)"
+    />
+
+    <CommentaireListeModal
+      v-model:openListeCommentairesModal="openListeCommentairesModal"
+      :commentaires="commentaires"
     />
   </div>
 </template>

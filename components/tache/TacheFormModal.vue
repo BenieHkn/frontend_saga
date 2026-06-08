@@ -90,9 +90,9 @@ const submit = async () => {
   loading.value = true
   try {
     if (isEditMode.value) {
-      emit('updated', { ...form })
+      emit('update', { ...form })
     } else {
-      emit('created', { ...form })
+      emit('create', { ...form })
     }
   } finally {
     loading.value = false
@@ -238,7 +238,6 @@ const responsablesOptions = computed(() => {
           <UButton color="gray" variant="ghost" @click="close">Annuler</UButton>
           <UButton
             :loading="loadingCreateOrUpdate"
-            :disable="loading"
             :color="isEditMode ? 'blue' : 'green'"
             variant="soft"
             @click="submit"

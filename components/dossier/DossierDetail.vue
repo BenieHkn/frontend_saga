@@ -1,5 +1,5 @@
 <script setup>
-import { formatDateFR, DOSSIER_STATUT_OPTIONS } from '@/composables/codirs/useCodir'
+import { useDossier } from '~/composables/dossier/useDossier'
 
 const props = defineProps({
   open:    { type: Boolean, default: false },
@@ -7,6 +7,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:open'])
+
+const {DOSSIER_STATUT_OPTIONS} = useDossier()
 
 // ── isOpen ────────────────────────────────────────────────────────────────────
 const isOpen = computed({
@@ -26,9 +28,9 @@ const dossierStatutLabel = computed(() => {
 const dossierStatutColor = computed(() => {
   const map = {
     'en_cours':     'blue',
-    'realisee':     'green',
+    'realise':     'green',
     'reconduit':    'yellow',
-    'supprimee':    'red',
+    'supprime':    'red',
   }
   return map[props.dossier?.statut] ?? 'gray'
 })

@@ -1,6 +1,6 @@
 import { useDossierService } from '@/service/dossiers/dossierService'
 
-export function useDossier() {
+export const useDossier = () => {
   const { getDossier, createDossier, updateDossier, deleteDossier, fetchDossier } = useDossierService()
 
   const handleAddDossier = async (ordreId, form) => {

@@ -122,7 +122,7 @@ const nomComplet = computed(() => {
             v-for="tache in taches"
             :key="tache.id"
             :tache="tache"
-            @updated="fetchTaches"
+            @update="fetchTaches"
           />
         </div>
       </UCard>

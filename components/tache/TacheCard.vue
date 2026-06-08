@@ -1,4 +1,4 @@
-<script setup>
+da<script setup>
 import {
   formatDateFR,
   useCodir,
@@ -9,13 +9,10 @@ import {
 const props = defineProps({
   tache:      { type: Object,  required: true },
   codirId:    { type: Number,  required: true },
-  peutGerer:  { type: Boolean, default: false },
-  peutVoir:   { type: Boolean, default: false },
+  peutGererCodir:  { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update', 'commenter', 'lire-commentaires', 'edit', 'delete', 'details'])
-
-const canView = computed(() => props.peutGerer || props.peutVoir)
 
 // ── Pivot du codir courant ────────────────────────────────────────────────────
 const pivot = computed(() =>
@@ -44,10 +41,10 @@ const responsables = computed(() =>
 <template>
   <div
     class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4 transition-all"
-    :class="canView
+    :class="peutGererCodir
       ? 'cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
       : 'cursor-default opacity-95'"
-    @click="canView && (peutGerer ? emit('edit', tache) : emit('details', tache))"
+    @click="peutGererCodir ? emit('edit', tache) : emit('details', tache)"
   >
     <!-- En-tête : titre + badges + boutons -->
     <div class="flex items-start justify-between gap-2 mb-3">
@@ -70,7 +67,6 @@ const responsables = computed(() =>
 
         <!-- Voir les détails -->
         <UButton
-          v-if="canView"
           icon="i-heroicons-eye"
           color="gray"
           variant="ghost"
@@ -81,7 +77,7 @@ const responsables = computed(() =>
 
         <!-- Modifier la tâche -->
         <UButton
-          v-if="peutGerer"
+          v-if="peutGererCodir"
           icon="i-heroicons-pencil-square"
           color="blue"
           variant="ghost"
@@ -126,12 +122,12 @@ const responsables = computed(() =>
 
         <!-- Détachement -->
         <UButton
-          v-if="peutGerer"
+          v-if="peutGererCodir"
           icon="i-heroicons-trash"
           color="red"
           variant="ghost"
           size="xs"
-          title="Détacher la tâche du CODIR"
+          title="Supprimer la tâche du CODIR"
           @click.stop="emit('delete', tache)"
         />
       </div>

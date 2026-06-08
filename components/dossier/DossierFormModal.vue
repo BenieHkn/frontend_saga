@@ -7,9 +7,10 @@ const props = defineProps({
   ordreId: { type: [Number, String], default: null },
   loading: { type: Boolean, default: false },
   documents: { type: Array, default: () => [] },
+  loadingCreateOrUpdate: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['update:open', 'createDossier', 'updateDossier'])
+const emit = defineEmits(['update:open', 'create', 'update'])
 const toast = useToast()
 const isEditMode = computed(() => !!props.dossier)
 const {DOSSIER_STATUT_OPTIONS} = useDossier()
@@ -17,7 +18,7 @@ const {DOSSIER_STATUT_OPTIONS} = useDossier()
 const defaultForm = () => ({
   libelle: '',
   description: '',
-  statut: '',
+  statut: 'en_cours',
   ordre_du_jour_id: props.ordreId,
 })
 
@@ -62,9 +63,9 @@ const submit = () => {
 
   console.log('Submitting dossier form', form)
   if (isEditMode.value) {
-    emit('updateDossier', { ...form })
+    emit('update', { ...form })
   } else {
-    emit('createDossier', { ...form })
+    emit('create', { ...form })
   }
 }
 
@@ -169,7 +170,7 @@ const documentsOptions = computed(() => {
           <UButton
             :color="isEditMode ? 'blue' : 'green'"
             variant="soft"
-            :loading="props.loading"
+            :loading="props.loadingCreateOrUpdate"
             @click="submit"
           >
             {{ isEditMode ? 'Enregistrer' : 'Créer' }}

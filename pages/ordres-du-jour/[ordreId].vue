@@ -7,9 +7,6 @@ import { useTache } from '@/composables/taches/useTaches'
 import { useActivite } from '@/composables/activite/useActivite'
 import { useAction } from '@/composables/actions/useAction'
 import { useMembre } from '@/composables/membres/useMembres'
-import CommentaireModal from '@/components/commentaire/CommentaireModal.vue'
-import CommentaireListeModal from '@/components/commentaire/CommentaireListeModal.vue'
-import DossierDetail from '~/components/dossier/DossierDetail.vue'
 import ActionFormModal from '~/components/action/ActionFormModal.vue'
 import ActiviteFormModal from '~/components/activite/ActiviteFormModal.vue'
 import { useAuth } from '~/composables/auth/useAuth'
@@ -30,8 +27,6 @@ const dossierToDeleteId = ref(null)
 const isDeletingDossier = ref(false)
 const isSavingDossier = ref(false)
 const dossierDetailModal = ref(false)
-const openCommentaireModal = ref(false)
-const openListeCommentairesModal = ref(false)
 
 // ── Composables ───────────────────────────────────────────────────────────────
 const ordreDuJourApi = useOrdreDuJour()
@@ -47,8 +42,11 @@ const {
   commentaires,
   creerCommentaire,
   fetchCommentaires,
+  openCommentaireModal,
+  openListeCommentairesModal,
   loading: commentairesLoading,
 } = useCommentaire()
+
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const ordreId = Number(route.params.ordreId)
@@ -137,23 +135,23 @@ const openDeleteDossier = (dossier) => {
   dossierDeleteModal.value = true
 }
 
-// ── Soumissions dossier ───────────────────────────────────────────────────────
-const addDossierSubmit = async (form) => {
-  console.log(form)
-  isSavingDossier.value = true
-  try {
-    await dossierApi.handleAddDossier(ordreId, form)
-    await refreshData()
-    dossierModal.value = false
-    toast.add({ title: 'Dossier ajouté', color: 'green', icon: 'i-heroicons-check-circle' })
-  } catch {
-    toast.add({ title: 'Erreur', description: "Impossible d'ajouter le dossier", color: 'red', icon: 'i-heroicons-exclamation-circle' })
-  } finally {
-    isSavingDossier.value = false
-  }
-}
+// // ── Soumissions dossier ───────────────────────────────────────────────────────
+// const addDossierSubmit = async (form) => {
+//   console.log(form)
+//   isSavingDossier.value = true
+//   try {
+//     await dossierApi.handleAddDossier(ordreId, form)
+//     await refreshData()
+//     dossierModal.value = false
+//     toast.add({ title: 'Dossier ajouté', color: 'green', icon: 'i-heroicons-check-circle' })
+//   } catch {
+//     toast.add({ title: 'Erreur', description: "Impossible d'ajouter le dossier", color: 'red', icon: 'i-heroicons-exclamation-circle' })
+//   } finally {
+//     isSavingDossier.value = false
+//   }
+// }
 
-const updateDossierSubmit = async (form) => {
+const handleUpdateDossier = async (form) => {
   isSavingDossier.value = true
   try {
     await dossierApi.handleUpdateDossier(selectedDossier.value.id, form)
@@ -194,6 +192,7 @@ const isSavingActivite = ref(false)
 
 const openAddTache = (dossier) => {
   selectedDossier.value = dossier
+  console.log("dossier sélectionné pour créer la tâche", selectedDossier.value)
   tacheModalOpen.value  = true
 }
 
@@ -209,47 +208,60 @@ const openAddAction = (dossier) => {
 }
 
 const handleTacheCreated = async (form) => {
+  loading.value = true
+  console.log(form)
   if (!selectedDossier.value) return
   try {
-    await tacheApi.createTache({ ...form, dossier_id: selectedDossier.value.id })
+    await tacheApi.createTache({...form, dossier_id: selectedDossier.value.id }) 
     tacheModalOpen.value = false
     await refreshData()
     toast.add({ title: 'Tâche créée', color: 'green', icon: 'i-heroicons-check-circle' })
   } catch {
     toast.add({ title: 'Erreur', description: 'Impossible de créer la tâche', color: 'red' })
+  } finally{
+    loading.value = false
   }
 }
 
 const handleActiviteCreated = async (form) => {
-  if (!form.libelle?.trim()) {
-    toast.add({ title: 'Champ requis', description: 'Le libellé est obligatoire', color: 'orange' })
-    return
-  }
-  isSavingActivite.value = true
+  loading.value = true
   try {
-    await activiteApi.createActivite({ ...form, dossier_id: selectedDossier.value?.id ?? form.dossier_id })
+    await activiteApi.createActivite({...form, dossier_id: selectedDossier.value.id})
     activiteModalOpen.value = false
     await refreshData()
     toast.add({ title: 'Activité créée', color: 'green', icon: 'i-heroicons-check-circle' })
   } catch {
     toast.add({ title: 'Erreur', description: 'Impossible de créer l’activité', color: 'red' })
-  } finally {
-    isSavingActivite.value = false
+  }finally{
+    loading.value = false
   }
 }
 
-const handleActionCreated = async (libelle) => {
-  if (!libelle?.trim() || !selectedDossier.value) return
-  isSavingAction.value = true
+const handleActionCreated = async (form) => {
+  loading.value = true
   try {
-    await actionApi.createAction({ libelle: libelle.trim(), dossier_id: selectedDossier.value.id })
+    await actionApi.createAction({...form, dossier_id: selectedDossier.value.id})
     actionModalOpen.value = false
     await refreshData()
     toast.add({ title: 'Action créée', color: 'green', icon: 'i-heroicons-check-circle' })
   } catch {
     toast.add({ title: 'Erreur', description: 'Impossible de créer l’action', color: 'red' })
   } finally {
-    isSavingAction.value = false
+    loading.value = false
+  }
+}
+
+const handleDossierCreated = async (form) => {
+  loading.value = true
+  try{
+    await dossierApi.handleAddDossier(ordreId, form)
+    await refreshData()
+    dossierModal.value = false
+    toast.add({ title: 'Dossier ajouté', color: 'green', icon: 'i-heroicons-check-circle' })
+  }catch{
+    toast.add({ title: 'Erreur', description: 'Impossible d\'ajouter le dossier', color: 'red' })
+  }finally{
+    loading.value = false
   }
 }
 
@@ -274,9 +286,10 @@ const openLectureCommentairesPourDossier = async (dossier) => {
 const handleRecupererCommentaire = async (contenu) => {
   if (!currentDossier.value) return
   await creerCommentaire({
-    commentable_id: currentDossier.value.id,
+    commentable_id:   currentDossier.value.id,
     commentable_type: 'dossier',
     contenu,
+    codir_id:         currentCodir.value?.id,
   })
   await fetchOrdreDuJour()
 }
@@ -415,6 +428,7 @@ onMounted(async () => {
       v-model:open="actionModalOpen"
       :dossier-id="selectedDossier?.id"
       @create="handleActionCreated"
+      :loading-create-or-update="loading"
     />
 
     <ConfirmationSuppressionModal
@@ -431,42 +445,38 @@ onMounted(async () => {
       :dossier-id="selectedDossier?.id"
       :membres-options="membresOptions"
       @create="handleTacheCreated"
+      :loading-create-or-update="loading"
     />
-
-    <!-- ── Modale ajout activité depuis card ─────────────────────────────────── -->
-    <!-- <UModal v-model="activiteModalOpen">
-      <UCard class="rounded-2xl">
-        <template #header>
-          <div class="flex items-center justify-between">
-            <h3 class="font-semibold">Nouvelle activité</h3>
-            <UButton icon="i-heroicons-x-mark" color="gray" variant="ghost" size="xs" @click="activiteModalOpen = false" />
-          </div>
-        </template>
-        <div class="p-2 flex flex-col gap-4">
-          <UFormGroup label="Libellé" required>
-            <UTextarea v-model="activiteForm.libelle" placeholder="Ex : Formation du personnel" rows="3" />
-          </UFormGroup>
-        </div>
-        <template #footer>
-          <div class="flex justify-end gap-2">
-            <UButton color="gray" variant="ghost" @click="activiteModalOpen = false; resetActiviteForm()">Annuler</UButton>
-            <UButton color="violet" variant="soft" :loading="isSavingActivite" @click="handleActiviteCreated">Créer</UButton>
-          </div>
-        </template>
-      </UCard>
-    </UModal> -->
 
     <ActiviteFormModal
       v-model:open="activiteModalOpen"
       :dossier-id="selectedDossier?.id"
       @create="handleActiviteCreated"
+      :loading-create-or-update="loading"
     />
-    
-    <!-- ── Modale ajout action depuis card ────────────────────────────────────── -->
-    <ActionFormModal
-      v-model:openActionModal="actionModalOpen"
-      :loading="isSavingAction"
-      @create-action="handleActionCreated"
+
+    <DossierFormModal
+      v-model:open="dossierModal"
+      @create="handleDossierCreated"
+      @update="handleUpdateDossier"
+      :dossier="selectedDossier"
+      :loading-create-or-update="loading"
+    />
+
+    <DossierDetail
+      v-model:open="dossierDetailModal"
+      :dossier="selectedDossier"
+    />
+
+    <CommentaireFormModal
+      v-model:open="openCommentaireModal"
+      :loading="commentairesLoading"
+      @create="handleRecupererCommentaire($event.contenu)"
+    />
+
+    <CommentaireListeModal
+      v-model:openListeCommentairesModal="openListeCommentairesModal"
+      :commentaires="commentaires"
     />
 
   </div>

@@ -10,12 +10,12 @@ const toast = useNuxtApp().$toast ?? useToast()
 const clearCurrents = () => {
   if (!process.client) return
   try {
-      localStorage.removeItem('currentCodir')
-      localStorage.removeItem('currentOrdreDuJour')
-      localStorage.removeItem('currentDossier')
-      localStorage.removeItem('currentTache')
-      localStorage.removeItem(`presence-${id}`)
-      localStorage.removeItem(`codir_step_${id}`)
+    localStorage.removeItem('currentCodir')
+    localStorage.removeItem('currentOrdreDuJour')
+    localStorage.removeItem('currentDossier')
+    localStorage.removeItem('currentTache')
+    localStorage.removeItem(`presence-${id}`)
+    localStorage.removeItem(`codir_step_${id}`)
   } catch (e) { }
 }
 const handleReturn = () => {
@@ -29,16 +29,74 @@ const codir = ref(null)
 
 
 // ── Composable ────────────────────────────────────────────────────────────────
-const { cloturerCodir, generatePdf, downloadPdf, getCodir } = useCodir()
+const { cloturerCodir, generatePdf, downloadPdf, getCodir, getPresences } = useCodir()
 
 // ── Clôture ───────────────────────────────────────────────────────────────────
 const showCloture = ref(false)
 const cloturePending = ref(false)
 
+const getCachedMembresById = () => {
+  if (!process.client) return new Map()
+
+  try {
+    const membres = JSON.parse(localStorage.getItem('membres') ?? '[]')
+    return new Map((membres ?? []).map((membre) => [Number(membre.id), membre]))
+  } catch {
+    return new Map()
+  }
+}
+
+const isPresenceValidated = (presence) =>
+  presence?.hasValidate === true ||
+  presence?.has_validate === true ||
+  presence?.hasValidate === 1 ||
+  presence?.has_validate === 1 ||
+  presence?.hasValidate === '1' ||
+  presence?.has_validate === '1'
+
+const isMembreExemptValidation = (presence, cachedMembresById) => {
+  const membre = presence?.membre ?? cachedMembresById.get(Number(presence?.membre_id))
+  const entiteCode =
+    membre?.entite_user?.entite?.code ??
+    membre?.entiteUser?.entite?.code ??
+    membre?.entite_user?.code ??
+    membre?.entiteUser?.code
+
+  return String(entiteCode ?? '').toUpperCase() === 'DGML'
+}
+
+const getUnvalidatedPresentPresences = async () => {
+  const presences = await getPresences(codir.value.id)
+  const cachedMembresById = getCachedMembresById()
+  if (!(presences ?? []).length) return [{ missingPresences: true }]
+
+  return (presences ?? []).filter((presence) => {
+    const isPresent =
+      presence?.is_present === true ||
+      presence?.is_present === 1 ||
+      presence?.is_present === '1'
+    if (!isPresent) return false
+    if (isMembreExemptValidation(presence, cachedMembresById)) return false
+    return !isPresenceValidated(presence)
+  })
+}
+
 const confirmerCloture = async () => {
   if (!codir.value) return
   cloturePending.value = true
   try {
+    const unvalidatedPresences = await getUnvalidatedPresentPresences()
+
+    if (unvalidatedPresences.length) {
+      toast.add({
+        title: 'Clôture impossible',
+        description: 'Tous les membres présents doivent valider le CODIR avant la clôture, sauf DGML.',
+        color: 'red',
+        icon: 'i-heroicons-exclamation-circle',
+      })
+      return
+    }
+
     await cloturerCodir(codir.value.id)
     // Nettoyage des clés locales liées au CODIR clôturé
     try {
@@ -128,8 +186,8 @@ const rafraichir = async () => {
 
 onMounted(() => {
   const raw = localStorage.getItem('currentCodir')
-  if (raw){
-     codir.value = JSON.parse(raw)
+  if (raw) {
+    codir.value = JSON.parse(raw)
     rafraichir()
   }
 })
@@ -138,7 +196,6 @@ onMounted(() => {
 <template>
   <div class="bg-gray-50 dark:bg-gray-900 p-6">
 
-    <!-- ── Barre d'outils ─────────────────────────────────────────────────── -->
     <div
       class="sticky top-20 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between gap-4 shadow-sm">
       <div class="flex items-center gap-3">
@@ -149,20 +206,16 @@ onMounted(() => {
       </div>
 
       <div class="flex items-center gap-2">
-
-        <!-- Générer PDF -->
         <UButton icon="i-heroicons-document-arrow-up" color="violet" variant="soft" size="sm" :loading="pdfGenerating"
           :disabled="pdfGenerating" @click="handleGeneratePdf">
           {{ pdfGenerating ? 'Génération…' : 'Générer PDF' }}
         </UButton>
 
-        <!-- Télécharger PDF (visible uniquement si url présente) -->
         <UButton v-if="codir?.url !== null" icon="i-heroicons-arrow-down-tray" color="emerald" variant="soft" size="sm"
           :loading="pdfDownloading" :disabled="pdfDownloading" @click="handleDownloadPdf(codir)">
           {{ pdfDownloading ? 'Téléchargement…' : 'Télécharger PDF' }}
         </UButton>
 
-        <!-- Clôturer -->
         <UButton v-if="codir?.url !== null && codir?.statut !== 'clos'" icon="i-heroicons-lock-closed" color="red"
           variant="soft" size="sm" :disabled="codir?.url === null" @click="showCloture = true">
           Clôturer
@@ -172,11 +225,9 @@ onMounted(() => {
           <UIcon name="i-heroicons-lock-closed" class="w-3.5 h-3.5" />
           Clôturé
         </span>
-
       </div>
     </div>
 
-    <!-- ── Modale : PDF généré avec succès ───────────────────────────────── -->
     <UModal v-model="showPdfGeneratedModal" :ui="{ width: 'sm:max-w-md' }" :prevent-close="pdfDownloading">
       <UCard>
         <template #header>
@@ -195,7 +246,6 @@ onMounted(() => {
           </div>
         </template>
 
-        <!-- Nom du fichier -->
         <div
           class="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3">
           <UIcon name="i-heroicons-document-text" class="w-8 h-8 text-red-500 flex-shrink-0" />
@@ -214,7 +264,6 @@ onMounted(() => {
             <UButton color="gray" variant="ghost" :disabled="pdfDownloading" @click="showPdfGeneratedModal = false">
               Plus tard
             </UButton>
-
             <div class="gap-3">
               <CustomButton color="emerald" icon="i-heroicons-arrow-down-tray" :loading="pdfDownloading"
                 @click="handleDownloadPdf(codir)" :btnText="pdfDownloading ? 'Téléchargement' : 'Télécharger'" />
@@ -224,7 +273,6 @@ onMounted(() => {
       </UCard>
     </UModal>
 
-    <!-- ── Modale clôture ─────────────────────────────────────────────────── -->
     <UModal v-model="showCloture" :ui="{ width: 'sm:max-w-md' }">
       <UCard>
         <template #header>
@@ -260,10 +308,8 @@ onMounted(() => {
       </UCard>
     </UModal>
 
-    <!-- ── Contenu ────────────────────────────────────────────────────────── -->
     <div v-if="codir" class="mx-auto my-8 bg-white shadow-xl rounded-xl overflow-hidden">
 
-      <!-- En-tête -->
       <div class="bg-gradient-to-r from-slate-800 to-blue-900 text-white px-10 py-8">
         <div class="text-xs font-semibold tracking-widest uppercase text-blue-300 mb-2">Compte rendu</div>
         <h1 class="text-3xl font-bold mb-3">Réunion CODIR</h1>
@@ -274,8 +320,7 @@ onMounted(() => {
           </span>
           <span class="flex items-center gap-1.5">
             <span class="opacity-60">Horaire :</span>
-            <strong class="text-white">{{ extractTime(codir.heure_debut) }} – {{ extractTime(codir.heure_fin)
-              }}</strong>
+            <strong class="text-white">{{ extractTime(codir.heure_debut) }} – {{ extractTime(codir.heure_fin) }}</strong>
           </span>
           <span
             class="text-xs font-semibold px-3 py-1 rounded-full capitalize bg-white/10 text-white border border-white/20">
@@ -293,77 +338,61 @@ onMounted(() => {
 
       <div class="px-10 py-8 space-y-10">
 
-        <!-- ── Suivi des tâches ──────────────────────────────────────────── -->
-        <section v-if="codir.taches?.length">
-          <h2 class="text-base font-bold text-slate-800 border-b-2 border-blue-600 pb-2 mb-4 flex items-center gap-2">
-            <span class="w-1.5 h-5 bg-blue-600 rounded-full inline-block"></span>
-            1 — Adoption du compte rendu &amp; suivi des tâches prescrites
-          </h2>
-          <table class="w-full text-sm border-collapse">
-            <thead>
-              <tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wide">
-                <th class="text-left px-3 py-2 border border-slate-200">Tâche</th>
-                <th class="text-center px-3 py-2 border border-slate-200 w-20">Priorité</th>
-                <th class="text-center px-3 py-2 border border-slate-200 w-24">Statut</th>
-                <th class="text-center px-3 py-2 border border-slate-200 w-20">Avancement</th>
-                <th class="text-left px-3 py-2 border border-slate-200">Membres</th>
-                <th class="text-left px-3 py-2 border border-slate-200">Commentaire</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="tache in codir.taches" :key="tache.id" class="hover:bg-slate-50 even:bg-slate-50/50">
-                <td class="px-3 py-2 border border-slate-200 font-medium text-slate-800">{{ tache.intitule }}</td>
-                <td class="px-3 py-2 border border-slate-200 text-center">
-                  <span :class="{
-                    'text-red-600 bg-red-50 px-2 py-0.5 rounded-full text-xs font-semibold': tache.priorite === 'Haute',
-                    'text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full text-xs font-semibold': tache.priorite === 'Moyenne',
-                    'text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-xs font-semibold': tache.priorite === 'Basse',
-                  }">{{ tache.priorite }}</span>
-                </td>
-                <td class="px-3 py-2 border border-slate-200 text-center text-xs">{{
-                  statutTacheLabel(tache.pivot?.statut)
-                  }}</td>
-                <td class="px-3 py-2 border border-slate-200 text-center">
-                  <div class="flex flex-col items-center gap-1">
-                    <span class="text-xs font-mono font-semibold text-blue-700">{{ tache.pivot?.progression ?? 0
-                      }}%</span>
-                    <div class="w-full bg-gray-200 rounded-full h-1.5">
-                      <div class="bg-blue-500 h-1.5 rounded-full" :style="`width:${tache.pivot?.progression ?? 0}%`">
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-3 py-2 border border-slate-200 text-xs text-slate-600">{{ getMembresLabel(tache.membres)
-                  }}
-                </td>
-                <td class="px-3 py-2 border border-slate-200 text-xs text-slate-500 italic">{{ tache.pivot?.commentaire
-                  ??
-                  '—' }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-
-        <!-- ── Ordres du jour ───────────────────────────────────────────── -->
         <section v-for="(odj, odjIdx) in codir.ordres_du_jour" :key="odj.id">
           <h2 class="text-base font-bold text-slate-800 border-b-2 border-violet-500 pb-2 mb-5 flex items-center gap-2">
             <span class="w-1.5 h-5 bg-violet-500 rounded-full inline-block"></span>
-            {{ codir.taches?.length ? odjIdx + 2 : odjIdx + 1 }} — {{ odj.libelle }}
+            {{ odjIdx + 1 }} — {{ odj.libelle }}
           </h2>
 
           <div v-for="dossier in odj.dossiers" :key="dossier.id" class="mb-6 pl-4 border-l-2 border-slate-200">
-            <div class="flex items-center gap-2 mb-3">
-              <span class="text-slate-400 text-xs font-bold uppercase tracking-wide shrink-0">Dossier</span>
-              <span class="font-semibold text-slate-700 text-sm">{{ dossier.libelle }}</span>
+            <div class="flex flex-col gap-0.5 mb-3">
+              <span class="text-slate-400 text-xs font-bold uppercase tracking-wide">Dossier</span>
+              <span class="font-semibold text-slate-800 text-sm">{{ dossier.libelle }}</span>
             </div>
 
             <div v-for="action in dossier.actions" :key="action.id" class="mb-4 pl-4 border-l-2 border-blue-100">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="text-blue-500 text-xs font-bold uppercase tracking-wide shrink-0">Action</span>
-                <span class="font-medium text-slate-700 text-sm">{{ action.libelle }}</span>
+              <div class="flex flex-col gap-0.5 mb-2">
+                <span class="text-blue-500 text-xs font-bold uppercase tracking-wide">Action</span>
+                <span class="font-medium text-slate-800 text-sm">{{ action.libelle }}</span>
               </div>
-              <div v-for="activite in action.activites" :key="activite.id"
-                class="mb-3 pl-4 border-l-2 border-violet-100">
+
+              <div v-if="action.taches?.length" class="pl-4 border-l-2 border-blue-50 mb-3">
+                <div class="text-xs font-bold text-blue-500 uppercase tracking-wide mb-2">Tâches</div>
+                <table class="w-full text-xs border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 text-slate-500 uppercase tracking-wide">
+                      <th class="text-left px-2 py-1.5 border border-slate-200">Tâche</th>
+                      <th class="text-center px-2 py-1.5 border border-slate-200 w-16">Priorité</th>
+                      <th class="text-center px-2 py-1.5 border border-slate-200 w-20">Début</th>
+                      <th class="text-center px-2 py-1.5 border border-slate-200 w-20">Fin</th>
+                      <th class="text-left px-2 py-1.5 border border-slate-200">Membres</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="tache in action.taches" :key="tache.id" class="even:bg-slate-50/40">
+                      <td class="px-2 py-1.5 border border-slate-200 text-slate-700">{{ tache.intitule }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center">
+                        <span :class="{
+                          'text-red-600 font-semibold': tache.priorite === 'Haute',
+                          'text-amber-600 font-semibold': tache.priorite === 'Moyenne',
+                          'text-green-600 font-semibold': tache.priorite === 'Basse',
+                        }">{{ tache.priorite }}</span>
+                      </td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">
+                        {{ formatDateShort(tache.date_debut) }}
+                      </td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">
+                        {{ formatDateShort(tache.date_fin) }}
+                      </td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">
+                        {{ getMembresLabel(tache.membres) }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div v-for="activite in action.activites" :key="activite.id" class="mb-3 pl-4 border-l-2 border-violet-100">
                 <div class="text-xs font-semibold text-violet-600 mb-1.5">▸ {{ activite.libelle }}</div>
                 <table v-if="activite.taches?.length" class="w-full text-xs border-collapse">
                   <thead>
@@ -379,22 +408,19 @@ onMounted(() => {
                     <tr v-for="tache in activite.taches" :key="tache.id" class="even:bg-slate-50/40">
                       <td class="px-2 py-1.5 border border-slate-200 text-slate-700">{{ tache.intitule }}</td>
                       <td class="px-2 py-1.5 border border-slate-200 text-center">
-                        <span
-                          :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">{{
-                          tache.priorite }}</span>
+                        <span :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">
+                          {{ tache.priorite }}
+                        </span>
                       </td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
-                        formatDateShort(tache.date_debut) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
-                        formatDateShort(tache.date_fin) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres)
-                        }}
-                      </td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_debut) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_fin) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres) }}</td>
                     </tr>
                   </tbody>
                 </table>
                 <p v-else class="text-slate-400 text-xs italic ml-2">Aucune tâche.</p>
               </div>
+
               <p v-if="!action.activites?.length" class="text-slate-400 text-xs italic pl-4">Aucune activité.</p>
             </div>
 
@@ -416,22 +442,48 @@ onMounted(() => {
                     <tr v-for="tache in activite.taches" :key="tache.id" class="even:bg-slate-50/40">
                       <td class="px-2 py-1.5 border border-slate-200 text-slate-700">{{ tache.intitule }}</td>
                       <td class="px-2 py-1.5 border border-slate-200 text-center">
-                        <span
-                          :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">{{
-                          tache.priorite }}</span>
+                        <span :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">
+                          {{ tache.priorite }}
+                        </span>
                       </td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
-                        formatDateShort(tache.date_debut) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
-                        formatDateShort(tache.date_fin) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres)
-                        }}
-                      </td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_debut) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_fin) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres) }}</td>
                     </tr>
                   </tbody>
                 </table>
                 <p v-else class="text-slate-400 text-xs italic ml-2">Aucune tâche.</p>
               </div>
+            </div>
+
+            <div v-if="dossier.taches?.length" class="pl-4 border-l-2 border-green-100 mt-3">
+              <div class="text-xs font-bold text-green-600 uppercase tracking-wide mb-2">Tâches directes du dossier</div>
+              <table class="w-full text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-500 uppercase tracking-wide">
+                    <th class="text-left px-2 py-1.5 border border-slate-200">Tâche</th>
+                    <th class="text-center px-2 py-1.5 border border-slate-200 w-16">Priorité</th>
+                    <th class="text-center px-2 py-1.5 border border-slate-200 w-20">Début</th>
+                    <th class="text-center px-2 py-1.5 border border-slate-200 w-20">Fin</th>
+                    <th class="text-left px-2 py-1.5 border border-slate-200">Membres</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="tache in dossier.taches" :key="tache.id" class="even:bg-slate-50/40">
+                    <td class="px-2 py-1.5 border border-slate-200 text-slate-700">{{ tache.intitule }}</td>
+                    <td class="px-2 py-1.5 border border-slate-200 text-center">
+                      <span :class="{
+                        'text-red-600 font-semibold': tache.priorite === 'Haute',
+                        'text-amber-600 font-semibold': tache.priorite === 'Moyenne',
+                        'text-green-600 font-semibold': tache.priorite === 'Basse',
+                      }">{{ tache.priorite }}</span>
+                    </td>
+                    <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_debut) }}</td>
+                    <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_fin) }}</td>
+                    <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres) }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             <p v-if="!dossier.actions?.length && !dossier.activites?.length" class="text-slate-400 text-xs italic pl-4">
@@ -446,7 +498,6 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Vide -->
     <div v-else class="flex flex-col items-center justify-center py-32 text-gray-400">
       <span class="text-5xl mb-4">📄</span>
       <p class="text-sm">Aucun CODIR chargé. Retournez sur la page de détail.</p>

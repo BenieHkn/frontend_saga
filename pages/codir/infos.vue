@@ -5,16 +5,15 @@ import {
   extractTimeInput,
   getStatutConfig,
 } from '@/composables/codirs/useCodir'
-import { useCodirsStore } from '@/stores/codirs'
+
 import { useCodir } from '@/composables/codirs/useCodir'
 import { getInitials } from '@/utils/formatters'
 
 definePageMeta({ title: 'Informations générales – CODIR' })
 
 const router = useRouter()
-const store = useCodirsStore()
 const toast = useNuxtApp().$toast ?? useToast()
-const { savePresences, getPresences, loading: presenceLoading, getCodir } = useCodir()
+const { savePresences, getPresences, loading: presenceLoading, getCodir, updateCodir } = useCodir()
 
 // ── Chargement du CODIR depuis localStorage ───────────────────────────────────
 const codir = ref(null)
@@ -93,7 +92,7 @@ const saveHeureFin = async () => {
   if (!codirId.value || !heureFin.value) return
   saving.value = true
   try {
-    await store.updateCodir(codirId.value, { heure_fin: heureFin.value })
+    await updateCodir(codirId.value, { heure_fin: heureFin.value })
     const updated = { ...codir.value, heure_fin: `${codir.value.date.substring(0, 10)}T${heureFin.value}:00.000000Z` }
     codir.value = updated
     localStorage.setItem('currentCodir', JSON.stringify(updated))

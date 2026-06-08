@@ -64,7 +64,6 @@ const isOpen = computed({
 
 const onConfirm = () => {
   emit('confirm')
-  isOpen.value = false
 }
 
 const onCancel = () => {

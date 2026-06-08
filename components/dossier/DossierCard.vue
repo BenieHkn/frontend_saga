@@ -30,8 +30,16 @@ const clickDossier  = () => emit('click', props.dossier)
     <div class="min-w-0 flex-1">
       <p class="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{{ dossier.libelle }}</p>
       <p class="text-xs text-gray-400 mt-0.5">#{{ dossier.id }}</p>
-      <UBadge :label="statutLabelFR(dossier.statut)" :color="couleurStatut(dossier.statut)" />
+
+      <div class="flex items-center gap-1 shrink-0">
+        <UBadge :label="statutLabelFR(dossier.statut)" :color="couleurStatut(dossier.statut)" />
+        <UBadge color="orange" variant="subtle" :label="dossier.taches?.length + ' Tâche' + (dossier.taches?.length > 1 ? 's' : '')" />
+        <UBadge color="blue" variant="subtle" :label="dossier.actions?.length + ' Action' + (dossier.actions?.length > 1 ? 's' : '')" />
+        <UBadge color="green" variant="subtle" :label="dossier.activites?.length + ' Activité' + (dossier.activites?.length > 1 ? 's' : '')" />
+      </div>
     </div>
+
+    
     
     <div class="flex items-center gap-1 shrink-0">
       <!-- Vue détail -->
