@@ -88,6 +88,10 @@ export function useCodir() {
     downloadPdf: (id) => call(`/codirs/${id}/downloadPdf`, { method: 'GET', blob: true }),
     generatePdf: (id) => call(`/codirs/${id}/generatePdf`, { method: 'POST' }),
     cloturerCodir: (id) => call(`/codirs/${id}/cloturerCodir`, { method: 'PATCH' }),
+    sendCodir: (id) =>
+        call(`/codirs/${id}/sendCodir`, {
+            method: 'POST',
+    }),
 
     // ✅ FIX 3 — fetchCodir : syntaxe corrigée (async{} → async () => {})
     //            et appel via call() au lieu de getCodir() non défini dans ce scope

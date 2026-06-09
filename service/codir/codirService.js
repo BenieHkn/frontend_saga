@@ -86,6 +86,12 @@ export function useCodirService() {
             method: 'PATCH',
         });
 
+    const sendCodir = (id) =>
+        call(`/codirs/${id}/sendCodir`, {
+            method: 'POST',
+    });
+
+
     return {
         getCodirs,
         getCodir,
@@ -103,5 +109,6 @@ export function useCodirService() {
         downloadPdf,
         generatePdf,
         cloturerCodir,
+        sendCodir
     };
 }
