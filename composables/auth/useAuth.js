@@ -198,6 +198,70 @@ export const useAuth = () => {
   const isAgent          = () => hasRole('agent')
   const isSecretaireCodir = () => hasRole('secretaire_codir')
 
+  // =====================
+  // RÔLES SMQ
+  // =====================
+  // Note : il n'existe pas de rôle smq_admin.
+  // L'administrateur système (isAdmin()) a tous les droits SMQ.
+  const isSmqPilote    = () => hasRole('smq_pilote')
+  const isSmqCopilote  = () => hasRole('smq_copilote')
+  const isSmqRQ        = () => hasRole('smq_rq')
+  const isSmqRQA       = () => hasRole('smq_rqa')
+  const isSmqMG        = () => isSmqRQ() || isSmqRQA()
+  // Alias de compatibilité : l'admin système tient lieu d'admin SMQ
+  const isSmqAdmin     = () => isAdmin()
+
+  /** A au moins un rôle SMQ (pour afficher le menu) */
+  const peutVoirSmq    = () => isSmqPilote() || isSmqCopilote() || isSmqRQ() || isSmqRQA() || isAdmin()
+
+  // ── Permissions SMQ (lecture depuis le bloc smq des permissions frontend) ──
+
+  const getSmqPerm = (key) => {
+    if (typeof window === 'undefined') return false
+    try {
+      const raw = localStorage.getItem('permissions')
+      return JSON.parse(raw)?.smq?.[key] === true
+    } catch { return false }
+  }
+
+  // Dashboard
+  const smqPeutVoirDashboard        = () => getSmqPerm('dashboard')
+  const smqPeutVoirDashboardGlobal  = () => getSmqPerm('dashboard_global')
+
+  // Indicateurs
+  const smqPeutVoirIndicateurs      = () => getSmqPerm('indicateurs_voir')
+  const smqPeutCreerIndicateur      = () => getSmqPerm('indicateurs_creer')
+  const smqPeutModifierIndicateur   = () => getSmqPerm('indicateurs_modifier')
+  const smqPeutSupprimerIndicateur  = () => getSmqPerm('indicateurs_supprimer')
+  const smqPeutAffecterCopilotes    = () => getSmqPerm('indicateurs_affecter')
+
+  // Saisies
+  const smqPeutVoirSaisies          = () => getSmqPerm('saisies_voir')
+  const smqPeutVoirToutesSaisies    = () => getSmqPerm('saisies_voir_toutes')
+  const smqPeutCreerSaisie          = () => getSmqPerm('saisies_creer')
+  const smqPeutSoumettreSaisie      = () => getSmqPerm('saisies_soumettre')
+  const smqPeutValiderSaisie        = () => getSmqPerm('saisies_valider')
+  const smqPeutRetournerSaisie      = () => getSmqPerm('saisies_retourner')
+  const smqPeutTransmettreSaisie    = () => getSmqPerm('saisies_transmettre')
+
+  // FAC
+  const smqPeutVoirFac              = () => getSmqPerm('fac_voir')
+  const smqPeutGererFac             = () => getSmqPerm('fac_gerer')
+
+  // PAQ
+  const smqPeutVoirPaq              = () => getSmqPerm('paq_voir')
+  const smqPeutGererPaq             = () => getSmqPerm('paq_gerer')
+  const smqPeutGererRecommandations = () => getSmqPerm('recommandations_gerer')
+
+  // Supervision
+  const smqPeutVoirStats            = () => getSmqPerm('stats_voir')
+  const smqPeutVoirRapports         = () => getSmqPerm('rapports_voir')
+  const smqPeutVoirHistoriques      = () => getSmqPerm('historiques_voir')
+
+  // Admin
+  const smqPeutGererUtilisateurs    = () => getSmqPerm('users_gerer')
+  const smqPeutGererReferentiels    = () => getSmqPerm('referentiels_gerer')
+
   const isChefServiceEtSecretaireCodir = () =>
     hasRole('chef_service') && hasRole('secretaire_codir')
 
@@ -531,6 +595,41 @@ const changePassword = async ({ current_password, password, password_confirmatio
     isSecretaireCodir,
     isChefServiceEtSecretaireCodir,
     isAgent,
+
+    // SMQ — Rôles (isSmqAdmin = alias de isAdmin)
+    isSmqAdmin,
+    isSmqPilote,
+    isSmqCopilote,
+    isSmqRQ,
+    isSmqRQA,
+    isSmqMG,
+    peutVoirSmq,
+
+    // SMQ — Permissions granulaires
+    smqPeutVoirDashboard,
+    smqPeutVoirDashboardGlobal,
+    smqPeutVoirIndicateurs,
+    smqPeutCreerIndicateur,
+    smqPeutModifierIndicateur,
+    smqPeutSupprimerIndicateur,
+    smqPeutAffecterCopilotes,
+    smqPeutVoirSaisies,
+    smqPeutVoirToutesSaisies,
+    smqPeutCreerSaisie,
+    smqPeutSoumettreSaisie,
+    smqPeutValiderSaisie,
+    smqPeutRetournerSaisie,
+    smqPeutTransmettreSaisie,
+    smqPeutVoirFac,
+    smqPeutGererFac,
+    smqPeutVoirPaq,
+    smqPeutGererPaq,
+    smqPeutGererRecommandations,
+    smqPeutVoirStats,
+    smqPeutVoirRapports,
+    smqPeutVoirHistoriques,
+    smqPeutGererUtilisateurs,
+    smqPeutGererReferentiels,
 
     // Permissions
     getPermissions,

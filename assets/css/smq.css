@@ -1,0 +1,404 @@
+/* ============================================================================
+   QualiPilot — Design tokens SMQ intégrés dans SAGA REVOLUTION
+   Module : Système de Management de la Qualité
+   Dépend de : assets/css/main.css (déjà chargé globalement)
+   ========================================================================== */
+
+/* ---- Couleurs QualiPilot (alignées sur SAGA vert émeraude + bleu marine) -- */
+:root {
+  --qp-primary-50:  #E8F6EE;
+  --qp-primary-100: #C9EBD7;
+  --qp-primary-500: #1F9D52;
+  --qp-primary-600: #168544;
+  --qp-primary-700: #116A37;
+
+  --qp-navy-50:  #EAEFF6;
+  --qp-navy-100: #CCD8E8;
+  --qp-navy-300: #6E89B2;
+  --qp-navy-500: #2E4F80;
+  --qp-navy-700: #1E3A5F;
+  --qp-navy-800: #182F4D;
+  --qp-navy-900: #11233B;
+
+  --qp-teal-50:  #E2F5F2;
+  --qp-teal-100: #C2EAE4;
+  --qp-teal-500: #0E9B8E;
+  --qp-teal-700: #0A6E66;
+
+  --qp-brand-gradient: linear-gradient(135deg, #1F8C49 0%, #1E3A5F 100%);
+
+  /* Neutrals */
+  --qp-n-0:   #FFFFFF;
+  --qp-n-25:  #F7F9FC;
+  --qp-n-50:  #EFF3F8;
+  --qp-n-100: #E3E9F1;
+  --qp-n-200: #CDD7E4;
+  --qp-n-300: #AEBBCC;
+  --qp-n-400: #8593A8;
+  --qp-n-500: #62718A;
+  --qp-n-600: #44546B;
+  --qp-n-700: #303E54;
+  --qp-n-800: #1E2A3E;
+  --qp-n-900: #0F1B2D;
+
+  /* Sémantique — Conformité */
+  --qp-success-50:  #E7F4ED;
+  --qp-success-100: #C6E6D3;
+  --qp-success-500: #1E8A5B;
+  --qp-success-600: #166F49;
+  --qp-success-700: #105739;
+
+  --qp-danger-50:  #FBEAE9;
+  --qp-danger-100: #F4CECB;
+  --qp-danger-500: #CE3B34;
+  --qp-danger-600: #AE2F29;
+  --qp-danger-700: #8C2521;
+
+  --qp-warning-50:  #FBF1DD;
+  --qp-warning-100: #F4E0B5;
+  --qp-warning-500: #C07F12;
+  --qp-warning-600: #9C660C;
+  --qp-warning-700: #7A4F08;
+
+  --qp-info-50:  #E6F0FB;
+  --qp-info-100: #C7DEF6;
+  --qp-info-500: #2575C2;
+  --qp-info-600: #1C5C9B;
+
+  /* Statuts workflow */
+  --qp-statut-brouillon: var(--qp-n-500);
+  --qp-statut-soumis:    var(--qp-warning-500);
+  --qp-statut-valide:    var(--qp-success-500);
+  --qp-statut-transmis:  var(--qp-teal-500);
+  --qp-statut-retourne:  var(--qp-danger-500);
+
+  /* Surfaces */
+  --qp-bg-app:     var(--qp-n-25);
+  --qp-bg-surface: var(--qp-n-0);
+  --qp-bg-subtle:  var(--qp-n-50);
+
+  --qp-fg-1: var(--qp-n-900);
+  --qp-fg-2: var(--qp-n-600);
+  --qp-fg-3: var(--qp-n-500);
+  --qp-fg-4: var(--qp-n-400);
+
+  --qp-border-1:     var(--qp-n-200);
+  --qp-border-2:     var(--qp-n-100);
+  --qp-border-focus: var(--qp-primary-500);
+
+  /* Ombres */
+  --qp-sh-1: 0 1px 2px rgba(15,27,45,.06), 0 1px 1px rgba(15,27,45,.04);
+  --qp-sh-2: 0 1px 2px rgba(15,27,45,.05), 0 4px 12px rgba(15,27,45,.07);
+  --qp-sh-3: 0 8px 24px rgba(15,27,45,.10), 0 2px 6px rgba(15,27,45,.06);
+
+  --qp-ring-focus:  0 0 0 3px rgba(31,157,82,.26);
+  --qp-ring-danger: 0 0 0 3px rgba(206,59,52,.25);
+
+  /* Timings */
+  --qp-dur-fast: 120ms;
+  --qp-dur-base: 180ms;
+  --qp-ease: cubic-bezier(.2,.6,.2,1);
+
+  /* Arrondis */
+  --qp-r-sm:  5px;
+  --qp-r-md:  7px;
+  --qp-r-lg:  10px;
+  --qp-r-xl:  14px;
+  --qp-r-pill: 999px;
+}
+
+/* ---- Typographie IBM Plex (chargée depuis nuxt.config head) ---------------- */
+.qp-font-sans { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+.qp-font-mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+/* Valeurs numériques toujours en mono tabulaire */
+.qp-num {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ---- KPI tile -------------------------------------------------------------- */
+.qp-kpi {
+  background: var(--qp-bg-surface);
+  border: 1px solid var(--qp-border-1);
+  border-radius: var(--qp-r-lg);
+  padding: 20px;
+  box-shadow: var(--qp-sh-1);
+}
+.qp-kpi__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--qp-fg-3);
+}
+.qp-kpi__value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  font-size: 2rem;
+  color: var(--qp-fg-1);
+  line-height: 1;
+  margin-top: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.qp-kpi__delta {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-top: 8px;
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.qp-kpi__delta.up   { color: var(--qp-success-600); }
+.qp-kpi__delta.down { color: var(--qp-danger-600); }
+
+/* ---- Badges statut --------------------------------------------------------- */
+.qp-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: var(--qp-r-pill);
+  white-space: nowrap;
+}
+.qp-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.qp-badge--neutral { background: var(--qp-n-50);        color: var(--qp-n-600); }
+.qp-badge--success { background: var(--qp-success-50);  color: var(--qp-success-600); }
+.qp-badge--danger  { background: var(--qp-danger-50);   color: var(--qp-danger-600); }
+.qp-badge--warning { background: var(--qp-warning-50);  color: var(--qp-warning-700); }
+.qp-badge--info    { background: var(--qp-info-50);     color: var(--qp-info-600); }
+.qp-badge--teal    { background: var(--qp-teal-50);     color: var(--qp-teal-700); }
+.qp-badge--solid.qp-badge--success { background: var(--qp-success-500); color: #fff; }
+.qp-badge--solid.qp-badge--danger  { background: var(--qp-danger-500);  color: #fff; }
+.qp-badge--solid::before { background: rgba(255,255,255,.85); }
+
+/* ---- Tableaux -------------------------------------------------------------- */
+.qp-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.qp-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--qp-fg-3);
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--qp-border-1);
+  background: var(--qp-n-25);
+  white-space: nowrap;
+}
+.qp-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--qp-border-2);
+  color: var(--qp-fg-1);
+  vertical-align: middle;
+}
+.qp-table tbody tr:hover { background: var(--qp-n-25); }
+.qp-table td.num,
+.qp-table th.num {
+  text-align: right;
+  font-family: 'IBM Plex Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Carte tableau --------------------------------------------------------- */
+.qp-tablecard {
+  background: #fff;
+  border: 1px solid var(--qp-border-1);
+  border-radius: var(--qp-r-lg);
+  overflow: hidden;
+  box-shadow: var(--qp-sh-1);
+}
+.qp-tablecard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--qp-border-2);
+}
+
+/* ---- Filtres / segmented control ------------------------------------------ */
+.qp-seg {
+  display: inline-flex;
+  background: var(--qp-n-50);
+  border: 1px solid var(--qp-border-2);
+  border-radius: var(--qp-r-md);
+  padding: 3px;
+  gap: 2px;
+}
+.qp-seg button {
+  border: 0;
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--qp-fg-2);
+  padding: 6px 14px;
+  border-radius: var(--qp-r-sm);
+  cursor: pointer;
+  transition: all var(--qp-dur-fast) var(--qp-ease);
+}
+.qp-seg button.active {
+  background: #fff;
+  color: var(--qp-primary-600);
+  box-shadow: var(--qp-sh-1);
+}
+
+/* ---- Barre de progression -------------------------------------------------- */
+.qp-progress {
+  height: 8px;
+  background: var(--qp-n-100);
+  border-radius: var(--qp-r-pill);
+  overflow: hidden;
+}
+.qp-progress__bar {
+  height: 100%;
+  border-radius: var(--qp-r-pill);
+  background: var(--qp-primary-500);
+  transition: width 0.4s ease;
+}
+
+/* ---- Stepper workflow ------------------------------------------------------ */
+.qp-stepper { display: flex; align-items: flex-start; margin-bottom: 22px; }
+.qp-step { flex: 1; text-align: center; position: relative; }
+.qp-step::after {
+  content: "";
+  position: absolute;
+  top: 13px; left: 50%;
+  width: 100%; height: 2px;
+  background: var(--qp-n-100);
+}
+.qp-step:last-child::after { display: none; }
+.qp-step.done::after { background: var(--qp-success-500); }
+.qp-step__dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: inline-grid; place-items: center;
+  position: relative; z-index: 1;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px; font-weight: 600;
+  border: 2px solid var(--qp-n-200);
+  background: #fff; color: var(--qp-fg-3);
+}
+.qp-step.done .qp-step__dot  { background: var(--qp-success-500); border-color: var(--qp-success-500); color: #fff; }
+.qp-step.now  .qp-step__dot  { background: var(--qp-primary-500); border-color: var(--qp-primary-500); color: #fff; box-shadow: 0 0 0 4px var(--qp-primary-50); }
+.qp-step__label { display: block; margin-top: 9px; font-size: 0.75rem; font-weight: 600; color: var(--qp-fg-3); }
+.qp-step.done .qp-step__label,
+.qp-step.now  .qp-step__label { color: var(--qp-fg-1); }
+
+/* ---- Champs formulaire ----------------------------------------------------- */
+.qp-field { display: flex; flex-direction: column; gap: 6px; }
+.qp-label { font-size: 0.8125rem; font-weight: 500; color: var(--qp-fg-1); }
+.qp-label .req { color: var(--qp-danger-500); margin-left: 2px; }
+.qp-input, .qp-select, .qp-textarea {
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 0.875rem;
+  color: var(--qp-fg-1);
+  background: #fff;
+  border: 1px solid var(--qp-border-1);
+  border-radius: var(--qp-r-md);
+  padding: 0 12px;
+  height: 38px;
+  width: 100%;
+  transition: border-color var(--qp-dur-fast) var(--qp-ease), box-shadow var(--qp-dur-fast) var(--qp-ease);
+}
+.qp-textarea { height: auto; padding: 12px; resize: vertical; line-height: 1.5; }
+.qp-input::placeholder { color: var(--qp-fg-4); }
+.qp-input:focus, .qp-select:focus, .qp-textarea:focus {
+  outline: none;
+  border-color: var(--qp-border-focus);
+  box-shadow: var(--qp-ring-focus);
+}
+.qp-input--mono {
+  font-family: 'IBM Plex Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+.qp-input.is-error { border-color: var(--qp-danger-500); box-shadow: var(--qp-ring-danger); }
+
+/* ---- Calcul (clé de calcul) ------------------------------------------------ */
+.qp-calc { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.qp-calc__op  { flex: 1; min-width: 140px; }
+.qp-calc__sign { width: 70px; flex: none; }
+.qp-calc__eq  {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 26px; color: var(--qp-fg-3);
+  font-weight: 500; padding-bottom: 4px;
+}
+.qp-calc__result {
+  border-radius: var(--qp-r-md);
+  padding: 9px 20px;
+  text-align: center;
+  flex: none;
+}
+.qp-calc__result .label {
+  font-size: 10px; text-transform: uppercase;
+  letter-spacing: .06em; font-weight: 600;
+}
+.qp-calc__result .value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 24px; font-weight: 600;
+}
+.qp-calc__result--ok {
+  background: var(--qp-success-50);
+  border: 1px solid var(--qp-success-100);
+}
+.qp-calc__result--ok .label { color: var(--qp-success-600); }
+.qp-calc__result--ok .value { color: var(--qp-success-700); }
+.qp-calc__result--err {
+  background: var(--qp-danger-50);
+  border: 1px solid var(--qp-danger-100);
+}
+.qp-calc__result--err .label { color: var(--qp-danger-600); }
+.qp-calc__result--err .value { color: var(--qp-danger-700); }
+
+/* ---- Card basique ---------------------------------------------------------- */
+.qp-card {
+  background: var(--qp-bg-surface);
+  border: 1px solid var(--qp-border-1);
+  border-radius: var(--qp-r-lg);
+  box-shadow: var(--qp-sh-1);
+}
+.qp-card--pad { padding: 24px; }
+
+/* ---- Divider --------------------------------------------------------------- */
+.qp-divider { height: 1px; background: var(--qp-border-2); border: 0; margin: 0; }
+
+/* ---- Overline -------------------------------------------------------------- */
+.qp-overline {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--qp-fg-3);
+}
+
+/* ---- Meta grid (fiche détail) ---------------------------------------------- */
+.qp-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--qp-border-1);
+  border-radius: var(--qp-r-md);
+  overflow: hidden;
+}
+.qp-meta-grid .cell {
+  padding: 12px 14px;
+  border-right: 1px solid var(--qp-border-2);
+}
+.qp-meta-grid .cell:last-child { border-right: 0; }
+.qp-meta-grid .cell .k {
+  font-size: 10px; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--qp-fg-3);
+  font-weight: 600;
+}
+.qp-meta-grid .cell .v {
+  font-size: 0.875rem; color: var(--qp-fg-1);
+  font-weight: 600; margin-top: 4px;
+}

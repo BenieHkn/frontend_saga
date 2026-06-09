@@ -118,7 +118,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">N° d'enregistrement *</label>
-                    <UInput v-model="form.numero_enreg" placeholder="Numéro d'enregistrement" class="w-full h-12" :disabled="isRestrictedEditor" />
+                    <UInput v-model="form.numero_enreg" placeholder="Numéro d'enregistrement" class="w-full h-12" />
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Date d'enregistrement *</label>
@@ -260,7 +260,7 @@ const isFormValid = computed(() => {
   if (isRestrictedEditor.value) {
     return (
       (sansReference.value || form.value.reference !== '') &&
-      form.value.objet !== ''
+      form.value.objet !== '' && form.value.numero_enreg !== ''
     )
   }
   return (
@@ -366,6 +366,7 @@ const validateForm = () => {
   if (isRestrictedEditor.value) {
     if (!sansReference.value && !form.value.reference) newErrors.push("La référence est obligatoire.")
     if (!form.value.objet) newErrors.push("L'objet est obligatoire.")
+    if (!form.value.numero_enreg) newErrors.push("Le numéro d'enregistrement est obligatoire.")
     errors.value = newErrors
     return newErrors.length === 0
   }
@@ -425,6 +426,7 @@ const handleSubmit = async () => {
     if (isRestrictedEditor.value) {
       formData.append('reference', sansReference.value ? 'sans reference' : (form.value.reference || 'sans reference'))
       formData.append('objet', form.value.objet)
+      formData.append('numero_enreg', form.value.numero_enreg)
     } else {
       formData.append('numero_enreg',    form.value.numero_enreg)
       formData.append('date_enreg',      form.value.date_enreg)

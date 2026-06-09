@@ -21,6 +21,61 @@
         </div>
       </NuxtLink>
 
+      <!-- ── Module SMQ ── -->
+      <div v-if="peutVoirSmq() || isAdmin()" class="pt-2">
+        <button @click="toggleSmq"
+          class="flex items-center justify-between w-full px-4 py-3.5 rounded-xl transition-all duration-200"
+          :class="[
+            isSmqRouteActive
+              ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg'
+              : 'text-gray-700 hover:bg-emerald-800 hover:text-white',
+          ]">
+          <div class="flex items-center">
+            <Icon name="heroicons:chart-bar-square-20-solid" class="h-6 w-6 shrink-0" />
+            <span v-if="isExpanded" class="ml-4 font-bold tracking-wide">SMQ</span>
+          </div>
+          <Icon v-if="isExpanded"
+            :name="smqMenuOpen ? 'heroicons:chevron-up' : 'heroicons:chevron-down'"
+            class="h-4 w-4 opacity-70" />
+          <div v-if="!isExpanded"
+            class="absolute left-16 bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+            SMQ
+          </div>
+        </button>
+        <div v-if="smqMenuOpen && isExpanded" class="ml-10 space-y-2 mt-2 animate-slide-down">
+          <NuxtLink to="/smq/dashboard"
+            class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+            :class="route.path.startsWith('/smq/dashboard') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+            <Icon name="heroicons:home-20-solid" class="h-4 w-4 shrink-0" />
+            Tableau de bord
+          </NuxtLink>
+          <NuxtLink to="/smq/indicateurs"
+            class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+            :class="route.path.startsWith('/smq/indicateurs') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+            <Icon name="heroicons:chart-bar-20-solid" class="h-4 w-4 shrink-0" />
+            Indicateurs
+          </NuxtLink>
+          <NuxtLink to="/smq/fac"
+            class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+            :class="route.path.startsWith('/smq/fac') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+            <Icon name="heroicons:clipboard-document-list-20-solid" class="h-4 w-4 shrink-0" />
+            Actions correctives
+          </NuxtLink>
+          <NuxtLink to="/smq/paq"
+            class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+            :class="route.path.startsWith('/smq/paq') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+            <Icon name="heroicons:magnifying-glass-circle-20-solid" class="h-4 w-4 shrink-0" />
+            Plan Audit Qualité
+          </NuxtLink>
+          <NuxtLink v-if="isSmqAdmin() || isAdmin()" to="/smq/admin"
+            class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+            :class="route.path.startsWith('/smq/admin') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+            <Icon name="heroicons:users-20-solid" class="h-4 w-4 shrink-0" />
+            Utilisateurs SMQ
+          </NuxtLink>
+        </div>
+      </div>
+
       <!-- ── Audit (Statistiques + Courriers) ── -->
       <div v-if="isDCCIQ() || isAdmin()" class="pt-2">
       <!-- <div v-if="voitStats()" class="pt-2"> -->
@@ -129,6 +184,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuth } from '~/composables/auth/useAuth'
+import { useSmqPermissions } from '~/composables/smq/useSmqPermissions'
 
 const route = useRoute()
 
@@ -141,13 +197,21 @@ const {
   isSP,
   isSA,
   isDG,
-  isDCCIQ, 
-  isAdmin
+  isDCCIQ,
+  isAdmin,
 } = useAuth()
+
+// SMQ — permissions via composable dédié (evite les appels de fonction SSR)
+const { peutVoirMenuSMQ, peutGererUtilisateurs } = useSmqPermissions()
+
+// Wrappers compatibles template (ref → boolean)
+const peutVoirSmq = () => peutVoirMenuSMQ.value || isAdmin()
+const isSmqAdmin  = () => peutGererUtilisateurs.value
 
 const isExpanded       = ref(true)
 const settingsMenuOpen = ref(false)
 const auditMenuOpen    = ref(false)
+const smqMenuOpen      = ref(false)
 const emit = defineEmits(['sidebar-toggle'])
 
 // ── Item actif ────────────────────────────────────────────────────────────────
@@ -223,6 +287,15 @@ const toggleAudit = () => {
   auditMenuOpen.value = !auditMenuOpen.value
 }
 
+const toggleSmq = () => {
+  if (!isExpanded.value) toggleSidebar()
+  smqMenuOpen.value = !smqMenuOpen.value
+}
+
+const isSmqRouteActive = computed(() =>
+  route.path.startsWith('/smq')
+)
+
 // ── Auto-ouvrir les menus selon la route active ───────────────────────────────
 const isSettingsRouteActive = computed(() =>
   ['/entites', '/utilisateurs', '/point-critique', '/interim', '/membres'].some(
@@ -236,6 +309,10 @@ watch(isSettingsRouteActive, (isActive) => {
 
 watch(isAuditRouteActive, (isActive) => {
   if (isActive && !auditMenuOpen.value) auditMenuOpen.value = true
+}, { immediate: true })
+
+watch(isSmqRouteActive, (isActive) => {
+  if (isActive && !smqMenuOpen.value) smqMenuOpen.value = true
 }, { immediate: true })
 
 onMounted(() => {
