@@ -86,13 +86,14 @@ const heureFinSaved = computed(() => !!codir.value?.heure_fin)
 
 watchEffect(() => {
   if (codir.value?.heure_fin) heureFin.value = extractTimeInput(codir.value.heure_fin)
+  if (codir.value?.reference) reference.value = codir.value.reference
 })
 
 const saveHeureFin = async () => {
   if (!codirId.value || !heureFin.value) return
   saving.value = true
   try {
-    await updateCodir(codirId.value, { heure_fin: heureFin.value })
+    await updateCodir(codirId.value, { heure_fin: heureFin.value, reference: reference.value })
     const updated = { ...codir.value, heure_fin: `${codir.value.date.substring(0, 10)}T${heureFin.value}:00.000000Z` }
     codir.value = updated
     localStorage.setItem('currentCodir', JSON.stringify(updated))
@@ -171,8 +172,10 @@ const savePresencesToDb = async () => {
   }
 }
 
-const rafraichir= async()=>{
-  if(process.client) return
+const reference = ref('')
+
+const rafraichir = async () => {
+  if (process.client) return
   codir.value = await getCodir(codir.value.id)
   localStorage.setItem('currentCodir', JSON.stringify(codir.value))
 }
@@ -241,22 +244,17 @@ onMounted(() => {
 
         <div class="flex items-end gap-4 p-1">
           <UFormGroup label="Heure de fin de séance" class="flex-1">
-            <UInput
-              v-model="heureFin"
-              type="time"
-              size="md"
-              icon="i-heroicons-clock"
-              :placeholder="extractTime(codir.heure_debut) || '10:00'"
-            />
+            <UInput v-model="heureFin" type="time" size="md" icon="i-heroicons-clock"
+              :placeholder="extractTime(codir.heure_debut) || '10:00'" />
           </UFormGroup>
-          <UButton
-            color="blue"
-            size="md"
-            icon="i-heroicons-check"
-            :loading="saving"
-            :disabled="!heureFin"
-            @click="saveHeureFin"
-          >
+
+          <UFormGroup label="Référence" class="flex-1">
+            <UInput v-model="reference" size="md" icon="i-heroicons-hashtag"
+              :placeholder="`/DGML/${new Date().getFullYear()}/`" />
+          </UFormGroup>
+
+          <UButton color="blue" size="md" icon="i-heroicons-check" :loading="saving" :disabled="!heureFin"
+            @click="saveHeureFin">
             Enregistrer
           </UButton>
         </div>
@@ -286,28 +284,16 @@ onMounted(() => {
 
             <!-- Bouton de sauvegarde + indicateur -->
             <div v-if="membres.length" class="flex items-center gap-2">
-              <span
-                v-if="!presencesSaved"
-                class="flex items-center gap-1 text-xs text-amber-500"
-              >
+              <span v-if="!presencesSaved" class="flex items-center gap-1 text-xs text-amber-500">
                 <UIcon name="i-heroicons-exclamation-triangle" class="w-3.5 h-3.5" />
                 Non sauvegardé
               </span>
-              <span
-                v-else
-                class="flex items-center gap-1 text-xs text-green-500"
-              >
+              <span v-else class="flex items-center gap-1 text-xs text-green-500">
                 <UIcon name="i-heroicons-check-circle" class="w-3.5 h-3.5" />
                 Sauvegardé
               </span>
-              <UButton
-                color="violet"
-                variant="soft"
-                size="xs"
-                icon="i-heroicons-cloud-arrow-up"
-                :loading="presenceLoading"
-                @click="savePresencesToDb"
-              >
+              <UButton color="violet" variant="soft" size="xs" icon="i-heroicons-cloud-arrow-up"
+                :loading="presenceLoading" @click="savePresencesToDb">
                 Sauvegarder
               </UButton>
             </div>
@@ -315,10 +301,8 @@ onMounted(() => {
         </div>
 
         <!-- Pas de membres -->
-        <div
-          v-if="!membres.length"
-          class="text-center py-10 text-gray-400 text-sm bg-gray-50 dark:bg-slate-800/50 rounded-2xl"
-        >
+        <div v-if="!membres.length"
+          class="text-center py-10 text-gray-400 text-sm bg-gray-50 dark:bg-slate-800/50 rounded-2xl">
           <UIcon name="i-heroicons-user-group" class="w-8 h-8 mx-auto mb-2 opacity-40" />
           <p>Aucun membre associé à ce CODIR.</p>
           <p class="text-xs mt-1 opacity-70">Les membres sont associés via les tâches et activités.</p>
@@ -326,16 +310,12 @@ onMounted(() => {
 
         <!-- Grille des cartes de présence -->
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <CodirListePresence
-            v-for="membre in membres"
-            :key="membre.id"
-            :name="membre.entite_user.user.prenom + ' ' + membre.entite_user.user.nom"
-            :role="membre.role"
+          <CodirListePresence v-for="membre in membres" :key="membre.id"
+            :name="membre.entite_user.user.prenom + ' ' + membre.entite_user.user.nom" :role="membre.role"
             :initials="getInitials(membre.entite_user.user.prenom + ' ' + membre.entite_user.user.nom)"
             :initial-status="presenceState[membre.id]?.status ?? 'present'"
             :initial-reason="presenceState[membre.id]?.reason ?? ''"
-            @change="onPresenceChange({ key: membre.id, ...$event })"
-          />
+            @change="onPresenceChange({ key: membre.id, ...$event })" />
         </div>
       </div>
 
@@ -344,10 +324,10 @@ onMounted(() => {
           <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4" />
           Enregistrez l'heure de fin avant de continuer
         </div>
-         <span v-if="!presencesSaved" class="text-xs text-amber-500 flex items-center gap-1">
-            <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4" />
-            Sauvegardez les présences avant de continuer
-          </span>
+        <span v-if="!presencesSaved" class="text-xs text-amber-500 flex items-center gap-1">
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4" />
+          Sauvegardez les présences avant de continuer
+        </span>
       </div>
 
       <!-- ── Navigation stepper ─────────────────────────────────────────────── -->
@@ -360,12 +340,8 @@ onMounted(() => {
 
         <div class="flex flex-col items-end gap-2">
 
-          <UButton
-            trailing-icon="i-heroicons-arrow-right"
-            color="blue"
-            :disabled="!presencesSaved || !heureFinSaved || presenceLoading"
-            @click="goNext"
-          >
+          <UButton trailing-icon="i-heroicons-arrow-right" color="blue"
+            :disabled="!presencesSaved || !heureFinSaved || presenceLoading" @click="goNext">
             Suivant
           </UButton>
         </div>
@@ -395,7 +371,8 @@ onMounted(() => {
             Continuer sans sauvegarder
           </UButton>
           <!-- Sauvegarder puis continuer -->
-          <UButton color="violet" icon="i-heroicons-cloud-arrow-up" :loading="presenceLoading" @click="confirmSaveAndNext">
+          <UButton color="violet" icon="i-heroicons-cloud-arrow-up" :loading="presenceLoading"
+            @click="confirmSaveAndNext">
             Sauvegarder et continuer
           </UButton>
         </div>

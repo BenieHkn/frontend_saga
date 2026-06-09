@@ -367,7 +367,10 @@ const handleValider = async () => {
       has_validate: true
     })
     
-    await updatePresence(presenceMembre.value.id)
+    presenceMembre.value = await updatePresence(presenceMembre.value.id, {
+      has_validate: true
+    })
+    
     await fetchCodir()
 
     toast.add({
@@ -507,13 +510,13 @@ onMounted(async () => {
       
       <div class="flex justify-end mt-8">
         <UButton
-            :disabled="!canValidate"
+            :disabled="!canValidate || presenceMembre.has_validate"
             color="green"
             variant="soft"
             @click="handleValider"
             :loading="loading"
           >
-            Valider le CODIR
+            {{ presenceMembre.has_validate ? 'CODIR validé' : 'Valider le CODIR' }}
           </UButton>
       </div>
    

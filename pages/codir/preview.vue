@@ -26,8 +26,6 @@ const handleReturn = () => {
 // ── Données depuis localStorage ───────────────────────────────────────────────
 const codir = ref(null)
 
-
-
 // ── Composable ────────────────────────────────────────────────────────────────
 const { cloturerCodir, generatePdf, downloadPdf, getCodir, getPresences } = useCodir()
 
@@ -47,12 +45,7 @@ const getCachedMembresById = () => {
 }
 
 const isPresenceValidated = (presence) =>
-  presence?.hasValidate === true ||
-  presence?.has_validate === true ||
-  presence?.hasValidate === 1 ||
-  presence?.has_validate === 1 ||
-  presence?.hasValidate === '1' ||
-  presence?.has_validate === '1'
+  presence?.has_validate === true
 
 const isMembreExemptValidation = (presence, cachedMembresById) => {
   const membre = presence?.membre ?? cachedMembresById.get(Number(presence?.membre_id))
@@ -66,15 +59,14 @@ const isMembreExemptValidation = (presence, cachedMembresById) => {
 }
 
 const getUnvalidatedPresentPresences = async () => {
-  const presences = await getPresences(codir.value.id)
+  const response = await getPresences(codir.value.id)
+  const presences = response?.presences || response || []
   const cachedMembresById = getCachedMembresById()
-  if (!(presences ?? []).length) return [{ missingPresences: true }]
 
-  return (presences ?? []).filter((presence) => {
-    const isPresent =
-      presence?.is_present === true ||
-      presence?.is_present === 1 ||
-      presence?.is_present === '1'
+  if (!presences.length) return [{ missingPresences: true }]
+
+  return presences.filter((presence) => {
+    const isPresent = presence?.is_present === true
     if (!isPresent) return false
     if (isMembreExemptValidation(presence, cachedMembresById)) return false
     return !isPresenceValidated(presence)
@@ -90,7 +82,7 @@ const confirmerCloture = async () => {
     if (unvalidatedPresences.length) {
       toast.add({
         title: 'Clôture impossible',
-        description: 'Tous les membres présents doivent valider le CODIR avant la clôture, sauf DGML.',
+        description: 'Toutes les entités présentes doivent valider le CODIR avant la clôture.',
         color: 'red',
         icon: 'i-heroicons-exclamation-circle',
       })
@@ -170,7 +162,7 @@ const handleDownloadPdf = async (item) => {
 
 // ── Helpers d'affichage ───────────────────────────────────────────────────────
 const getMembresLabel = (membres) =>
-  membres?.map(m => `${m.entite_user?.user?.prenom ?? ''} ${m.entite_user?.user?.nom ?? ''} (${m.role})`).join(', ') ?? '—'
+  membres?.map(m => `${m.entite_user?.entite?.code ?? ''} `).join(', ') ?? '—'
 
 const statutTacheLabel = (s) => ({
   en_attente: 'En attente', en_cours: 'En cours',
@@ -184,11 +176,61 @@ const rafraichir = async () => {
   localStorage.setItem('currentCodir', JSON.stringify(codir.value))
 }
 
+// ── Listing validations ───────────────────────────────────────────────────────
+const presencesGroupees = ref({ valides: [], nonValides: [], exempts: [] })
+const presencesLoading = ref(false)
+
+const chargerPresences = async () => {
+  if (!codir.value) return
+  presencesLoading.value = true
+  try {
+    const response = await getPresences(codir.value.id)
+    const presences = response?.presences || response || []
+    const cachedMembresById = getCachedMembresById()
+
+    const valides = []
+    const nonValides = []
+    const exempts = []
+
+    for (const presence of presences) {
+      if (!presence.is_present) continue
+
+      const codeEntite = codeEntiteMembre(presence, cachedMembresById)
+
+      if (isMembreExemptValidation(presence, cachedMembresById)) {
+        exempts.push(codeEntite)
+      } else if (isPresenceValidated(presence)) {
+        valides.push(codeEntite)
+      } else {
+        nonValides.push(codeEntite)
+      }
+    }
+
+    presencesGroupees.value = { valides, nonValides, exempts }
+  } finally {
+    presencesLoading.value = false
+  }
+}
+
+const codeEntiteMembre = (presence, map) => {
+  const membre = presence?.membre ?? map?.get(Number(presence?.membre_id))
+  const entiteCode =
+    membre?.entite_user?.entite?.code
+
+  return entiteCode ? String(entiteCode).toUpperCase() : `Entité inconnue (#${presence.membre_id})`
+}
+
+// ── Listing validations ───────────────────────────────────────────────────────
+const showValidations = ref(true) // true = démasqué par défaut, mettez false pour le masquer au chargement
+// const presencesGroupees = ref({ valides: [], nonValides: [], exempts: [] })
+// const presencesLoading = ref(false)
+
 onMounted(() => {
   const raw = localStorage.getItem('currentCodir')
   if (raw) {
     codir.value = JSON.parse(raw)
     rafraichir()
+    chargerPresences()
   }
 })
 </script>
@@ -310,7 +352,82 @@ onMounted(() => {
 
     <div v-if="codir" class="mx-auto my-8 bg-white shadow-xl rounded-xl overflow-hidden">
 
-      <div class="bg-gradient-to-r from-slate-800 to-blue-900 text-white px-10 py-8">
+      <div v-if="!presencesLoading" class="px-10 py-5 border-b border-gray-100 dark:border-gray-700">
+        <div class="flex items-center justify-between cursor-pointer group mb-4"
+          @click="showValidations = !showValidations">
+          <h2
+            class="text-sm font-semibold text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-200 uppercase tracking-wide transition-colors">
+            Validation des présences
+          </h2>
+          <UButton :icon="showValidations ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'" color="gray"
+            variant="ghost" size="sm" />
+        </div>
+
+        <div v-show="showValidations" class="grid grid-cols-1 sm:grid-cols-3 gap-4 transition-all">
+
+          <div
+            class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-4">
+            <div class="flex items-center gap-2 mb-3">
+              <UIcon name="i-heroicons-check-circle" class="w-4 h-4 text-emerald-500" />
+              <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
+                Validé ({{ presencesGroupees.valides.length }})
+              </span>
+            </div>
+            <ul v-if="presencesGroupees.valides.length" class="space-y-1">
+              <li v-for="code in presencesGroupees.valides" :key="code"
+                class="text-sm text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 font-medium">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block flex-shrink-0"></span>
+                {{ code }}
+              </li>
+            </ul>
+            <p v-else class="text-xs italic text-emerald-600/60 dark:text-emerald-500/50">Aucun</p>
+          </div>
+
+          <div class="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4">
+            <div class="flex items-center gap-2 mb-3">
+              <UIcon name="i-heroicons-clock" class="w-4 h-4 text-amber-500" />
+              <span class="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
+                En attente ({{ presencesGroupees.nonValides.length }})
+              </span>
+            </div>
+            <ul v-if="presencesGroupees.nonValides.length" class="space-y-1">
+              <li v-for="code in presencesGroupees.nonValides" :key="code"
+                class="text-sm text-amber-800 dark:text-amber-300 flex items-center gap-1.5 font-medium">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block flex-shrink-0"></span>
+                {{ code }}
+              </li>
+            </ul>
+            <p v-else class="text-xs italic text-amber-600/60 dark:text-amber-500/50">Aucun</p>
+          </div>
+
+          <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
+            <div class="flex items-center gap-2 mb-3">
+              <UIcon name="i-heroicons-shield-check" class="w-4 h-4 text-gray-400" />
+              <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Exempts ({{ presencesGroupees.exempts.length }})
+              </span>
+            </div>
+            <ul v-if="presencesGroupees.exempts.length" class="space-y-1">
+              <li v-for="code in presencesGroupees.exempts" :key="code"
+                class="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1.5 font-medium">
+                <span class="w-1.5 h-1.5 rounded-full bg-gray-300 inline-block flex-shrink-0"></span>
+                {{ code }}
+              </li>
+            </ul>
+            <p v-else class="text-xs italic text-gray-400/60">Aucun</p>
+          </div>
+
+        </div>
+      </div>
+
+      <div v-else class="px-10 py-4 border-b border-gray-100 dark:border-gray-700">
+        <div class="flex items-center gap-2 text-sm text-gray-400">
+          <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin" />
+          Chargement des présences…
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-r from-teal-800 to-blue-900 text-white px-10 py-8">
         <div class="text-xs font-semibold tracking-widest uppercase text-blue-300 mb-2">Compte rendu</div>
         <h1 class="text-3xl font-bold mb-3">Réunion CODIR</h1>
         <div class="flex flex-wrap items-center gap-6 text-sm text-blue-100">
@@ -320,19 +437,13 @@ onMounted(() => {
           </span>
           <span class="flex items-center gap-1.5">
             <span class="opacity-60">Horaire :</span>
-            <strong class="text-white">{{ extractTime(codir.heure_debut) }} – {{ extractTime(codir.heure_fin) }}</strong>
+            <strong class="text-white">{{ extractTime(codir.heure_debut) }} – {{ extractTime(codir.heure_fin)
+            }}</strong>
           </span>
           <span
             class="text-xs font-semibold px-3 py-1 rounded-full capitalize bg-white/10 text-white border border-white/20">
             {{ getStatutConfig(codir.statut).label }}
           </span>
-        </div>
-        <div v-if="codir.url" class="mt-4">
-          <a :href="`/${codir.url}`" target="_blank"
-            class="inline-flex items-center gap-1.5 text-xs text-blue-200 hover:text-white underline underline-offset-2 transition-colors">
-            <UIcon name="i-heroicons-document-arrow-down" class="w-3.5 h-3.5" />
-            Voir le PDF enregistré
-          </a>
         </div>
       </div>
 
@@ -392,7 +503,8 @@ onMounted(() => {
                 </table>
               </div>
 
-              <div v-for="activite in action.activites" :key="activite.id" class="mb-3 pl-4 border-l-2 border-violet-100">
+              <div v-for="activite in action.activites" :key="activite.id"
+                class="mb-3 pl-4 border-l-2 border-violet-100">
                 <div class="text-xs font-semibold text-violet-600 mb-1.5">▸ {{ activite.libelle }}</div>
                 <table v-if="activite.taches?.length" class="w-full text-xs border-collapse">
                   <thead>
@@ -408,13 +520,18 @@ onMounted(() => {
                     <tr v-for="tache in activite.taches" :key="tache.id" class="even:bg-slate-50/40">
                       <td class="px-2 py-1.5 border border-slate-200 text-slate-700">{{ tache.intitule }}</td>
                       <td class="px-2 py-1.5 border border-slate-200 text-center">
-                        <span :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">
+                        <span
+                          :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">
                           {{ tache.priorite }}
                         </span>
                       </td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_debut) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_fin) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
+                        formatDateShort(tache.date_debut) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
+                        formatDateShort(tache.date_fin) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres)
+                      }}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -442,13 +559,18 @@ onMounted(() => {
                     <tr v-for="tache in activite.taches" :key="tache.id" class="even:bg-slate-50/40">
                       <td class="px-2 py-1.5 border border-slate-200 text-slate-700">{{ tache.intitule }}</td>
                       <td class="px-2 py-1.5 border border-slate-200 text-center">
-                        <span :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">
+                        <span
+                          :class="{ 'text-red-600 font-semibold': tache.priorite === 'Haute', 'text-amber-600 font-semibold': tache.priorite === 'Moyenne', 'text-green-600 font-semibold': tache.priorite === 'Basse' }">
                           {{ tache.priorite }}
                         </span>
                       </td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_debut) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_fin) }}</td>
-                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
+                        formatDateShort(tache.date_debut) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
+                        formatDateShort(tache.date_fin) }}</td>
+                      <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres)
+                      }}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -457,7 +579,8 @@ onMounted(() => {
             </div>
 
             <div v-if="dossier.taches?.length" class="pl-4 border-l-2 border-green-100 mt-3">
-              <div class="text-xs font-bold text-green-600 uppercase tracking-wide mb-2">Tâches directes du dossier</div>
+              <div class="text-xs font-bold text-green-600 uppercase tracking-wide mb-2">Tâches directes du dossier
+              </div>
               <table class="w-full text-xs border-collapse">
                 <thead>
                   <tr class="bg-slate-50 text-slate-500 uppercase tracking-wide">
@@ -478,9 +601,12 @@ onMounted(() => {
                         'text-green-600 font-semibold': tache.priorite === 'Basse',
                       }">{{ tache.priorite }}</span>
                     </td>
-                    <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_debut) }}</td>
-                    <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{ formatDateShort(tache.date_fin) }}</td>
-                    <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres) }}</td>
+                    <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
+                      formatDateShort(tache.date_debut) }}</td>
+                    <td class="px-2 py-1.5 border border-slate-200 text-center text-slate-500">{{
+                      formatDateShort(tache.date_fin) }}</td>
+                    <td class="px-2 py-1.5 border border-slate-200 text-slate-500">{{ getMembresLabel(tache.membres) }}
+                    </td>
                   </tr>
                 </tbody>
               </table>
