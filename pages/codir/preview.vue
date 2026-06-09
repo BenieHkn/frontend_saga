@@ -238,7 +238,7 @@ onMounted(() => {
         </UButton>
 
         <UButton 
-          icon="i-heroicons-document-arrow-up" 
+          icon="i-heroicons -paper-airplane" 
           color="violet" 
           variant="soft" 
           size="sm" 
