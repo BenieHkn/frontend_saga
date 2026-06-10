@@ -51,14 +51,53 @@
             </div>
           </div>
 
-          <!-- Admin : sélection parmi les entités premières -->
+          <!-- Admin : sélection parmi les entités premières avec recherche -->
           <div v-else class="form-grid">
-            <div class="qp-field full">
+            <div class="qp-field full" style="position:relative" ref="entiteDropdownRef">
               <label class="qp-label">Entité <span class="req">*</span></label>
-              <select v-model="form.entite_id" class="qp-select" :class="{ 'is-error': errors.entite_id }">
-                <option value="">— Choisir une entité —</option>
-                <option v-for="e in entitesPremières" :key="e.id" :value="e.id">{{ e.libelle }}</option>
-              </select>
+              <div
+                class="qp-input flex items-center gap-2 cursor-pointer"
+                :class="{ 'is-error': errors.entite_id }"
+                style="padding-right:10px"
+                @click="entiteDropdownOpen = !entiteDropdownOpen"
+              >
+                <span class="flex-1 truncate" :style="!form.entite_id ? 'color:var(--qp-fg-3)' : ''">
+                  {{ entitesPremières.find(e => e.id === form.entite_id)?.libelle ?? '— Choisir une entité —' }}
+                </span>
+                <Icon name="heroicons:chevron-down" class="h-4 w-4 flex-none" style="color:var(--qp-fg-3)" />
+              </div>
+              <div
+                v-if="entiteDropdownOpen"
+                class="rounded-lg overflow-hidden"
+                style="position:absolute;z-index:50;top:100%;left:0;right:0;margin-top:4px;background:#fff;border:1px solid var(--qp-border-1);box-shadow:var(--qp-sh-2)"
+              >
+                <div class="p-2 border-b" style="border-color:var(--qp-border-2)">
+                  <input
+                    v-model="entiteSearch"
+                    class="qp-input"
+                    style="height:34px;font-size:13px"
+                    placeholder="Rechercher une entité…"
+                    @click.stop
+                    autofocus
+                  />
+                </div>
+                <div style="max-height:200px;overflow-y:auto">
+                  <div
+                    v-for="e in entitesFiltrees"
+                    :key="e.id"
+                    class="px-3 py-2.5 text-sm cursor-pointer hover:bg-gray-50"
+                    :style="form.entite_id === e.id
+                      ? 'background:var(--qp-primary-50);color:var(--qp-primary-700);font-weight:600'
+                      : 'color:var(--qp-fg-1)'"
+                    @click="selectionnerEntite(e)"
+                  >
+                    {{ e.libelle }}
+                  </div>
+                  <div v-if="!entitesFiltrees.length" class="px-3 py-3 text-sm" style="color:var(--qp-fg-3)">
+                    Aucun résultat
+                  </div>
+                </div>
+              </div>
               <span v-if="errors.entite_id" class="qp-hint" style="color:var(--qp-danger-500)">{{ errors.entite_id }}</span>
             </div>
           </div>
@@ -78,9 +117,40 @@
           </div>
         </div>
 
-        <!-- 4 Clé de calcul -->
+        <!-- 4 Type d'indicateur -->
         <div class="section">
-          <div class="section-head"><span class="n">4</span><h3>Clé de calcul</h3></div>
+          <div class="section-head"><span class="n">4</span><h3>Type d'indicateur</h3></div>
+          <div class="flex gap-3">
+            <label
+              class="flex-1 flex items-start gap-3 rounded-xl px-4 py-3 cursor-pointer border transition-all"
+              :style="form.type === 'calcul'
+                ? 'border-color:var(--qp-primary-500);background:var(--qp-primary-50)'
+                : 'border-color:var(--qp-border-1);background:#fff'"
+            >
+              <input type="radio" value="calcul" v-model="form.type" style="accent-color:var(--qp-primary-500);margin-top:3px" />
+              <div>
+                <p class="text-sm font-semibold" style="color:var(--qp-fg-1)">Indicateur de calcul</p>
+                <p class="text-xs" style="color:var(--qp-fg-3)">Résultat = (Opérande 1 [opérateur] Opérande 2) × 100 — exprimé en %</p>
+              </div>
+            </label>
+            <label
+              class="flex-1 flex items-start gap-3 rounded-xl px-4 py-3 cursor-pointer border transition-all"
+              :style="form.type === 'suivi'
+                ? 'border-color:var(--qp-primary-500);background:var(--qp-primary-50)'
+                : 'border-color:var(--qp-border-1);background:#fff'"
+            >
+              <input type="radio" value="suivi" v-model="form.type" style="accent-color:var(--qp-primary-500);margin-top:3px" />
+              <div>
+                <p class="text-sm font-semibold" style="color:var(--qp-fg-1)">Indicateur de suivi</p>
+                <p class="text-xs" style="color:var(--qp-fg-3)">Valeur saisie directement — comparée à une cible absolue</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 5 Clé de calcul (calcul seulement) -->
+        <div v-if="form.type === 'calcul'" class="section">
+          <div class="section-head"><span class="n">5</span><h3>Clé de calcul</h3></div>
           <div class="flex items-end gap-3 flex-wrap">
             <div class="qp-field flex-1" style="min-width:150px">
               <label class="qp-label">Libellé opérande 1 <span class="req">*</span></label>
@@ -104,15 +174,28 @@
           </div>
         </div>
 
-        <!-- 5 Valeur cible -->
+        <!-- 5 Valeur suivie (suivi seulement) -->
+        <div v-if="form.type === 'suivi'" class="section">
+          <div class="section-head"><span class="n">5</span><h3>Valeur suivie</h3></div>
+          <div class="form-grid">
+            <div class="qp-field full">
+              <label class="qp-label">Libellé de la valeur <span class="req">*</span></label>
+              <input v-model="form.label_valeur" class="qp-input" placeholder="Ex. : Nombre de véhicules réceptionnés" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 6 Valeur cible -->
         <div class="section" style="border-bottom:0">
-          <div class="section-head"><span class="n">5</span><h3>Valeur cible</h3></div>
+          <div class="section-head"><span class="n">6</span><h3>Valeur cible</h3></div>
           <div class="form-grid">
             <div class="qp-field">
-              <label class="qp-label">Valeur cible (%) <span class="req">*</span></label>
+              <label class="qp-label">
+                Valeur cible{{ form.type === 'calcul' ? ' (%)' : '' }} <span class="req">*</span>
+              </label>
               <div class="flex items-center gap-2">
                 <input v-model.number="form.valeur_cible" class="qp-input qp-input--mono" inputmode="decimal" :class="{ 'is-error': errors.valeur_cible }" placeholder="Ex. : 85" style="flex:1" />
-                <span class="text-sm font-semibold" style="color:var(--qp-fg-2)">%</span>
+                <span v-if="form.type === 'calcul'" class="text-sm font-semibold" style="color:var(--qp-fg-2)">%</span>
               </div>
               <span v-if="errors.valeur_cible" class="qp-hint" style="color:var(--qp-danger-500)">{{ errors.valeur_cible }}</span>
             </div>
@@ -166,9 +249,29 @@ const periodicites     = ref([])
 const operateurs       = ref([])
 const entitesPremières = ref([])
 
+// ── Combobox entité ────────────────────────────────────────────────────────────
+const entiteDropdownOpen = ref(false)
+const entiteDropdownRef  = ref(null)
+const entiteSearch       = ref('')
+
+const entitesFiltrees = computed(() => {
+  const q = entiteSearch.value.toLowerCase().trim()
+  return q
+    ? entitesPremières.value.filter(e => e.libelle.toLowerCase().includes(q))
+    : entitesPremières.value
+})
+
+const selectionnerEntite = (e) => {
+  form.entite_id           = e.id
+  entiteDropdownOpen.value = false
+  entiteSearch.value       = ''
+}
+
 const form = reactive({
   libelle: '',
+  type: 'calcul',
   operateur_id: null, label_operande1: '', label_operande2: '',
+  label_valeur: '',
   valeur_cible: null,
   periodicite_id: null,
   entite_id: '',
@@ -179,11 +282,14 @@ const operateurSigne = computed(() => operateurs.value.find(o => o.id === form.o
 
 const recap = computed(() => [
   { label: 'Code',        value: 'Généré automatiquement' },
+  { label: 'Type',        value: form.type === 'suivi' ? 'Suivi' : 'Calcul' },
   { label: 'Entité',      value: isPilote.value
       ? entitePilote.value?.libelle
       : entitesPremières.value.find(e => e.id === form.entite_id)?.libelle },
   { label: 'Périodicité', value: periodicites.value.find(p => p.id === form.periodicite_id)?.libelle },
-  { label: 'Cible',       value: form.valeur_cible !== null && form.valeur_cible !== '' ? `${form.valeur_cible} %` : '' },
+  { label: 'Cible',       value: form.valeur_cible !== null && form.valeur_cible !== ''
+      ? (form.type === 'calcul' ? `${form.valeur_cible} %` : `${form.valeur_cible}`)
+      : '' },
 ])
 
 const valider = () => {
@@ -199,13 +305,18 @@ const enregistrer = async () => {
   saving.value = true
   try {
     const payload = {
-      libelle:         form.libelle,
-      operateur_id:    form.operateur_id,
-      label_operande1: form.label_operande1,
-      label_operande2: form.label_operande2,
-      valeur_cible:    form.valeur_cible,
-      periodicite_id:  form.periodicite_id,
-      actif:           form.actif,
+      libelle:        form.libelle,
+      type:           form.type,
+      valeur_cible:   form.valeur_cible,
+      periodicite_id: form.periodicite_id,
+      actif:          form.actif,
+    }
+    if (form.type === 'calcul') {
+      payload.operateur_id    = form.operateur_id
+      payload.label_operande1 = form.label_operande1
+      payload.label_operande2 = form.label_operande2
+    } else {
+      payload.label_valeur = form.label_valeur
     }
     // L'admin envoie entite_id ; le pilote laisse le backend récupérer son entité automatiquement
     if (!isPilote.value) payload.entite_id = form.entite_id
@@ -227,6 +338,12 @@ const enregistrer = async () => {
 }
 
 onMounted(async () => {
+  document.addEventListener('click', (evt) => {
+    if (entiteDropdownRef.value && !entiteDropdownRef.value.contains(evt.target)) {
+      entiteDropdownOpen.value = false
+    }
+  })
+
   const promises = [fetchPeriodicites(), fetchOperateurs()]
   if (!isPilote.value) promises.push(fetchEntitesPremières())
 

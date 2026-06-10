@@ -5,7 +5,7 @@ defineProps({
   index: { type: Number, default: 1 },
 })
 
-const emit = defineEmits(['attach', 'detach', 'commenter', 'voir-commentaires', 'voir-detail-ordre'])
+const emit = defineEmits(['attach', 'detach', 'commenter', 'voir-commentaires', 'voir-detail-ordre', 'edit'])
 
 const router = useRouter()
 
@@ -34,6 +34,7 @@ const statutClass = (statut) => {
             <span :class="`text-[10px] font-semibold capitalize ${statutClass(ordre.statut)}`">
               {{ ordre.statut }}
             </span>
+            <p class="text-xs text-gray-400 mt-0.5">{{ ordre.dossiers?.length ?? 0 }} dossier(s)</p>
           </div>
         </div>
 
@@ -46,6 +47,15 @@ const statutClass = (statut) => {
             variant="ghost"
             size="xs"
             @click.stop="emit('detach', ordre.id)" 
+            v-if="peutGererCodir"
+          />
+
+          <UButton
+            icon="i-heroicons-pencil"
+            color="red"
+            variant="ghost"
+            size="xs"
+            @click.stop="emit('edit', ordre)" 
             v-if="peutGererCodir"
           />
 

@@ -9,13 +9,13 @@ export const useCommentaire = () => {
   const loading = ref(false)
   const toast = useToast()
 
-  async function fetchCommentaires(elementType, elementId) {
+  async function fetchCommentaires(elementType, elementId, codirId) {
     loading.value = true
     try {
-      const response = await commentaireService.getCommentairesByGroupeId(elementType, elementId)
+      const response = await commentaireService.getCommentairesByGroupeIdAndCodirId(elementType, elementId, codirId)
       commentaires.value = response?.data ?? response ?? []
     } catch (error) {
-      console.error('Error fetching commentaires:', error)
+      console.error('Erreur lors de la recuperation des commentaires:', error)
       commentaires.value = []
     } finally {
       loading.value = false
@@ -31,6 +31,7 @@ export const useCommentaire = () => {
         commentable_id: data.commentable_id,
         commentable_type: data.commentable_type,
         entite_user_id: entiteUser?.id,
+        codir_id: data.codir_id,
       })
 
       if (response?.success) {

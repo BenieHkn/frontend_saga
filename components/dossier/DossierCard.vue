@@ -1,4 +1,6 @@
 <script setup>
+import { useStatutUI } from '~/composables/useStatutUI'
+
 const props = defineProps({
   dossier: { type: Object, required: true },
   peutGererCodir: { type: Boolean, default: false },
@@ -6,30 +8,19 @@ const props = defineProps({
   index: { type: Number, default: 0 },
 })
 
-const emit = defineEmits(['deleted', 'click', 'commenter', 'lire-commentaires'])
-const showDeleteModal = ref(false)
-const codirStore = ref({ loading: false }) // État local par défaut pour la sécurité
+const { couleurStatut, statutLabelFR } = useStatutUI()
 
-// ✅ Pas d'argument dans l'emit — le parent connaît déjà l'id
-const removeDossier = () => {
-  showDeleteModal.value = true
-}
+const emit = defineEmits(['delete', 'click', 'commenter', 'lire-commentaires', 'edit', 'detail', 'add-tache', 'add-activite', 'add-action'])
 
-const clickDossier = () => emit('click', props.dossier)
-
-const cancelDelete = () => {
-  showDeleteModal.value = false
-}
-
-const confirmDelete = () => {
-  emit('deleted')
-  showDeleteModal.value = false
-}
+const removeDossier = () => emit('delete', props.dossier)
+const editDossier   = () => emit('edit', props.dossier)
+const viewDetail    = () => emit('detail', props.dossier)
+const clickDossier  = () => emit('click', props.dossier)
 </script>
 
 <template>
   <div
-    class="flex items-center gap-3 bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-colors"
+    class="flex items-center gap-3 bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
     @click="clickDossier">
     
     <div class="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
@@ -39,10 +30,76 @@ const confirmDelete = () => {
     <div class="min-w-0 flex-1">
       <p class="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{{ dossier.libelle }}</p>
       <p class="text-xs text-gray-400 mt-0.5">#{{ dossier.id }}</p>
+
+      <div class="flex items-center gap-1 shrink-0">
+        <UBadge :label="statutLabelFR(dossier.statut)" :color="couleurStatut(dossier.statut)" />
+        <UBadge color="orange" variant="subtle" :label="dossier.taches?.length + ' Tâche' + (dossier.taches?.length > 1 ? 's' : '')" />
+        <UBadge color="blue" variant="subtle" :label="dossier.actions?.length + ' Action' + (dossier.actions?.length > 1 ? 's' : '')" />
+        <UBadge color="green" variant="subtle" :label="dossier.activites?.length + ' Activité' + (dossier.activites?.length > 1 ? 's' : '')" />
+      </div>
     </div>
+
     
-    <div class="flex items-center gap-2 shrink-0">
-      
+    
+    <div class="flex items-center gap-1 shrink-0">
+      <!-- Vue détail -->
+      <UButton 
+        icon="i-heroicons-eye" 
+        color="gray" 
+        variant="ghost" 
+        size="xs"
+        title="Voir le détail"
+        @click.stop="viewDetail" 
+      />
+
+      <!-- Modifier -->
+      <UButton
+        v-if="peutGererCodir"
+        icon="i-heroicons-pencil" 
+        color="blue" 
+        variant="ghost" 
+        size="xs"
+        title="Modifier le dossier"
+        @click.stop="editDossier" 
+      />
+
+      <!-- Ajouter tâche -->
+      <UButton
+        v-if="peutGererCodir"
+        icon="i-heroicons-clipboard-document-check"
+        color="cyan"
+        variant="ghost"
+        size="xs"
+        title="Ajouter une tâche"
+        label="Tâche"
+        @click.stop="emit('add-tache', dossier)"
+      />
+
+      <!-- Ajouter activité -->
+      <UButton
+        v-if="peutGererCodir"
+        icon="i-heroicons-bolt"
+        color="violet"
+        variant="ghost"
+        size="xs"
+        title="Ajouter une activité"
+        label="Activité"
+        @click.stop="emit('add-activite', dossier)"
+      />
+
+      <!-- Ajouter action -->
+      <UButton
+        v-if="peutGererCodir"
+        icon="i-heroicons-rocket-launch"
+        color="orange"
+        variant="ghost"
+        size="xs"
+        title="Ajouter une action"
+        label="Action"
+        @click.stop="emit('add-action', dossier)"
+      />
+
+      <!-- Lire commentaires -->
       <div class="relative inline-block">
         <UButton 
           icon="i-heroicons-chat-bubble-bottom-center-text" 
@@ -60,6 +117,7 @@ const confirmDelete = () => {
         </span>
       </div>
 
+      <!-- Ajouter commentaire -->
       <div class="relative inline-block">
         <UButton 
           icon="i-heroicons-chat-bubble-left-right" 
@@ -74,6 +132,7 @@ const confirmDelete = () => {
         </div>
       </div>
 
+      <!-- Supprimer -->
       <UButton 
         v-if="peutGererCodir" 
         icon="i-heroicons-trash" 
@@ -86,42 +145,4 @@ const confirmDelete = () => {
       />
     </div>
   </div>
-
-  <UModal v-if="peutGererCodir" v-model="showDeleteModal">
-    <UCard class="rounded-2xl">
-      <template #header>
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/40 flex items-center justify-center">
-            <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-red-600 dark:text-red-400" />
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-900 dark:text-white">Confirmer la suppression</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Cette action est irréversible</p>
-          </div>
-        </div>
-      </template>
-
-      <div class="p-2">
-        <p class="text-gray-700 dark:text-gray-300 mb-4">
-          Êtes-vous sûr de vouloir supprimer le dossier
-          <span class="font-semibold text-red-600 dark:text-red-400">"{{ dossier.libelle }}"</span> ?
-        </p>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          Cette action supprimera définitivement le dossier et toutes ses données associées.
-        </p>
-      </div>
-
-      <template #footer>
-        <div class="flex justify-end gap-3">
-          <UButton color="gray" variant="ghost" @click="cancelDelete" :disabled="codirStore.loading">
-            Annuler
-          </UButton>
-          <UButton color="red" @click="confirmDelete" :loading="codirStore.loading">
-            <UIcon name="i-heroicons-trash" class="w-4 h-4 mr-2" />
-            Supprimer
-          </UButton>
-        </div>
-      </template>
-    </UCard>
-  </UModal>
 </template>

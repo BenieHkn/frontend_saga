@@ -23,8 +23,8 @@ export function useCommentaireService(){
         })
     }
 
-    const getCommentairesByGroupeId = (groupeType, groupeId)=>{
-        return call(`/commentaires/groupe/${groupeType}/${groupeId}`)
+    const getCommentairesByGroupeIdAndCodirId = (groupeType, groupeId, codirId)=>{
+        return call(`/commentaires/groupe/${groupeType}/${groupeId}/codirs/${codirId}`)
     }
 
     return {
@@ -32,6 +32,6 @@ export function useCommentaireService(){
         createCommentaire,
         updateCommentaire,
         deleteCommentaire,
-        getCommentairesByGroupeId
+        getCommentairesByGroupeIdAndCodirId
     }
 }

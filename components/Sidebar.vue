@@ -47,7 +47,7 @@
             class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
             :class="route.path.startsWith('/smq/dashboard') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
             <Icon name="heroicons:home-20-solid" class="h-4 w-4 shrink-0" />
-            Tableau de bord
+            Tableau de bord qualité
           </NuxtLink>
           <NuxtLink to="/smq/indicateurs"
             class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
@@ -55,7 +55,7 @@
             <Icon name="heroicons:chart-bar-20-solid" class="h-4 w-4 shrink-0" />
             Indicateurs
           </NuxtLink>
-          <NuxtLink to="/smq/fac"
+          <NuxtLink v-if="!estCopilote" to="/smq/fac"
             class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
             :class="route.path.startsWith('/smq/fac') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
             <Icon name="heroicons:clipboard-document-list-20-solid" class="h-4 w-4 shrink-0" />
@@ -202,10 +202,10 @@ const {
 } = useAuth()
 
 // SMQ — permissions via composable dédié (evite les appels de fonction SSR)
-const { peutVoirMenuSMQ, peutGererUtilisateurs } = useSmqPermissions()
+const { peutVoirMenuSMQ, peutGererUtilisateurs, estPilote, estCopilote, estRQ, estRQA, estAdminSmq } = useSmqPermissions()
 
 // Wrappers compatibles template (ref → boolean)
-const peutVoirSmq = () => peutVoirMenuSMQ.value || isAdmin()
+const peutVoirSmq = () => peutVoirMenuSMQ.value || estPilote.value || estCopilote.value || estRQ.value || estRQA.value || estAdminSmq.value || isAdmin()
 const isSmqAdmin  = () => peutGererUtilisateurs.value
 
 const isExpanded       = ref(true)
@@ -215,8 +215,27 @@ const smqMenuOpen      = ref(false)
 const emit = defineEmits(['sidebar-toggle'])
 
 // ── Item actif ────────────────────────────────────────────────────────────────
-const isItemActive = (item) =>
-  route.path === item.path || route.path.startsWith(item.path + '/')
+const codirRoutes = [
+  '/codir/',
+  '/ordres-du-jour/',
+  '/dossiers/',
+  '/activites/',
+  '/actions/'
+]
+
+const isItemActive = (item) => {
+  if (item.path === '/codir') {
+    return (
+      route.path === '/codir' ||
+      codirRoutes.some(prefix => route.path.startsWith(prefix))
+    )
+  }
+
+  return (
+    route.path === item.path ||
+    route.path.startsWith(item.path + '/')
+  )
+}
 
 // ── Routes Audit ──────────────────────────────────────────────────────────────
 const auditRoutes = ['/stats', '/audit/courriers']

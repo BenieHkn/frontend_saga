@@ -87,12 +87,17 @@
             </td>
             <td class="text-sm" style="color: var(--qp-fg-2)">{{ ind.periodicite?.libelle }}</td>
             <td>
-              <span class="text-xs qp-num" style="color: var(--qp-fg-2)">
+              <span v-if="ind.type === 'suivi'" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style="background:var(--qp-primary-50);color:var(--qp-primary-700);border:1px solid var(--qp-primary-200)">
+                Suivi · {{ ind.label_valeur }}
+              </span>
+              <span v-else class="text-xs qp-num" style="color: var(--qp-fg-2)">
                 {{ ind.label_operande1 }} {{ ind.operateur?.signe }} {{ ind.label_operande2 }} × 100
               </span>
             </td>
             <td class="num">
-              <span class="qp-num text-sm">{{ formatPourcentage(ind.valeur_cible) }}</span>
+              <span class="qp-num text-sm">
+                {{ ind.type === 'suivi' ? ind.valeur_cible : formatPourcentage(ind.valeur_cible) }}
+              </span>
             </td>
             <td>
               <span

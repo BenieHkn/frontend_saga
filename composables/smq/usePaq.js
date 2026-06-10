@@ -122,6 +122,18 @@ export const usePaq = () => {
   const deleteRecommandation = async (id) =>
     $fetch(`${base.value}/smq/recommandations/${id}`, { method: 'DELETE', headers: headers() })
 
+  // ── Référentiels (entités, utilisateurs) ─────────────────────────────────
+
+  const fetchEntites = async () => {
+    const res = await $fetch(`${base.value}/smq/entites-premieres`, { headers: headers() })
+    return res?.data ?? []
+  }
+
+  const fetchSmqUsers = async () => {
+    const res = await $fetch(`${base.value}/users`, { headers: headers() })
+    return res?.data?.data ?? res?.data ?? res ?? []
+  }
+
   // ── Référentiels UI ───────────────────────────────────────────────────────
 
   const AUDIT_STATUTS = [
@@ -147,6 +159,7 @@ export const usePaq = () => {
     ajouterEntiteAudit, supprimerEntiteAudit,
     fetchAuditEntite, updateAuditEntite, syncParticipants,
     fetchRecommandations, createRecommandation, updateRecommandation, deleteRecommandation,
+    fetchEntites, fetchSmqUsers,
     AUDIT_STATUTS, badgeAuditStatut, labelAuditStatut,
     RECO_STATUTS, colorRecoStatut,
   }

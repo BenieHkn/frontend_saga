@@ -1,13 +1,36 @@
 <script setup>
-import { ref } from 'vue' 
+import { ref, watch } from 'vue'
+
 const props = defineProps({
   tabs: {
     type: Array,
     default: () => []
+  },
+  defaultTab: {
+    type: String,
+    default: null,
+  },
+  currentTab: {
+    type: String,
+    default: null,
   }
 })
 
-const activeTab = ref(props.tabs?.[0]?.id)
+const emit = defineEmits(['update:currentTab'])
+
+// Priorité : modelValue (v-model) > defaultTab > premier onglet
+const activeTab = ref(props.currentTab ?? props.defaultTab ?? props.tabs?.[0]?.id)
+
+// Sync depuis le parent (quand le parent change la valeur du v-model)
+watch(() => props.currentTab, (val) => {
+  if (val && val !== activeTab.value) activeTab.value = val
+})
+
+// Notify le parent quand l'onglet change
+const setTab = (id) => {
+  activeTab.value = id
+  emit('update:currentTab', id)
+}
 </script>
 
 <template>
@@ -17,7 +40,7 @@ const activeTab = ref(props.tabs?.[0]?.id)
         <button
           v-for="tab in tabs"
           :key="tab.id"
-          @click="activeTab = tab.id"
+          @click="setTab(tab.id)"
           class="pb-4 pt-2 text-sm font-medium transition-all border-b-2"
           :class="[
             activeTab === tab.id

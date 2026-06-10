@@ -16,7 +16,7 @@
           <td style="padding:5px 8px;text-align:right;font-size:9pt">
             <strong>Fiche N° :</strong> {{ facCourante.numero_fiche ?? `FAC-${String(facCourante.id).padStart(4,'0')}` }}<br>
             <em style="font-size:8pt;color:#666">(Réservée au RQ)</em>
-            <span v-if="facCourante.saisieIndicateur?.indicateur"><br><span style="font-size:8pt">Indicateur : <strong>{{ facCourante.saisieIndicateur.indicateur.code }}</strong></span></span>
+            <span v-if="facCourante.saisie_indicateur?.indicateur"><br><span style="font-size:8pt">Indicateur : <strong>{{ facCourante.saisie_indicateur.indicateur.code }}</strong></span></span>
           </td>
         </tr>
       </table>
@@ -121,8 +121,8 @@
           <tr v-for="fac in facList" :key="fac.id" class="cursor-pointer" @click="ouvrirDetail(fac)">
             <td><span class="qp-num text-xs" style="color:var(--qp-fg-3)">{{ fac.numero_fiche ?? `FAC-${fac.id}` }}</span></td>
             <td>
-              <p class="text-sm font-medium" style="color:var(--qp-fg-1)">{{ fac.saisieIndicateur?.indicateur?.code ?? '—' }}</p>
-              <p class="text-xs" style="color:var(--qp-fg-3)">{{ fac.saisieIndicateur?.indicateur?.libelle }}</p>
+              <p class="text-sm font-medium" style="color:var(--qp-fg-1)">{{ fac.saisie_indicateur?.indicateur?.code ?? '—' }}</p>
+              <p class="text-xs" style="color:var(--qp-fg-3)">{{ fac.saisie_indicateur?.indicateur?.libelle }}</p>
             </td>
             <td class="text-sm" style="color:var(--qp-fg-2);max-width:260px">{{ fac.description_nc ?? '—' }}</td>
             <td class="text-sm" style="color:var(--qp-fg-2)">{{ fac.responsable_action ?? '—' }}</td>
@@ -184,14 +184,14 @@
             <h3 class="font-semibold text-base" style="color:var(--qp-fg-1);margin:0">
               {{ facCourante?.numero_fiche ?? `FAC-${facCourante?.id}` }}
               <span class="ml-2 text-sm font-normal" style="color:var(--qp-fg-3)">
-                {{ facCourante?.saisieIndicateur?.indicateur?.code }}
+                {{ facCourante?.saisie_indicateur?.indicateur?.code }}
               </span>
             </h3>
           </div>
           <select v-model="form.statut" class="qp-select" style="width:auto;height:32px;font-size:0.8125rem" :disabled="facCloturee">
             <option value="ouvert">Ouverte</option>
             <option value="en_cours">En cours</option>
-            <option value="clos">Clôturée</option>
+            <option v-if="peutCloturerFac || form.statut === 'clos'" value="clos">Clôturée</option>
           </select>
         </div>
 
@@ -238,9 +238,40 @@
                 <textarea v-model="form.actions_proposees" class="qp-textarea" rows="3" :disabled="facCloturee" />
               </div>
               <div class="grid gap-4" style="grid-template-columns:1fr 1fr">
-                <div class="qp-field">
-                  <label class="qp-label">Responsable de l'action</label>
-                  <input v-model="form.responsable_action" class="qp-input" :disabled="facCloturee" />
+                <div class="qp-field" style="grid-column:1/-1">
+                  <label class="qp-label">Responsable(s) de l'action</label>
+                  <div class="flex flex-col gap-2">
+                    <!-- Tags sélectionnés -->
+                    <div class="flex flex-wrap gap-1 min-h-[36px] px-2 py-1 rounded-lg border" style="border-color:var(--qp-border-1);background:var(--qp-n-0)">
+                      <span
+                        v-for="uid in responsablesChoisis" :key="uid"
+                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                        style="background:var(--qp-primary-100);color:var(--qp-primary-700)"
+                      >
+                        {{ responsablesList.find(u => u.id === uid)?.nom_complet }}
+                        <button v-if="!facCloturee" type="button" @click="responsablesChoisis = responsablesChoisis.filter(i => i !== uid)" style="line-height:1;margin-left:2px">×</button>
+                      </span>
+                      <span v-if="!responsablesChoisis.length" class="text-xs self-center" style="color:var(--qp-fg-3)">
+                        {{ responsablesList.length ? 'Aucun sélectionné' : 'Chargement…' }}
+                      </span>
+                    </div>
+                    <!-- Liste de cases à cocher -->
+                    <div v-if="!facCloturee && responsablesList.length" class="flex flex-col gap-0.5 max-h-36 overflow-y-auto rounded-lg border px-2 py-1" style="border-color:var(--qp-border-1)">
+                      <label
+                        v-for="u in responsablesList" :key="u.id"
+                        class="flex items-center gap-2 text-sm px-1 py-1 rounded cursor-pointer"
+                        :style="responsablesChoisis.includes(u.id) ? 'background:var(--qp-primary-50)' : ''"
+                      >
+                        <input
+                          type="checkbox"
+                          :value="u.id"
+                          v-model="responsablesChoisis"
+                          style="accent-color:var(--qp-primary-500);width:14px;height:14px;flex-shrink:0"
+                        />
+                        <span style="color:var(--qp-fg-2)">{{ u.nom_complet }}</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 <div class="qp-field">
                   <label class="qp-label">Date prévisionnelle de mise en œuvre</label>
@@ -281,7 +312,7 @@
                 </div>
                 <div class="qp-field">
                   <label class="qp-label">Fiche clôturée ?</label>
-                  <select v-model="form.fiche_cloturee" class="qp-select" :disabled="facCloturee">
+                  <select v-model="form.fiche_cloturee" class="qp-select" :disabled="facCloturee || !peutCloturerFac">
                     <option :value="null">— Choisir —</option>
                     <option :value="true">Oui</option>
                     <option :value="false">Non</option>
@@ -289,7 +320,7 @@
                 </div>
                 <div v-if="form.fiche_cloturee" class="qp-field">
                   <label class="qp-label">Si oui, le</label>
-                  <input v-model="form.date_cloture" type="date" class="qp-input qp-input--mono" :disabled="facCloturee" />
+                  <input v-model="form.date_cloture" type="date" class="qp-input qp-input--mono" :disabled="facCloturee || !peutCloturerFac" />
                 </div>
               </div>
               <div v-if="form.fiche_cloturee === false" class="grid gap-4" style="grid-template-columns:1fr 1fr">
@@ -319,15 +350,27 @@
         </div>
 
         <div class="flex items-center justify-between px-5 pb-5">
-          <button
-            class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border"
-            style="background:#fff;border-color:var(--qp-border-1);color:var(--qp-fg-2)"
-            :disabled="pdfLoading"
-            @click="genererPdf"
-          >
-            <Icon :name="pdfLoading ? 'heroicons:arrow-path' : 'heroicons:document-arrow-down'" class="h-4 w-4" :class="{ 'animate-spin': pdfLoading }" />
-            {{ pdfLoading ? 'Génération…' : 'Générer PDF' }}
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border"
+              style="background:#fff;border-color:var(--qp-border-1);color:var(--qp-fg-2)"
+              :disabled="pdfLoading"
+              @click="genererPdf"
+            >
+              <Icon :name="pdfLoading ? 'heroicons:arrow-path' : 'heroicons:document-arrow-down'" class="h-4 w-4" :class="{ 'animate-spin': pdfLoading }" />
+              {{ pdfLoading ? 'Génération…' : (facADejaUnPdf ? 'Regénérer' : 'Générer PDF') }}
+            </button>
+            <button
+              v-if="facADejaUnPdf"
+              class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border"
+              style="background:#fff;border-color:var(--qp-success-300);color:var(--qp-success-700)"
+              :disabled="dlLoading"
+              @click="telechargerPdf"
+            >
+              <Icon :name="dlLoading ? 'heroicons:arrow-path' : 'heroicons:arrow-down-tray'" class="h-4 w-4" :class="{ 'animate-spin': dlLoading }" />
+              {{ dlLoading ? 'Téléchargement…' : 'Télécharger' }}
+            </button>
+          </div>
           <div class="flex gap-2">
             <button class="px-4 py-2 text-sm rounded-lg" style="color:var(--qp-fg-2)" @click="modalOpen = false">Fermer</button>
             <button
@@ -358,12 +401,14 @@ useHead({ title: 'Actions correctives — SMQ · SAGA' })
 const route   = useRoute()
 const config  = useRuntimeConfig()
 const apiBase = config.public.apiBase
-const { fetchFac, updateFac, generateFacPdf, downloadFacPdf, FAC_STATUTS, labelFacStatut } = useFac()
+const { fetchFac, updateFac, fetchResponsablesPossibles, generateFacPdf, downloadFacPdf, FAC_STATUTS, labelFacStatut } = useFac()
 const { formatDate } = useIndicateurs()
 const { isSmqRQ, isSmqRQA, isSmqAdmin } = useAuth()
 
-const peutRemplirRQ = computed(() => isSmqRQ() || isSmqRQA() || isSmqAdmin())
-const facCloturee   = computed(() => facCourante.value?.fiche_cloturee === true || facCourante.value?.statut === 'clos')
+const peutRemplirRQ   = computed(() => isSmqRQ() || isSmqRQA() || isSmqAdmin())
+const peutCloturerFac = computed(() => isSmqRQ() || isSmqRQA())
+const facCloturee     = computed(() => facCourante.value?.fiche_cloturee === true || facCourante.value?.statut === 'clos')
+const facADejaUnPdf   = computed(() => !!facCourante.value?.pdf_url)
 
 // Normalise "2026-06-09T00:00:00.000000Z" → "2026-06-09"
 const toDate = (v) => v ? String(v).substring(0, 10) : ''
@@ -397,6 +442,17 @@ const form = reactive({
   date_verification: '', conclusion_efficacite: '',
   fiche_cloturee: null, date_cloture: '',
   ouvrir_nouvelle_fiche: null, num_nouvelle_fiche: '', commentaires_rq: '',
+})
+
+const responsablesList    = ref([])   // { id, nom_complet }[]
+const responsablesChoisis = ref([])   // ids sélectionnés
+
+// Synchronise responsablesChoisis → form.responsable_action (noms)
+watch(responsablesChoisis, (ids) => {
+  form.responsable_action = responsablesList.value
+    .filter(u => ids.includes(u.id))
+    .map(u => u.nom_complet)
+    .join(', ')
 })
 
 const statutStyle = (s) => ({
@@ -446,6 +502,18 @@ const ouvrirDetail = (fac) => {
     num_nouvelle_fiche:    fac.num_nouvelle_fiche   ?? '',
     commentaires_rq:       fac.commentaires_rq      ?? '',
   })
+  // Charger les responsables possibles et initialiser la sélection
+  responsablesList.value = []
+  responsablesChoisis.value = []
+  fetchResponsablesPossibles(fac.id).then(list => {
+    responsablesList.value = list
+    // Pré-sélectionner selon responsable_action (noms stockés)
+    const noms = (fac.responsable_action ?? '').split(',').map(n => n.trim()).filter(Boolean)
+    responsablesChoisis.value = list
+      .filter(u => noms.includes(u.nom_complet))
+      .map(u => u.id)
+  }).catch(() => {})
+
   modalOpen.value = true
 }
 
@@ -460,10 +528,13 @@ const genererPdf = async () => {
   pdfLoading.value = true
   pdfErreur.value  = ''
   try {
+    // 1. Générer → sauvegarde pdf_url en base
     const res = await generateFacPdf(facCourante.value.id)
     if (facCourante.value) facCourante.value.pdf_url = res?.url ?? facCourante.value.pdf_url
     const numero = facCourante.value?.numero_fiche ?? `FAC-${String(facCourante.value?.id).padStart(4, '0')}`
-    pdfModalNom.value  = res?.filename ?? `${numero}.pdf`
+    pdfModalNom.value = res?.filename ?? `${numero}.pdf`
+
+    // 2. Afficher le modal
     showPdfModal.value = true
   } catch (e) {
     console.error('Génération PDF :', e)

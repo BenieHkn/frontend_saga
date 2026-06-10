@@ -1,10 +1,17 @@
 <script setup>
 import { useOrdreDuJour } from '@/composables/ordres-du-jour/useOrdreDuJour'
+import { useDossier } from '@/composables/dossier/useDossier'
 import { formatDateFR, useCodir } from '@/composables/codirs/useCodir'
 import { useCommentaire } from '@/composables/commentaire/useCommentaire'
-import CommentaireModal from '@/components/commentaire/CommentaireModal.vue'
-import CommentaireListeModal from '@/components/commentaire/CommentaireListeModal.vue'
+import { useTache } from '@/composables/taches/useTaches'
+import { useActivite } from '@/composables/activite/useActivite'
+import { useAction } from '@/composables/actions/useAction'
+import { useMembre } from '@/composables/membres/useMembres'
+import ActionFormModal from '~/components/action/ActionFormModal.vue'
+import ActiviteFormModal from '~/components/activite/ActiviteFormModal.vue'
 import { useAuth } from '~/composables/auth/useAuth'
+import { useStorage } from '@/composables/useStorage'
+import { useDocumentService } from '~/service/documents/documentService'
 
 definePageMeta({ title: "Détail ordre du jour" })
 
@@ -12,20 +19,25 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 
-const clearCurrents = () => {
-  if (!process.client) return
-  try {
-    localStorage.removeItem('currentOrdreDuJour')
-  } catch (e) {}
-}
-const handleReturn = () => {
-  clearCurrents()
-  router.back()
-}
+// ── État des modales ──────────────────────────────────────────────────────────
+const dossierModal = ref(false)
+const selectedDossier = ref(null)
+const dossierDeleteModal = ref(false)
+const dossierToDeleteId = ref(null)
+const isDeletingDossier = ref(false)
+const isSavingDossier = ref(false)
+const dossierDetailModal = ref(false)
 
+// ── Composables ───────────────────────────────────────────────────────────────
 const ordreDuJourApi = useOrdreDuJour()
-const codirApi = useCodir()
+const dossierApi     = useDossier()
+const tacheApi       = useTache()
+const activiteApi    = useActivite()
+const actionApi      = useAction()
+const membreApi      = useMembre()
+const { peutGererCodir } = useAuth()
 
+//les fonctions de crud commentaire
 const {
   commentaires,
   creerCommentaire,
@@ -35,119 +47,269 @@ const {
   loading: commentairesLoading,
 } = useCommentaire()
 
+
+// ── State ─────────────────────────────────────────────────────────────────────
 const ordreId = Number(route.params.ordreId)
 const currentOrdreDuJour = ref(null)
 const currentCodir = ref(null)
 const currentDossier = ref(null)
 const loading = ref(true)
-const { peutGererCodir } = useAuth()
+const entiteUser = ref()
+const membresForSelect = ref([])
+const documents = ref([])
 
-// ── Fetch ─────────────────────────────────────────────────────────────────────
+const fetchMembresLocaux = async () => {
+  membresForSelect.value = await membreApi.getMembres()
+}
+const membresOptions = computed(() =>
+  membresForSelect.value.map(m => ({ label: m.entite_user?.entite?.code ?? '', value: m.id }))
+)
+
+const {getDocumentsFromMonth} = useDocumentService()
+
+// ── Liste des dossiers ──────────────────────────────────────────────────────────────────
+const dossiers = computed(() => currentOrdreDuJour.value?.dossiers ?? [])
+
+
+// ── Helpers statut ────────────────────────────────────────────────────────────
+const statutClass = (statut) => {
+  const classes = {
+    'ouvert':    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    'fermé':     'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    'en cours':  'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    'archivé':   'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
+  }
+  return classes[statut?.toLowerCase()] ?? 'bg-gray-100 text-gray-500'
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const refreshData = async () => {
+  currentOrdreDuJour.value = await ordreDuJourApi.getOrdre(ordreId)
+  console.log("ordre mis à jour", currentOrdreDuJour.value)
+  enregistrerDansLocalStorage("currentOrdreDuJour", currentOrdreDuJour.value)
+}
+
+const {enregistrerDansLocalStorage} = useStorage()
+
+
+const clearCurrents = () => {
+  if (!process.client) return
+  try { localStorage.removeItem('currentOrdreDuJour') } catch (e) {}
+}
+
+const handleReturn = () => {
+  clearCurrents()
+  router.back()
+}
+
+// ── Fetch initial ─────────────────────────────────────────────────────────────
 const fetchOrdreDuJour = async () => {
   try {
     currentOrdreDuJour.value = await ordreDuJourApi.fetchOrdre(ordreId)
+    console.log("Les dossiers de l'ordre du jour", currentOrdreDuJour.value.dossiers);
+    localStorage.setItem("currentOrdreDuJour", JSON.stringify(currentOrdreDuJour.value))
   } catch {
     console.warn("Impossible de rafraîchir l'ordre du jour, utilisation du cache")
   }
 }
 
-const entiteUser = ref()
-
-
-
-// ── Computed ──────────────────────────────────────────────────────────────────
-const dossiers = computed(() => currentOrdreDuJour.value?.dossiers ?? [])
-
-// ── Statut badge ──────────────────────────────────────────────────────────────
-const statutClass = (statut) => {
-  const map = {
-    actif: 'text-green-600 bg-green-50 dark:bg-green-950/40',
-    inactif: 'text-gray-500 bg-gray-100 dark:bg-gray-800/60',
-    archivé: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40',
-  }
-  return map[statut] ?? 'text-gray-500 bg-gray-100'
+// ── Actions ouverture modales ─────────────────────────────────────────────────
+const openCreateDossier = () => {
+  console.log('openCreateDossier called');
+  selectedDossier.value = null
+  dossierModal.value = true
 }
 
-// ── Ajout dossier ─────────────────────────────────────────────────────────────
-const dossierModal = ref(false)
-const dossierForm = reactive({ libelle: '' })
-const resetDossierForm = () => Object.assign(dossierForm, { libelle: '' })
+const openDetailDossier = (dossier) => {
+  selectedDossier.value = dossier
+  dossierDetailModal.value = true
+}
 
-const addDossier = async () => {
-  if (!dossierForm.libelle.trim()) return
+const openEditDossier = (dossier) => {
+  selectedDossier.value = dossier
+  dossierModal.value = true
+}
+
+const openDeleteDossier = (dossier) => {
+  dossierToDeleteId.value = dossier.id
+  dossierDeleteModal.value = true
+}
+
+// // ── Soumissions dossier ───────────────────────────────────────────────────────
+// const addDossierSubmit = async (form) => {
+//   console.log(form)
+//   isSavingDossier.value = true
+//   try {
+//     await dossierApi.handleAddDossier(ordreId, form)
+//     await refreshData()
+//     dossierModal.value = false
+//     toast.add({ title: 'Dossier ajouté', color: 'green', icon: 'i-heroicons-check-circle' })
+//   } catch {
+//     toast.add({ title: 'Erreur', description: "Impossible d'ajouter le dossier", color: 'red', icon: 'i-heroicons-exclamation-circle' })
+//   } finally {
+//     isSavingDossier.value = false
+//   }
+// }
+
+const handleUpdateDossier = async (form) => {
+  isSavingDossier.value = true
   try {
-    await ordreDuJourApi.addDossier(ordreId, { libelle: dossierForm.libelle.trim() })
-    currentCodir.value = await codirApi.fetchCodir(currentCodir.value.id)
-    currentOrdreDuJour.value = await ordreDuJourApi.fetchOrdre(ordreId)
-  
-    toast.add({
-      title: 'Dossier créé',
-      description: `"${dossierForm.libelle}" a été ajouté à l'ordre du jour`,
-      color: 'green',
-      icon: 'i-heroicons-check-circle',
-    })
+    await dossierApi.handleUpdateDossier(selectedDossier.value.id, form)
+    await refreshData()
     dossierModal.value = false
-    resetDossierForm()
+    toast.add({ title: 'Dossier mis à jour', color: 'green', icon: 'i-heroicons-check-circle' })
   } catch {
-    toast.add({
-      title: 'Erreur',
-      description: 'Impossible de créer le dossier',
-      color: 'red',
-      icon: 'i-heroicons-exclamation-circle',
-    })
+    toast.add({ title: 'Erreur', description: 'Impossible de modifier le dossier', color: 'red', icon: 'i-heroicons-exclamation-circle' })
+  } finally {
+    isSavingDossier.value = false
   }
 }
 
-// ── Suppression dossier ───────────────────────────────────────────────────────
-const handleRemoveDossier = async (dossierId) => {
+const confirmDeleteDossierAction = async () => {
+  if (!dossierToDeleteId.value) return
+  isDeletingDossier.value = true
   try {
-    await ordreDuJourApi.removeDossier(ordreId, dossierId)
-    currentCodir.value = await codirApi.fetchCodir(currentCodir.value.id)
-    // ✅ fetchOrdre retourne l'ODJ, on l'assigne au ref
-    currentOrdreDuJour.value = await ordreDuJourApi.fetchOrdre(ordreId)
+    await dossierApi.handleDeleteDossier(dossierToDeleteId.value)
+    await refreshData()
     toast.add({ title: 'Dossier retiré', color: 'green', icon: 'i-heroicons-check-circle' })
+    dossierDeleteModal.value = false
+    dossierToDeleteId.value = null
   } catch {
     toast.add({ title: 'Erreur', description: 'Impossible de retirer le dossier', color: 'red', icon: 'i-heroicons-exclamation-circle' })
+  } finally {
+    isDeletingDossier.value = false
   }
 }
 
-// ── Navigation vers dossier ───────────────────────────────────────────────────
+// ── Tâche depuis card dossier ─────────────────────────────────────────────────
+const tacheModalOpen   = ref(false)
+const activiteModalOpen = ref(false)
+const actionModalOpen  = ref(false)
+const activiteForm = reactive({ libelle: '', action_id: null, dossier_id: null })
+const resetActiviteForm = () => Object.assign(activiteForm, { libelle: '', action_id: null, dossier_id: null })
+const isSavingAction  = ref(false)
+const isSavingActivite = ref(false)
+
+const openAddTache = (dossier) => {
+  selectedDossier.value = dossier
+  console.log("dossier sélectionné pour créer la tâche", selectedDossier.value)
+  tacheModalOpen.value  = true
+}
+
+const openAddActivite = (dossier) => {
+  selectedDossier.value  = dossier
+  activiteForm.dossier_id = dossier.id
+  activiteModalOpen.value = true
+}
+
+const openAddAction = (dossier) => {
+  selectedDossier.value = dossier
+  actionModalOpen.value = true
+}
+
+const handleTacheCreated = async (form) => {
+  loading.value = true
+  console.log(form)
+  if (!selectedDossier.value) return
+  try {
+    await tacheApi.createTache({...form, dossier_id: selectedDossier.value.id }) 
+    tacheModalOpen.value = false
+    await refreshData()
+    toast.add({ title: 'Tâche créée', color: 'green', icon: 'i-heroicons-check-circle' })
+  } catch {
+    toast.add({ title: 'Erreur', description: 'Impossible de créer la tâche', color: 'red' })
+  } finally{
+    loading.value = false
+  }
+}
+
+const handleActiviteCreated = async (form) => {
+  loading.value = true
+  try {
+    await activiteApi.createActivite({...form, dossier_id: selectedDossier.value.id})
+    activiteModalOpen.value = false
+    await refreshData()
+    toast.add({ title: 'Activité créée', color: 'green', icon: 'i-heroicons-check-circle' })
+  } catch {
+    toast.add({ title: 'Erreur', description: 'Impossible de créer l’activité', color: 'red' })
+  }finally{
+    loading.value = false
+  }
+}
+
+const handleActionCreated = async (form) => {
+  loading.value = true
+  try {
+    await actionApi.createAction({...form, dossier_id: selectedDossier.value.id})
+    actionModalOpen.value = false
+    await refreshData()
+    toast.add({ title: 'Action créée', color: 'green', icon: 'i-heroicons-check-circle' })
+  } catch {
+    toast.add({ title: 'Erreur', description: 'Impossible de créer l’action', color: 'red' })
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleDossierCreated = async (form) => {
+  loading.value = true
+  try{
+    await dossierApi.handleAddDossier(ordreId, form)
+    await refreshData()
+    dossierModal.value = false
+    toast.add({ title: 'Dossier ajouté', color: 'green', icon: 'i-heroicons-check-circle' })
+  }catch{
+    toast.add({ title: 'Erreur', description: 'Impossible d\'ajouter le dossier', color: 'red' })
+  }finally{
+    loading.value = false
+  }
+}
+
+// ── Navigation et commentaires ────────────────────────────────────────────────
 const handleClick = (dossier) => {
   if (process.client)
     localStorage.setItem("currentDossier", JSON.stringify(dossier))
   navigateTo(`/dossiers/${dossier.id}`)
 }
 
-const openCommentairePourDossier = async (dossier) => {
+const openCommentairePourDossier = (dossier) => {
   currentDossier.value = dossier
-  if (process.client) {
-    openCommentaireModal.value = true
-  }
+  openCommentaireModal.value = true
 }
 
 const openLectureCommentairesPourDossier = async (dossier) => {
   currentDossier.value = dossier
   await fetchCommentaires('dossier', dossier.id)
-  if (process.client) {
-    openListeCommentairesModal.value = true
-  }
+  openListeCommentairesModal.value = true
 }
 
 const handleRecupererCommentaire = async (contenu) => {
-  if (!currentDossier.value) return;
+  if (!currentDossier.value) return
   await creerCommentaire({
-    commentable_id: currentDossier.value.id,
+    commentable_id:   currentDossier.value.id,
     commentable_type: 'dossier',
     contenu,
+    codir_id:         currentCodir.value?.id,
   })
-
-  await fetchOrdreDuJour() // Rafraîchir l'ordre du jour pour mettre à jour le nombre de commentaires
+  await fetchOrdreDuJour()
 }
 
+
+const loadData=async()=>{
+   currentCodir.value = JSON.parse(localStorage.getItem("currentCodir"))
+  fetchOrdreDuJour()
+  chargerDocuments()
+}
+
+const chargerDocuments = async()=>{
+  documents.value = await getDocumentsFromMonth()
+  console.log("Les documents", documents.value)
+}
+
+// ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
-  currentCodir.value = JSON.parse(localStorage.getItem("currentCodir"))
-  await fetchOrdreDuJour()
-  entiteUser.value = JSON.parse(localStorage.getItem("entite_user"))
+  await loadData()
+  fetchMembresLocaux()
   loading.value = false
 })
 </script>
@@ -169,13 +331,13 @@ onMounted(async () => {
     <!-- Introuvable -->
     <div v-else-if="!currentOrdreDuJour" class="text-center py-20">
       <UIcon name="i-heroicons-exclamation-triangle" class="w-12 h-12 mx-auto text-amber-400 mb-4" />
-      <p class="text-gray-500 text-sm">Ordre du jour introuvable ou non chargé.</p>
+      <p class="text-gray-500 text-sm">Point introuvable ou non chargé.</p>
       <UButton class="mt-4" color="gray" variant="ghost" @click="handleReturn()">Retour</UButton>
     </div>
 
     <template v-else>
 
-      <!-- ── En-tête ─────────────────────────────────────────────────────── -->
+      <!-- ── En-tête ──────────────────────────────────────────────────────── -->
       <UCard class="rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 mb-6">
         <div class="p-2">
           <div class="flex items-center gap-4">
@@ -211,13 +373,19 @@ onMounted(async () => {
         </div>
       </UCard>
 
-      <!-- ── Liste des dossiers ──────────────────────────────────────────── -->
+      <!-- ── Liste des dossiers ───────────────────────────────────────────── -->
       <section>
         <h2 class="text-base font-semibold flex items-center gap-2 mb-3">
           <UIcon name="i-heroicons-folder-open" class="text-violet-500" />
           Dossiers rattachés
           <UBadge color="violet" variant="soft" size="xs">{{ dossiers.length }}</UBadge>
-          <UButton v-if="peutGererCodir()" icon="i-heroicons-plus" color="blue" variant="soft" @click="dossierModal = true">
+          <UButton
+            v-if="peutGererCodir()"
+            icon="i-heroicons-plus"
+            color="blue"
+            variant="soft"
+            @click="openCreateDossier"
+          >
             Ajouter
           </UButton>
         </h2>
@@ -228,57 +396,88 @@ onMounted(async () => {
         </div>
 
         <div v-else class="flex flex-col gap-2">
-          <!-- ✅ Empêcher la propagation du clic depuis le bouton supprimer -->
           <DossierCard
             v-for="(dossier, index) in dossiers"
             :key="dossier.id"
             :dossier="dossier"
             :index="index"
-            @peutGererCodir="peutGererCodir()"
+            :peut-gerer-codir="peutGererCodir()"
             @click="handleClick(dossier)"
-            @deleted="handleRemoveDossier(dossier.id)"
+            @detail="openDetailDossier(dossier)"
+            @delete="openDeleteDossier(dossier)"
             @commenter="openCommentairePourDossier(dossier)"
             @lire-commentaires="openLectureCommentairesPourDossier(dossier)"
+            @edit="openEditDossier(dossier)"
+            @add-tache="openAddTache(dossier)"
+            @add-activite="openAddActivite(dossier)"
+            @add-action="openAddAction(dossier)"
           />
         </div>
       </section>
 
     </template>
 
-    <UAlert v-if="ordreDuJourApi.error.value" color="red" icon="i-heroicons-exclamation-circle"
-      :title="ordreDuJourApi.error.value" class="mt-4" />
+    <UAlert
+      v-if="ordreDuJourApi.error.value"
+      color="red"
+      icon="i-heroicons-exclamation-circle"
+      :title="ordreDuJourApi.error.value"/>
+
+    <!-- ── Modale ajout action depuis card ────────────────────────────────────── -->
+    <ActionFormModal
+      v-model:open="actionModalOpen"
+      :dossier-id="selectedDossier?.id"
+      @create="handleActionCreated"
+      :loading-create-or-update="loading"
+    />
+
+    <ConfirmationSuppressionModal
+      v-model:openConfirmationModal="dossierDeleteModal"
+      titre="Confirmer la suppression"
+      message="Voulez-vous vraiment retirer ce dossier de l'ordre du jour ?"
+      :loading="isDeletingDossier"
+      @confirm="confirmDeleteDossierAction"
+      @cancel="dossierDeleteModal = false"
+    />
+    <!-- ── Modale ajout tâche depuis card ───────────────────────────────────── -->
+    <TacheFormModal
+      v-model:open="tacheModalOpen"
+      :dossier-id="selectedDossier?.id"
+      :membres-options="membresOptions"
+      @create="handleTacheCreated"
+      :loading-create-or-update="loading"
+    />
+
+    <ActiviteFormModal
+      v-model:open="activiteModalOpen"
+      :dossier-id="selectedDossier?.id"
+      @create="handleActiviteCreated"
+      :loading-create-or-update="loading"
+    />
+
+    <DossierFormModal
+      v-model:open="dossierModal"
+      @create="handleDossierCreated"
+      @update="handleUpdateDossier"
+      :dossier="selectedDossier"
+      :loading-create-or-update="loading"
+    />
+
+    <DossierDetail
+      v-model:open="dossierDetailModal"
+      :dossier="selectedDossier"
+    />
+
+    <CommentaireFormModal
+      v-model:open="openCommentaireModal"
+      :loading="commentairesLoading"
+      @create="handleRecupererCommentaire($event.contenu)"
+    />
+
+    <CommentaireListeModal
+      v-model:openListeCommentairesModal="openListeCommentairesModal"
+      :commentaires="commentaires"
+    />
 
   </div>
-
-  <CommentaireModal
-    v-model:openCommentaireModal="openCommentaireModal"
-    :loading="commentairesLoading"
-    @commenter="handleRecupererCommentaire"
-  />
-
-  <CommentaireListeModal
-    v-model:openListeCommentairesModal="openListeCommentairesModal"
-    :commentaires="commentaires"
-    :entiteUser="entiteUser"
-  />
-
-  <!-- ── Modale ajout dossier ───────────────────────────────────────────────── -->
-  <UModal v-model="dossierModal">
-    <UCard class="rounded-2xl">
-      <template #header>
-        <h3 class="font-semibold">Ajouter un dossier</h3>
-      </template>
-      <div class="p-2 flex flex-col gap-4">
-        <UFormGroup label="Libellé">
-          <UTextarea v-model="dossierForm.libelle" placeholder="Ex: Budget annuel" size="md" />
-        </UFormGroup>
-      </div>
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <UButton color="gray" variant="ghost" @click="dossierModal = false">Annuler</UButton>
-          <UButton color="blue" :loading="ordreDuJourApi.loading.value" @click="addDossier">Ajouter</UButton>
-        </div>
-      </template>
-    </UCard>
-  </UModal>
 </template>

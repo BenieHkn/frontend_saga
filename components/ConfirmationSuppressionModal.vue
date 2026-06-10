@@ -1,25 +1,27 @@
 <template>
-  <UModal v-model="isOpen" :title="titre">
-    <UCard class="rounded-2xl">
+  <UModal v-model="isOpen" prevent-close>
+    <UCard :ui="{ ring: '' }" class="rounded-2xl">
       <template #header>
         <div class="flex items-center gap-3">
-          <UIcon
-            name="i-heroicons-exclamation-triangle"
-            class="w-6 h-6 text-red-600 dark:text-red-400"
-          />
-          <h2 class="text-lg font-semibold">{{ titre }}</h2>
+          <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+            <UIcon
+              name="i-heroicons-exclamation-triangle"
+              class="w-5 h-5 text-red-600 dark:text-red-400"
+            />
+          </div>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ titre }}</h2>
         </div>
       </template>
 
-      <div class="space-y-4 p-4 text-sm text-gray-600 dark:text-gray-200">
+      <div class="space-y-4 text-sm text-gray-600 dark:text-gray-300">
         <p>{{ message }}</p>
-        <p v-if="details" class="font-medium text-gray-800 dark:text-white">
+        <p v-if="details" class="font-medium text-gray-900 dark:text-white">
           {{ details }}
         </p>
       </div>
 
       <template #footer>
-        <div class="flex justify-end gap-2">
+        <div class="flex justify-end gap-3">
           <UButton color="gray" variant="ghost" @click="onCancel" type="button">
             {{ cancelLabel }}
           </UButton>
@@ -62,7 +64,6 @@ const isOpen = computed({
 
 const onConfirm = () => {
   emit('confirm')
-  isOpen.value = false
 }
 
 const onCancel = () => {

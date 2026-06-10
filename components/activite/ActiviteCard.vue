@@ -1,19 +1,17 @@
 <script setup>
-import { useActivite } from '@/composables/activite/useActivite'
+import ConfirmationSuppressionModal from '@/components/ConfirmationSuppressionModal.vue'
 
 const props = defineProps({
   activite:  { type: Object,  required: true },
   numero:    { type: Number,  default: null  },
-  peutGerer: { type: Boolean, default: false },
+  peutGererCodir: { type: Boolean, default: false },
+  loading: {type: Boolean, default: false}
 })
 
-const emit = defineEmits(['updated', 'add-tache', 'commenter', 'lire-commentaires'])
+const emit = defineEmits(['update', 'add-tache', 'commenter', 'lire-commentaires', 'delete', 'edit'])
 
 const router      = useRouter()
-const toast       = useToast()
 const deleteModal = ref(false)
-
-const { deleteActivite, loading } = useActivite()
 
 const goToActivite = () => {
   localStorage.setItem('currentActivite', JSON.stringify(props.activite))
@@ -21,24 +19,11 @@ const goToActivite = () => {
 }
 
 const confirmDelete = async () => {
-  try {
-    await deleteActivite(props.activite.id)
-    toast.add({
-      title: 'Activité supprimée',
-      description: `"${props.activite.libelle}" a été supprimée`,
-      color: 'green',
-      icon: 'i-heroicons-check-circle',
-    })
-    deleteModal.value = false
-    emit('updated')
-  } catch {
-    toast.add({
-      title: 'Erreur',
-      description: "Impossible de supprimer l'activité",
-      color: 'red',
-      icon: 'i-heroicons-exclamation-circle',
-    })
-  }
+  emit('delete', props.activite)
+}
+
+const cancelDelete = () => {
+  deleteModal.value = false
 }
 </script>
 
@@ -108,7 +93,7 @@ const confirmDelete = async () => {
                 </div>
 
                 <UButton
-                  v-if="peutGerer"
+                  v-if="peutGererCodir"
                   icon="i-heroicons-plus"
                   color="blue"
                   variant="soft"
@@ -119,7 +104,7 @@ const confirmDelete = async () => {
                 </UButton>
 
                 <UButton
-                  v-if="peutGerer"
+                  v-if="peutGererCodir"
                   icon="i-heroicons-trash"
                   color="red"
                   variant="ghost"
@@ -141,35 +126,16 @@ const confirmDelete = async () => {
     </div>
 
     <!-- Modale suppression -->
-    <UModal v-model="deleteModal">
-      <UCard class="rounded-2xl">
-        <template #header>
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/40 flex items-center justify-center">
-              <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-red-600 dark:text-red-400" />
-            </div>
-            <div>
-              <h3 class="font-semibold text-gray-900 dark:text-white">Confirmer la suppression</h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Cette action est irréversible</p>
-            </div>
-          </div>
-        </template>
-        <div class="p-2">
-          <p class="text-gray-700 dark:text-gray-300">
-            Êtes-vous sûr de vouloir supprimer l'activité
-            <span class="font-semibold text-red-600 dark:text-red-400">"{{ activite.libelle }}"</span> ?
-          </p>
-        </div>
-        <template #footer>
-          <div class="flex justify-end gap-2">
-            <UButton color="gray" variant="ghost" @click="deleteModal = false">Annuler</UButton>
-            <UButton color="red" :loading="loading" @click="confirmDelete">
-              <UIcon name="i-heroicons-trash" class="w-4 h-4 mr-1" />
-              Supprimer
-            </UButton>
-          </div>
-        </template>
-      </UCard>
-    </UModal>
+    <ConfirmationSuppressionModal
+      v-model:openConfirmationModal="deleteModal"
+      titre="Confirmer la suppression"
+      message="Voulez-vous vraiment supprimer cette activité ?"
+      :details="activite.libelle ? `Activité : ${activite.libelle}` : ''"
+      confirmLabel="Supprimer"
+      cancelLabel="Annuler"
+      :loading="loading"
+      @confirm="confirmDelete"
+      @cancel="cancelDelete"
+    />
   </div>
 </template>

@@ -22,14 +22,17 @@
           <p class="qp-num font-semibold text-sm" style="color:var(--qp-fg-1)">{{ indicateur?.code }}</p>
         </div>
         <div>
-          <p class="qp-overline mb-1">Clé de calcul</p>
+          <p class="qp-overline mb-1">{{ indicateur?.type === 'suivi' ? 'Valeur suivie' : 'Clé de calcul' }}</p>
           <p class="text-sm qp-num" style="color:var(--qp-fg-2)">
-            {{ indicateur?.label_operande1 }} {{ indicateur?.operateur?.signe }} {{ indicateur?.label_operande2 }} × 100
+            <template v-if="indicateur?.type === 'suivi'">{{ indicateur?.label_valeur }}</template>
+            <template v-else>{{ indicateur?.label_operande1 }} {{ indicateur?.operateur?.signe }} {{ indicateur?.label_operande2 }} × 100</template>
           </p>
         </div>
         <div>
           <p class="qp-overline mb-1">Cible</p>
-          <p class="qp-num font-semibold text-sm" style="color:var(--qp-fg-1)">{{ indicateur?.valeur_cible }} %</p>
+          <p class="qp-num font-semibold text-sm" style="color:var(--qp-fg-1)">
+            {{ indicateur?.valeur_cible }}{{ indicateur?.type === 'suivi' ? '' : ' %' }}
+          </p>
         </div>
         <div>
           <p class="qp-overline mb-1">Exercice</p>
@@ -96,7 +99,9 @@
             </div>
 
             <span v-if="saisieOf(periode)" class="qp-num text-sm font-semibold" style="color:var(--qp-fg-1)">
-              {{ formatPourcentage(saisieOf(periode).resultat) }}
+              {{ indicateur?.type === 'suivi'
+                  ? Math.round(saisieOf(periode).resultat)
+                  : formatPourcentage(saisieOf(periode).resultat) }}
             </span>
 
             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium" :style="statutStyle(periode)">
@@ -121,39 +126,57 @@
 
             <div class="grid gap-4" style="grid-template-columns: 1fr 1fr">
 
-              <div class="qp-field">
-                <label class="qp-label">{{ indicateur?.label_operande1 }} <span class="req">*</span></label>
-                <input
-                  v-model.number="formPeriode.operande1"
-                  type="number"
-                  step="1"
-                  class="qp-input qp-input--mono"
-                  :disabled="!peutSaisirCopilote(periode) && !peutSaisirDirectement(periode) && !peutModifierPilote(periode)"
-                  placeholder="0"
-                  @input="calculerPreview"
-                />
-              </div>
+              <!-- ── Indicateur de SUIVI : un seul champ ── -->
+              <template v-if="indicateur?.type === 'suivi'">
+                <div class="full">
+                  <label class="qp-label">{{ indicateur?.label_valeur }} <span class="req">*</span></label>
+                  <input
+                    v-model.number="formPeriode.operande1"
+                    type="number"
+                    step="1"
+                    class="qp-input qp-input--mono"
+                    :disabled="!peutSaisirCopilote(periode) && !peutSaisirDirectement(periode) && !peutModifierPilote(periode)"
+                    placeholder="0"
+                    @input="calculerPreview"
+                  />
+                </div>
+              </template>
 
-              <div class="qp-field">
-                <label class="qp-label">{{ indicateur?.label_operande2 }} <span class="req">*</span></label>
-                <input
-                  v-model.number="formPeriode.operande2"
-                  type="number"
-                  step="1"
-                  class="qp-input qp-input--mono"
-                  :disabled="!peutSaisirCopilote(periode) && !peutSaisirDirectement(periode) && !peutModifierPilote(periode)"
-                  placeholder="0"
-                  @input="calculerPreview"
-                />
-              </div>
+              <!-- ── Indicateur de CALCUL : deux opérandes ── -->
+              <template v-else>
+                <div class="qp-field">
+                  <label class="qp-label">{{ indicateur?.label_operande1 }} <span class="req">*</span></label>
+                  <input
+                    v-model.number="formPeriode.operande1"
+                    type="number"
+                    step="1"
+                    class="qp-input qp-input--mono"
+                    :disabled="!peutSaisirCopilote(periode) && !peutSaisirDirectement(periode) && !peutModifierPilote(periode)"
+                    placeholder="0"
+                    @input="calculerPreview"
+                  />
+                </div>
+                <div class="qp-field">
+                  <label class="qp-label">{{ indicateur?.label_operande2 }} <span class="req">*</span></label>
+                  <input
+                    v-model.number="formPeriode.operande2"
+                    type="number"
+                    step="1"
+                    class="qp-input qp-input--mono"
+                    :disabled="!peutSaisirCopilote(periode) && !peutSaisirDirectement(periode) && !peutModifierPilote(periode)"
+                    placeholder="0"
+                    @input="calculerPreview"
+                  />
+                </div>
+              </template>
 
               <!-- Aperçu résultat -->
               <div class="full">
                 <div class="flex items-center gap-4 rounded-lg px-4 py-3" :style="resultatStyle">
                   <div>
-                    <p class="text-xs" style="color:var(--qp-fg-3)">Résultat calculé</p>
+                    <p class="text-xs" style="color:var(--qp-fg-3)">{{ indicateur?.type === 'suivi' ? 'Valeur saisie' : 'Résultat calculé' }}</p>
                     <p class="qp-num text-lg font-bold" :style="conformiteColor">
-                      {{ previewResultat !== null ? formatPourcentage(previewResultat) : '—' }}
+                      {{ previewResultat !== null ? (indicateur?.type === 'suivi' ? Math.round(previewResultat) : formatPourcentage(previewResultat)) : '—' }}
                     </p>
                   </div>
                   <div v-if="previewResultat !== null" class="ml-auto">
@@ -206,7 +229,7 @@
                 v-if="peutSaisirCopilote(periode)"
                 class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white"
                 style="background:var(--qp-primary-500)"
-                :disabled="actionEnCours || formPeriode.operande1 === null || formPeriode.operande2 === null"
+                :disabled="actionEnCours || formPeriode.operande1 === null || (indicateur?.type !== 'suivi' && formPeriode.operande2 === null)"
                 @click="soumettre(periode)"
               >
                 <Icon name="heroicons:paper-airplane" class="h-4 w-4" />
@@ -314,9 +337,33 @@
             <textarea v-model="facForm.actions_proposees" class="qp-textarea" rows="3" placeholder="Actions pour supprimer ou limiter les causes…" />
           </div>
           <div class="grid gap-4" style="grid-template-columns:1fr 1fr">
-            <div class="qp-field">
-              <label class="qp-label">Responsable de l'action</label>
-              <input v-model="facForm.responsable_action" class="qp-input" placeholder="Nom du responsable" />
+            <div class="qp-field" style="grid-column:1/-1">
+              <label class="qp-label">Responsable(s) de l'action</label>
+              <div class="flex flex-col gap-2">
+                <div class="flex flex-wrap gap-1 min-h-[36px] px-2 py-1 rounded-lg border" style="border-color:var(--qp-border-1);background:var(--qp-n-0)">
+                  <span
+                    v-for="uid in facResponsablesChx" :key="uid"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                    style="background:var(--qp-primary-100);color:var(--qp-primary-700)"
+                  >
+                    {{ facResponsables.find(u => u.id === uid)?.nom_complet }}
+                    <button type="button" @click="facResponsablesChx = facResponsablesChx.filter(i => i !== uid)" style="line-height:1;margin-left:2px">×</button>
+                  </span>
+                  <span v-if="!facResponsablesChx.length" class="text-xs self-center" style="color:var(--qp-fg-3)">
+                    {{ facResponsables.length ? 'Aucun sélectionné' : 'Chargement…' }}
+                  </span>
+                </div>
+                <div v-if="facResponsables.length" class="flex flex-col gap-0.5 max-h-36 overflow-y-auto rounded-lg border px-2 py-1" style="border-color:var(--qp-border-1)">
+                  <label
+                    v-for="u in facResponsables" :key="u.id"
+                    class="flex items-center gap-2 text-sm px-1 py-1 rounded cursor-pointer"
+                    :style="facResponsablesChx.includes(u.id) ? 'background:var(--qp-primary-50)' : ''"
+                  >
+                    <input type="checkbox" :value="u.id" v-model="facResponsablesChx" style="accent-color:var(--qp-primary-500);width:14px;height:14px;flex-shrink:0" />
+                    <span style="color:var(--qp-fg-2)">{{ u.nom_complet }}</span>
+                  </label>
+                </div>
+              </div>
             </div>
             <div class="qp-field">
               <label class="qp-label">Date prévisionnelle de mise en œuvre</label>
@@ -445,7 +492,7 @@ const { fetchExerciceActif }                                             = useRe
 const { fetchSaisies, enregistrerBrouillon, mettreAJourSaisie,
         soumettre: API_soumettre, valider: API_valider,
         retourner: API_retourner, transmettre: API_transmettre }         = useSaisies()
-const { createFac }                                                      = useFac()
+const { createFac, fetchResponsablesPossiblesCreation }                  = useFac()
 const { isSmqAdmin, isSmqPilote, isSmqCopilote }                        = useAuth()
 
 // ── Droits ────────────────────────────────────────────────────────────────────
@@ -472,11 +519,20 @@ const motifRetour  = ref('')
 const periodeCible = ref(null)
 
 // ── FAC ───────────────────────────────────────────────────────────────────────
-const modalFac    = ref(false)
-const facSaisieId = ref(null)
-const facForm     = reactive({
+const modalFac            = ref(false)
+const facSaisieId         = ref(null)
+const facResponsables     = ref([])    // liste { id, nom_complet }
+const facResponsablesChx  = ref([])    // ids cochés
+const facForm             = reactive({
   description_nc: '', action_maitrise: '', causes: '', actions_proposees: '',
   responsable_action: '', date_previsionnelle: '', critere_efficacite: '', date_examen_effets: '',
+})
+
+watch(facResponsablesChx, (ids) => {
+  facForm.responsable_action = facResponsables.value
+    .filter(u => ids.includes(u.id))
+    .map(u => u.nom_complet)
+    .join(', ')
 })
 
 // ── Assignation copilote ──────────────────────────────────────────────────────
@@ -587,11 +643,19 @@ const togglePeriode = (idx, periode) => {
   const s = saisieOf(periode)
   formPeriode.operande1 = s?.operande1 ?? null
   formPeriode.operande2 = s?.operande2 ?? null
-  if (s?.operande1 != null && s?.operande2 != null) calculerPreview()
+  const isSuivi = indicateur.value?.type === 'suivi'
+  if (isSuivi ? s?.operande1 != null : (s?.operande1 != null && s?.operande2 != null)) calculerPreview()
 }
 
 // ── Calcul preview ────────────────────────────────────────────────────────────
 const calculerPreview = () => {
+  // Suivi : la valeur saisie est directement le résultat
+  if (indicateur.value?.type === 'suivi') {
+    const op1 = Number(formPeriode.operande1)
+    previewResultat.value = isFinite(op1) && formPeriode.operande1 !== null ? op1 : null
+    return
+  }
+  // Calcul : formule (op1 [opérateur] op2) × 100
   const op1 = Math.trunc(Number(formPeriode.operande1))
   const op2 = Math.trunc(Number(formPeriode.operande2))
   if (!isFinite(op1) || !isFinite(op2) || op2 === 0) { previewResultat.value = null; return }
@@ -668,6 +732,11 @@ const ouvrirMotif = (periode) => { periodeCible.value = periode; motifRetour.val
 const ouvrirFac = (periode) => {
   facSaisieId.value = saisieOf(periode)?.id
   Object.assign(facForm, { description_nc: '', action_maitrise: '', causes: '', actions_proposees: '', responsable_action: '', date_previsionnelle: '', critere_efficacite: '', date_examen_effets: '' })
+  facResponsables.value    = []
+  facResponsablesChx.value = []
+  fetchResponsablesPossiblesCreation(facSaisieId.value).then(list => {
+    facResponsables.value = list
+  }).catch(() => {})
   modalFac.value = true
 }
 

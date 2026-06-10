@@ -46,6 +46,17 @@ export const useFac = () => {
   const deleteFac = async (id) =>
     $fetch(`${base.value}/smq/actions-correctives/${id}`, { method: 'DELETE', headers: headers() })
 
+  const fetchResponsablesPossibles = async (id) => {
+    const res = await $fetch(`${base.value}/smq/actions-correctives/${id}/responsables-possibles`, { headers: headers() })
+    return res?.data ?? []
+  }
+
+  const fetchResponsablesPossiblesCreation = async (saisieIndicateurId = null) => {
+    const q = saisieIndicateurId ? `?saisie_indicateur_id=${saisieIndicateurId}` : ''
+    const res = await $fetch(`${base.value}/smq/responsables-possibles${q}`, { headers: headers() })
+    return res?.data ?? []
+  }
+
   const generateFacPdf = async (id) => {
     const token = process.client ? localStorage.getItem('auth_token') : ''
     const res = await fetch(`${base.value}/smq/actions-correctives/${id}/generate-pdf`, {
@@ -107,7 +118,7 @@ export const useFac = () => {
 
   return {
     fetchFac, fetchFacItem, createFac, updateFac, deleteFac, fetchFacStats,
-    generateFacPdf, downloadFacPdf,
+    fetchResponsablesPossibles, fetchResponsablesPossiblesCreation, generateFacPdf, downloadFacPdf,
     FAC_STATUTS, badgeFacStatut, labelFacStatut,
   }
 }

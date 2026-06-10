@@ -14,6 +14,17 @@ const createForm  = reactive({ heure_debut: '', heure_fin: '', date: '' })
 const resetCreate = () => Object.assign(createForm, { heure_debut: '', heure_fin: '', date: '' })
 const { peutVoirCodir, peutGererCodir } = useAuth()
 
+const clearCurrents = () => {
+  if (!process.client) return
+  try {
+    localStorage.removeItem('currentCodir')
+    localStorage.removeItem('currentOrdreDuJour')
+    localStorage.removeItem('currentDossier')
+    localStorage.removeItem('currentTache')
+    localStorage.removeItem('currentActivite')
+  } catch (e) { }
+}
+
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const codirs = ref([])
@@ -34,6 +45,7 @@ const fetchCodirs = async () => {
 }
 
 onMounted(async () => {
+  clearCurrents()
   if (process.client) {
     const cached = localStorage.getItem('codirs')
     if (cached) codirs.value = JSON.parse(cached)
@@ -336,58 +348,18 @@ const handleDelete = async () => {
     </UCard>
   </UModal>
 
-<UModal v-model="deleteModal">
-  <UCard class="rounded-2xl max-w-md">
-    <template #header>
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/40 flex items-center justify-center">
-          <UIcon
-            name="i-heroicons-trash"
-            class="w-5 h-5 text-red-600"
-          />
-        </div>
-
-        <div>
-          <h3 class="font-semibold text-lg">
-            Confirmation de suppression
-          </h3>
-        </div>
-      </div>
-    </template>
-
-    <div class="py-4">
-      <p class="text-sm text-gray-600 dark:text-gray-300">
-        Êtes-vous sûr de vouloir supprimer cet élément ?
-      </p>
-
-      <p class="text-sm text-red-600 mt-2 font-medium">
-        Cette action est irréversible.
-      </p>
-    </div>
-
-    <template #footer>
-      <div class="flex justify-end gap-2">
-        <UButton
-          color="gray"
-          variant="ghost"
-          @click="deleteModal = false"
-        >
-          Annuler
-        </UButton>
-
-        <UButton
-          color="red"
-          icon="i-heroicons-trash"
-          :loading="loading"
-          @click="handleDelete"
-        >
-          Supprimer
-        </UButton>
-      </div>
-    </template>
-  </UCard>
-</UModal>
-
+    <ConfirmationSuppressionModal
+      v-if="codirASupprimer"
+      :open-confirmation-modal="deleteModal"
+      titre="Confirmer la suppression du CODIR"
+      :message="`Voulez-vous vraiment supprimer le CODIR du ${formatDateFR(codirASupprimer.date)} ?`"
+      :details="`Date : ${formatDateFR(codirASupprimer.date)} - Horaire : ${codirASupprimer.heure_debut} - ${codirASupprimer.heure_fin}`"
+      confirm-label="Supprimer"
+      cancel-label="Annuler"
+      :loading="loading"
+      @confirm="handleDelete"
+      @cancel="deleteModal = false"
+    />
 </template>
 
 <style scoped>
