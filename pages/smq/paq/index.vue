@@ -51,33 +51,56 @@
               </div>
             </div>
             <span class="qp-badge" :class="badgeAuditStatut(audit.statut)">{{ labelAuditStatut(audit.statut) }}</span>
-            <!-- Bouton ajouter entité -->
+            <!-- Audit réalisé : badge cadenas -->
+            <span
+              v-if="audit.statut === 'realise'"
+              class="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium"
+              style="background:var(--qp-success-50);color:var(--qp-success-700);border:1px solid var(--qp-success-200)"
+              title="Audit clôturé — lecture seule"
+            >
+              <Icon name="heroicons:lock-closed" class="h-3.5 w-3.5" />
+              Clôturé
+            </span>
+            <!-- Bouton Télécharger PDF (toujours visible) -->
             <button
               class="w-8 h-8 rounded-md flex items-center justify-center transition-all text-xs"
-              style="color:var(--qp-primary-600);background:var(--qp-primary-50)"
-              title="Planifier une visite d'entité"
-              @click="ouvrirVisite(audit, null)"
+              style="color:var(--qp-danger-600);background:var(--qp-danger-50)"
+              title="Télécharger le programme (PDF)"
+              :disabled="pdfLoading"
+              @click.stop="telechargerProgrammePdf(audit)"
             >
-              <Icon name="heroicons:building-office-2" class="h-4 w-4" />
+              <Icon :name="pdfLoading ? 'heroicons:arrow-path' : 'heroicons:document-arrow-down'" class="h-4 w-4" :class="{ 'animate-spin': pdfLoading }" />
             </button>
-            <!-- Bouton modifier audit -->
-            <button
-              class="w-8 h-8 rounded-md flex items-center justify-center transition-all text-xs"
-              style="color:var(--qp-fg-3)"
-              title="Modifier l'audit"
-              @click="ouvrirAudit(audit)"
-            >
-              <Icon name="heroicons:pencil-square" class="h-4 w-4" />
-            </button>
-            <!-- Bouton supprimer audit -->
-            <button
-              class="w-8 h-8 rounded-md flex items-center justify-center transition-all text-xs"
-              style="color:var(--qp-danger-500)"
-              title="Supprimer l'audit"
-              @click="confirmerSuppressionAudit(audit)"
-            >
-              <Icon name="heroicons:trash" class="h-4 w-4" />
-            </button>
+            <!-- Boutons d'action (masqués si réalisé) -->
+            <template v-if="audit.statut !== 'realise'">
+              <!-- Bouton ajouter entité -->
+              <button
+                class="w-8 h-8 rounded-md flex items-center justify-center transition-all text-xs"
+                style="color:var(--qp-primary-600);background:var(--qp-primary-50)"
+                title="Planifier une visite d'entité"
+                @click="ouvrirVisite(audit, null)"
+              >
+                <Icon name="heroicons:clipboard-document-list" class="h-4 w-4" />
+              </button>
+              <!-- Bouton modifier audit -->
+              <button
+                class="w-8 h-8 rounded-md flex items-center justify-center transition-all text-xs"
+                style="color:var(--qp-fg-3)"
+                title="Modifier l'audit"
+                @click="ouvrirAudit(audit)"
+              >
+                <Icon name="heroicons:pencil-square" class="h-4 w-4" />
+              </button>
+              <!-- Bouton supprimer audit -->
+              <button
+                class="w-8 h-8 rounded-md flex items-center justify-center transition-all text-xs"
+                style="color:var(--qp-danger-500)"
+                title="Supprimer l'audit"
+                @click="confirmerSuppressionAudit(audit)"
+              >
+                <Icon name="heroicons:trash" class="h-4 w-4" />
+              </button>
+            </template>
           </div>
 
           <!-- Visites (audits_entites) -->
@@ -96,26 +119,46 @@
                   <span v-else style="color:var(--qp-warning-600)">À planifier</span>
                   <span v-if="ae.heure_debut" class="block" style="color:var(--qp-fg-3)">{{ ae.heure_debut }}{{ ae.heure_fin ? ' – ' + ae.heure_fin : '' }}</span>
                 </span>
-                <!-- Libellé entité -->
-                <span class="flex-1 text-sm font-medium" style="color:var(--qp-fg-1)">{{ ae.entite?.libelle ?? ae.libelle ?? '—' }}</span>
-                <!-- Avatars auditeurs -->
+                <!-- Libellé entité + titre + processus -->
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium truncate" style="color:var(--qp-fg-1)">
+                    {{ ae.entite?.libelle ?? ae.libelle ?? '—' }}
+                  </div>
+                  <div v-if="ae.processus" class="text-xs truncate mt-0.5" style="color:var(--qp-fg-3)">
+                    {{ ae.processus }}
+                  </div>
+                </div>
+                <!-- Avatars auditeurs (couronne pour le chef) -->
                 <div class="flex" style="margin-left:-4px">
-                  <span
+                  <div
                     v-for="u in (ae.users ?? []).slice(0, 4)"
                     :key="u.id"
-                    class="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-semibold"
-                    style="border:2px solid var(--qp-n-25); margin-left:-6px"
-                    :style="{ background: avatarCouleur(nomComplet(u)) }"
-                    :title="nomComplet(u)"
-                  >{{ initialesAvatar(nomComplet(u)) }}</span>
+                    class="relative flex-none"
+                    style="margin-left:-6px"
+                  >
+                    <span
+                      class="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-semibold"
+                      style="border:2px solid var(--qp-n-25)"
+                      :style="{ background: avatarCouleur(nomComplet(u)) }"
+                      :title="nomComplet(u) + (u.pivot?.is_chef ? ' (chef d\'équipe)' : '')"
+                    >{{ initialesAvatar(nomComplet(u)) }}</span>
+                    <!-- Couronne chef d'équipe -->
+                    <span
+                      v-if="u.pivot?.is_chef"
+                      class="absolute -top-1.5 -right-1 flex items-center justify-center w-3.5 h-3.5 rounded-full text-[8px]"
+                      style="background:var(--qp-warning-400);color:#fff;border:1px solid #fff"
+                      title="Chef d'équipe"
+                    >★</span>
+                  </div>
                   <span
                     v-if="(ae.users ?? []).length > 4"
                     class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold"
                     style="border:2px solid var(--qp-n-25); margin-left:-6px; background:var(--qp-n-200); color:var(--qp-fg-2)"
                   >+{{ ae.users.length - 4 }}</span>
                 </div>
-                <!-- Bouton modifier visite -->
+                <!-- Bouton modifier visite (masqué si réalisé) -->
                 <button
+                  v-if="audit.statut !== 'realise'"
                   class="w-7 h-7 rounded flex items-center justify-center transition-all"
                   style="color:var(--qp-primary-500)"
                   title="Modifier la programmation de cette visite"
@@ -123,7 +166,7 @@
                 >
                   <Icon name="heroicons:calendar-days" class="h-4 w-4" />
                 </button>
-                <!-- Bouton afficher/masquer recommandations -->
+                <!-- Bouton afficher/masquer recommandations (toujours visible en lecture) -->
                 <button
                   v-if="ae.recommandations?.length"
                   class="flex items-center gap-1 px-2 h-7 rounded text-xs font-medium transition-all flex-none"
@@ -136,8 +179,9 @@
                   <Icon name="heroicons:chat-bubble-left-ellipsis" class="h-3.5 w-3.5" />
                   <span>{{ ae.recommandations.length }}</span>
                 </button>
-                <!-- Bouton ajouter recommandation -->
+                <!-- Bouton ajouter recommandation (masqué si réalisé) -->
                 <button
+                  v-if="audit.statut !== 'realise'"
                   class="w-7 h-7 rounded flex items-center justify-center transition-all"
                   style="color:var(--qp-fg-3)"
                   title="Ajouter une recommandation"
@@ -145,8 +189,9 @@
                 >
                   <Icon name="heroicons:plus" class="h-4 w-4" />
                 </button>
-                <!-- Bouton supprimer visite -->
+                <!-- Bouton supprimer visite (masqué si réalisé) -->
                 <button
+                  v-if="audit.statut !== 'realise'"
                   class="w-7 h-7 rounded flex items-center justify-center transition-all"
                   style="color:var(--qp-danger-400)"
                   title="Retirer cette entité de l'audit"
@@ -166,7 +211,7 @@
                 >
                   <span class="w-1.5 h-1.5 rounded-full mt-1.5 flex-none" :style="{ background: colorRecoStatut(reco.statut) }" />
                   <span class="flex-1 text-xs leading-relaxed" style="color:var(--qp-fg-2)">{{ reco.libelle }}</span>
-                  <!-- Badge statut cliquable pour cycler -->
+                  <!-- Badge statut (toujours cliquable, même si audit réalisé) -->
                   <button
                     class="text-[10px] px-2 py-0.5 rounded-full flex-none font-medium transition-all"
                     :style="recoStatutStyle(reco.statut)"
@@ -192,6 +237,7 @@
           <!-- Pied : ajouter visite (si aucune visite) -->
           <div v-else class="px-[18px] py-2.5 flex items-center gap-2" style="background:var(--qp-n-25);border-top:1px solid var(--qp-border-2)">
             <button
+              v-if="audit.statut !== 'realise'"
               class="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-md"
               style="color:var(--qp-primary-600);background:var(--qp-primary-50)"
               @click="ouvrirVisite(audit, null)"
@@ -199,6 +245,7 @@
               <Icon name="heroicons:plus" class="h-3.5 w-3.5" />
               Ajouter une entité à auditer
             </button>
+            <span v-else class="text-xs" style="color:var(--qp-fg-3)">Audit clôturé — aucune visite enregistrée</span>
           </div>
         </div>
       </div>
@@ -257,7 +304,11 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="qp-field">
               <label class="qp-label">Référentiel</label>
-              <input v-model="auditForm.referentiel" class="qp-input" placeholder="ISO 9001" />
+              <input v-model="auditForm.referentiel" class="qp-input" placeholder="ISO 9001 : 2015" />
+            </div>
+            <div class="qp-field">
+              <label class="qp-label">Type d'audit</label>
+              <input v-model="auditForm.type_audit" class="qp-input" placeholder="Qualité interne" />
             </div>
             <div class="qp-field">
               <label class="qp-label">Date de début <span class="req">*</span></label>
@@ -266,6 +317,86 @@
             <div class="qp-field">
               <label class="qp-label">Date de fin</label>
               <input v-model="auditForm.date_fin" type="date" class="qp-input qp-input--mono" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="qp-field">
+              <label class="qp-label">Observateur</label>
+              <input v-model="auditForm.observateur" class="qp-input" placeholder="Ex. : Bureau ISOSUD Certification" />
+            </div>
+            <div class="qp-field">
+              <label class="qp-label">Site(s) audité(s)</label>
+              <input v-model="auditForm.sites_audites" class="qp-input" placeholder="Ex. : Direction Générale et DGCA" />
+            </div>
+          </div>
+          <div class="qp-field">
+            <label class="qp-label">Objectifs d'audit</label>
+            <textarea v-model="auditForm.objectifs" class="qp-textarea" rows="3" placeholder="L'objectif général de cette activité est…" />
+          </div>
+          <!-- Superviseurs (multi-select) -->
+          <div class="qp-field">
+            <label class="qp-label">Superviseurs</label>
+            <!-- Chips sélectionnés -->
+            <div v-if="auditForm.superviseurs_ids.length" class="flex flex-wrap gap-1.5 mb-2">
+              <span
+                v-for="uid in auditForm.superviseurs_ids"
+                :key="uid"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+                style="background:var(--qp-warning-50);color:var(--qp-warning-800);border:1px solid var(--qp-warning-300)"
+              >
+                <span
+                  class="w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold flex-none"
+                  :style="{ background: avatarCouleur(nomComplet(smqUsers.find(u => u.id === uid))) }"
+                >{{ initialesAvatar(nomComplet(smqUsers.find(u => u.id === uid))) }}</span>
+                {{ nomComplet(smqUsers.find(u => u.id === uid)) }}
+                <button
+                  type="button"
+                  class="ml-0.5 hover:text-red-500"
+                  @click.prevent="auditForm.superviseurs_ids = auditForm.superviseurs_ids.filter(id => id !== uid)"
+                >
+                  <Icon name="heroicons:x-mark" class="h-3 w-3" />
+                </button>
+              </span>
+            </div>
+            <!-- Recherche -->
+            <div class="relative mb-1">
+              <Icon name="heroicons:magnifying-glass" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none" style="color:var(--qp-fg-3)" />
+              <input
+                v-model="superviseurSearch"
+                class="qp-input"
+                style="height:34px;font-size:13px;padding-left:30px"
+                placeholder="Rechercher un superviseur…"
+              />
+            </div>
+            <!-- Liste checkboxes -->
+            <div class="rounded-lg border overflow-hidden" style="border-color:var(--qp-border-1);max-height:160px;overflow-y:auto">
+              <div v-if="!smqUsers.length" class="px-3 py-2 text-sm" style="color:var(--qp-fg-3)">Chargement…</div>
+              <div v-else-if="!superviseursFiltres.length" class="px-3 py-3 text-sm" style="color:var(--qp-fg-3)">Aucun résultat</div>
+              <label
+                v-for="u in superviseursFiltres"
+                :key="u.id"
+                class="flex items-center gap-3 px-3 py-2 cursor-pointer border-b last:border-b-0"
+                :style="auditForm.superviseurs_ids.includes(u.id)
+                  ? 'background:var(--qp-warning-50);border-color:var(--qp-border-2)'
+                  : 'background:#fff;border-color:var(--qp-border-2)'"
+              >
+                <input
+                  type="checkbox"
+                  :value="u.id"
+                  v-model="auditForm.superviseurs_ids"
+                  class="rounded flex-none"
+                  style="accent-color:var(--qp-warning-500)"
+                />
+                <span
+                  class="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-none"
+                  :style="{ background: avatarCouleur(nomComplet(u)) }"
+                >{{ initialesAvatar(nomComplet(u)) }}</span>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium truncate" style="color:var(--qp-fg-1)">{{ nomComplet(u) }}</div>
+                  <div class="text-xs truncate" style="color:var(--qp-fg-3)">{{ u.email }}</div>
+                </div>
+                <Icon v-if="auditForm.superviseurs_ids.includes(u.id)" name="heroicons:check" class="h-4 w-4 flex-none" style="color:var(--qp-warning-500)" />
+              </label>
             </div>
           </div>
           <div class="qp-field">
@@ -357,6 +488,12 @@
             </div>
           </div>
 
+          <!-- Processus audité -->
+          <div class="qp-field">
+            <label class="qp-label">Processus audité</label>
+            <input v-model="visiteForm.processus" class="qp-input" placeholder="Ex. : Processus achat" />
+          </div>
+
           <!-- Date + Horaires -->
           <div class="grid grid-cols-3 gap-3">
             <div class="qp-field col-span-3 sm:col-span-1">
@@ -382,22 +519,37 @@
                 v-for="uid in visiteForm.participants"
                 :key="uid"
                 class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-                style="background:var(--qp-primary-50);color:var(--qp-primary-700);border:1px solid var(--qp-primary-100)"
+                :style="visiteForm.chef_id === uid
+                  ? 'background:var(--qp-warning-50);color:var(--qp-warning-800);border:1px solid var(--qp-warning-300)'
+                  : 'background:var(--qp-primary-50);color:var(--qp-primary-700);border:1px solid var(--qp-primary-100)'"
               >
+                <!-- Avatar -->
                 <span
                   class="w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold flex-none"
                   :style="{ background: avatarCouleur(nomComplet(smqUsers.find(u => u.id === uid))) }"
                 >{{ initialesAvatar(nomComplet(smqUsers.find(u => u.id === uid))) }}</span>
                 {{ nomComplet(smqUsers.find(u => u.id === uid)) }}
+                <!-- Bouton chef d'équipe (étoile) -->
+                <button
+                  type="button"
+                  class="ml-0.5"
+                  :title="visiteForm.chef_id === uid ? 'Retirer le rôle de chef d\'équipe' : 'Désigner chef d\'équipe'"
+                  :style="visiteForm.chef_id === uid ? 'color:var(--qp-warning-600)' : 'color:var(--qp-fg-3)'"
+                  @click.prevent="visiteForm.chef_id = visiteForm.chef_id === uid ? null : uid"
+                >★</button>
+                <!-- Retirer auditeur -->
                 <button
                   type="button"
                   class="ml-0.5 hover:text-red-500"
-                  @click.prevent="visiteForm.participants = visiteForm.participants.filter(id => id !== uid)"
+                  @click.prevent="visiteForm.participants = visiteForm.participants.filter(id => id !== uid); if(visiteForm.chef_id === uid) visiteForm.chef_id = null"
                 >
                   <Icon name="heroicons:x-mark" class="h-3 w-3" />
                 </button>
               </span>
             </div>
+            <p v-if="visiteForm.participants.length" class="text-xs mb-1" style="color:var(--qp-fg-3)">
+              Cliquez sur ★ pour désigner le chef d'équipe (fond doré).
+            </p>
             <!-- Barre de recherche -->
             <div class="relative mb-1">
               <Icon name="heroicons:magnifying-glass" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none" style="color:var(--qp-fg-3)" />
@@ -512,6 +664,49 @@
         </div>
       </div>
     </UModal>
+
+    <!-- ── Alerte blocage audit (style SweetAlert) ───────────────────────────── -->
+    <UModal v-model="blocageModalOpen" :ui="{ width: 'sm:max-w-sm' }">
+      <div class="bg-white rounded-2xl overflow-hidden text-center">
+        <!-- Icône centrale -->
+        <div class="flex justify-center pt-8 pb-3">
+          <div
+            class="w-20 h-20 rounded-full flex items-center justify-center"
+            style="background:var(--qp-warning-100)"
+          >
+            <Icon name="heroicons:exclamation-triangle" class="h-10 w-10" style="color:var(--qp-warning-500)" />
+          </div>
+        </div>
+        <!-- Titre -->
+        <h2 class="text-lg font-bold px-6 mb-2" style="color:var(--qp-fg-1)">Action impossible</h2>
+        <!-- Message -->
+        <p class="text-sm px-6 mb-4" style="color:var(--qp-fg-2)">
+          Vous ne pouvez pas planifier un nouvel audit tant qu'un audit non réalisé existe.
+        </p>
+        <!-- Détail de l'audit bloquant -->
+        <div v-if="blocageAudit" class="mx-6 mb-5 px-4 py-3 rounded-xl text-sm text-left" style="background:var(--qp-warning-50);border:1px solid var(--qp-warning-200)">
+          <p class="font-semibold mb-0.5" style="color:var(--qp-warning-800)">
+            {{ blocageAudit.titre || titreAudit(blocageAudit) }}
+          </p>
+          <p class="text-xs" style="color:var(--qp-warning-700)">
+            Statut actuel : <strong>{{ labelAuditStatut(blocageAudit.statut) }}</strong>
+          </p>
+        </div>
+        <p class="text-xs px-6 mb-6" style="color:var(--qp-fg-3)">
+          Marquez cet audit comme <strong>Réalisé</strong> pour pouvoir en planifier un nouveau.
+        </p>
+        <!-- Bouton -->
+        <div class="px-6 pb-7">
+          <button
+            class="w-full py-2.5 text-sm font-semibold rounded-xl"
+            style="background:var(--qp-warning-500);color:#fff"
+            @click="blocageModalOpen = false"
+          >
+            OK, compris
+          </button>
+        </div>
+      </div>
+    </UModal>
   </div>
 </template>
 
@@ -525,7 +720,7 @@ useHead({ title: 'Plan Audit Qualité — SMQ · SAGA' })
 
 const store = useSmqStore()
 const {
-  fetchAudits, createAudit, updateAudit, deleteAudit,
+  fetchAudits, createAudit, updateAudit, deleteAudit, downloadAuditPdf,
   ajouterEntiteAudit, supprimerEntiteAudit,
   updateAuditEntite, syncParticipants,
   fetchRecommandations, createRecommandation, updateRecommandation,
@@ -552,11 +747,27 @@ const smqUsers       = ref([])
 
 const auditModalOpen = ref(false)
 const auditEnCours   = ref(null)
+const AUDIT_DEFAULTS = {
+  referentiel:    'ISO 9001 – 2015, fiches processus et autres documents d\'application',
+  type_audit:     'Qualité interne',
+  objectifs:      'L\'objectif général de cette activité est d\'assurer une veille constante sur la bonne gestion des processus et des procédures de la DGML.',
+  observateur:    'Bureau ISOSUD Certification',
+  sites_audites:  'Direction Générale et DGCA',
+}
+
 const auditForm      = reactive({
-  titre: '', referentiel: 'ISO 9001',
+  titre: '',
+  referentiel:      AUDIT_DEFAULTS.referentiel,
+  type_audit:       AUDIT_DEFAULTS.type_audit,
+  objectifs:        AUDIT_DEFAULTS.objectifs,
+  observateur:      AUDIT_DEFAULTS.observateur,
+  sites_audites:    AUDIT_DEFAULTS.sites_audites,
+  superviseurs_ids: [],
   date_debut: '', date_fin: '',
   statut: 'a_planifier', exercice_id: null,
 })
+const superviseurSearch = ref('')
+const pdfLoading = ref(false)
 
 // ── Modal visite par entité ───────────────────────────────────────────────────
 
@@ -587,6 +798,15 @@ const auditeursFiltres = computed(() => {
     : smqUsers.value
 })
 
+const superviseursFiltres = computed(() => {
+  const q = superviseurSearch.value.toLowerCase().trim()
+  return q
+    ? smqUsers.value.filter(u =>
+        nomComplet(u).toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
+      )
+    : smqUsers.value
+})
+
 // Fermer le dropdown en cliquant ailleurs
 onMounted(() => {
   document.addEventListener('click', (evt) => {
@@ -601,10 +821,12 @@ const visiteAudit     = ref(null)   // l'audit parent
 const visiteEnCours   = ref(null)   // null = création, objet = édition
 const visiteForm      = reactive({
   entite_id: '',
+  processus: '',
   date: '',
   heure_debut: '',
   heure_fin: '',
   participants: [],
+  chef_id: null,   // ID du chef d'équipe
   observations_generales: '',
 })
 
@@ -619,6 +841,12 @@ const recoForm         = reactive({ libelle: '', statut: 'ouvert' })
 const confirmModalOpen = ref(false)
 const confirmMessage   = ref('')
 const confirmAction    = ref(null)
+
+// ── Modal blocage (audit non réalisé) ─────────────────────────────────────────
+
+const blocageModalOpen = ref(false)
+const blocageMessage   = ref('')
+const blocageAudit     = ref(null)
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 
@@ -664,16 +892,53 @@ const charger = async () => {
 // ── Audit (CRUD) ──────────────────────────────────────────────────────────────
 
 const ouvrirAudit = (audit) => {
+  // En création : bloquer si un audit non réalisé existe déjà
+  if (!audit) {
+    const bloquant = audits.value.find(a => a.statut !== 'realise')
+    if (bloquant) {
+      blocageAudit.value   = bloquant
+      blocageMessage.value = 'Vous ne pouvez pas planifier un nouvel audit tant qu\'un audit non réalisé existe pour cet exercice.'
+      blocageModalOpen.value = true
+      return
+    }
+  }
+
   auditEnCours.value = audit
   Object.assign(auditForm, {
-    titre:       audit?.titre        ?? '',
-    referentiel: audit?.referentiel  ?? 'ISO 9001',
-    date_debut:  audit?.date_debut   ?? '',
-    date_fin:    audit?.date_fin     ?? '',
-    statut:      audit?.statut       ?? 'a_planifier',
-    exercice_id: exerciceActif.value?.id ?? null,
+    titre:         audit?.titre          ?? '',
+    referentiel:      audit?.referentiel    ?? AUDIT_DEFAULTS.referentiel,
+    type_audit:       audit?.type_audit     ?? AUDIT_DEFAULTS.type_audit,
+    objectifs:        audit?.objectifs      ?? AUDIT_DEFAULTS.objectifs,
+    observateur:      audit?.observateur    ?? AUDIT_DEFAULTS.observateur,
+    sites_audites:    audit?.sites_audites  ?? AUDIT_DEFAULTS.sites_audites,
+    superviseurs_ids: (audit?.superviseurs ?? []).map(u => u.id),
+    date_debut:       audit?.date_debut     ?? '',
+    date_fin:      audit?.date_fin       ?? '',
+    statut:        audit?.statut         ?? 'a_planifier',
+    exercice_id:   exerciceActif.value?.id ?? null,
   })
+  superviseurSearch.value = ''
   auditModalOpen.value = true
+}
+
+const telechargerProgrammePdf = async (audit) => {
+  if (pdfLoading.value) return
+  pdfLoading.value = true
+  try {
+    const blob = await downloadAuditPdf(audit.id)
+    const url  = window.URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `PAQ_Audit_${audit.id}.pdf`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+  } catch (e) {
+    console.error('❌ PDF audit :', e)
+  } finally {
+    pdfLoading.value = false
+  }
 }
 
 const sauvegarderAudit = async () => {
@@ -685,7 +950,16 @@ const sauvegarderAudit = async () => {
     auditModalOpen.value = false
     await charger()
   } catch (e) {
-    console.error('❌ Sauvegarde audit :', e)
+    const data = e?.data ?? e?.response?.data
+    if (data?.audit_bloquant) {
+      // Règle métier : un audit non réalisé bloque la création
+      auditModalOpen.value = false
+      blocageAudit.value   = data.audit_bloquant
+      blocageMessage.value = data.message ?? 'Un audit non réalisé existe déjà.'
+      blocageModalOpen.value = true
+    } else {
+      console.error('❌ Sauvegarde audit :', e)
+    }
   } finally {
     saving.value = false
   }
@@ -706,12 +980,15 @@ const ouvrirVisite = async (audit, ae) => {
   visiteAudit.value   = audit
   visiteEnCours.value = ae ?? null
 
+  const chef = (ae?.users ?? []).find(u => u.pivot?.is_chef)
   Object.assign(visiteForm, {
     entite_id:               ae?.entite_id ?? ae?.entite?.id ?? '',
+    processus:               ae?.processus  ?? '',
     date:                    ae?.date      ? ae.date.substring(0, 10) : '',
     heure_debut:             ae?.heure_debut ?? '',
     heure_fin:               ae?.heure_fin   ?? '',
     participants:            (ae?.users ?? []).map(u => u.id),
+    chef_id:                 chef?.id ?? null,
     observations_generales:  ae?.observations_generales ?? '',
   })
 
@@ -727,21 +1004,25 @@ const sauvegarderVisite = async () => {
     if (visiteEnCours.value?.id) {
       // Mise à jour d'une visite existante
       await updateAuditEntite(visiteEnCours.value.id, {
+        processus:              visiteForm.processus,
         date:                   visiteForm.date,
         heure_debut:            visiteForm.heure_debut,
         heure_fin:              visiteForm.heure_fin,
         observations_generales: visiteForm.observations_generales,
         participants:           visiteForm.participants,
+        chef_id:                visiteForm.chef_id,
       })
     } else {
       // Création d'une nouvelle visite (ajout entité à l'audit)
       await ajouterEntiteAudit(visiteAudit.value.id, {
         entite_id:              visiteForm.entite_id,
+        processus:              visiteForm.processus,
         date:                   visiteForm.date,
         heure_debut:            visiteForm.heure_debut,
         heure_fin:              visiteForm.heure_fin,
         observations_generales: visiteForm.observations_generales,
         participants:           visiteForm.participants,
+        chef_id:                visiteForm.chef_id,
       })
     }
     visiteModalOpen.value = false

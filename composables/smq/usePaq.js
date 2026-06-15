@@ -63,6 +63,15 @@ export const usePaq = () => {
   const deleteAudit = async (id) =>
     $fetch(`${base.value}/smq/audits/${id}`, { method: 'DELETE', headers: headers() })
 
+  const downloadAuditPdf = async (id) => {
+    const token = process.client ? localStorage.getItem('auth_token') : ''
+    const res = await fetch(`${base.value}/smq/audits/${id}/pdf`, {
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/pdf' },
+    })
+    if (!res.ok) throw new Error('Erreur génération PDF')
+    return res.blob()
+  }
+
   // ── AuditEntites (visites) ────────────────────────────────────────────────
 
   const ajouterEntiteAudit = async (auditId, data) => {
@@ -155,7 +164,7 @@ export const usePaq = () => {
   const colorRecoStatut = (s) => RECO_STATUTS.find(r => r.value === s)?.color ?? 'var(--qp-n-300)'
 
   return {
-    fetchAudits, fetchAudit, createAudit, updateAudit, deleteAudit,
+    fetchAudits, fetchAudit, createAudit, updateAudit, deleteAudit, downloadAuditPdf,
     ajouterEntiteAudit, supprimerEntiteAudit,
     fetchAuditEntite, updateAuditEntite, syncParticipants,
     fetchRecommandations, createRecommandation, updateRecommandation, deleteRecommandation,
