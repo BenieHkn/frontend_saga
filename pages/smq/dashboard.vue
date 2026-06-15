@@ -1,5 +1,5 @@
 <template>
-  <div class="smq-content">
+  <div class="smq-content p-4 lg:p-6">
     <!-- En-tête ---------------------------------------------------------------- -->
     <SmqPageHeader
       :overline="`Management Global · Exercice ${exercice}`"
@@ -107,15 +107,7 @@
         <h3 class="font-semibold text-base mb-4" style="color: var(--qp-fg-1); margin: 0 0 18px">Répartition globale</h3>
         <div class="flex items-center gap-5">
           <!-- Donut CSS -->
-          <div class="flex-none" style="
-            width: 128px; height: 128px; border-radius: 50%;
-            background: conic-gradient(
-              var(--qp-success-500) 0 {{ donutConformeStop }}%,
-              var(--qp-danger-500) {{ donutConformeStop }}% {{ donutDangerStop }}%,
-              var(--qp-warning-500) {{ donutDangerStop }}% 100%
-            );
-            display: grid; place-items: center; position: relative;
-          ">
+          <div class="flex-none" :style="donutStyle">
             <div style="
               position: absolute; inset: 20px;
               background: #fff; border-radius: 50%;
@@ -158,19 +150,29 @@
         </div>
         <div v-if="loading" class="p-4 text-center text-sm" style="color: var(--qp-fg-3)">Chargement…</div>
         <template v-else>
-          <div
-            v-for="ind in indicateursSousCible"
-            :key="ind.id"
-            class="flex items-center gap-3 px-[18px] py-3 border-b last:border-b-0"
-            style="border-color: var(--qp-border-2)"
+          <UTable
+            :rows="indicateursSousCible"
+            :columns="sousCibleColumns"
+            :ui="{
+              wrapper: 'rounded-lg overflow-hidden border',
+              th: { padding: 'px-4 py-3' },
+              td: { padding: 'px-4 py-3' }
+            }"
+            class="text-sm"
           >
-            <span class="qp-num text-xs flex-none" style="color: var(--qp-fg-3)">{{ ind.code }}</span>
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium truncate" style="color: var(--qp-fg-1)">{{ ind.libelle }}</div>
-              <div class="text-xs" style="color: var(--qp-fg-3)">{{ ind.direction }}</div>
-            </div>
-            <SmqStatusBadge :conformite="ind.conformite" />
-          </div>
+            <template #code-data="{ row }">
+              <span class="qp-num text-xs" style="color: var(--qp-fg-3)">{{ row.code }}</span>
+            </template>
+            <template #libelle-data="{ row }">
+              <div class="font-medium truncate" style="color: var(--qp-fg-1)">{{ row.libelle }}</div>
+            </template>
+            <template #direction-data="{ row }">
+              <span style="color: var(--qp-fg-3)">{{ row.direction }}</span>
+            </template>
+            <template #conformite-data="{ row }">
+              <SmqStatusBadge :conformite="row.conformite" />
+            </template>
+          </UTable>
           <div v-if="!indicateursSousCible.length" class="p-5 text-center text-sm" style="color: var(--qp-fg-3)">
             Aucun indicateur sous la cible.
           </div>
@@ -185,20 +187,29 @@
         </div>
         <div v-if="loading" class="p-4 text-center text-sm" style="color: var(--qp-fg-3)">Chargement…</div>
         <template v-else>
-          <div
-            v-for="evt in activiteRecente"
-            :key="evt.id"
-            class="flex items-center gap-3 px-[18px] py-3 border-b last:border-b-0"
-            style="border-color: var(--qp-border-2)"
+          <UTable
+            :rows="activiteRecente"
+            :columns="activiteColumns"
+            :ui="{
+              wrapper: 'rounded-lg overflow-hidden border',
+              th: { padding: 'px-4 py-3' },
+              td: { padding: 'px-4 py-3' }
+            }"
+            class="text-sm"
           >
-            <SmqStatusBadge :status="evt.statut" class="flex-none" />
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium truncate" style="color: var(--qp-fg-1)">
-                {{ evt.code ? `${evt.code} · ` : '' }}{{ evt.libelle }}
-              </div>
-              <div class="text-xs" style="color: var(--qp-fg-3)">{{ evt.detail }}</div>
-            </div>
-          </div>
+            <template #statut-data="{ row }">
+              <SmqStatusBadge :status="row.statut" class="flex-none" />
+            </template>
+            <template #code-data="{ row }">
+              <span class="qp-num text-xs" style="color: var(--qp-fg-3)">{{ row.code }}</span>
+            </template>
+            <template #libelle-data="{ row }">
+              <div class="font-medium truncate" style="color: var(--qp-fg-1)">{{ row.code ? `${row.code} · ` : '' }}{{ row.libelle }}</div>
+            </template>
+            <template #detail-data="{ row }">
+              <span class="text-xs" style="color: var(--qp-fg-3)">{{ row.detail }}</span>
+            </template>
+          </UTable>
           <div v-if="!activiteRecente.length" class="p-5 text-center text-sm" style="color: var(--qp-fg-3)">
             Aucune activité récente.
           </div>
@@ -234,6 +245,20 @@ const stats = ref({
 const indicateursSousCible = ref([])
 const activiteRecente      = ref([])
 const historique           = ref([])
+
+const sousCibleColumns = [
+  { key: 'code', label: 'Code' },
+  { key: 'libelle', label: 'Indicateur' },
+  { key: 'direction', label: 'Direction' },
+  { key: 'conformite', label: 'Conformité' },
+]
+
+const activiteColumns = [
+  { key: 'statut', label: 'Statut' },
+  { key: 'code', label: 'Code' },
+  { key: 'libelle', label: 'Libellé' },
+  { key: 'detail', label: 'Détail' },
+]
 
 // ── Chargement ────────────────────────────────────────────────────────────────
 const charger = async () => {
@@ -271,6 +296,16 @@ const donutDangerStop = computed(() => {
   if (!stats.value.total) return 0
   return Math.round(((stats.value.conformes + stats.value.non_conformes) / stats.value.total) * 100)
 })
+
+const donutStyle = computed(() => ({
+  width: '128px',
+  height: '128px',
+  borderRadius: '50%',
+  background: `conic-gradient(var(--qp-success-500) 0 ${donutConformeStop.value}%, var(--qp-danger-500) ${donutConformeStop.value}% ${donutDangerStop.value}%, var(--qp-warning-500) ${donutDangerStop.value}% 100%)`,
+  display: 'grid',
+  placeItems: 'center',
+  position: 'relative',
+}))
 
 // Courbe SVG (points fictifs si pas de données historiques)
 const courbePoints = computed(() => {
