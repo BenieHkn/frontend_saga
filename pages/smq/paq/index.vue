@@ -120,7 +120,7 @@
                   <span v-if="ae.heure_debut" class="block" style="color:var(--qp-fg-3)">{{ ae.heure_debut }}{{ ae.heure_fin ? ' – ' + ae.heure_fin : '' }}</span>
                 </span>
                 <!-- Libellé entité + titre + processus -->
-                <div class="flex-1 min-w-0">
+                <div class="flex-1 min-w-0" @click="ouvrirOra(audit, ae)" style="cursor:pointer">
                   <div class="text-sm font-medium truncate" style="color:var(--qp-fg-1)">
                     {{ ae.entite?.libelle ?? ae.libelle ?? '—' }}
                   </div>
@@ -162,7 +162,7 @@
                   class="w-7 h-7 rounded flex items-center justify-center transition-all"
                   style="color:var(--qp-primary-500)"
                   title="Modifier la programmation de cette visite"
-                  @click="ouvrirVisite(audit, ae)"
+                  @click.stop="ouvrirVisite(audit, ae)"
                 >
                   <Icon name="heroicons:calendar-days" class="h-4 w-4" />
                 </button>
@@ -174,7 +174,7 @@
                     ? 'background:var(--qp-primary-50);color:var(--qp-primary-600)'
                     : 'color:var(--qp-fg-3)'"
                   :title="recoOuvertes.has(ae.id) ? 'Masquer les recommandations' : 'Voir les recommandations'"
-                  @click="toggleRecoOuvertes(ae.id)"
+                  @click.stop="toggleRecoOuvertes(ae.id)"
                 >
                   <Icon name="heroicons:chat-bubble-left-ellipsis" class="h-3.5 w-3.5" />
                   <span>{{ ae.recommandations.length }}</span>
@@ -185,7 +185,7 @@
                   class="w-7 h-7 rounded flex items-center justify-center transition-all"
                   style="color:var(--qp-fg-3)"
                   title="Ajouter une recommandation"
-                  @click="ouvrirRecommandation(ae)"
+                  @click.stop="ouvrirRecommandation(ae)"
                 >
                   <Icon name="heroicons:plus" class="h-4 w-4" />
                 </button>
@@ -195,7 +195,7 @@
                   class="w-7 h-7 rounded flex items-center justify-center transition-all"
                   style="color:var(--qp-danger-400)"
                   title="Retirer cette entité de l'audit"
-                  @click="confirmerSuppressionVisite(audit, ae)"
+                  @click.stop="confirmerSuppressionVisite(audit, ae)"
                 >
                   <Icon name="heroicons:x-mark" class="h-4 w-4" />
                 </button>
@@ -996,6 +996,15 @@ const ouvrirVisite = async (audit, ae) => {
   entiteSearch.value       = ''
   auditeurSearch.value     = ''
   visiteModalOpen.value    = true
+}
+
+// Ouvrir le modal ORA (page `/smq/paq/ora`) en naviguant avec les ids en query
+const router = useRouter()
+const ouvrirOra = (audit, ae) => {
+  const query = {}
+  if (audit?.id) query.auditId = audit.id
+  if (ae?.id)    query.auditEntiteId = ae.id
+  router.push({ path: '/smq/paq/ora', query })
 }
 
 const sauvegarderVisite = async () => {
