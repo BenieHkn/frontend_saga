@@ -274,6 +274,39 @@
   box-shadow: 0 4px 14px rgba(0,0,0,0.25);
 }
 
+/* Bouton Enregistrer — 3 états */
+.qp-btn--save {
+  background: #ffffff;
+  color: #1a5c33;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+  min-width: 148px;
+  transition: background var(--qp-dur-fast) var(--qp-ease),
+              color var(--qp-dur-fast) var(--qp-ease),
+              box-shadow var(--qp-dur-fast) var(--qp-ease),
+              opacity var(--qp-dur-fast);
+}
+.qp-btn--save:hover:not(:disabled) {
+  background: #f0fdf4;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+/* État : en cours de sauvegarde */
+.qp-btn--save-loading {
+  background: rgba(255,255,255,0.75);
+  color: #1a5c33;
+  box-shadow: none;
+}
+/* État : sauvegardé avec succès */
+.qp-btn--save-done {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 2px 10px rgba(22,163,74,0.40);
+}
+.qp-btn--save-done:disabled {
+  opacity: 1;
+}
+
 /* ============================================================================
    TABLEAUX — refonte complète
    ============================================================================ */

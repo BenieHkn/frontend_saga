@@ -179,11 +179,7 @@ const statutAe = (ae) => {
   return                                         { label: 'À valider',  color: '#f59e0b', bg: '#fef9c3', icon: 'heroicons:exclamation-circle-20-solid' }
 }
 
-// ── Parse le texte de la restitution pour l'affichage ─────────────────────
-const parserListe = (text) => {
-  if (!text?.trim()) return []
-  return text.split('\n').filter(l => l.trim()).map(l => l.replace(/^[•\-\d.]+\s*/, '').trim()).filter(Boolean)
-}
+
 </script>
 
 <template>
@@ -328,63 +324,78 @@ const parserListe = (text) => {
             </div>
           </div>
 
-          <!-- ── Écarts / Indicateurs ── -->
-          <div v-if="restitution.ecarts" class="rounded-xl border overflow-hidden" style="border-color:var(--qp-border-1)">
+          <!-- ── Écarts ── -->
+          <div
+            v-if="restitution.ecarts_indicateurs?.length || restitution.ecarts_libres?.length"
+            class="rounded-xl border overflow-hidden"
+            style="border-color:var(--qp-border-1)"
+          >
             <div class="px-5 py-3" style="background:#fff1f2;border-bottom:1px solid var(--qp-border-1)">
               <span class="font-semibold text-sm flex items-center gap-1.5" style="color:#b91c1c">
                 <Icon name="heroicons:exclamation-triangle-20-solid" class="h-4 w-4" />Écarts
               </span>
             </div>
-            <div class="px-5 py-4">
-              <p class="text-sm whitespace-pre-wrap" style="color:var(--qp-fg-1)">{{ restitution.ecarts }}</p>
+            <div class="px-5 py-4 space-y-3">
+              <!-- Écarts indicateurs -->
+              <div v-for="(e, i) in (restitution.ecarts_indicateurs ?? [])" :key="'ind-'+i" class="text-sm space-y-0.5">
+                <div class="font-semibold" style="color:var(--qp-fg-0)">{{ [e.code, e.libelle].filter(Boolean).join(' – ') || 'Indicateur' }}</div>
+                <div v-if="e.ecart_constate" style="color:var(--qp-fg-1)"><span class="font-medium">Écart :&nbsp;</span>{{ e.ecart_constate }}</div>
+                <div v-if="e.observations" style="color:var(--qp-fg-2)"><span class="font-medium">Observations :&nbsp;</span>{{ e.observations }}</div>
+              </div>
+              <!-- Écarts libres -->
+              <div v-for="(e, i) in (restitution.ecarts_libres ?? [])" :key="'lib-'+i" class="text-sm space-y-0.5">
+                <div v-if="e.libelle" class="font-semibold" style="color:var(--qp-fg-0)">{{ e.libelle }}</div>
+                <div v-if="e.ecart_constate" style="color:var(--qp-fg-1)"><span class="font-medium">Écart :&nbsp;</span>{{ e.ecart_constate }}</div>
+                <div v-if="e.observations" style="color:var(--qp-fg-2)"><span class="font-medium">Observations :&nbsp;</span>{{ e.observations }}</div>
+              </div>
             </div>
           </div>
 
           <!-- ── Points forts ── -->
-          <div v-if="restitution.points_forts" class="rounded-xl border overflow-hidden" style="border-color:var(--qp-border-1)">
+          <div v-if="restitution.points_forts?.length" class="rounded-xl border overflow-hidden" style="border-color:var(--qp-border-1)">
             <div class="px-5 py-3" style="background:#f0fdf4;border-bottom:1px solid var(--qp-border-1)">
               <span class="font-semibold text-sm flex items-center gap-1.5" style="color:#15803d">
                 <Icon name="heroicons:hand-thumb-up-20-solid" class="h-4 w-4" />Points forts
               </span>
             </div>
             <div class="px-5 py-4 space-y-1.5">
-              <div v-for="(item, i) in parserListe(restitution.points_forts)" :key="i" class="flex items-start gap-2 text-sm" style="color:var(--qp-fg-1)">
-                <span class="text-emerald-600 shrink-0 mt-0.5">•</span>{{ item }}
+              <div v-for="(item, i) in (restitution.points_forts ?? [])" :key="i" class="flex items-start gap-2 text-sm" style="color:var(--qp-fg-1)">
+                <span class="text-emerald-600 shrink-0 mt-0.5">•</span>{{ item.texte }}
               </div>
             </div>
           </div>
 
           <!-- ── Points faibles ── -->
-          <div v-if="restitution.points_faibles" class="rounded-xl border overflow-hidden" style="border-color:var(--qp-border-1)">
+          <div v-if="restitution.points_faibles?.length" class="rounded-xl border overflow-hidden" style="border-color:var(--qp-border-1)">
             <div class="px-5 py-3" style="background:#fff7ed;border-bottom:1px solid var(--qp-border-1)">
               <span class="font-semibold text-sm flex items-center gap-1.5" style="color:#c2410c">
                 <Icon name="heroicons:hand-thumb-down-20-solid" class="h-4 w-4" />Points faibles
               </span>
             </div>
             <div class="px-5 py-4 space-y-1.5">
-              <div v-for="(item, i) in parserListe(restitution.points_faibles)" :key="i" class="flex items-start gap-2 text-sm" style="color:var(--qp-fg-1)">
-                <span style="color:#c2410c" class="shrink-0 mt-0.5">•</span>{{ item }}
+              <div v-for="(item, i) in (restitution.points_faibles ?? [])" :key="i" class="flex items-start gap-2 text-sm" style="color:var(--qp-fg-1)">
+                <span style="color:#c2410c" class="shrink-0 mt-0.5">•</span>{{ item.texte }}
               </div>
             </div>
           </div>
 
           <!-- ── Recommandations ── -->
-          <div v-if="restitution.recommandations" class="rounded-xl border overflow-hidden" style="border-color:var(--qp-border-1)">
+          <div v-if="restitution.recommandations?.length" class="rounded-xl border overflow-hidden" style="border-color:var(--qp-border-1)">
             <div class="px-5 py-3" style="background:#eff6ff;border-bottom:1px solid var(--qp-border-1)">
               <span class="font-semibold text-sm flex items-center gap-1.5" style="color:#1d4ed8">
                 <Icon name="heroicons:light-bulb-20-solid" class="h-4 w-4" />Recommandations
               </span>
             </div>
             <div class="px-5 py-4 space-y-1.5">
-              <div v-for="(item, i) in parserListe(restitution.recommandations)" :key="i" class="flex items-start gap-2 text-sm" style="color:var(--qp-fg-1)">
-                <span style="color:#1d4ed8" class="shrink-0 mt-0.5">•</span>{{ item }}
+              <div v-for="(item, i) in (restitution.recommandations ?? [])" :key="i" class="flex items-start gap-2 text-sm" style="color:var(--qp-fg-1)">
+                <span style="color:#1d4ed8" class="shrink-0 mt-0.5">•</span>{{ item.texte }}
               </div>
             </div>
           </div>
 
           <!-- Rien à afficher -->
           <div
-            v-if="!restitution.ecarts && !restitution.points_forts && !restitution.points_faibles && !restitution.recommandations"
+            v-if="!restitution.ecarts_indicateurs?.length && !restitution.ecarts_libres?.length && !restitution.points_forts?.length && !restitution.points_faibles?.length && !restitution.recommandations?.length"
             class="text-sm py-6 text-center" style="color:var(--qp-fg-4)"
           >
             La restitution est vide — le chef d'équipe n'a pas encore renseigné les données.

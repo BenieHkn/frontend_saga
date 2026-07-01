@@ -135,24 +135,25 @@ const _chargerIndicateurs = async () => {
 
   loadingIndicateurs.value = true
   try {
-    const q = new URLSearchParams({ per_page: '100', entite_id: entiteId })
-    const indRes = await $fetch(`${base.value}/smq/indicateurs?${q}`, { headers: h() })
-    const indicateurs = indRes?.data?.data ?? indRes?.data ?? indRes ?? []
-    const liste = Array.isArray(indicateurs) ? indicateurs : Object.values(indicateurs).filter(v => v?.id)
+    // Requête unique : saisies transmises pour cette entité + exercice
+    // Le SaisieIndicateurController gère le contrôle d'accès (chef, pilote, RQ…)
+    const sq = new URLSearchParams({ statut: 'transmis', entite_id: entiteId, per_page: '100' })
+    if (exerciceId) sq.set('exercice_id', exerciceId)
+    const sRes = await $fetch(`${base.value}/smq/saisies?${sq}`, { headers: h() })
+    const saisies = sRes?.data?.data ?? sRes?.data ?? sRes ?? []
+    const list = Array.isArray(saisies) ? saisies : Object.values(saisies).filter(s => s?.id)
 
-    const enrichis = await Promise.all(liste.map(async (ind) => {
-      let derniereSaisie = null
-      try {
-        const sq = new URLSearchParams({ indicateur_id: ind.id, statut: 'transmis', per_page: '10' })
-        if (exerciceId) sq.set('exercice_id', exerciceId)
-        const sRes = await $fetch(`${base.value}/smq/saisies?${sq}`, { headers: h() })
-        const arr = Array.isArray(sRes?.data?.data ?? sRes?.data ?? sRes ?? []) ? (sRes?.data?.data ?? sRes?.data ?? sRes ?? []) : []
-        derniereSaisie = arr[0] ?? null
-      } catch {}
-      return { ...ind, derniereSaisie }
-    }))
+    // Dédupliquer par indicateur_id — garder la première (orderByDesc created_at = la plus récente)
+    const seen = new Set()
+    indicateursEntite.value = list
+      .filter(s => s.indicateur?.id)
+      .filter(s => {
+        if (seen.has(s.indicateur_id ?? s.indicateur?.id)) return false
+        seen.add(s.indicateur_id ?? s.indicateur?.id)
+        return true
+      })
+      .map(s => ({ ...s.indicateur, derniereSaisie: s }))
 
-    indicateursEntite.value = enrichis.filter(ind => ind.derniereSaisie !== null)
     _initEcartsDepuisIndicateurs()
   } catch (e) {
     console.error('Indicateurs:', e)
@@ -176,19 +177,23 @@ const _initForm = () => {
 }
 
 const _initEcartsDepuisIndicateurs = () => {
-  // Écarts libres (non liés à un indicateur) — depuis la relation BDD
-  const libres = restitution.value?.ecarts_libres ?? null
-  ecartsLibres.value = (libres && Array.isArray(libres))
+  // Écarts libres — depuis la relation BDD
+  const libres = restitution.value?.ecarts_libres ?? []
+  ecartsLibres.value = Array.isArray(libres)
     ? libres.map(e => ({ libelle: e.libelle ?? '', ecart_constate: e.ecart_constate ?? '', observations: e.observations ?? '' }))
     : []
 
-  const ecartsSauvegardes = restitution.value?.ecarts_json ?? null
-  if (ecartsSauvegardes && Array.isArray(ecartsSauvegardes)) {
-    ecartsLignes.value = ecartsSauvegardes
-    return
-  }
+  // Écarts indicateurs sauvegardés — depuis la relation BDD (ecarts_indicateurs)
+  const sauvegardes   = restitution.value?.ecarts_indicateurs ?? []
+  const sauvegardesMap = new Map(
+    Array.isArray(sauvegardes)
+      ? sauvegardes.map(e => [e.indicateur_id, e])
+      : []
+  )
+
   ecartsLignes.value = indicateursEntite.value.map(ind => {
-    const s = ind.derniereSaisie
+    const s          = ind.derniereSaisie
+    const sauvegarde = sauvegardesMap.get(ind.id) ?? null
     return {
       indicateur_id:   ind.id,
       code:            ind.code            ?? '',
@@ -204,8 +209,8 @@ const _initEcartsDepuisIndicateurs = () => {
       dernierResultat: s?.resultat         ?? null,
       conformite:      s?.conformite       ?? ind.conformite ?? 'en_attente',
       periode:         s?.date_debut       ?? null,
-      observations:    '',
-      ecart_constate:  '',
+      observations:    sauvegarde?.observations   ?? '',
+      ecart_constate:  sauvegarde?.ecart_constate ?? '',
       ras:             false,
     }
   })
@@ -231,30 +236,6 @@ const badgeConformite = (val) => {
 }
 
 
-const _compilerEcarts = () => {
-  const lignesIndicateurs = ecartsLignes.value.map((e, i) => {
-    const label = [e.code, e.libelle].filter(Boolean).join(' – ') || `Indicateur ${i + 1}`
-    if (e.ras) return `${label} : RAS — pas d'écart constaté`
-    const res = e.dernierResultat !== null
-      ? `\n  Résultat : ${formaterResultat(e)}${e.valeur_cible ? ' (cible : ' + e.valeur_cible + (e.type === 'calcul' ? ' %' : '') + ')' : ''}`
-      : ''
-    const ecart = e.ecart_constate?.trim() ? `\n  Écart constaté : ${e.ecart_constate}` : ''
-    const obs   = e.observations?.trim()   ? `\n  Observations : ${e.observations}`     : ''
-    return `${label}${res}${ecart}${obs}`
-  })
-
-  const lignesLibres = ecartsLibres.value
-    .filter(e => e.libelle?.trim() || e.ecart_constate?.trim())
-    .map(e => {
-      const label = e.libelle?.trim() || 'Écart divers'
-      const ecart = e.ecart_constate?.trim() ? `\n  Écart constaté : ${e.ecart_constate}` : ''
-      const obs   = e.observations?.trim()   ? `\n  Observations : ${e.observations}`     : ''
-      return `${label}${ecart}${obs}`
-    })
-
-  const toutes = [...lignesIndicateurs, ...lignesLibres]
-  return toutes.length ? toutes.join('\n\n') : 'RAS — Aucun écart constaté.'
-}
 
 const ajouterEcartLibre = () => {
   ecartsLibres.value.push({ libelle: '', ecart_constate: '', observations: '' })
@@ -279,7 +260,6 @@ const sauvegarder = async () => {
       points_forts:    pointsForts.value.filter(p => p.texte?.trim()),
       points_faibles:  pointsFaibles.value.filter(p => p.texte?.trim()),
       recommandations: recommandations.value.filter(p => p.texte?.trim()),
-      ecarts:          _compilerEcarts(),
       ecarts_indicateurs: ecartsLignes.value
         .filter(e => !e.ras && (e.ecart_constate?.trim() || e.observations?.trim()))
         .map(e => ({
@@ -441,10 +421,16 @@ const etatAction = computed(() => {
     <SmqPageHeader overline="Audit qualité" title="Restitution — Saisie">
       <template v-if="selected && modeEdition">
         <!-- Enregistrer -->
-        <button :disabled="saving" @click="sauvegarder" class="qp-btn qp-btn--header-cta">
+        <button
+          :disabled="saving || saved"
+          @click="sauvegarder"
+          class="qp-btn qp-btn--save"
+          :class="{ 'qp-btn--save-done': saved, 'qp-btn--save-loading': saving }"
+        >
           <Icon v-if="saving" name="heroicons:arrow-path-20-solid" class="h-4 w-4 animate-spin" />
-          <Icon v-else name="heroicons:check-circle-20-solid" class="h-4 w-4" />
-          {{ saving ? 'Enregistrement…' : 'Enregistrer' }}
+          <Icon v-else-if="saved" name="heroicons:check-circle-20-solid" class="h-4 w-4" />
+          <Icon v-else name="heroicons:cloud-arrow-up-20-solid" class="h-4 w-4" />
+          <span>{{ saving ? 'Enregistrement…' : saved ? 'Enregistré' : 'Enregistrer' }}</span>
         </button>
         <!-- Annuler -->
         <button :disabled="saving" @click="modeEdition = false; _initForm(); _initEcartsDepuisIndicateurs()" class="qp-btn qp-btn--ghost">
@@ -498,12 +484,8 @@ const etatAction = computed(() => {
       </button>
     </SmqPageHeader>
 
-    <!-- Feedback -->
+    <!-- Feedback erreur -->
     <div v-if="erreurSave" class="mb-4 qp-alert qp-alert--danger text-sm">{{ erreurSave }}</div>
-    <div v-if="saved" class="mb-4 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">
-      <Icon name="heroicons:check-circle-20-solid" class="h-4 w-4 shrink-0" />
-      Restitution enregistrée avec succès.
-    </div>
 
     <div class="flex gap-6 items-start">
 
