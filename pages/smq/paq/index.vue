@@ -1570,4 +1570,3 @@ onMounted(async () => {
 .fade-up-enter-active, .fade-up-leave-active { transition: opacity 0.3s, transform 0.3s; }
 .fade-up-enter-from, .fade-up-leave-to { opacity: 0; transform: translateX(-50%) translateY(12px); }
 </style>
-                                                                                                                             
