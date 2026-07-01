@@ -211,8 +211,10 @@ export const useAuth = () => {
   // Alias de compatibilité : l'admin système tient lieu d'admin SMQ
   const isSmqAdmin     = () => isAdmin()
 
+  const isSmqChefEquipe = () => hasRole('smq_chef_equipe')
+
   /** A au moins un rôle SMQ (pour afficher le menu) */
-  const peutVoirSmq    = () => isSmqPilote() || isSmqCopilote() || isSmqRQ() || isSmqRQA() || isAdmin()
+  const peutVoirSmq    = () => isSmqPilote() || isSmqCopilote() || isSmqRQ() || isSmqRQA() || isSmqChefEquipe() || isAdmin()
 
   // ── Permissions SMQ (lecture depuis le bloc smq des permissions frontend) ──
 
@@ -281,6 +283,25 @@ export const useAuth = () => {
   const peutTransferer   = () => hasPermission('faire_transfert')
   const typeDashboard    = () => getPermissions().dashboard ?? 'agent'
   const champsVisibles   = () => getPermissions().champs_visibles ?? null
+
+  // =====================
+  // REFRESH ROLES
+  // =====================
+
+  const refreshRoles = async () => {
+    if (!process.client) return
+    const token = getStoredToken()
+    if (!token) return
+    try {
+      const { public: { apiBase } } = useRuntimeConfig()
+      const res = await $fetch(`${apiBase}/auth/roles`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      })
+      if (res.roles) {
+        localStorage.setItem('roles', JSON.stringify(res.roles))
+      }
+    } catch {}
+  }
 
   // =====================
   // REMEMBER ME
@@ -568,6 +589,7 @@ const changePassword = async ({ current_password, password, password_confirmatio
     forgotPassword,
     logout,
     loadRememberedEmail,
+    refreshRoles,
 
     // Session
     getStoredToken,
@@ -603,6 +625,7 @@ const changePassword = async ({ current_password, password, password_confirmatio
     isSmqRQ,
     isSmqRQA,
     isSmqMG,
+    isSmqChefEquipe,
     peutVoirSmq,
 
     // SMQ — Permissions granulaires

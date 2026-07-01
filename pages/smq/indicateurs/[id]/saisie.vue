@@ -84,7 +84,8 @@
         >
           <!-- En-tête de période -->
           <div
-            class="flex items-center gap-4 px-5 py-4 cursor-pointer select-none"
+            class="flex items-center gap-4 px-5 py-4 select-none"
+            :class="periodeBloquee(idx) ? 'opacity-50' : 'cursor-pointer'"
             :style="ouvert === idx ? 'border-bottom: 1px solid var(--qp-border-2)' : ''"
             @click="togglePeriode(idx, periode)"
           >
@@ -109,6 +110,14 @@
             </span>
 
             <Icon
+              v-if="periodeBloquee(idx)"
+              name="heroicons:lock-closed"
+              class="h-4 w-4 flex-none"
+              style="color:var(--qp-fg-3)"
+              :title="`Transmettez la période précédente avant d'accéder à ${periode.label}`"
+            />
+            <Icon
+              v-else
               :name="ouvert === idx ? 'heroicons:chevron-up' : 'heroicons:chevron-down'"
               class="h-4 w-4 flex-none"
               style="color:var(--qp-fg-3)"
@@ -135,7 +144,7 @@
                     type="number"
                     step="1"
                     class="qp-input qp-input--mono"
-                    :disabled="!peutSaisirCopilote(periode) && !peutSaisirDirectement(periode) && !peutModifierPilote(periode)"
+                    :disabled="!peutSaisirCopilote(periode) && !peutEnregistrerPilote(periode) && !peutModifierPilote(periode)"
                     placeholder="0"
                     @input="calculerPreview"
                   />
@@ -151,7 +160,7 @@
                     type="number"
                     step="1"
                     class="qp-input qp-input--mono"
-                    :disabled="!peutSaisirCopilote(periode) && !peutSaisirDirectement(periode) && !peutModifierPilote(periode)"
+                    :disabled="!peutSaisirCopilote(periode) && !peutEnregistrerPilote(periode) && !peutModifierPilote(periode)"
                     placeholder="0"
                     @input="calculerPreview"
                   />
@@ -163,7 +172,7 @@
                     type="number"
                     step="1"
                     class="qp-input qp-input--mono"
-                    :disabled="!peutSaisirCopilote(periode) && !peutSaisirDirectement(periode) && !peutModifierPilote(periode)"
+                    :disabled="!peutSaisirCopilote(periode) && !peutEnregistrerPilote(periode) && !peutModifierPilote(periode)"
                     placeholder="0"
                     @input="calculerPreview"
                   />
@@ -204,12 +213,6 @@
               </div>
             </div>
 
-            <!-- Note pilote : validation directe -->
-            <div v-if="estPiloteSeul && statutDePeriode(periode) === 'a_saisir'" class="full mt-3 flex items-center gap-2 rounded-lg px-3 py-2.5" style="background:var(--qp-primary-50);border:1px solid var(--qp-primary-100)">
-              <Icon name="heroicons:shield-check" class="h-4 w-4 flex-none" style="color:var(--qp-primary-600)" />
-              <p class="text-xs" style="color:var(--qp-primary-800)">En tant que pilote, cette saisie sera <strong>directement validée</strong> sans passer par la soumission.</p>
-            </div>
-
             <!-- Actions -->
             <div class="flex flex-wrap items-center gap-2.5 mt-5">
               <!-- Copilote : enregistrer brouillon -->
@@ -224,7 +227,7 @@
                 Enregistrer
               </button>
 
-              <!-- Copilote : soumettre -->
+              <!-- Copilote : soumettre au pilote -->
               <button
                 v-if="peutSaisirCopilote(periode)"
                 class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white"
@@ -236,18 +239,31 @@
                 Soumettre au pilote
               </button>
 
-              <!-- Pilote : saisie directe (→ validé) -->
+              <!-- Pilote seul — étape 1 : enregistrer en brouillon -->
               <button
-                v-if="peutSaisirDirectement(periode)"
-                class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white"
-                style="background:var(--qp-success-600)"
-                :disabled="actionEnCours || formPeriode.operande1 === null || formPeriode.operande2 === null"
+                v-if="peutEnregistrerPilote(periode)"
+                class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border"
+                style="background:#fff;border-color:var(--qp-border-1);box-shadow:var(--qp-sh-1)"
+                :disabled="actionEnCours || formPeriode.operande1 === null"
                 @click="enregistrer(periode)"
               >
-                <Icon name="heroicons:shield-check" class="h-4 w-4" />
-                Valider directement
+                <Icon name="heroicons:bookmark" class="h-4 w-4" />
+                Enregistrer
               </button>
 
+              <!-- Pilote seul — étape 2 : valider son brouillon -->
+              <button
+                v-if="peutValiderPilote(periode)"
+                class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white"
+                style="background:var(--qp-success-600)"
+                :disabled="actionEnCours"
+                @click="valider(periode)"
+              >
+                <Icon name="heroicons:shield-check" class="h-4 w-4" />
+                Valider
+              </button>
+
+              <!-- Pilote avec copilote : valider la saisie soumise -->
               <button
                 v-if="peutValider(periode)"
                 class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white"
@@ -326,11 +342,11 @@
           </div>
           <div class="qp-field">
             <label class="qp-label">Action effectuée pour maîtriser / corriger</label>
-            <textarea v-model="facForm.action_maitrise" class="qp-textarea" rows="2" placeholder="Action immédiate mise en place…" />
+            <textarea v-model="facForm.action_maitrise" class="qp-textarea" rows="3" placeholder="Action immédiate mise en place…" />
           </div>
           <div class="qp-field">
             <label class="qp-label">Cause(s) identifiée(s)</label>
-            <textarea v-model="facForm.causes" class="qp-textarea" rows="2" placeholder="Cause(s) du dysfonctionnement…" />
+            <textarea v-model="facForm.causes" class="qp-textarea" rows="3" placeholder="Cause(s) du dysfonctionnement…" />
           </div>
           <div class="qp-field">
             <label class="qp-label">Action(s) corrective(s) proposée(s)</label>
@@ -370,8 +386,27 @@
               <input v-model="facForm.date_previsionnelle" type="date" class="qp-input qp-input--mono" />
             </div>
             <div class="qp-field">
-              <label class="qp-label">Critère d'efficacité</label>
-              <input v-model="facForm.critere_efficacite" class="qp-input" placeholder="Ex. : indicateur ≥ cible sur 2 périodes" />
+              <label class="qp-label">Critères d'efficacité</label>
+              <div v-if="facCriteres.length" class="flex flex-wrap gap-1.5 mb-2">
+                <span
+                  v-for="(c, i) in facCriteres" :key="i"
+                  class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+                  style="background:var(--qp-primary-50);color:var(--qp-primary-700)"
+                >
+                  {{ c }}
+                  <button type="button" class="ml-0.5 hover:opacity-70" @click="facCriteres.splice(i, 1)">×</button>
+                </span>
+              </div>
+              <div class="flex gap-2">
+                <input
+                  v-model="nouveauFacCritere"
+                  class="qp-input flex-1"
+                  style="height:32px;font-size:0.8125rem"
+                  placeholder="Ex. : indicateur ≥ cible sur 2 périodes"
+                  @keydown.enter.prevent="ajouterFacCritere"
+                />
+                <button type="button" class="px-3 py-1 text-sm rounded-lg text-white" style="background:var(--qp-primary-500)" @click="ajouterFacCritere">+</button>
+              </div>
             </div>
             <div class="qp-field">
               <label class="qp-label">Date prévue pour l'examen des effets</label>
@@ -525,15 +560,16 @@ const facResponsables     = ref([])    // liste { id, nom_complet }
 const facResponsablesChx  = ref([])    // ids cochés
 const facForm             = reactive({
   description_nc: '', action_maitrise: '', causes: '', actions_proposees: '',
-  responsable_action: '', date_previsionnelle: '', critere_efficacite: '', date_examen_effets: '',
+  date_previsionnelle: '', date_examen_effets: '',
 })
-
-watch(facResponsablesChx, (ids) => {
-  facForm.responsable_action = facResponsables.value
-    .filter(u => ids.includes(u.id))
-    .map(u => u.nom_complet)
-    .join(', ')
-})
+const facCriteres = ref([])      // tableau de libellés de critères
+const nouveauFacCritere = ref('')
+const ajouterFacCritere = () => {
+  const val = nouveauFacCritere.value.trim()
+  if (!val) return
+  facCriteres.value.push(val)
+  nouveauFacCritere.value = ''
+}
 
 // ── Assignation copilote ──────────────────────────────────────────────────────
 const modalAssignation   = ref(false)
@@ -628,15 +664,29 @@ const badgeStyle = (p) => {
   return 'background:var(--qp-n-200);color:var(--qp-fg-2)'
 }
 
-// Copilote uniquement (pas pilote) peut saisir en brouillon / retourné
+// Copilote uniquement (pas pilote) peut saisir en brouillon / retourné / soumis
 const peutSaisirCopilote    = (p) => !estPiloteSeul.value && estCopilote.value && ['a_saisir','brouillon','retourne'].includes(statutDePeriode(p))
-const peutSaisirDirectement = (p) => estPiloteSeul.value && statutDePeriode(p) === 'a_saisir'
-const peutModifierPilote    = (p) => estPilote.value && statutDePeriode(p) === 'soumis'  // pilote peut corriger avant validation
-const peutValider           = (p) => estPilote.value && statutDePeriode(p) === 'soumis'
+// Pilote seul : enregistrer en brouillon (1re étape)
+const peutEnregistrerPilote = (p) => estPiloteSeul.value && ['a_saisir', 'brouillon'].includes(statutDePeriode(p))
+// Pilote seul : valider son propre brouillon (2e étape, quand il est prêt)
+const peutValiderPilote     = (p) => estPiloteSeul.value && statutDePeriode(p) === 'brouillon'
+// Pilote peut corriger les valeurs soumises par le copilote avant validation
+const peutModifierPilote    = (p) => estPilote.value && statutDePeriode(p) === 'soumis'
+// Pilote valide les saisies soumises par le copilote
+const peutValider           = (p) => estPilote.value && !estPiloteSeul.value && statutDePeriode(p) === 'soumis'
 const peutTransmettre       = (p) => estPilote.value && statutDePeriode(p) === 'valide'
+
+// ── Blocage : période précédente non transmise ────────────────────────────────
+const periodeBloquee = (idx) => {
+  if ((indicateur.value?.periodicite?.nb_periodes ?? 1) <= 1) return false
+  if (idx === 0) return false
+  const precedente = periodes.value[idx - 1]
+  return statutDePeriode(precedente) !== 'transmis'
+}
 
 // ── Ouvrir / fermer ───────────────────────────────────────────────────────────
 const togglePeriode = (idx, periode) => {
+  if (periodeBloquee(idx)) return
   if (ouvert.value === idx) { ouvert.value = null; return }
   ouvert.value = idx
   previewResultat.value = null
@@ -731,7 +781,9 @@ const ouvrirMotif = (periode) => { periodeCible.value = periode; motifRetour.val
 
 const ouvrirFac = (periode) => {
   facSaisieId.value = saisieOf(periode)?.id
-  Object.assign(facForm, { description_nc: '', action_maitrise: '', causes: '', actions_proposees: '', responsable_action: '', date_previsionnelle: '', critere_efficacite: '', date_examen_effets: '' })
+  Object.assign(facForm, { description_nc: '', action_maitrise: '', causes: '', actions_proposees: '', date_previsionnelle: '', date_examen_effets: '' })
+  facCriteres.value = []
+  nouveauFacCritere.value = ''
   facResponsables.value    = []
   facResponsablesChx.value = []
   fetchResponsablesPossiblesCreation(facSaisieId.value).then(list => {
@@ -744,7 +796,12 @@ const creerFac = async () => {
   if (!facSaisieId.value || !facForm.description_nc?.trim()) return
   actionEnCours.value = true
   try {
-    const fac = await createFac({ saisie_indicateur_id: facSaisieId.value, ...facForm })
+    const fac = await createFac({
+      saisie_indicateur_id: facSaisieId.value,
+      ...facForm,
+      criteres:        facCriteres.value,
+      responsable_ids: facResponsablesChx.value,
+    })
     const s = saisies.value.find(s => s.id === facSaisieId.value)
     if (s) s.actionsCorrectives = [fac]
     modalFac.value = false
@@ -796,12 +853,13 @@ const confirmerAssignation = async () => {
     const updated = await API_assignerCopilote(id.value, selectedServiceId.value)
     // Mettre à jour les entites de l'indicateur avec la réponse
     if (updated?.entites) indicateur.value = { ...indicateur.value, entites: updated.entites }
-    else await charger()
     modalAssignation.value = false
   } catch (e) {
-    console.error('Erreur assignation :', e)
+    console.error('Assignation copilote :', e)
+    alert(e?.data?.message ?? "Erreur lors de l'assignation")
   } finally {
     actionEnCours.value = false
+    modalAssignation.value = false
   }
 }
 
@@ -809,7 +867,5 @@ onMounted(() => charger())
 </script>
 
 <style scoped>
-.smq-content { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
-.full { grid-column: 1 / -1; }
-.req  { color: var(--qp-danger-500); margin-left: 2px; }
+.smq-content { }
 </style>

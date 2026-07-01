@@ -43,36 +43,112 @@
           </div>
         </button>
         <div v-if="smqMenuOpen && isExpanded" class="ml-10 space-y-2 mt-2 animate-slide-down">
-          <NuxtLink to="/smq/dashboard"
-            class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
-            :class="route.path.startsWith('/smq/dashboard') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
-            <Icon name="heroicons:home-20-solid" class="h-4 w-4 shrink-0" />
-            Tableau de bord qualité
-          </NuxtLink>
-          <NuxtLink to="/smq/indicateurs"
-            class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
-            :class="route.path.startsWith('/smq/indicateurs') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
-            <Icon name="heroicons:chart-bar-20-solid" class="h-4 w-4 shrink-0" />
-            Indicateurs
-          </NuxtLink>
-          <NuxtLink v-if="!estCopilote" to="/smq/fac"
-            class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
-            :class="route.path.startsWith('/smq/fac') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
-            <Icon name="heroicons:clipboard-document-list-20-solid" class="h-4 w-4 shrink-0" />
-            Actions correctives
-          </NuxtLink>
-          <NuxtLink to="/smq/paq"
-            class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
-            :class="route.path.startsWith('/smq/paq') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
-            <Icon name="heroicons:magnifying-glass-circle-20-solid" class="h-4 w-4 shrink-0" />
-            Plan Audit Qualité
-          </NuxtLink>
-          <NuxtLink v-if="isSmqAdmin() || isAdmin()" to="/smq/admin"
-            class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
-            :class="route.path.startsWith('/smq/admin') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
-            <Icon name="heroicons:users-20-solid" class="h-4 w-4 shrink-0" />
-            Utilisateurs SMQ
-          </NuxtLink>
+
+          <!-- Masqué pour les chefs d'équipe n'ayant pas d'autre rôle SMQ -->
+          <template v-if="!estChefEquipeSeulement">
+            <NuxtLink to="/smq/dashboard"
+              class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+              :class="route.path.startsWith('/smq/dashboard') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+              <Icon name="heroicons:home-20-solid" class="h-4 w-4 shrink-0" />
+              Tableau de bord qualité
+            </NuxtLink>
+            <NuxtLink to="/smq/indicateurs"
+              class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+              :class="route.path.startsWith('/smq/indicateurs') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+              <Icon name="heroicons:chart-bar-20-solid" class="h-4 w-4 shrink-0" />
+              Indicateurs
+            </NuxtLink>
+            <NuxtLink v-if="!estCopilote" to="/smq/fac"
+              class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+              :class="route.path.startsWith('/smq/fac') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+              <Icon name="heroicons:clipboard-document-list-20-solid" class="h-4 w-4 shrink-0" />
+              Actions correctives
+            </NuxtLink>
+          </template>
+
+          <!-- Audit qualité — sous-menu Activité / Plan / Restitution(s) -->
+          <div>
+            <div class="flex items-center gap-2 text-xs font-black uppercase tracking-widest px-2 pt-1 pb-0.5" style="color:var(--qp-fg-3,#888)">
+              <Icon name="heroicons:magnifying-glass-circle-20-solid" class="h-3.5 w-3.5 shrink-0" />
+              Audit qualité
+            </div>
+
+            <!-- Activité & Plan : masqués pour chef-only -->
+            <template v-if="!estChefEquipeSeulement">
+              <NuxtLink to="/smq/audit/activite"
+                class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+                :class="route.path.startsWith('/smq/audit/activite') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+                <Icon name="heroicons:clipboard-document-list-20-solid" class="h-4 w-4 shrink-0" />
+                Activité
+              </NuxtLink>
+              <NuxtLink to="/smq/audit/plan"
+                class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+                :class="route.path.startsWith('/smq/audit/plan') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+                <Icon name="heroicons:calendar-days-20-solid" class="h-4 w-4 shrink-0" />
+                Planification
+              </NuxtLink>
+            </template>
+
+            <!-- Restitution chef : chef avec audit actif, ou RQ/RQA/admin -->
+            <NuxtLink
+              v-if="(estChefEquipe && aAuditsChefActifs) || estRQ || estRQA || isAdmin()"
+              to="/smq/audit/restitution"
+              class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+              :class="route.path.startsWith('/smq/audit/restitution') && !route.path.startsWith('/smq/audit/restitution-pilote') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+              <Icon name="heroicons:document-text-20-solid" class="h-4 w-4 shrink-0" />
+              Restitution
+            </NuxtLink>
+
+            <!-- Restitution pilote : pilote dont l'entité est en cours d'audit -->
+            <NuxtLink
+              v-if="aAuditsPiloteActifs"
+              to="/smq/audit/restitution-pilote"
+              class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+              :class="route.path.startsWith('/smq/audit/restitution-pilote') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+              <Icon name="heroicons:clipboard-document-check-20-solid" class="h-4 w-4 shrink-0" />
+              Restitution (validation)
+            </NuxtLink>
+          </div>
+
+          <!-- ── Référentiels SMQ (admin/RQ seulement) ── -->
+          <template v-if="isSmqAdmin() || isAdmin()">
+            <NuxtLink to="/smq/exercice"
+              class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+              :class="route.path.startsWith('/smq/exercice') ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+              <Icon name="heroicons:calendar-days-20-solid" class="h-4 w-4 shrink-0" />
+              Exercices
+            </NuxtLink>
+            <NuxtLink to="/smq/admin/referentiels?tab=processus"
+              class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+              :class="route.path === '/smq/admin/referentiels' && route.query.tab === 'processus' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+              <Icon name="heroicons:arrow-path-rounded-square-20-solid" class="h-4 w-4 shrink-0" />
+              Processus
+            </NuxtLink>
+            <NuxtLink to="/smq/admin/referentiels?tab=sites_audites"
+              class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+              :class="route.path === '/smq/admin/referentiels' && route.query.tab === 'sites_audites' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+              <Icon name="heroicons:map-pin-20-solid" class="h-4 w-4 shrink-0" />
+              Sites audités
+            </NuxtLink>
+            <NuxtLink to="/smq/admin/referentiels?tab=types_audits"
+              class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+              :class="route.path === '/smq/admin/referentiels' && route.query.tab === 'types_audits' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+              <Icon name="heroicons:tag-20-solid" class="h-4 w-4 shrink-0" />
+              Types d'audits
+            </NuxtLink>
+            <NuxtLink to="/smq/admin/referentiels?tab=observateurs"
+              class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+              :class="route.path === '/smq/admin/referentiels' && route.query.tab === 'observateurs' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+              <Icon name="heroicons:eye-20-solid" class="h-4 w-4 shrink-0" />
+              Observateurs
+            </NuxtLink>
+            <NuxtLink to="/smq/admin"
+              class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg font-bold transition-colors"
+              :class="route.path === '/smq/admin' ? 'bg-gradient-to-br from-emerald-700 to-blue-800 text-white shadow-lg' : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-100'">
+              <Icon name="heroicons:users-20-solid" class="h-4 w-4 shrink-0" />
+              Utilisateurs SMQ
+            </NuxtLink>
+          </template>
         </div>
       </div>
 
@@ -185,6 +261,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuth } from '~/composables/auth/useAuth'
 import { useSmqPermissions } from '~/composables/smq/useSmqPermissions'
+import { useAuditNavigation } from '~/composables/smq/useAuditNavigation'
 
 const route = useRoute()
 
@@ -199,13 +276,37 @@ const {
   isDG,
   isDCCIQ,
   isAdmin,
+  hasRole,
+  getRoles,
+  refreshRoles,
 } = useAuth()
 
 // SMQ — permissions via composable dédié (evite les appels de fonction SSR)
-const { peutVoirMenuSMQ, peutGererUtilisateurs, estPilote, estCopilote, estRQ, estRQA, estAdminSmq } = useSmqPermissions()
+const { peutVoirMenuSMQ, peutGererUtilisateurs, estPilote, estCopilote, estRQ, estRQA, estAdminSmq, estChefEquipe } = useSmqPermissions()
 
-// Wrappers compatibles template (ref → boolean)
-const peutVoirSmq = () => peutVoirMenuSMQ.value || estPilote.value || estCopilote.value || estRQ.value || estRQA.value || estAdminSmq.value || isAdmin()
+// Audits actifs (chef + pilote) — contrôle visibilité dynamique
+const { aAuditsChefActifs, aAuditsPiloteActifs, chargerAuditNav } = useAuditNavigation()
+
+// Chef d'équipe sans aucun autre rôle SMQ
+const estChefEquipeSeulement = computed(() =>
+  estChefEquipe.value &&
+  !estPilote.value &&
+  !estCopilote.value &&
+  !estRQ.value &&
+  !estRQA.value &&
+  !estAdminSmq.value &&
+  !isAdmin()
+)
+
+// Wrappers compatibles template
+// Chef-only → SMQ visible seulement si audit actif non réalisé
+const peutVoirSmq = () => {
+  if (estChefEquipeSeulement.value) return aAuditsChefActifs.value
+  // aAuditsPiloteActifs couvre les responsables d'entités sans rôle smq_pilote explicite
+  return peutVoirMenuSMQ.value || estPilote.value || estCopilote.value ||
+    estRQ.value || estRQA.value || estAdminSmq.value || estChefEquipe.value ||
+    isAdmin() || aAuditsPiloteActifs.value
+}
 const isSmqAdmin  = () => peutGererUtilisateurs.value
 
 const isExpanded       = ref(true)
@@ -334,9 +435,17 @@ watch(isSmqRouteActive, (isActive) => {
   if (isActive && !smqMenuOpen.value) smqMenuOpen.value = true
 }, { immediate: true })
 
-onMounted(() => {
+onMounted(async () => {
   if (window.innerWidth < 1024) isExpanded.value = false
   emit('sidebar-toggle', isExpanded.value)
+  const rolesBefore = JSON.stringify(getRoles())
+  await refreshRoles()
+  const rolesAfter = JSON.stringify(getRoles())
+  if (rolesBefore !== rolesAfter) {
+    window.location.reload()
+  }
+  // Fire-and-forget : les items restitution apparaissent dès que les données arrivent
+  chargerAuditNav()
 })
 </script>
 

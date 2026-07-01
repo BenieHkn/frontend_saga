@@ -91,6 +91,17 @@ export default defineNuxtConfig({
     },
   },
 
+  vite: {
+    server: {
+      hmr: {
+        timeout: 120000,
+      },
+    },
+    optimizeDeps: {
+      include: ['vue', 'vue-router'],
+    },
+  },
+
   app: {
     head: {
       title: 'SAGA',

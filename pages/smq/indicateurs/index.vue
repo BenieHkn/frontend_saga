@@ -5,7 +5,7 @@
       title="Indicateurs"
     >
       <button
-        class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 transition-all"
+        class="qp-btn qp-btn--ghost qp-btn--sm"
         @click="exporterListe"
       >
         <Icon name="heroicons:arrow-down-tray" class="h-4 w-4" />
@@ -14,8 +14,7 @@
       <NuxtLink
         v-if="peutParametrer"
         to="/smq/indicateurs/create"
-        class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white transition-all"
-        style="background: var(--qp-primary-500)"
+        class="qp-btn qp-btn--header-cta qp-btn--sm"
       >
         <Icon name="heroicons:plus" class="h-4 w-4" />
         Nouvel indicateur
@@ -119,27 +118,22 @@
               </button>
             </td>
           </tr>
-          <tr v-if="!indicateurs.length">
-            <td colspan="8" class="text-center py-10 text-sm" style="color: var(--qp-fg-3)">Aucun indicateur trouvé.</td>
+          <tr v-if="!indicateurs.length" class="qp-table__empty">
+            <td colspan="8">
+              <Icon name="heroicons:magnifying-glass" class="h-8 w-8 mx-auto mb-2 block opacity-30" />
+              Aucun indicateur trouvé.
+            </td>
           </tr>
         </tbody>
       </table>
 
-      <!-- Pagination -->
-      <div v-if="totalPages > 1" class="flex items-center justify-between px-[18px] py-3 border-t" style="border-color: var(--qp-border-2)">
-        <span class="qp-overline">{{ totalItems }} indicateur{{ totalItems !== 1 ? 's' : '' }}</span>
-        <div class="flex gap-1">
-          <button
-            v-for="p in totalPages"
-            :key="p"
-            class="w-8 h-8 border rounded text-xs font-mono transition-all"
-            :style="p === page
-              ? 'background:var(--qp-primary-500);color:#fff;border-color:var(--qp-primary-500)'
-              : 'background:#fff;color:var(--qp-fg-2);border-color:var(--qp-border-1)'"
-            @click="page = p; charger()"
-          >{{ p }}</button>
-        </div>
-      </div>
+      <SmqPagination
+        v-model="page"
+        :total="totalItems"
+        :per-page="perPage"
+        @update:modelValue="charger"
+        @update:perPage="perPage = $event; page = 1; charger()"
+      />
     </div>
   </div>
 </template>
@@ -174,6 +168,7 @@ const indicateurs  = ref([])
 const loading      = ref(false)
 const error        = ref(null)
 const page         = ref(1)
+const perPage      = ref(20)
 const totalPages   = ref(1)
 const totalItems   = ref(0)
 const search       = ref('')
@@ -191,7 +186,7 @@ const avatarCouleur = (nom) => AVATAR_COLORS[(nom?.charCodeAt(0) ?? 0) % AVATAR_
 const charger = async () => {
   loading.value = true; error.value = null
   try {
-    const params = { page: page.value, per_page: 20 }
+    const params = { page: page.value, per_page: perPage.value }
     if (filtreActif.value !== '') params.actif = filtreActif.value
     if (search.value.trim())      params.search = search.value.trim()
 
@@ -215,5 +210,5 @@ onMounted(() => charger())
 </script>
 
 <style scoped>
-.smq-content { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+.smq-content { }
 </style>

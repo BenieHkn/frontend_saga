@@ -4,15 +4,10 @@
       overline="SMQ · Indicateurs"
       title="Paramétrage d'un indicateur"
     >
-      <NuxtLink to="/smq/indicateurs" class="px-4 py-2 text-sm font-medium rounded-lg" style="color: var(--qp-fg-2)">
+      <NuxtLink to="/smq/indicateurs" class="qp-btn qp-btn--ghost">
         Annuler
       </NuxtLink>
-      <button
-        class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white"
-        style="background: var(--qp-primary-500)"
-        :disabled="saving"
-        @click="enregistrer"
-      >
+      <button class="qp-btn qp-btn--header-cta" :disabled="saving" @click="enregistrer">
         <Icon name="heroicons:check" class="h-4 w-4" />
         {{ saving ? 'Enregistrement…' : 'Enregistrer l\'indicateur' }}
       </button>
@@ -358,7 +353,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.smq-content { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+.smq-content { }
 .section { padding: 22px 24px; border-bottom: 1px solid var(--qp-border-2); }
 .section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
 .section-head .n { width:24px;height:24px;border-radius:50%;background:var(--qp-primary-50);color:var(--qp-primary-700);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;flex:none; }
@@ -367,3 +362,4 @@ onMounted(async () => {
 .full { grid-column: 1 / -1; }
 .req { color: var(--qp-danger-500); margin-left: 2px; }
 </style>
+                                                                                                                                                                                       

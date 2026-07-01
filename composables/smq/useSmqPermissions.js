@@ -68,9 +68,12 @@ export const useSmqPermissions = () => {
   /** Management Global = RQ ou RQA */
   const estMG        = computed(() => estRQ.value || estRQA.value)
 
+  /** Chef d'équipe d'audit — rôle temporaire */
+  const estChefEquipe = role('smq_chef_equipe')
+
   /** Appartient au module SMQ (a au moins un rôle SMQ ou est admin système) */
   const estMembreSMQ = computed(() =>
-    estAdminSmq.value || estPilote.value || estCopilote.value || estRQ.value || estRQA.value
+    estAdminSmq.value || estPilote.value || estCopilote.value || estRQ.value || estRQA.value || estChefEquipe.value
   )
 
   // ── Tableau de bord ───────────────────────────────────────────────────────
@@ -170,7 +173,9 @@ export const useSmqPermissions = () => {
    * Peut accéder à la section SMQ dans la navigation.
    * Vrai dès qu'un utilisateur a au moins le droit de voir le dashboard.
    */
-  const peutVoirMenuSMQ = computed(() => peutVoirDashboard.value || peutVoirDashboardGlobal.value)
+  const peutVoirMenuSMQ = computed(() =>
+    peutVoirDashboard.value || peutVoirDashboardGlobal.value || estMembreSMQ.value
+  )
 
   /**
    * Retourne le nom lisible du rôle SMQ courant pour l'affichage.
@@ -198,7 +203,7 @@ export const useSmqPermissions = () => {
 
   return {
     // Rôles
-    estAdminSmq, estPilote, estCopilote, estRQ, estRQA, estMG, estMembreSMQ,
+    estAdminSmq, estPilote, estCopilote, estRQ, estRQA, estMG, estMembreSMQ, estChefEquipe,
     // Dashboard
     peutVoirDashboard, peutVoirDashboardGlobal,
     // Référentiels

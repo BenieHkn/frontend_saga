@@ -37,7 +37,8 @@ export const usePaq = () => {
     if (params.exercice_id) q.set('exercice_id', params.exercice_id)
     if (params.per_page)    q.set('per_page',    params.per_page ?? 50)
     const res = await $fetch(`${base.value}/smq/audits?${q}`, { headers: headers() })
-    const list = res?.data?.data ?? res?.data ?? res ?? []
+    const raw = res?.data?.data ?? res?.data ?? res ?? []
+    const list = Array.isArray(raw) ? raw : Object.values(raw).filter(v => v && typeof v === 'object' && v.id)
     return list
   }
 
@@ -73,6 +74,16 @@ export const usePaq = () => {
   }
 
   // ── AuditEntites (visites) ────────────────────────────────────────────────
+
+  const planifierAudit = async (id) => {
+    const res = await $fetch(`${base.value}/smq/audits/${id}/planifier`, { method: 'POST', headers: headers() })
+    return res?.data ?? res
+  }
+
+  const realiserAudit = async (id) => {
+    const res = await $fetch(`${base.value}/smq/audits/${id}/realiser`, { method: 'POST', headers: headers() })
+    return res?.data ?? res
+  }
 
   const ajouterEntiteAudit = async (auditId, data) => {
     const res = await $fetch(`${base.value}/smq/audits/${auditId}/entites`, {
@@ -134,7 +145,7 @@ export const usePaq = () => {
   // ── Référentiels (entités, utilisateurs) ─────────────────────────────────
 
   const fetchEntites = async () => {
-    const res = await $fetch(`${base.value}/smq/entites-premieres`, { headers: headers() })
+    const res = await $fetch(`${base.value}/smq/entites-auditables`, { headers: headers() })
     return res?.data ?? []
   }
 
@@ -146,10 +157,10 @@ export const usePaq = () => {
   // ── Référentiels UI ───────────────────────────────────────────────────────
 
   const AUDIT_STATUTS = [
-    { value: 'a_planifier', label: 'À planifier', badge: 'qp-badge--warning',  icon: 'heroicons:calendar-days' },
-    { value: 'planifie',    label: 'Planifié',    badge: 'qp-badge--info',     icon: 'heroicons:compass' },
-    { value: 'en_cours',    label: 'En cours',    badge: 'qp-badge--info',     icon: 'heroicons:play-circle' },
-    { value: 'realise',     label: 'Réalisé',     badge: 'qp-badge--success',  icon: 'heroicons:clipboard-document-check' },
+    { value: 'a_planifier',               label: 'À planifier',               badge: 'qp-badge--bw', icon: 'heroicons:calendar-days' },
+    { value: 'en_cours_de_planification', label: 'En cours de planification', badge: 'qp-badge--bw', icon: 'heroicons:pencil-square' },
+    { value: 'planifie',                  label: 'Planifié',                  badge: 'qp-badge--bw', icon: 'heroicons:compass' },
+    { value: 'realise',                   label: 'Réalisé',                   badge: 'qp-badge--bw qp-badge--bw-filled', icon: 'heroicons:clipboard-document-check' },
   ]
 
   const badgeAuditStatut = (s) => AUDIT_STATUTS.find(a => a.value === s)?.badge ?? 'qp-badge--neutral'
@@ -165,6 +176,7 @@ export const usePaq = () => {
 
   return {
     fetchAudits, fetchAudit, createAudit, updateAudit, deleteAudit, downloadAuditPdf,
+    planifierAudit, realiserAudit,
     ajouterEntiteAudit, supprimerEntiteAudit,
     fetchAuditEntite, updateAuditEntite, syncParticipants,
     fetchRecommandations, createRecommandation, updateRecommandation, deleteRecommandation,

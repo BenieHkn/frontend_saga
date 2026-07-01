@@ -108,12 +108,12 @@
 }
 
 /* ---- Typographie IBM Plex (chargée depuis nuxt.config head) ---------------- */
-.qp-font-sans { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
-.qp-font-mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+.qp-font-sans { font-family: 'Montserrat', system-ui, sans-serif; }
+.qp-font-mono { font-family: ui-monospace, monospace; }
 
 /* Valeurs numériques toujours en mono tabulaire */
 .qp-num {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-family: ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
@@ -134,7 +134,7 @@
   color: var(--qp-fg-3);
 }
 .qp-kpi__value {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: ui-monospace, monospace;
   font-weight: 600;
   font-size: 2rem;
   color: var(--qp-fg-1);
@@ -181,49 +181,236 @@
 .qp-badge--solid.qp-badge--success { background: var(--qp-success-500); color: #fff; }
 .qp-badge--solid.qp-badge--danger  { background: var(--qp-danger-500);  color: #fff; }
 .qp-badge--solid::before { background: rgba(255,255,255,.85); }
+.qp-badge--bw        { background: #fff; color: var(--qp-n-900); border: 1px solid var(--qp-n-300) !important; }
+.qp-badge--bw-filled { background: var(--qp-n-900); color: #fff; border-color: var(--qp-n-900) !important; }
+.qp-badge--bw::before { background: var(--qp-n-900); }
+.qp-badge--bw-filled::before { background: rgba(255,255,255,.85); }
 
-/* ---- Tableaux -------------------------------------------------------------- */
-.qp-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-.qp-table th {
-  text-align: left;
-  font-size: 0.75rem;
+/* ---- Carte générique (modal, panel) --------------------------------------- */
+.qp-card {
+  background: var(--qp-n-0);
+  border-radius: var(--qp-r-xl);
+  box-shadow: var(--qp-sh-3);
+  border: 1px solid var(--qp-border-1);
+}
+.qp-card--pad { padding: 20px; }
+
+/* ---- Boutons --------------------------------------------------------------- */
+.qp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 16px;
+  height: 38px;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--qp-fg-3);
-  letter-spacing: .03em;
-  text-transform: uppercase;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--qp-border-1);
-  background: var(--qp-n-25);
+  border-radius: var(--qp-r-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background var(--qp-dur-fast) var(--qp-ease),
+              box-shadow var(--qp-dur-fast) var(--qp-ease),
+              opacity var(--qp-dur-fast);
   white-space: nowrap;
 }
-.qp-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--qp-border-2);
-  color: var(--qp-fg-1);
-  vertical-align: middle;
+.qp-btn:disabled { opacity: .5; cursor: not-allowed; }
+.qp-btn--primary {
+  background: var(--qp-brand-gradient);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 1px 3px rgba(31,140,73,.30);
 }
-.qp-table tbody tr:hover { background: var(--qp-n-25); }
-.qp-table td.num,
-.qp-table th.num {
-  text-align: right;
-  font-family: 'IBM Plex Mono', monospace;
-  font-variant-numeric: tabular-nums;
+.qp-btn--primary:hover:not(:disabled) {
+  box-shadow: 0 3px 10px rgba(31,140,73,.35);
+  opacity: .92;
+}
+.qp-btn--secondary {
+  background: var(--qp-n-0);
+  color: var(--qp-fg-1);
+  border-color: var(--qp-border-1);
+}
+.qp-btn--secondary:hover:not(:disabled) {
+  background: var(--qp-n-50);
+}
+/* Outline — sur fond clair */
+.qp-btn--outline {
+  background: transparent;
+  color: var(--qp-fg-1);
+  border-color: var(--qp-border-1);
+}
+.qp-btn--outline:hover:not(:disabled) {
+  background: var(--qp-n-50);
 }
 
-/* ---- Carte tableau --------------------------------------------------------- */
+/* Taille réduite */
+.qp-btn--sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 0.8125rem;
+}
+
+/* ── Boutons dans les en-têtes de page (fond sombre) ── */
+
+/* Secondaire — contour blanc semi-transparent */
+.qp-btn--ghost {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border-color: rgba(255,255,255,0.30);
+}
+.qp-btn--ghost:hover:not(:disabled) {
+  background: rgba(255,255,255,0.22);
+  border-color: rgba(255,255,255,0.50);
+}
+
+/* Primaire — blanc plein, texte vert foncé — contraste maximal sur fond sombre */
+.qp-btn--header-cta {
+  background: #ffffff;
+  color: #1a5c33;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+}
+.qp-btn--header-cta:hover:not(:disabled) {
+  background: #f0fdf4;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+
+/* ============================================================================
+   TABLEAUX — refonte complète
+   ============================================================================ */
+
+/* ---- Conteneur carte ------------------------------------------------------- */
 .qp-tablecard {
   background: #fff;
-  border: 1px solid var(--qp-border-1);
-  border-radius: var(--qp-r-lg);
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--qp-sh-1);
+  box-shadow:
+    0 1px 3px rgba(15,27,45,.06),
+    0 4px 16px rgba(15,27,45,.08);
+  border: 1px solid rgba(15,27,45,.08);
 }
+
+/* ---- Entête de carte (titre + actions) ------------------------------------ */
 .qp-tablecard__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
+  padding: 15px 20px;
+  background: #fff;
+  border-bottom: 2px solid var(--qp-border-1);
+  position: relative;
+}
+.qp-tablecard__head::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--qp-primary-500) 0%, var(--qp-navy-500) 100%);
+  border-radius: 4px 0 0 4px;
+}
+
+/* ---- Table ----------------------------------------------------------------- */
+.qp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+/* ── En-têtes de colonnes ─────────────────────────────────────────────────── */
+.qp-table thead tr {
+  background: linear-gradient(180deg, #1E3A5F 0%, #2a4f7a 100%);
+}
+.qp-table th {
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 13px 18px;
+  white-space: nowrap;
+  border: none;
+  position: relative;
+}
+.qp-table th:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 25%; bottom: 25%;
+  width: 1px;
+  background: rgba(255,255,255,0.12);
+}
+/* Boutons de tri dans les th */
+.qp-table th button {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+.qp-table th button:hover { color: #fff; }
+
+/* ── Lignes de données ────────────────────────────────────────────────────── */
+.qp-table tbody tr {
+  transition: background 120ms ease;
+  position: relative;
+}
+/* Lignes paires légèrement teintées */
+.qp-table tbody tr:nth-child(even) {
+  background: #f8fafb;
+}
+.qp-table tbody tr:nth-child(odd) {
+  background: #fff;
+}
+
+/* Hover fort : fond vert pâle + indicateur gauche */
+.qp-table tbody tr:hover {
+  background: linear-gradient(90deg, #e8f6ee 0%, #f0fbf5 100%) !important;
+  box-shadow: inset 3px 0 0 var(--qp-primary-500);
+}
+
+.qp-table td {
+  padding: 13px 18px;
   border-bottom: 1px solid var(--qp-border-2);
+  color: var(--qp-fg-1);
+  vertical-align: middle;
+}
+.qp-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Colonnes numériques ──────────────────────────────────────────────────── */
+.qp-table td.num,
+.qp-table th.num {
+  text-align: right;
+  font-family: ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Ligne vide ──────────────────────────────────────────────────────────── */
+.qp-table tbody tr.qp-table__empty td {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--qp-fg-3);
+  font-size: 0.9rem;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+/* ── Pied de tableau (pagination / compteur) ──────────────────────────────── */
+.qp-tablecard__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 18px;
+  background: var(--qp-n-25);
+  border-top: 1px solid var(--qp-border-1);
+  font-size: 0.75rem;
+  color: var(--qp-fg-3);
 }
 
 /* ---- Filtres / segmented control ------------------------------------------ */
@@ -283,7 +470,7 @@
   border-radius: 50%;
   display: inline-grid; place-items: center;
   position: relative; z-index: 1;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: ui-monospace, monospace;
   font-size: 13px; font-weight: 600;
   border: 2px solid var(--qp-n-200);
   background: #fff; color: var(--qp-fg-3);
@@ -299,7 +486,7 @@
 .qp-label { font-size: 0.8125rem; font-weight: 500; color: var(--qp-fg-1); }
 .qp-label .req { color: var(--qp-danger-500); margin-left: 2px; }
 .qp-input, .qp-select, .qp-textarea {
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
   font-size: 0.875rem;
   color: var(--qp-fg-1);
   background: #fff;
@@ -310,95 +497,79 @@
   width: 100%;
   transition: border-color var(--qp-dur-fast) var(--qp-ease), box-shadow var(--qp-dur-fast) var(--qp-ease);
 }
-.qp-textarea { height: auto; padding: 12px; resize: vertical; line-height: 1.5; }
-.qp-input::placeholder { color: var(--qp-fg-4); }
-.qp-input:focus, .qp-select:focus, .qp-textarea:focus {
-  outline: none;
-  border-color: var(--qp-border-focus);
-  box-shadow: var(--qp-ring-focus);
-}
-.qp-input--mono {
-  font-family: 'IBM Plex Mono', monospace;
-  font-variant-numeric: tabular-nums;
-}
-.qp-input.is-error { border-color: var(--qp-danger-500); box-shadow: var(--qp-ring-danger); }
-
-/* ---- Calcul (clé de calcul) ------------------------------------------------ */
-.qp-calc { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
-.qp-calc__op  { flex: 1; min-width: 140px; }
-.qp-calc__sign { width: 70px; flex: none; }
-.qp-calc__eq  {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 26px; color: var(--qp-fg-3);
-  font-weight: 500; padding-bottom: 4px;
-}
-.qp-calc__result {
-  border-radius: var(--qp-r-md);
-  padding: 9px 20px;
-  text-align: center;
-  flex: none;
-}
-.qp-calc__result .label {
-  font-size: 10px; text-transform: uppercase;
-  letter-spacing: .06em; font-weight: 600;
-}
-.qp-calc__result .value {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 24px; font-weight: 600;
-}
-.qp-calc__result--ok {
-  background: var(--qp-success-50);
-  border: 1px solid var(--qp-success-100);
-}
-.qp-calc__result--ok .label { color: var(--qp-success-600); }
-.qp-calc__result--ok .value { color: var(--qp-success-700); }
-.qp-calc__result--err {
-  background: var(--qp-danger-50);
-  border: 1px solid var(--qp-danger-100);
-}
-.qp-calc__result--err .label { color: var(--qp-danger-600); }
-.qp-calc__result--err .value { color: var(--qp-danger-700); }
-
-/* ---- Card basique ---------------------------------------------------------- */
-.qp-card {
-  background: var(--qp-bg-surface);
-  border: 1px solid var(--qp-border-1);
-  border-radius: var(--qp-r-lg);
-  box-shadow: var(--qp-sh-1);
-}
-.qp-card--pad { padding: 24px; }
-
-/* ---- Divider --------------------------------------------------------------- */
-.qp-divider { height: 1px; background: var(--qp-border-2); border: 0; margin: 0; }
-
-/* ---- Overline -------------------------------------------------------------- */
-.qp-overline {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--qp-fg-3);
-}
-
-/* ---- Meta grid (fiche détail) ---------------------------------------------- */
-.qp-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  border: 1px solid var(--qp-border-1);
-  border-radius: var(--qp-r-md);
+.qp-textarea { height: auto; min-height: 80px; padding: 8px 12px; resize: vertical; }
+/* ── Role stat cards (admin utilisateurs) ─────────────────────────────────── */
+.role-stat-card {
+  border-radius: 14px;
   overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  box-shadow: 0 1px 3px rgba(15,27,45,.07), 0 4px 12px rgba(15,27,45,.08);
+  transition: box-shadow .18s ease, border-color .18s ease, transform .12s ease;
+  user-select: none;
 }
-.qp-meta-grid .cell {
-  padding: 12px 14px;
-  border-right: 1px solid var(--qp-border-2);
+.role-stat-card:hover { box-shadow: 0 4px 20px rgba(15,27,45,.14); transform: translateY(-1px); }
+.role-stat-card--active { border-color: var(--qp-primary-400) !important; box-shadow: 0 0 0 3px var(--qp-primary-100); }
+
+.role-stat-card__banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
 }
-.qp-meta-grid .cell:last-child { border-right: 0; }
-.qp-meta-grid .cell .k {
-  font-size: 10px; text-transform: uppercase;
-  letter-spacing: .05em; color: var(--qp-fg-3);
+.role-stat-card__icon-wrap {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.2);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.role-stat-card__count {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  margin-left: auto;
+}
+.role-stat-card__deco {
+  position: absolute;
+  right: -12px; top: -12px;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  pointer-events: none;
+}
+.role-stat-card__body {
+  padding: 10px 16px 12px;
+  background: #fff;
+}
+.role-stat-card__title {
+  font-size: .875rem;
   font-weight: 600;
+  color: var(--qp-fg-1);
 }
-.qp-meta-grid .cell .v {
-  font-size: 0.875rem; color: var(--qp-fg-1);
-  font-weight: 600; margin-top: 4px;
+.role-stat-card__meta {
+  font-size: .75rem;
+  color: var(--qp-fg-3);
+  margin-top: 2px;
+}
+.role-stat-card__filter-hint {
+  font-size: .6875rem;
+  color: var(--qp-fg-4);
+  margin-top: 6px;
+}
+
+/* ---- Conteneur principal des pages SMQ ------------------------------------ */
+.smq-content {
+  padding: 1rem;
+  font-family: 'Montserrat', system-ui, sans-serif;
+}
+@media (min-width: 640px) {
+  .smq-content { padding: 1.25rem; }
+}
+@media (min-width: 1024px) {
+  .smq-content { padding: 1.5rem 1.75rem; }
 }

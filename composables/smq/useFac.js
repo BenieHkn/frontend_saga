@@ -57,6 +57,13 @@ export const useFac = () => {
     return res?.data ?? []
   }
 
+  const ouvrirNouvelleFac = async (id) => {
+    const res = await $fetch(`${base.value}/smq/actions-correctives/${id}/ouvrir-nouvelle`, {
+      method: 'POST', headers: jsonHeaders(),
+    })
+    return res // { success, data, numero_fiche }
+  }
+
   const generateFacPdf = async (id) => {
     const token = process.client ? localStorage.getItem('auth_token') : ''
     const res = await fetch(`${base.value}/smq/actions-correctives/${id}/generate-pdf`, {
@@ -118,7 +125,8 @@ export const useFac = () => {
 
   return {
     fetchFac, fetchFacItem, createFac, updateFac, deleteFac, fetchFacStats,
-    fetchResponsablesPossibles, fetchResponsablesPossiblesCreation, generateFacPdf, downloadFacPdf,
+    fetchResponsablesPossibles, fetchResponsablesPossiblesCreation,
+    ouvrirNouvelleFac, generateFacPdf, downloadFacPdf,
     FAC_STATUTS, badgeFacStatut, labelFacStatut,
   }
 }

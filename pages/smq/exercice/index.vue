@@ -4,11 +4,7 @@
       :overline="`Exercices · ${exercices.length} exercice${exercices.length !== 1 ? 's' : ''}`"
       title="Gestion des exercices"
     >
-      <button
-        class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white"
-        style="background: var(--qp-primary-500)"
-        @click="ouvrirModal(null)"
-      >
+      <button class="qp-btn qp-btn--header-cta" @click="ouvrirModal(null)">
         <Icon name="heroicons:plus" class="h-4 w-4" />
         Créer un exercice
       </button>
@@ -39,13 +35,8 @@
             >
               {{ row.annee ?? '—' }}
             </div>
-            <div>
-              <div class="font-medium text-sm" style="color:var(--qp-fg-1)">
-                Exercice {{ row.annee }}
-              </div>
-              <div v-if="row.description" class="text-xs" style="color:var(--qp-fg-3)">
-                {{ row.description }}
-              </div>
+            <div class="font-medium text-sm" style="color:var(--qp-fg-1)">
+              Exercice {{ row.annee }}
             </div>
           </div>
         </template>
@@ -63,13 +54,30 @@
         </template>
 
         <template #actif-data="{ row }">
-          <span v-if="row.actif" class="qp-badge qp-badge--success">Actif</span>
-          <span v-else class="qp-badge qp-badge--neutral">Inactif</span>
+          <span v-if="row.actif" class="text-sm font-medium" style="color:var(--qp-success-600)">Actif</span>
+          <span v-else class="text-sm" style="color:var(--qp-fg-4)">Inactif</span>
         </template>
 
         <template #actions-data="{ row }">
           <div class="flex items-center gap-1">
-           
+            <button
+              v-if="!row.actif && !estPasse(row)"
+              class="px-2 h-7 rounded text-xs font-medium transition-all"
+              style="color:var(--qp-primary-600);background:var(--qp-primary-50)"
+              title="Définir comme exercice actif"
+              @click="definirActif(row)"
+            >
+              Activer
+            </button>
+            <button
+              v-if="row.actif"
+              class="px-2 h-7 rounded text-xs font-medium transition-all"
+              style="color:var(--qp-warning-700);background:var(--qp-warning-50)"
+              title="Clôturer cet exercice"
+              @click="cloturer(row)"
+            >
+              Clôturer
+            </button>
             <button
               class="w-7 h-7 rounded flex items-center justify-center transition-all"
               style="color:var(--qp-fg-3)"
@@ -78,20 +86,12 @@
             >
               <Icon name="heroicons:pencil-square" class="h-4 w-4" />
             </button>
-            <button
-              class="w-7 h-7 rounded flex items-center justify-center transition-all"
-              style="color:var(--qp-danger-500)"
-              title="Supprimer"
-              @click="confirmerSuppression(row)"
-            >
-              <Icon name="heroicons:trash" class="h-4 w-4" />
-            </button>
           </div>
         </template>
       </UTable>
     </div>
 
-    <!-- ── Modal Création/Modification ──────────────────────────────────── -->
+    <!-- Modal Création/Modification -->
     <UModal v-model="modalOpen" :ui="{ width: 'sm:max-w-md' }">
       <div class="bg-white rounded-xl overflow-hidden">
         <div class="px-6 py-4 border-b" style="border-color:var(--qp-border-1)">
@@ -108,13 +108,6 @@
               :min="2000"
               :max="2100"
               icon="heroicons:calendar"
-            />
-          </UFormGroup>
-          <UFormGroup label="Description">
-            <UTextarea
-              v-model="form.description"
-              rows="2"
-              placeholder="Optionnelle — ex. Exercice 2026"
             />
           </UFormGroup>
           <div class="grid grid-cols-2 gap-4">
@@ -149,7 +142,7 @@
       </div>
     </UModal>
 
-    <!-- ── Modal confirmation suppression ──────────────────────────────────── -->
+    <!-- Modal confirmation suppression -->
     <UModal v-model="confirmModalOpen">
       <div class="bg-white rounded-xl overflow-hidden">
         <div class="px-6 py-4 border-b" style="border-color:var(--qp-border-1)">
@@ -170,11 +163,7 @@
           <UButton color="gray" variant="soft" @click="confirmModalOpen = false">
             Annuler
           </UButton>
-          <UButton
-            color="red"
-            :loading="saving"
-            @click="executerSuppression"
-          >
+          <UButton color="red" :loading="saving" @click="executerSuppression">
             Supprimer
           </UButton>
         </div>
@@ -188,78 +177,65 @@ import { useReferentiels } from '~/composables/smq/useReferentiels'
 
 useHead({ title: 'Exercices — SMQ · SAGA' })
 
-const { fetchExercices, createExercice, updateExercice, deleteExercice, setExerciceActif } = useReferentiels()
+const { fetchExercices, createExercice, updateExercice, deleteExercice, setExerciceActif, cloturerExercice } = useReferentiels()
 
-const loading      = ref(true)
-const saving       = ref(false)
-const erreur       = ref('')
-const exercices    = ref([])
+const loading    = ref(true)
+const saving     = ref(false)
+const erreur     = ref('')
+const exercices  = ref([])
 
-// ── Colonnes du tableau ──────────────────────────────────────────────────────
 const columns = [
-  { key: 'exercice', label: 'Exercice', sortable: true },
-  { key: 'date_debut', label: 'Date début', sortable: true },
-  { key: 'date_fin', label: 'Date fin', sortable: true },
-  { key: 'actif', label: 'Statut', sortable: true },
-  { key: 'actions', label: 'Actions' },
+  { key: 'exercice',   label: 'Exercice',    sortable: true },
+  { key: 'date_debut', label: 'Date début',  sortable: true },
+  { key: 'date_fin',   label: 'Date fin',    sortable: true },
+  { key: 'actif',      label: 'Statut',      sortable: true },
+  { key: 'actions',    label: 'Actions' },
 ]
 
-// ── Modal formulaire ─────────────────────────────────────────────────────────
-const modalOpen         = ref(false)
-const exerciceEnCours   = ref(null)
-const form = reactive({
-  annee: new Date().getFullYear(),
-  description: '',
-  date_debut: '',
-  date_fin: '',
-})
+const modalOpen       = ref(false)
+const exerciceEnCours = ref(null)
+const form = reactive({ annee: new Date().getFullYear(), date_debut: '', date_fin: '' })
 
-// ── Modal confirmation ───────────────────────────────────────────────────────
-const confirmModalOpen  = ref(false)
-const confirmExercice   = ref(null)
+const confirmModalOpen = ref(false)
+const confirmExercice  = ref(null)
 
-// ── Formatage date courte ────────────────────────────────────────────────────
 const formatDate = (date) => {
   if (!date) return '—'
-  const d = new Date(date)
-  return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' })
+  return new Date(date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-// ── Chargement ────────────────────────────────────────────────────────────────
 const charger = async () => {
   loading.value = true
-  try {
-    exercices.value = await fetchExercices()
-  } catch (e) {
-    console.error('❌ Chargement exercices :', e)
-  } finally {
-    loading.value = false
-  }
+  try { exercices.value = await fetchExercices() }
+  catch (e) { console.error('Chargement exercices :', e) }
+  finally { loading.value = false }
 }
 
-// ── Ouvrir modal création/édition ─────────────────────────────────────────────
 const ouvrirModal = (exercice) => {
   exerciceEnCours.value = exercice
   Object.assign(form, {
-    annee:       exercice?.annee       ?? new Date().getFullYear(),
-    description: exercice?.description ?? '',
-    date_debut:  exercice?.date_debut  ? exercice.date_debut.substring(0, 10) : '',
-    date_fin:    exercice?.date_fin    ? exercice.date_fin.substring(0, 10) : '',
+    annee:      exercice?.annee      ?? new Date().getFullYear(),
+    date_debut: exercice?.date_debut ? exercice.date_debut.substring(0, 10) : '',
+    date_fin:   exercice?.date_fin   ? exercice.date_fin.substring(0, 10) : '',
   })
   erreur.value = ''
   modalOpen.value = true
 }
 
-// ── Sauvegarder (création ou mise à jour) ─────────────────────────────────────
 const sauvegarder = async () => {
   if (!form.annee) return
   saving.value = true
   erreur.value = ''
   try {
+    const payload = {
+      annee:      form.annee,
+      date_debut: form.date_debut || null,
+      date_fin:   form.date_fin   || null,
+    }
     if (exerciceEnCours.value?.id) {
-      await updateExercice(exerciceEnCours.value.id, { ...form })
+      await updateExercice(exerciceEnCours.value.id, payload)
     } else {
-      await createExercice({ ...form })
+      await createExercice(payload)
     }
     modalOpen.value = false
     await charger()
@@ -270,20 +246,38 @@ const sauvegarder = async () => {
   }
 }
 
-// ── Définir comme actif ───────────────────────────────────────────────────────
-const definirActif = async (exercice) => {
-  saving.value = true
-  try {
-    await setExerciceActif(exercice.id)
-    await charger()
-  } catch (e) {
-    console.error('❌ Définition actif :', e)
-  } finally {
-    saving.value = false
-  }
+const estPasse = (row) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  if (row.date_fin) return new Date(row.date_fin) < today
+  return (row.annee ?? 0) < today.getFullYear()
 }
 
-// ── Suppression ───────────────────────────────────────────────────────────────
+const cloturer = async (exercice) => {
+  saving.value = true
+  try {
+    await cloturerExercice(exercice.id)
+    await charger()
+  } catch (e) {
+    const data = e?.data ?? e?.response?.data
+    if (data?.manquants?.length) {
+      const liste = data.manquants.slice(0, 10).map(m => `• ${m}`).join('\n')
+      const suite = data.manquants.length > 10 ? `\n… et ${data.manquants.length - 10} autre(s)` : ''
+      alert(`${data.message}\n\n${liste}${suite}`)
+    } else {
+      alert(data?.message ?? 'Erreur lors de la clôture.')
+    }
+  }
+  finally { saving.value = false }
+}
+
+const definirActif = async (exercice) => {
+  saving.value = true
+  try { await setExerciceActif(exercice.id); await charger() }
+  catch (e) { console.error('Définition actif :', e) }
+  finally { saving.value = false }
+}
+
 const confirmerSuppression = (exercice) => {
   confirmExercice.value = exercice
   confirmModalOpen.value = true
@@ -298,7 +292,7 @@ const executerSuppression = async () => {
     confirmExercice.value = null
     await charger()
   } catch (e) {
-    console.error('❌ Suppression :', e)
+    console.error('Suppression :', e)
   } finally {
     saving.value = false
   }
@@ -308,5 +302,6 @@ onMounted(() => charger())
 </script>
 
 <style scoped>
-.smq-content { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+.smq-content { }
 </style>
+                                                                                                                             

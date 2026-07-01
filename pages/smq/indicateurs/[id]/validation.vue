@@ -293,5 +293,5 @@ onMounted(() => charger())
 </script>
 
 <style scoped>
-.smq-content { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+.smq-content { }
 </style>

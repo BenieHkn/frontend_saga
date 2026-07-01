@@ -8,18 +8,14 @@
       <div class="qp-seg">
         <button v-for="s in ['S1','S2']" :key="s" :class="{ active: semestre === s }" @click="semestre = s; charger()">{{ s }}</button>
       </div>
-      <button
-        class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white"
-        style="background: var(--qp-primary-500)"
-        @click="ouvrirAudit(null)"
-      >
+      <button class="qp-btn qp-btn--header-cta" @click="ouvrirAudit(null)">
         <Icon name="heroicons:plus" class="h-4 w-4" />
         Planifier un audit
       </button>
     </SmqPageHeader>
 
     <div v-if="loading" class="flex justify-center py-20">
-      <div class="w-8 h-8 border-4 border-slate-200 rounded-full animate-spin" style="border-top-color: var(--qp-primary-500)" />
+      <div class="w-8 h-8 border-4 border-slate-200 rounded-full animate-spin" style="border-top-color: var(--qp-primary-500)"></div>
     </div>
 
     <div v-else class="grid gap-4" style="grid-template-columns: 1fr 320px; align-items: start">
@@ -30,9 +26,9 @@
           Aucun audit planifié pour ce semestre.
         </div>
 
+        <template v-for="audit in audits" :key="audit?.id ?? audit">
         <div
-          v-for="audit in audits"
-          :key="audit.id"
+          v-if="audit?.id"
           class="rounded-lg overflow-hidden mb-3"
           style="border:1px solid var(--qp-border-1);background:#fff;box-shadow:var(--qp-sh-1)"
         >
@@ -124,8 +120,8 @@
                   <div class="text-sm font-medium truncate" style="color:var(--qp-fg-1)">
                     {{ ae.entite?.libelle ?? ae.libelle ?? '—' }}
                   </div>
-                  <div v-if="ae.processus" class="text-xs truncate mt-0.5" style="color:var(--qp-fg-3)">
-                    {{ ae.processus }}
+                  <div v-if="ae.entite?.processus" class="text-xs truncate mt-0.5" style="color:var(--qp-fg-3)">
+                    {{ ae.entite.processus.libelle }}
                   </div>
                 </div>
                 <!-- Avatars auditeurs (couronne pour le chef) -->
@@ -142,13 +138,15 @@
                       :style="{ background: avatarCouleur(nomComplet(u)) }"
                       :title="nomComplet(u) + (u.pivot?.is_chef ? ' (chef d\'équipe)' : '')"
                     >{{ initialesAvatar(nomComplet(u)) }}</span>
-                    <!-- Couronne chef d'équipe -->
+                    <!-- Bonhomme chef d'équipe -->
                     <span
                       v-if="u.pivot?.is_chef"
-                      class="absolute -top-1.5 -right-1 flex items-center justify-center w-3.5 h-3.5 rounded-full text-[8px]"
+                      class="absolute -top-1.5 -right-1 flex items-center justify-center w-3.5 h-3.5 rounded-full"
                       style="background:var(--qp-warning-400);color:#fff;border:1px solid #fff"
                       title="Chef d'équipe"
-                    >★</span>
+                    >
+                      <Icon name="heroicons:user-solid" class="h-2.5 w-2.5" />
+                    </span>
                   </div>
                   <span
                     v-if="(ae.users ?? []).length > 4"
@@ -209,7 +207,7 @@
                   class="flex items-start gap-2.5 px-[18px] py-2 border-b"
                   style="border-color:var(--qp-border-2);padding-left:130px"
                 >
-                  <span class="w-1.5 h-1.5 rounded-full mt-1.5 flex-none" :style="{ background: colorRecoStatut(reco.statut) }" />
+                  <span class="w-1.5 h-1.5 rounded-full mt-1.5 flex-none" :style="{ background: colorRecoStatut(reco.statut) }"></span>
                   <span class="flex-1 text-xs leading-relaxed" style="color:var(--qp-fg-2)">{{ reco.libelle }}</span>
                   <!-- Badge statut (toujours cliquable, même si audit réalisé) -->
                   <button
@@ -248,6 +246,114 @@
             <span v-else class="text-xs" style="color:var(--qp-fg-3)">Audit clôturé — aucune visite enregistrée</span>
           </div>
         </div>
+
+        <!-- ── Section Programme ───────────────────────────────────────────── -->
+        <div style="border-top:1px solid var(--qp-border-2)">
+          <!-- Toggle header -->
+          <div
+            class="flex items-center justify-between px-[18px] py-2.5 cursor-pointer select-none"
+            style="background:var(--qp-n-25)"
+            @click="toggleProgramme(audit)"
+          >
+            <div class="flex items-center gap-2">
+              <Icon
+                :name="programmeOuvert.has(audit.id) ? 'heroicons:chevron-down' : 'heroicons:chevron-right'"
+                class="h-3.5 w-3.5"
+                style="color:var(--qp-fg-3)"
+              />
+              <span class="text-xs font-semibold" style="color:var(--qp-fg-2)">Programme</span>
+              <span
+                v-if="((programmeItems[audit.id]?.length ?? 0) + (audit.audits_entites?.length ?? 0)) > 0"
+                class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold text-white"
+                style="background:var(--qp-primary-500)"
+              >{{ (programmeItems[audit.id]?.length ?? 0) + (audit.audits_entites?.length ?? 0) }}</span>
+            </div>
+            <button
+              v-if="audit.statut !== 'realise' && peutGererProgramme"
+              class="text-xs flex items-center gap-1 px-2.5 py-1 rounded-md"
+              style="color:var(--qp-primary-600);background:var(--qp-primary-50)"
+              @click.stop="ouvrirModalProgramme(audit, null)"
+            >
+              <Icon name="heroicons:plus" class="h-3 w-3" />
+              Ajouter
+            </button>
+          </div>
+
+          <!-- Contenu programme (déplié) -->
+          <div v-if="programmeOuvert.has(audit.id)">
+            <div v-if="!(programmeItems[audit.id]?.length) && !(audit.audits_entites?.length)" class="px-[18px] py-4 text-xs text-center" style="color:var(--qp-fg-3)">
+              Aucun item de programme. Cliquez sur « Ajouter » pour commencer.
+            </div>
+            <table v-else class="w-full" style="border-collapse:collapse">
+              <thead>
+                <tr style="background:var(--qp-n-50);border-bottom:1px solid var(--qp-border-2)">
+                  <th class="text-left text-xs font-semibold px-3 py-1.5" style="color:var(--qp-fg-3);width:120px">Horaire</th>
+                  <th class="text-left text-xs font-semibold px-3 py-1.5" style="color:var(--qp-fg-3)">Processus / Activité</th>
+                  <th class="text-left text-xs font-semibold px-3 py-1.5" style="color:var(--qp-fg-3)">Pilotes / Participants</th>
+                  <th style="width:64px"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <template
+                  v-for="row in avecPauses(audit.audits_entites ?? [], programmeItems[audit.id] ?? [])"
+                  :key="row._type === 'date_header' ? 'dh-' + row.date : row._type === 'pause' ? 'p-' + row.heure_debut : row._id ?? 'row'"
+                >
+                  <!-- En-tête de jour -->
+                  <tr v-if="row._type === 'date_header'">
+                    <td colspan="5" class="px-3 py-1.5 text-xs font-bold text-center" style="background:var(--qp-primary-600);color:#fff">
+                      {{ formatDateFr(row.date) }}
+                    </td>
+                  </tr>
+                  <!-- Pause automatique -->
+                  <tr v-else-if="row._type === 'pause'" style="background:var(--qp-n-25)">
+                    <td class="px-3 py-1.5 text-xs qp-num" style="color:var(--qp-fg-3)">{{ row.heure_debut }} – {{ row.heure_fin }}</td>
+                    <td colspan="4" class="px-3 py-1.5 text-xs font-medium italic text-center" style="color:var(--qp-fg-3)">— Pause —</td>
+                  </tr>
+                  <!-- Visite d'entité (depuis audits_entites) -->
+                  <tr v-else-if="row._source === 'entite'" style="border-bottom:1px solid var(--qp-border-2);background:var(--qp-n-25)">
+                    <td class="px-3 py-2 text-xs qp-num" style="color:var(--qp-fg-2)">
+                      {{ row.heure_debut ?? '' }}{{ (row.heure_debut && row.heure_fin) ? ' – ' : '' }}{{ row.heure_fin ?? '' }}
+                    </td>
+                    <td class="px-3 py-2">
+                      <div class="text-xs font-medium" style="color:var(--qp-fg-1)">{{ row.libelle }}</div>
+                      <div v-if="row.sous_libelle" class="text-xs mt-0.5" style="color:var(--qp-fg-3)">{{ row.sous_libelle }}</div>
+                    </td>
+                    <td class="px-3 py-2 text-xs" style="color:var(--qp-fg-2)">
+                      {{ [row.pilotes_text, (row.auditeurs ?? []).map(u => (u.prenom ? u.prenom[0] + '. ' : '') + u.nom).join(', ')].filter(Boolean).join(' — ') || '—' }}
+                    </td>
+                    <td></td>
+                  </tr>
+                  <!-- Item programme spécial (réunion d'ouverture, clôture, autre) -->
+                  <tr v-else style="border-bottom:1px solid var(--qp-border-2)">
+                    <td class="px-3 py-2 text-xs qp-num" style="color:var(--qp-fg-2)">
+                      {{ row.heure_debut ?? '' }}{{ (row.heure_debut && row.heure_fin) ? ' – ' : '' }}{{ row.heure_fin ?? '' }}
+                    </td>
+                    <td class="px-3 py-2">
+                      <div class="text-xs font-medium" style="color:var(--qp-fg-1)">{{ labelTypeProgramme(row.type) }}</div>
+                      <div v-if="row.libelle" class="text-xs mt-0.5" style="color:var(--qp-fg-3)">{{ row.libelle }}</div>
+                    </td>
+                    <td class="px-3 py-2 text-xs" style="color:var(--qp-fg-2)">{{ row.pilotes_text || '—' }}</td>
+                    <td class="px-2 py-2">
+                      <div v-if="audit.statut !== 'realise' && peutGererProgramme" class="flex gap-1 justify-end">
+                        <button
+                          class="w-6 h-6 rounded flex items-center justify-center"
+                          style="color:var(--qp-fg-3)"
+                          @click="ouvrirModalProgramme(audit, row)"
+                        ><Icon name="heroicons:pencil-square" class="h-3.5 w-3.5" /></button>
+                        <button
+                          class="w-6 h-6 rounded flex items-center justify-center"
+                          style="color:var(--qp-danger-500)"
+                          @click="supprimerItemProgramme(row)"
+                        ><Icon name="heroicons:trash" class="h-3.5 w-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        </template>
       </div>
 
       <!-- ── Colonne droite : recommandations ─────────────────────────────── -->
@@ -269,7 +375,7 @@
           <span
             class="w-2 h-2 rounded-full mt-1.5 flex-none"
             :style="{ background: colorRecoStatut(reco.statut) }"
-          />
+          ></span>
           <div class="flex-1 min-w-0">
             <div class="text-sm" style="color:var(--qp-fg-1)">{{ reco.libelle }}</div>
             <div class="text-xs mt-0.5" style="color:var(--qp-fg-3)">
@@ -308,7 +414,10 @@
             </div>
             <div class="qp-field">
               <label class="qp-label">Type d'audit</label>
-              <input v-model="auditForm.type_audit" class="qp-input" placeholder="Qualité interne" />
+              <select v-model="auditForm.type_audit_id" class="qp-select">
+                <option :value="null">— Choisir —</option>
+                <option v-for="t in typesAudit" :key="t.id" :value="t.id">{{ t.libelle }}</option>
+              </select>
             </div>
             <div class="qp-field">
               <label class="qp-label">Date de début <span class="req">*</span></label>
@@ -322,16 +431,39 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="qp-field">
               <label class="qp-label">Observateur</label>
-              <input v-model="auditForm.observateur" class="qp-input" placeholder="Ex. : Bureau ISOSUD Certification" />
+              <select v-model="auditForm.observateur_id" class="qp-select">
+                <option :value="null">— Choisir —</option>
+                <option v-for="o in observateurs" :key="o.id" :value="o.id">{{ o.libelle }}</option>
+              </select>
             </div>
             <div class="qp-field">
               <label class="qp-label">Site(s) audité(s)</label>
-              <input v-model="auditForm.sites_audites" class="qp-input" placeholder="Ex. : Direction Générale et DGCA" />
+              <div class="flex flex-col gap-1.5 mt-1">
+                <label
+                  v-for="s in sitesAudites"
+                  :key="s.id"
+                  class="flex items-center gap-2 cursor-pointer text-sm"
+                  style="color:var(--qp-fg-1)"
+                >
+                  <input
+                    type="checkbox"
+                    :value="s.id"
+                    v-model="auditForm.site_ids"
+                    style="accent-color:var(--qp-primary-500);width:15px;height:15px"
+                  />
+                  {{ s.libelle }}
+                </label>
+                <span v-if="!sitesAudites.length" class="text-xs" style="color:var(--qp-fg-4)">Aucun site configuré</span>
+              </div>
             </div>
           </div>
           <div class="qp-field">
             <label class="qp-label">Objectifs d'audit</label>
-            <textarea v-model="auditForm.objectifs" class="qp-textarea" rows="3" placeholder="L'objectif général de cette activité est…" />
+            <textarea v-model="auditForm.objectifs" class="qp-textarea" rows="3" placeholder="Décrire les objectifs de cet audit…"></textarea>
+          </div>
+          <div class="qp-field">
+            <label class="qp-label">Critères d'audit</label>
+            <textarea v-model="auditForm.criteres_audit" class="qp-textarea" rows="3" placeholder="Référentiels, procédures ou exigences applicables…"></textarea>
           </div>
           <!-- Superviseurs (multi-select) -->
           <div class="qp-field">
@@ -488,12 +620,6 @@
             </div>
           </div>
 
-          <!-- Processus audité -->
-          <div class="qp-field">
-            <label class="qp-label">Processus audité</label>
-            <input v-model="visiteForm.processus" class="qp-input" placeholder="Ex. : Processus achat" />
-          </div>
-
           <!-- Date + Horaires -->
           <div class="grid grid-cols-3 gap-3">
             <div class="qp-field col-span-3 sm:col-span-1">
@@ -529,14 +655,16 @@
                   :style="{ background: avatarCouleur(nomComplet(smqUsers.find(u => u.id === uid))) }"
                 >{{ initialesAvatar(nomComplet(smqUsers.find(u => u.id === uid))) }}</span>
                 {{ nomComplet(smqUsers.find(u => u.id === uid)) }}
-                <!-- Bouton chef d'équipe (étoile) -->
+                <!-- Bouton chef d'équipe (bonhomme) -->
                 <button
                   type="button"
-                  class="ml-0.5"
+                  class="ml-0.5 flex items-center"
                   :title="visiteForm.chef_id === uid ? 'Retirer le rôle de chef d\'équipe' : 'Désigner chef d\'équipe'"
                   :style="visiteForm.chef_id === uid ? 'color:var(--qp-warning-600)' : 'color:var(--qp-fg-3)'"
-                  @click.prevent="visiteForm.chef_id = visiteForm.chef_id === uid ? null : uid"
-                >★</button>
+                  @click.prevent="demanderChefEquipe(uid)"
+                >
+                  <Icon name="heroicons:user-solid" class="h-3.5 w-3.5" />
+                </button>
                 <!-- Retirer auditeur -->
                 <button
                   type="button"
@@ -548,7 +676,7 @@
               </span>
             </div>
             <p v-if="visiteForm.participants.length" class="text-xs mb-1" style="color:var(--qp-fg-3)">
-              Cliquez sur ★ pour désigner le chef d'équipe (fond doré).
+              Cliquez sur <Icon name="heroicons:user-solid" class="h-3 w-3 inline" /> pour désigner le chef d'équipe (fond doré).
             </p>
             <!-- Barre de recherche -->
             <div class="relative mb-1">
@@ -603,7 +731,7 @@
               class="qp-textarea"
               rows="3"
               placeholder="Contexte de la visite, points à aborder…"
-            />
+            ></textarea>
           </div>
         </div>
         <div class="px-6 py-4 border-t flex justify-end gap-2.5" style="border-color:var(--qp-border-1)">
@@ -631,7 +759,7 @@
         <div class="p-6 grid gap-4">
           <div class="qp-field">
             <label class="qp-label">Recommandation <span class="req">*</span></label>
-            <textarea v-model="recoForm.libelle" class="qp-textarea" rows="3" placeholder="Décrivez la recommandation…" />
+            <textarea v-model="recoForm.libelle" class="qp-textarea" rows="3" placeholder="Décrivez la recommandation…"></textarea>
           </div>
           <div class="qp-field">
             <label class="qp-label">Statut</label>
@@ -664,6 +792,49 @@
         </div>
       </div>
     </UModal>
+
+    <!-- ── Overlay confirmation chef d'équipe (div custom, évite la fermeture du UModal parent) -->
+    <Teleport to="body">
+      <div
+        v-if="chefConfirmOpen"
+        class="fixed inset-0 flex items-center justify-center"
+        style="z-index:9999;background:rgba(0,0,0,0.45)"
+        @click.self="chefConfirmOpen = false"
+      >
+        <div class="bg-white rounded-2xl overflow-hidden text-center" style="width:360px;max-width:95vw">
+          <div class="flex justify-center pt-8 pb-3">
+            <div class="w-16 h-16 rounded-full flex items-center justify-center" style="background:var(--qp-warning-100)">
+              <Icon name="heroicons:user-solid" class="h-8 w-8" style="color:var(--qp-warning-600)" />
+            </div>
+          </div>
+          <h2 class="text-base font-bold px-6 mb-2" style="color:var(--qp-fg-1)">Désigner chef d'équipe</h2>
+          <p class="text-sm px-6 mb-5" style="color:var(--qp-fg-2)">
+            Voulez-vous désigner
+            <strong>{{ nomComplet(smqUsers.find(u => u.id === chefCandidatId)) }}</strong>
+            comme chef d'équipe pour cette visite ?
+          </p>
+          <div v-if="chefCandidatId && visiteForm.chef_id && chefCandidatId !== visiteForm.chef_id" class="mx-6 mb-4 px-4 py-2 rounded-lg text-xs text-left" style="background:var(--qp-warning-50);color:var(--qp-warning-700);border:1px solid var(--qp-warning-200)">
+            Le rôle de chef sera retiré à <strong>{{ nomComplet(smqUsers.find(u => u.id === visiteForm.chef_id)) }}</strong>.
+          </div>
+          <div class="flex gap-3 px-6 pb-7">
+            <button class="flex-1 py-2.5 text-sm rounded-xl border" style="border-color:var(--qp-border-1);color:var(--qp-fg-2)" @click="chefConfirmOpen = false">Annuler</button>
+            <button class="flex-1 py-2.5 text-sm font-semibold rounded-xl text-white" style="background:var(--qp-warning-500)" @click="confirmerChefEquipe">Confirmer</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- ── Alerte chef désigné ─────────────────────────────────────────────── -->
+    <Transition name="fade-up">
+      <div
+        v-if="chefAlerteVisible"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg text-sm font-medium"
+        style="background:var(--qp-warning-500);color:#fff;min-width:280px"
+      >
+        <Icon name="heroicons:user-solid" class="h-5 w-5 flex-none" />
+        <span>{{ chefAlerteMsg }}</span>
+      </div>
+    </Transition>
 
     <!-- ── Alerte blocage audit (style SweetAlert) ───────────────────────────── -->
     <UModal v-model="blocageModalOpen" :ui="{ width: 'sm:max-w-sm' }">
@@ -707,6 +878,95 @@
         </div>
       </div>
     </UModal>
+
+    <!-- ── Modal Programme : ajout/édition item ─────────────────────────── -->
+    <div
+      v-if="modalProgramme"
+      class="fixed inset-0 z-50 flex items-center justify-center"
+      style="background:rgba(0,0,0,0.4)"
+      @click.self="modalProgramme = false"
+    >
+      <div class="qp-card" style="width:560px;max-width:95vw;max-height:90vh;overflow-y:auto">
+        <!-- En-tête -->
+        <div class="flex items-center justify-between px-5 pt-5 pb-4" style="border-bottom:1px solid var(--qp-border-2)">
+          <h3 class="font-semibold text-base" style="color:var(--qp-fg-1);margin:0">
+            {{ formProgramme.id ? 'Modifier l\'item' : 'Ajouter au programme' }}
+          </h3>
+          <button @click="modalProgramme = false">
+            <Icon name="heroicons:x-mark" class="h-5 w-5" style="color:var(--qp-fg-3)" />
+          </button>
+        </div>
+
+        <div class="px-5 py-4 flex flex-col gap-4">
+          <!-- Type -->
+          <div class="qp-field">
+            <label class="qp-label">Type d'item</label>
+            <select v-model="formProgramme.type" class="qp-select">
+              <option v-for="t in TYPES_ITEM" :key="t.value" :value="t.value">{{ t.label }}</option>
+            </select>
+          </div>
+
+          <!-- Date + heures -->
+          <div class="grid gap-4" style="grid-template-columns:1fr 1fr 1fr">
+            <div class="qp-field" style="grid-column:1/-1">
+              <label class="qp-label">Date</label>
+              <input v-model="formProgramme.date" type="date" class="qp-input qp-input--mono" />
+            </div>
+            <div class="qp-field">
+              <label class="qp-label">Heure début</label>
+              <input v-model="formProgramme.heure_debut" type="time" class="qp-input qp-input--mono" />
+            </div>
+            <div class="qp-field">
+              <label class="qp-label">Heure fin</label>
+              <input v-model="formProgramme.heure_fin" type="time" class="qp-input qp-input--mono" />
+            </div>
+          </div>
+
+          <!-- Libellé (processus/activité) -->
+          <div v-if="formProgramme.type === 'autre'" class="qp-field">
+            <label class="qp-label">Libellé</label>
+            <input
+              v-model="formProgramme.libelle"
+              class="qp-input"
+              placeholder="Ex : Visite terrain, point administratif…"
+            />
+          </div>
+
+          <!-- Pilotes -->
+          <div class="qp-field">
+            <label class="qp-label">Pilotes</label>
+            <input
+              v-model="formProgramme.pilotes_text"
+              class="qp-input"
+              placeholder="Ex : DGR et Collaborateurs"
+            />
+          </div>
+
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-2 px-5 pb-5">
+          <button
+            class="px-4 py-2 text-sm rounded-lg"
+            style="color:var(--qp-fg-2)"
+            @click="modalProgramme = false"
+          >Annuler</button>
+          <button
+            class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white"
+            style="background:var(--qp-primary-500)"
+            :disabled="savingProgramme"
+            @click="sauvegarderItemProgramme"
+          >
+            <Icon
+              :name="savingProgramme ? 'heroicons:arrow-path' : 'heroicons:check'"
+              class="h-4 w-4"
+              :class="{ 'animate-spin': savingProgramme }"
+            />
+            {{ savingProgramme ? 'Enregistrement…' : 'Enregistrer' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -714,7 +974,9 @@
 import { usePaq }          from '~/composables/smq/usePaq'
 import { useReferentiels } from '~/composables/smq/useReferentiels'
 import { useIndicateurs }  from '~/composables/smq/useIndicateurs'
-import { useSmqStore }     from '~/stores/smq'
+import { useSmqStore }         from '~/stores/smq'
+import { useAuditProgramme }  from '~/composables/smq/useAuditProgramme'
+import { useAuth }             from '~/composables/auth/useAuth'
 
 useHead({ title: 'Plan Audit Qualité — SMQ · SAGA' })
 
@@ -729,6 +991,8 @@ const {
   RECO_STATUTS, colorRecoStatut,
 } = usePaq()
 const { fetchExercices, fetchExerciceActif } = useReferentiels()
+const { fetchProgramme, createItem: createProgrammeItem, updateItem: updateProgrammeItem, deleteItem: deleteProgrammeItem, avecPauses, TYPES_ITEM, labelType: labelTypeProgramme } = useAuditProgramme()
+const { isSmqRQ, isSmqRQA, isSmqAdmin } = useAuth()
 const { formatDate, initialesAvatar } = useIndicateurs()
 
 // ── État global ───────────────────────────────────────────────────────────────
@@ -747,21 +1011,45 @@ const smqUsers       = ref([])
 
 const auditModalOpen = ref(false)
 const auditEnCours   = ref(null)
+// ── Référentiels audit (chargés depuis l'API) ─────────────────────────────────
+const typesAudit    = ref([])
+const observateurs  = ref([])
+const sitesAudites  = ref([])
+
+const chargerReferentiels = async () => {
+  const token = process.client ? localStorage.getItem('auth_token') : ''
+  const h = { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+  const base = useRuntimeConfig().public.apiBase
+  try {
+    const [ta, obs, sa] = await Promise.all([
+      $fetch(`${base}/smq/types-audits`,  { headers: h }),
+      $fetch(`${base}/smq/observateurs`,  { headers: h }),
+      $fetch(`${base}/smq/sites-audites`, { headers: h }),
+    ])
+    typesAudit.value   = (ta?.data  ?? ta  ?? []).filter(i => i.actif)
+    observateurs.value = (obs?.data ?? obs ?? []).filter(i => i.actif)
+    sitesAudites.value = (sa?.data  ?? sa  ?? []).filter(i => i.actif)
+  } catch {
+    // silencieux — listes vides si API indisponible
+  }
+}
+
 const AUDIT_DEFAULTS = {
   referentiel:    'ISO 9001 – 2015, fiches processus et autres documents d\'application',
-  type_audit:     'Qualité interne',
-  objectifs:      'L\'objectif général de cette activité est d\'assurer une veille constante sur la bonne gestion des processus et des procédures de la DGML.',
-  observateur:    'Bureau ISOSUD Certification',
-  sites_audites:  'Direction Générale et DGCA',
+  type_audit_id:  null,
+  objectifs:      '',
+  observateur_id: null,
+  criteres_audit: '',
 }
 
 const auditForm      = reactive({
   titre: '',
   referentiel:      AUDIT_DEFAULTS.referentiel,
-  type_audit:       AUDIT_DEFAULTS.type_audit,
+  type_audit_id:    AUDIT_DEFAULTS.type_audit_id,
   objectifs:        AUDIT_DEFAULTS.objectifs,
-  observateur:      AUDIT_DEFAULTS.observateur,
-  sites_audites:    AUDIT_DEFAULTS.sites_audites,
+  observateur_id:   AUDIT_DEFAULTS.observateur_id,
+  site_ids:         [],   // tableau d'IDs (relation N→N)
+  criteres_audit:   AUDIT_DEFAULTS.criteres_audit,
   superviseurs_ids: [],
   date_debut: '', date_fin: '',
   statut: 'a_planifier', exercice_id: null,
@@ -784,7 +1072,7 @@ const entitesFiltrees = computed(() => {
 })
 
 const selectionnerEntite = (e) => {
-  visiteForm.entite_id    = e.id
+  visiteForm.entite_id     = e.id
   entiteDropdownOpen.value = false
   entiteSearch.value       = ''
 }
@@ -821,7 +1109,6 @@ const visiteAudit     = ref(null)   // l'audit parent
 const visiteEnCours   = ref(null)   // null = création, objet = édition
 const visiteForm      = reactive({
   entite_id: '',
-  processus: '',
   date: '',
   heure_debut: '',
   heure_fin: '',
@@ -841,6 +1128,34 @@ const recoForm         = reactive({ libelle: '', statut: 'ouvert' })
 const confirmModalOpen = ref(false)
 const confirmMessage   = ref('')
 const confirmAction    = ref(null)
+
+// ── Chef d'équipe : confirmation + alerte ────────────────────────────────────
+
+const chefConfirmOpen  = ref(false)
+const chefCandidatId   = ref(null)
+const chefAlerteVisible = ref(false)
+const chefAlerteMsg    = ref('')
+
+const demanderChefEquipe = (uid) => {
+  // Si c'est déjà le chef → retrait direct sans popup
+  if (visiteForm.chef_id === uid) {
+    visiteForm.chef_id = null
+    return
+  }
+  chefCandidatId.value = uid
+  chefConfirmOpen.value = true
+}
+
+const confirmerChefEquipe = () => {
+  const nom = nomComplet(smqUsers.value.find(u => u.id === chefCandidatId.value))
+  visiteForm.chef_id   = chefCandidatId.value
+  chefConfirmOpen.value = false
+  chefCandidatId.value  = null
+  // Alerte toast
+  chefAlerteMsg.value     = `${nom} désigné(e) comme chef d'équipe`
+  chefAlerteVisible.value  = true
+  setTimeout(() => { chefAlerteVisible.value = false }, 3500)
+}
 
 // ── Modal blocage (audit non réalisé) ─────────────────────────────────────────
 
@@ -880,7 +1195,14 @@ const charger = async () => {
       fetchAudits({ exercice_id: exerciceActif.value?.id }),
       fetchRecommandations({ per_page: 20 }),
     ])
-    audits.value          = auditList
+    // Tri : non réalisés d'abord (par date_debut desc), puis réalisés (par date_debut desc)
+    const trier = (list) => [...list].sort((a, b) => {
+      const aRealise = a.statut === 'realise' ? 1 : 0
+      const bRealise = b.statut === 'realise' ? 1 : 0
+      if (aRealise !== bRealise) return aRealise - bRealise
+      return (b.date_debut ?? '').localeCompare(a.date_debut ?? '')
+    })
+    audits.value          = trier((auditList ?? []).filter(Boolean))
     recommandations.value = recoList
   } catch (e) {
     console.error('❌ PAQ :', e)
@@ -905,17 +1227,18 @@ const ouvrirAudit = (audit) => {
 
   auditEnCours.value = audit
   Object.assign(auditForm, {
-    titre:         audit?.titre          ?? '',
-    referentiel:      audit?.referentiel    ?? AUDIT_DEFAULTS.referentiel,
-    type_audit:       audit?.type_audit     ?? AUDIT_DEFAULTS.type_audit,
-    objectifs:        audit?.objectifs      ?? AUDIT_DEFAULTS.objectifs,
-    observateur:      audit?.observateur    ?? AUDIT_DEFAULTS.observateur,
-    sites_audites:    audit?.sites_audites  ?? AUDIT_DEFAULTS.sites_audites,
+    titre:            audit?.titre            ?? '',
+    referentiel:      audit?.referentiel      ?? AUDIT_DEFAULTS.referentiel,
+    type_audit_id:    audit?.type_audit_id    ?? audit?.type_audit?.id   ?? AUDIT_DEFAULTS.type_audit_id,
+    objectifs:        audit?.objectifs        ?? AUDIT_DEFAULTS.objectifs,
+    observateur_id:   audit?.observateur_id   ?? audit?.observateur?.id  ?? AUDIT_DEFAULTS.observateur_id,
+    site_ids:         (audit?.sites ?? []).map(s => s.id),
+    criteres_audit:   audit?.criteres_audit   ?? AUDIT_DEFAULTS.criteres_audit,
     superviseurs_ids: (audit?.superviseurs ?? []).map(u => u.id),
-    date_debut:       audit?.date_debut     ?? '',
-    date_fin:      audit?.date_fin       ?? '',
-    statut:        audit?.statut         ?? 'a_planifier',
-    exercice_id:   exerciceActif.value?.id ?? null,
+    date_debut:       audit?.date_debut      ?? '',
+    date_fin:         audit?.date_fin        ?? '',
+    statut:           audit?.statut          ?? 'a_planifier',
+    exercice_id:      exerciceActif.value?.id ?? null,
   })
   superviseurSearch.value = ''
   auditModalOpen.value = true
@@ -976,14 +1299,13 @@ const confirmerSuppressionAudit = (audit) => {
 
 // ── Visite par entité ─────────────────────────────────────────────────────────
 
-const ouvrirVisite = async (audit, ae) => {
+const ouvrirVisite = (audit, ae) => {
   visiteAudit.value   = audit
   visiteEnCours.value = ae ?? null
 
   const chef = (ae?.users ?? []).find(u => u.pivot?.is_chef)
   Object.assign(visiteForm, {
     entite_id:               ae?.entite_id ?? ae?.entite?.id ?? '',
-    processus:               ae?.processus  ?? '',
     date:                    ae?.date      ? ae.date.substring(0, 10) : '',
     heure_debut:             ae?.heure_debut ?? '',
     heure_fin:               ae?.heure_fin   ?? '',
@@ -1004,7 +1326,6 @@ const sauvegarderVisite = async () => {
     if (visiteEnCours.value?.id) {
       // Mise à jour d'une visite existante
       await updateAuditEntite(visiteEnCours.value.id, {
-        processus:              visiteForm.processus,
         date:                   visiteForm.date,
         heure_debut:            visiteForm.heure_debut,
         heure_fin:              visiteForm.heure_fin,
@@ -1016,7 +1337,6 @@ const sauvegarderVisite = async () => {
       // Création d'une nouvelle visite (ajout entité à l'audit)
       await ajouterEntiteAudit(visiteAudit.value.id, {
         entite_id:              visiteForm.entite_id,
-        processus:              visiteForm.processus,
         date:                   visiteForm.date,
         heure_debut:            visiteForm.heure_debut,
         heure_fin:              visiteForm.heure_fin,
@@ -1132,22 +1452,113 @@ const executerConfirmation = async () => {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
+// ── Programme ────────────────────────────────────────────────────────────────
+
+const peutGererProgramme  = computed(() => isSmqRQ() || isSmqRQA() || isSmqAdmin())
+const programmeOuvert     = ref(new Set())
+const programmeItems      = ref({})   // { [auditId]: AuditProgrammeItem[] }
+const modalProgramme      = ref(false)
+const savingProgramme     = ref(false)
+const auditCourantProg    = ref(null)
+const formProgramme       = reactive({
+  id: null, type: 'reunion_ouverture', date: '', heure_debut: '', heure_fin: '',
+  libelle: '', pilotes_text: '',
+})
+
+
+const formatDateFr = (d) => {
+  if (!d) return ''
+  const dt = new Date((d + '').substring(0, 10) + 'T00:00:00')
+  return dt.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+const toggleProgramme = async (audit) => {
+  const id = audit.id
+  const next = new Set(programmeOuvert.value)
+  if (next.has(id)) {
+    next.delete(id)
+  } else {
+    next.add(id)
+    if (!programmeItems.value[id]) {
+      programmeItems.value = { ...programmeItems.value, [id]: await fetchProgramme(id) }
+    }
+  }
+  programmeOuvert.value = next
+}
+
+const ouvrirModalProgramme = (audit, item) => {
+  auditCourantProg.value = audit
+  Object.assign(formProgramme, {
+    id:           item?.id           ?? null,
+    type:         item?.type         ?? 'reunion_ouverture',
+    date:         (item?.date ?? audit.date_debut ?? '').toString().substring(0, 10),
+    heure_debut:  item?.heure_debut  ?? '',
+    heure_fin:    item?.heure_fin    ?? '',
+    libelle:      item?.libelle      ?? '',
+    pilotes_text: item?.pilotes_text ?? '',
+
+  })
+  modalProgramme.value = true
+}
+
+const sauvegarderItemProgramme = async () => {
+  if (!auditCourantProg.value || savingProgramme.value) return
+  savingProgramme.value = true
+  try {
+    const payload = {
+      type:         formProgramme.type,
+      date:         formProgramme.date,
+      heure_debut:  formProgramme.heure_debut || null,
+      heure_fin:    formProgramme.heure_fin   || null,
+      libelle:      formProgramme.libelle      || null,
+      pilotes_text: formProgramme.pilotes_text || null,
+
+    }
+    if (formProgramme.id) {
+      await updateProgrammeItem(formProgramme.id, payload)
+    } else {
+      await createProgrammeItem(auditCourantProg.value.id, payload)
+    }
+    const id = auditCourantProg.value.id
+    programmeItems.value = { ...programmeItems.value, [id]: await fetchProgramme(id) }
+    modalProgramme.value = false
+  } catch (e) { console.error('Programme save:', e) }
+  finally { savingProgramme.value = false }
+}
+
+const supprimerItemProgramme = async (item) => {
+  if (!confirm('Supprimer cet item du programme ?')) return
+  const auditId = item.audit_id
+  await deleteProgrammeItem(item.id)
+  programmeItems.value = { ...programmeItems.value, [auditId]: await fetchProgramme(auditId) }
+}
+
 onMounted(async () => {
-  const [exList, exActif, entitesList, usersList] = await Promise.all([
-    fetchExercices(),
-    fetchExerciceActif(),
-    fetchEntites(),
-    fetchSmqUsers(),
-  ])
-  exercices.value         = exList
-  exerciceActif.value     = exActif ?? exList[0] ?? null
-  entitesDisponibles.value = entitesList
-  smqUsers.value          = usersList
-  await charger()
+  try {
+    const [exList, exActif, entitesList, usersList] = await Promise.all([
+      fetchExercices(),
+      fetchExerciceActif(),
+      fetchEntites(),
+      fetchSmqUsers(),
+    ])
+    exercices.value          = exList
+    exerciceActif.value      = exActif ?? exList[0] ?? null
+    entitesDisponibles.value = entitesList
+    smqUsers.value           = usersList
+    await Promise.all([charger(), chargerReferentiels()])
+  } catch (e) {
+    console.error('❌ PAQ init:', e)
+    loading.value = false
+  }
 })
 </script>
 
 <style scoped>
-.smq-content { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+.smq-content { }
 .req { color: var(--qp-danger-500); margin-left: 2px; }
+
+/* Toast chef d'équipe */
+.fade-up-enter-active, .fade-up-leave-active { transition: opacity 0.3s, transform 0.3s; }
+.fade-up-enter-from, .fade-up-leave-to { opacity: 0; transform: translateX(-50%) translateY(12px); }
 </style>
+                                                                                                                             

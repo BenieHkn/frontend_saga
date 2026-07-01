@@ -1,23 +1,10 @@
 <template>
-  <div class="smq-content p-4 lg:p-6">
+  <div class="smq-content">
     <!-- En-tête ---------------------------------------------------------------- -->
     <SmqPageHeader
       :overline="`Management Global · Exercice ${exercice}`"
       title="Tableau de bord qualité"
     >
-      <!-- Sélecteur de trimestre -->
-      <div class="qp-seg">
-        <button
-          v-for="t in ['T1','T2','T3','T4']"
-          :key="t"
-          :class="{ active: trimestreCourant === t }"
-          @click="trimestreCourant = t"
-        >{{ t }}</button>
-      </div>
-      <button class="btn-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 transition-all">
-        <Icon name="heroicons:arrow-down-tray" class="h-4 w-4" />
-        Exporter
-      </button>
     </SmqPageHeader>
 
     <!-- KPI row ---------------------------------------------------------------- -->
@@ -31,12 +18,16 @@
         :value="stats.total"
         :delta="stats.nouveaux ? `+${stats.nouveaux} nouveaux` : ''"
         delta-type="up"
+        color="navy"
+        icon="heroicons:chart-bar-square"
       />
       <SmqKpiCard
         label="Taux de conformité"
         :value="formatTaux(stats.taux_conformite)"
         :progress="stats.taux_conformite"
         progress-color="var(--qp-success-500)"
+        color="success"
+        icon="heroicons:check-badge"
       />
       <SmqKpiCard
         label="Non conformes"
@@ -44,12 +35,16 @@
         value-color="var(--qp-danger-600)"
         :delta="stats.delta_nc ? `${stats.delta_nc > 0 ? '+' : ''}${stats.delta_nc} vs période préc.` : ''"
         :delta-type="stats.delta_nc > 0 ? 'down' : 'up'"
+        color="danger"
+        icon="heroicons:exclamation-triangle"
       />
       <SmqKpiCard
         label="En attente de validation"
         :value="stats.en_attente"
         value-color="var(--qp-warning-600)"
         :subtext="`sur ${stats.nb_directions ?? '—'} directions`"
+        color="warning"
+        icon="heroicons:clock"
       />
     </div>
 
@@ -72,7 +67,7 @@
           </div>
         </div>
         <!-- Graphique SVG inline simplifié -->
-        <svg viewBox="0 0 620 220" width="100%" height="220" preserveAspectRatio="none" font-family="IBM Plex Mono">
+        <svg viewBox="0 0 620 220" width="100%" height="220" preserveAspectRatio="none" font-family="ui-monospace">
           <g stroke="var(--qp-border-2)" stroke-width="1">
             <line x1="44" y1="20"  x2="610" y2="20"></line>
             <line x1="44" y1="70"  x2="610" y2="70"></line>
@@ -342,5 +337,5 @@ const courbeArea = computed(() => {
 </script>
 
 <style scoped>
-.smq-content { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+.smq-content { }
 </style>
